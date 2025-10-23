@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import logoIcon from "figma:asset/2963c86375c465a0181ec7f085caa0b02f003590.png";
+import logoIcon from "/logo.png";
 
 interface SharedPredictionPageProps {
   predictionId: string;
@@ -18,20 +18,27 @@ interface PredictionData {
   timestamp: string;
 }
 
-export function SharedPredictionPage({ predictionId, onBack }: SharedPredictionPageProps) {
-  const [predictionData, setPredictionData] = useState<PredictionData | null>(null);
+export function SharedPredictionPage({
+  predictionId,
+  onBack,
+}: SharedPredictionPageProps) {
+  const [predictionData, setPredictionData] = useState<PredictionData | null>(
+    null
+  );
 
   useEffect(() => {
     // Load prediction data from localStorage
-    console.log('SharedPredictionPage: Looking for prediction:', predictionId);
+    console.log("SharedPredictionPage: Looking for prediction:", predictionId);
     const storedData = localStorage.getItem(`prediction-${predictionId}`);
-    console.log('SharedPredictionPage: Found data:', storedData);
+    console.log("SharedPredictionPage: Found data:", storedData);
     if (storedData) {
       const parsedData = JSON.parse(storedData);
-      console.log('SharedPredictionPage: Parsed data:', parsedData);
+      console.log("SharedPredictionPage: Parsed data:", parsedData);
       setPredictionData(parsedData);
     } else {
-      console.warn('SharedPredictionPage: No prediction data found in localStorage');
+      console.warn(
+        "SharedPredictionPage: No prediction data found in localStorage"
+      );
     }
   }, [predictionId]);
 
@@ -59,7 +66,7 @@ export function SharedPredictionPage({ predictionId, onBack }: SharedPredictionP
       {/* Background with Oracle Avatar */}
       <div className="absolute inset-0 z-0">
         {/* Avatar as background with overlay */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10 blur-3xl scale-110"
           style={{
             backgroundImage: `url(${predictionData.oracleAvatar})`,
@@ -75,7 +82,11 @@ export function SharedPredictionPage({ predictionId, onBack }: SharedPredictionP
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src={logoIcon} alt="Dehouse of Oracles" className="w-8 h-8" />
+              <img
+                src={logoIcon}
+                alt="Dehouse of Oracles"
+                className="w-8 h-8"
+              />
               <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Dehouse of Oracles
               </span>
@@ -93,7 +104,8 @@ export function SharedPredictionPage({ predictionId, onBack }: SharedPredictionP
         <div className="mb-6 text-center">
           <h1 className="mb-2">Shared Prediction</h1>
           <p className="text-muted-foreground">
-            From {predictionData.oracleName} on {new Date(predictionData.timestamp).toLocaleDateString()}
+            From {predictionData.oracleName} on{" "}
+            {new Date(predictionData.timestamp).toLocaleDateString()}
           </p>
         </div>
 
@@ -108,7 +120,9 @@ export function SharedPredictionPage({ predictionId, onBack }: SharedPredictionP
               />
             </div>
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg">
-              <span className="text-sm text-white">{predictionData.oracleName}</span>
+              <span className="text-sm text-white">
+                {predictionData.oracleName}
+              </span>
             </div>
           </div>
         </div>
@@ -122,9 +136,7 @@ export function SharedPredictionPage({ predictionId, onBack }: SharedPredictionP
               </div>
               <div className="flex-1">
                 <h3 className="text-sm mb-2">Question</h3>
-                <p className="leading-relaxed">
-                  {predictionData.question}
-                </p>
+                <p className="leading-relaxed">{predictionData.question}</p>
               </div>
             </div>
           </CardContent>
@@ -138,7 +150,9 @@ export function SharedPredictionPage({ predictionId, onBack }: SharedPredictionP
                 <span className="text-lg">{predictionData.oracleEmoji}</span>
               </div>
               <div className="flex-1">
-                <h3 className="text-sm mb-2">{predictionData.oracleName}'s Prediction</h3>
+                <h3 className="text-sm mb-2">
+                  {predictionData.oracleName}'s Prediction
+                </h3>
                 <p className="leading-relaxed whitespace-pre-wrap">
                   {predictionData.answer}
                 </p>
@@ -152,7 +166,8 @@ export function SharedPredictionPage({ predictionId, onBack }: SharedPredictionP
           <CardContent className="p-8 text-center">
             <h3 className="mb-3">Want your own prediction?</h3>
             <p className="text-muted-foreground mb-6">
-              Join Dehouse of Oracles and chat with specialized AI oracle agents for free!
+              Join Dehouse of Oracles and chat with specialized AI oracle agents
+              for free!
             </p>
             <Button
               size="lg"
@@ -168,7 +183,10 @@ export function SharedPredictionPage({ predictionId, onBack }: SharedPredictionP
         {/* Disclaimer */}
         <div className="mt-8 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
           <p className="text-xs text-muted-foreground text-center leading-relaxed">
-            <strong>Disclaimer:</strong> This prediction is for entertainment purposes only and should not be considered financial, investment, or professional advice. Always consult with qualified experts before making important decisions.
+            <strong>Disclaimer:</strong> This prediction is for entertainment
+            purposes only and should not be considered financial, investment, or
+            professional advice. Always consult with qualified experts before
+            making important decisions.
           </p>
         </div>
       </main>

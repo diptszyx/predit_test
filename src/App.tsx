@@ -1,6 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "./components/ui/button";
-import { ChevronLeft, ChevronRight, Twitter, MessageCircle, Search } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Twitter,
+  MessageCircle,
+  Search,
+} from "lucide-react";
 import { Input } from "./components/ui/input";
 import { ChatPage } from "./components/ChatPage";
 import { Dashboard } from "./components/Dashboard";
@@ -8,7 +14,11 @@ import { SubscriptionPage } from "./components/SubscriptionPage";
 import { HousesPage } from "./components/HousesPage";
 import { LeaderboardPage } from "./components/LeaderboardPage";
 import { SettingsPage } from "./components/SettingsPage";
-import { WalletConnectDialog, type WalletType, type SocialProvider } from "./components/WalletConnectDialog";
+import {
+  WalletConnectDialog,
+  type WalletType,
+  type SocialProvider,
+} from "./components/WalletConnectDialog";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { TermsOfUse } from "./components/TermsOfUse";
 import { RotatingBanners } from "./components/RotatingBanners";
@@ -18,22 +28,20 @@ import { OracleCard } from "./components/OracleCard";
 import { UnifiedHeader } from "./components/UnifiedHeader";
 import { SharedPredictionPage } from "./components/SharedPredictionPage";
 import { Toaster } from "./components/ui/sonner";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { mockUser, platformStats, houses, houseMembers } from "./lib/mockData";
 import type { Oracle, User } from "./lib/types";
 import { useXP } from "./lib/useXP";
 import { getLevelTitle } from "./lib/xpSystem";
-
 // Oracle avatar images
-import oracleImg1 from "figma:asset/796782a600b4b3273a6ffabf93553e48e069067e.png";
-import oracleImg2 from "figma:asset/542054ed16955695ae7ee333193a12ff318830d7.png";
-import oracleImg3 from "figma:asset/a2194f9396a71a565f110f6ddfdb04496b38730f.png";
-import oracleImg4 from "figma:asset/69fe21e30dd0b7d8b95637f2d887bf5af8acd371.png";
-import oracleImg5 from "figma:asset/409a9a6302f10c88c7010ce6620ba94f4c359702.png";
-import oracleImg6 from "figma:asset/12a88d1ebe272567526965cc36e50d84326f7932.png";
-import oracleImg7 from "figma:asset/249c3a113c38999930aaac93b74fb456033fc39c.png";
-import oracleImg8 from "figma:asset/31891bb73f82aa82ce0f7295eff98632f60e5c37.png";
-import logoIcon from "figma:asset/2963c86375c465a0181ec7f085caa0b02f003590.png";
+import oracleImg1 from "/20250320060028336922.png";
+import oracleImg2 from "/20250320060028336922.png";
+import oracleImg3 from "/20250320060028336922.png";
+import oracleImg4 from "/20250320060028336922.png";
+import oracleImg5 from "/20250320060028336922.png";
+import oracleImg6 from "/20250320060028336922.png";
+import oracleImg7 from "/20250320060028336922.png";
+import oracleImg8 from "/20250320060028336922.png";
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
@@ -50,13 +58,17 @@ export default function App() {
   const [selectedHouseId, setSelectedHouseId] = useState<string | null>(null);
   const [totalQuestionsAsked, setTotalQuestionsAsked] = useState(0);
   const [userCreatedMarkets, setUserCreatedMarkets] = useState<any[]>([]);
-  const [sharedPredictionId, setSharedPredictionId] = useState<string | null>(null);
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const [sharedPredictionId, setSharedPredictionId] = useState<string | null>(
+    null
+  );
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null
+  );
   const categoryScrollRef = useRef<HTMLDivElement>(null);
 
   // Update user function
   const updateUser = (updates: Partial<User>) => {
-    setUser(prev => prev ? { ...prev, ...updates } : null);
+    setUser((prev) => (prev ? { ...prev, ...updates } : null));
   };
 
   // XP system hook
@@ -64,23 +76,23 @@ export default function App() {
 
   // Market management
   const handleAddMarket = (market: any) => {
-    setUserCreatedMarkets(prev => [...prev, market]);
-    awardXPToUser('CREATE_MARKET');
+    setUserCreatedMarkets((prev) => [...prev, market]);
+    awardXPToUser("CREATE_MARKET");
   };
 
   // House management
   const handleJoinHouse = (houseId: string) => {
     updateUser({ house: houseId });
-    awardXPToUser('JOIN_HOUSE');
+    awardXPToUser("JOIN_HOUSE");
   };
 
   const handleSwitchHouse = (houseId: string) => {
     const currentSwitches = user?.houseSwitchesUsed ?? 0;
-    updateUser({ 
+    updateUser({
       house: houseId,
-      houseSwitchesUsed: currentSwitches + 1
+      houseSwitchesUsed: currentSwitches + 1,
     });
-    awardXPToUser('JOIN_HOUSE');
+    awardXPToUser("JOIN_HOUSE");
   };
 
   const handleLeaveHouse = () => {
@@ -98,23 +110,23 @@ export default function App() {
   // Check if URL is a shared prediction or has referral code
   useEffect(() => {
     const path = window.location.pathname;
-    console.log('Current pathname:', path);
+    console.log("Current pathname:", path);
     const predictionMatch = path.match(/\/prediction\/([^/]+)/);
     if (predictionMatch) {
-      console.log('Shared prediction detected! ID:', predictionMatch[1]);
+      console.log("Shared prediction detected! ID:", predictionMatch[1]);
       setSharedPredictionId(predictionMatch[1]);
-      setCurrentPage('shared-prediction');
+      setCurrentPage("shared-prediction");
     }
-    
+
     // Check for referral code in URL params
     const urlParams = new URLSearchParams(window.location.search);
-    const referralCode = urlParams.get('ref');
+    const referralCode = urlParams.get("ref");
     if (referralCode) {
-      console.log('Referral code detected:', referralCode);
+      console.log("Referral code detected:", referralCode);
       // Store referral code in session storage for use during onboarding
-      sessionStorage.setItem('pendingReferralCode', referralCode);
-      toast.info('Referral code detected! Sign up to get your bonus.', {
-        description: 'You\'ll earn 100 XP when you create your account!'
+      sessionStorage.setItem("pendingReferralCode", referralCode);
+      toast.info("Referral code detected! Sign up to get your bonus.", {
+        description: "You'll earn 100 XP when you create your account!",
       });
     }
   }, []);
@@ -126,7 +138,8 @@ export default function App() {
       name: "Satoshi's Heir",
       emoji: "₿",
       title: "Cryptocurrency Visionary",
-      description: "Specializes in cryptocurrency market analysis, blockchain technology assessment, and digital asset valuation. Monitors on-chain metrics, protocol developments, regulatory landscape, and institutional adoption trends.",
+      description:
+        "Specializes in cryptocurrency market analysis, blockchain technology assessment, and digital asset valuation. Monitors on-chain metrics, protocol developments, regulatory landscape, and institutional adoption trends.",
       gradient: "from-orange-600 via-amber-600 to-yellow-700",
       category: "Cryptocurrency",
       accuracy: "92%",
@@ -142,7 +155,8 @@ export default function App() {
       name: "The Macro Maestro",
       emoji: "📊",
       title: "Global Economics Expert",
-      description: "Provides macroeconomic forecasting through central bank policy analysis, inflation tracking, employment data, and GDP growth indicators. Monitors monetary policy impacts, economic cycles, and global financial system dynamics.",
+      description:
+        "Provides macroeconomic forecasting through central bank policy analysis, inflation tracking, employment data, and GDP growth indicators. Monitors monetary policy impacts, economic cycles, and global financial system dynamics.",
       gradient: "from-slate-600 via-gray-600 to-zinc-700",
       category: "Economics",
       accuracy: "91%",
@@ -158,7 +172,8 @@ export default function App() {
       name: "The Market Whisperer",
       emoji: "📈",
       title: "Financial Markets Sage",
-      description: "Provides comprehensive financial market analysis combining technical indicators, fundamental valuations, macroeconomic trends, and quantitative modeling. Specializes in identifying market inefficiencies and high-probability opportunities.",
+      description:
+        "Provides comprehensive financial market analysis combining technical indicators, fundamental valuations, macroeconomic trends, and quantitative modeling. Specializes in identifying market inefficiencies and high-probability opportunities.",
       gradient: "from-emerald-600 via-green-600 to-teal-700",
       category: "Financial Markets",
       accuracy: "89%",
@@ -174,7 +189,8 @@ export default function App() {
       name: "Madame Destiny",
       emoji: "🔮",
       title: "Mystic Seer of Fates",
-      description: "Utilizes psychological profiling, behavioral economics, and pattern recognition to forecast personal and professional outcomes. Analyzes decision-making frameworks and life trajectory indicators through mystical insights.",
+      description:
+        "Utilizes psychological profiling, behavioral economics, and pattern recognition to forecast personal and professional outcomes. Analyzes decision-making frameworks and life trajectory indicators through mystical insights.",
       gradient: "from-fuchsia-600 via-purple-600 to-pink-700",
       category: "Fortune & Mysticism",
       accuracy: "87%",
@@ -190,7 +206,8 @@ export default function App() {
       name: "The Value Hunter",
       emoji: "📋",
       title: "Deep Value Specialist",
-      description: "Deep dive into company financials, business models, competitive advantages, and intrinsic value. Analyzes balance sheets, income statements, cash flows, and key financial ratios to identify undervalued opportunities.",
+      description:
+        "Deep dive into company financials, business models, competitive advantages, and intrinsic value. Analyzes balance sheets, income statements, cash flows, and key financial ratios to identify undervalued opportunities.",
       gradient: "from-blue-600 via-cyan-600 to-sky-700",
       category: "Fundamental Analysis",
       accuracy: "88%",
@@ -206,7 +223,8 @@ export default function App() {
       name: "The Degen Queen",
       emoji: "🐸",
       title: "Meme Coin Specialist",
-      description: "Expert in meme coin trends, viral token movements, and community-driven crypto projects. Monitors social sentiment, influencer activity, and degen culture to identify the next 100x moonshot opportunities.",
+      description:
+        "Expert in meme coin trends, viral token movements, and community-driven crypto projects. Monitors social sentiment, influencer activity, and degen culture to identify the next 100x moonshot opportunities.",
       gradient: "from-lime-600 via-green-600 to-emerald-700",
       category: "Meme Coins",
       accuracy: "83%",
@@ -222,7 +240,8 @@ export default function App() {
       name: "The Policy Prophet",
       emoji: "🎭",
       title: "Political Strategist",
-      description: "Specializes in political forecasting through advanced analysis of legislative patterns, voting behavior, and policy trends. Leverages comprehensive datasets including social media sentiment, polling data, and historical election outcomes.",
+      description:
+        "Specializes in political forecasting through advanced analysis of legislative patterns, voting behavior, and policy trends. Leverages comprehensive datasets including social media sentiment, polling data, and historical election outcomes.",
       gradient: "from-violet-600 via-purple-600 to-indigo-700",
       category: "Politics",
       accuracy: "93%",
@@ -238,7 +257,8 @@ export default function App() {
       name: "Chart Master Zhen",
       emoji: "📉",
       title: "Technical Analyst Extraordinaire",
-      description: "Masters chart patterns, indicators, and price action analysis. Specializes in trend identification, support/resistance levels, momentum indicators, and algorithmic trading signals for precise entry and exit points.",
+      description:
+        "Masters chart patterns, indicators, and price action analysis. Specializes in trend identification, support/resistance levels, momentum indicators, and algorithmic trading signals for precise entry and exit points.",
       gradient: "from-red-600 via-rose-600 to-pink-700",
       category: "Technical Analysis",
       accuracy: "85%",
@@ -265,27 +285,28 @@ export default function App() {
   ];
 
   // Filter oracles
-  const filteredOracles = oracles.filter(oracle => {
-    const matchesSearch = oracle.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         oracle.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         oracle.specialty.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || oracle.category === selectedCategory;
+  const filteredOracles = oracles.filter((oracle) => {
+    const matchesSearch =
+      oracle.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      oracle.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      oracle.specialty.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" || oracle.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-
-
   // Scroll functions
-  const scroll = (direction: 'left' | 'right') => {
+  const scroll = (direction: "left" | "right") => {
     if (categoryScrollRef.current) {
       const scrollAmount = 200;
-      const newScrollLeft = direction === 'left'
-        ? categoryScrollRef.current.scrollLeft - scrollAmount
-        : categoryScrollRef.current.scrollLeft + scrollAmount;
-      
+      const newScrollLeft =
+        direction === "left"
+          ? categoryScrollRef.current.scrollLeft - scrollAmount
+          : categoryScrollRef.current.scrollLeft + scrollAmount;
+
       categoryScrollRef.current.scrollTo({
         left: newScrollLeft,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   };
@@ -295,8 +316,8 @@ export default function App() {
   };
 
   const generateMockAddress = (walletType: WalletType): string => {
-    const chars = '0123456789abcdef';
-    let address = '0x';
+    const chars = "0123456789abcdef";
+    let address = "0x";
     for (let i = 0; i < 40; i++) {
       address += chars[Math.floor(Math.random() * chars.length)];
     }
@@ -305,27 +326,27 @@ export default function App() {
 
   const generateMockEmail = (provider: SocialProvider): string => {
     const timestamp = Date.now();
-    return provider === "google" 
+    return provider === "google"
       ? `user${timestamp}@gmail.com`
       : `user${timestamp}@icloud.com`;
   };
 
   const handleWalletConnect = (walletType: WalletType) => {
     const walletAddress = generateMockAddress(walletType);
-    
+
     // Check for pending referral code
-    const referralCode = sessionStorage.getItem('pendingReferralCode');
+    const referralCode = sessionStorage.getItem("pendingReferralCode");
     let initialXP = mockUser.xp;
-    
+
     if (referralCode) {
       // Award 100 XP bonus for joining with referral code
       initialXP += 100;
-      toast.success('🎉 Referral bonus applied! +100 XP', {
-        description: 'Welcome to Dehouse of Oracles!'
+      toast.success("🎉 Referral bonus applied! +100 XP", {
+        description: "Welcome to Dehouse of Oracles!",
       });
-      sessionStorage.removeItem('pendingReferralCode');
+      sessionStorage.removeItem("pendingReferralCode");
     }
-    
+
     const newUser: User = {
       ...mockUser,
       walletAddress,
@@ -338,7 +359,7 @@ export default function App() {
     setUser(newUser);
     setWalletDialogOpen(false);
     toast.success(`Connected with ${walletType}!`);
-    
+
     // Navigate to pending destination if any
     if (pendingNavigation) {
       setCurrentPage(pendingNavigation);
@@ -348,20 +369,20 @@ export default function App() {
 
   const handleSocialConnect = (provider: SocialProvider) => {
     const email = generateMockEmail(provider);
-    
+
     // Check for pending referral code
-    const referralCode = sessionStorage.getItem('pendingReferralCode');
+    const referralCode = sessionStorage.getItem("pendingReferralCode");
     let initialXP = mockUser.xp;
-    
+
     if (referralCode) {
       // Award 100 XP bonus for joining with referral code
       initialXP += 100;
-      toast.success('🎉 Referral bonus applied! +100 XP', {
-        description: 'Welcome to Dehouse of Oracles!'
+      toast.success("🎉 Referral bonus applied! +100 XP", {
+        description: "Welcome to Dehouse of Oracles!",
       });
-      sessionStorage.removeItem('pendingReferralCode');
+      sessionStorage.removeItem("pendingReferralCode");
     }
-    
+
     const newUser: User = {
       ...mockUser,
       email,
@@ -374,7 +395,7 @@ export default function App() {
     setUser(newUser);
     setWalletDialogOpen(false);
     toast.success(`Connected with ${provider}!`);
-    
+
     // Navigate to pending destination if any
     if (pendingNavigation) {
       setCurrentPage(pendingNavigation);
@@ -396,7 +417,7 @@ export default function App() {
         onBack={() => {
           setSharedPredictionId(null);
           setCurrentPage("oracles");
-          window.history.pushState({}, '', '/');
+          window.history.pushState({}, "", "/");
         }}
       />
     );
@@ -413,7 +434,7 @@ export default function App() {
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         totalQuestionsAsked={totalQuestionsAsked}
-        onQuestionAsked={() => setTotalQuestionsAsked(prev => prev + 1)}
+        onQuestionAsked={() => setTotalQuestionsAsked((prev) => prev + 1)}
         user={user}
         onOpenWalletDialog={() => setWalletDialogOpen(true)}
         onNavigate={(page) => setCurrentPage(page)}
@@ -465,10 +486,7 @@ export default function App() {
           onOpenChange={setPrivacyDialogOpen}
         />
 
-        <TermsOfUse
-          open={termsDialogOpen}
-          onOpenChange={setTermsDialogOpen}
-        />
+        <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
 
         <Toaster />
       </div>
@@ -491,9 +509,9 @@ export default function App() {
           onOpenSettings={() => setCurrentPage("settings")}
         />
         <main className="container mx-auto px-4 py-6">
-          <Dashboard 
-            onNavigate={(page) => setCurrentPage(page)} 
-            user={user}
+          <Dashboard
+            onNavigate={(page) => setCurrentPage(page)}
+            user={user ?? mockUser}
             totalOracles={oracles.length}
           />
         </main>
@@ -513,10 +531,7 @@ export default function App() {
           onOpenChange={setPrivacyDialogOpen}
         />
 
-        <TermsOfUse
-          open={termsDialogOpen}
-          onOpenChange={setTermsDialogOpen}
-        />
+        <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
 
         <Toaster />
       </div>
@@ -561,10 +576,7 @@ export default function App() {
           onOpenChange={setPrivacyDialogOpen}
         />
 
-        <TermsOfUse
-          open={termsDialogOpen}
-          onOpenChange={setTermsDialogOpen}
-        />
+        <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
 
         <Toaster />
       </div>
@@ -574,9 +586,7 @@ export default function App() {
   if (currentPage === "settings") {
     return (
       <div className="min-h-screen bg-background">
-        <SettingsPage
-          onBack={() => setCurrentPage("dashboard")}
-        />
+        <SettingsPage onBack={() => setCurrentPage("dashboard")} />
 
         {/* Wallet Connect Dialog */}
         <WalletConnectDialog
@@ -593,10 +603,7 @@ export default function App() {
           onOpenChange={setPrivacyDialogOpen}
         />
 
-        <TermsOfUse
-          open={termsDialogOpen}
-          onOpenChange={setTermsDialogOpen}
-        />
+        <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
 
         <Toaster />
       </div>
@@ -646,10 +653,7 @@ export default function App() {
           onOpenChange={setPrivacyDialogOpen}
         />
 
-        <TermsOfUse
-          open={termsDialogOpen}
-          onOpenChange={setTermsDialogOpen}
-        />
+        <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
 
         <Toaster />
       </div>
@@ -690,10 +694,7 @@ export default function App() {
           onOpenChange={setPrivacyDialogOpen}
         />
 
-        <TermsOfUse
-          open={termsDialogOpen}
-          onOpenChange={setTermsDialogOpen}
-        />
+        <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
 
         <Toaster />
       </div>
@@ -711,7 +712,7 @@ export default function App() {
         onJoinHouse={handleJoinHouse}
         onSwitchHouse={handleSwitchHouse}
         onLeaveHouse={handleLeaveHouse}
-        user={user}
+        user={user ?? mockUser}
         houses={houses}
         houseMembers={houseMembers}
       />
@@ -740,7 +741,7 @@ export default function App() {
           setSharedPredictionId(null);
           setCurrentPage("oracles");
           // Clear the URL
-          window.history.pushState({}, '', '/');
+          window.history.pushState({}, "", "/");
         }}
       />
     );
@@ -765,7 +766,7 @@ export default function App() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {/* Hero Banner */}
-        <RotatingBanners />
+        <RotatingBanners onNavigate={(page) => setCurrentPage(page)} />
 
         {/* Hero Section */}
         <div className="mb-12 mt-8">
@@ -774,30 +775,35 @@ export default function App() {
               Welcome to the Future of AI-Powered Predictions
             </h2>
             <p className="text-muted-foreground text-lg">
-              Harness the collective intelligence of specialized AI oracles, each trained to master specific domains. 
-              From cryptocurrency to politics, technical analysis to fortune telling—our oracles deliver insights 
-              that combine cutting-edge AI with deep domain expertise.
+              Harness the collective intelligence of specialized AI oracles,
+              each trained to master specific domains. From cryptocurrency to
+              politics, technical analysis to fortune telling—our oracles
+              deliver insights that combine cutting-edge AI with deep domain
+              expertise.
             </p>
             <div className="grid sm:grid-cols-3 gap-6 mt-8">
               <div className="p-6 rounded-lg border border-border bg-card/50 backdrop-blur">
                 <div className="text-3xl mb-3">🤖</div>
                 <h3 className="mb-2">Specialized AI Agents</h3>
                 <p className="text-sm text-muted-foreground">
-                  Each oracle is fine-tuned for specific expertise, from market analysis to mystical insights
+                  Each oracle is fine-tuned for specific expertise, from market
+                  analysis to mystical insights
                 </p>
               </div>
               <div className="p-6 rounded-lg border border-border bg-card/50 backdrop-blur">
                 <div className="text-3xl mb-3">⚡</div>
                 <h3 className="mb-2">Real-Time Predictions</h3>
                 <p className="text-sm text-muted-foreground">
-                  Get instant, actionable insights powered by the latest AI models and data
+                  Get instant, actionable insights powered by the latest AI
+                  models and data
                 </p>
               </div>
               <div className="p-6 rounded-lg border border-border bg-card/50 backdrop-blur">
                 <div className="text-3xl mb-3">🎮</div>
                 <h3 className="mb-2">Gamified Experience</h3>
                 <p className="text-sm text-muted-foreground">
-                  Level up, join houses, complete quests, and earn rewards as you explore
+                  Level up, join houses, complete quests, and earn rewards as
+                  you explore
                 </p>
               </div>
             </div>
@@ -832,7 +838,7 @@ export default function App() {
               variant="ghost"
               size="icon"
               className="absolute left-0 top-1/2 z-10 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
-              onClick={() => scroll('left')}
+              onClick={() => scroll("left")}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -840,12 +846,14 @@ export default function App() {
             <div
               ref={categoryScrollRef}
               className="flex gap-2 overflow-x-auto scrollbar-hide px-10"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {categories.map((category) => (
                 <Button
                   key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
+                  variant={
+                    selectedCategory === category ? "default" : "outline"
+                  }
                   size="sm"
                   onClick={() => setSelectedCategory(category)}
                   className="whitespace-nowrap"
@@ -859,7 +867,7 @@ export default function App() {
               variant="ghost"
               size="icon"
               className="absolute right-0 top-1/2 z-10 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
-              onClick={() => scroll('right')}
+              onClick={() => scroll("right")}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -869,14 +877,15 @@ export default function App() {
         {/* Oracle Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredOracles.map((oracle) => (
-            <OracleCard
-              key={oracle.id}
-              oracle={oracle}
-              onClick={() => {
-                setSelectedOracle(oracle);
-                setCurrentPage("chat");
-              }}
-            />
+            <div key={oracle.id}>
+              <OracleCard
+                oracle={oracle}
+                onClick={() => {
+                  setSelectedOracle(oracle);
+                  setCurrentPage("chat");
+                }}
+              />
+            </div>
           ))}
         </div>
 
@@ -897,21 +906,30 @@ export default function App() {
             <div>
               <h3 className="mb-3">About</h3>
               <p className="text-sm text-muted-foreground">
-                Dehouse of Oracles - AI-powered prediction platform with specialized oracle agents.
+                Dehouse of Oracles - AI-powered prediction platform with
+                specialized oracle agents.
               </p>
             </div>
             <div>
               <h3 className="mb-3">Platform</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Total Consult Sessions: {platformStats.totalConsultSessions.toLocaleString()}</li>
-                <li>Total Predictions: {platformStats.totalPredictions.toLocaleString()}</li>
+                <li>
+                  Total Consult Sessions:{" "}
+                  {platformStats.totalConsultSessions.toLocaleString()}
+                </li>
+                <li>
+                  Total Predictions:{" "}
+                  {platformStats.totalPredictions.toLocaleString()}
+                </li>
                 <li>Platform Accuracy: {platformStats.accuracy}%</li>
               </ul>
             </div>
             <div>
               <h3 className="mb-3">Community</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Active Users: {(platformStats.activeUsers / 1000).toFixed(0)}K</li>
+                <li>
+                  Active Users: {(platformStats.activeUsers / 1000).toFixed(0)}K
+                </li>
                 <li>Houses: {platformStats.totalHouses}</li>
                 <li>Oracle Categories: 8</li>
               </ul>
@@ -920,16 +938,19 @@ export default function App() {
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  onClick={() => window.open('https://twitter.com/dehouseoracles', '_blank')}
+                  onClick={() =>
+                    window.open("https://twitter.com/dehouseoracles", "_blank")
+                  }
                 >
-                  <Twitter className="w-4 h-4" />
-                  X / Twitter
+                  <Twitter className="w-4 h-4" />X / Twitter
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  onClick={() => window.open('https://discord.gg/dehouseoracles', '_blank')}
+                  onClick={() =>
+                    window.open("https://discord.gg/dehouseoracles", "_blank")
+                  }
                 >
                   <MessageCircle className="w-4 h-4" />
                   Discord
@@ -958,13 +979,25 @@ export default function App() {
               </ul>
             </div>
           </div>
-          
+
           {/* Disclaimer Section */}
           <div className="mt-8 pt-6 border-t border-border">
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-yellow-600 dark:text-yellow-500 mb-2">⚠️ Important Disclaimer</h4>
+              <h4 className="text-sm font-semibold text-yellow-600 dark:text-yellow-500 mb-2">
+                ⚠️ Important Disclaimer
+              </h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                <strong>Do Your Own Research (DYOR).</strong> The information provided on this platform is for entertainment and informational purposes only and should not be considered financial, investment, or professional advice. Always consult with a qualified financial expert or professional advisor before making any investment decisions. Our platform aims to provide you with information, but you are solely responsible for your own financial investing decisions. We deny all liabilities for any losses, damages, or consequences arising from the use of this platform or reliance on any predictions, analyses, or information provided by our AI oracles.
+                <strong>Do Your Own Research (DYOR).</strong> The information
+                provided on this platform is for entertainment and informational
+                purposes only and should not be considered financial,
+                investment, or professional advice. Always consult with a
+                qualified financial expert or professional advisor before making
+                any investment decisions. Our platform aims to provide you with
+                information, but you are solely responsible for your own
+                financial investing decisions. We deny all liabilities for any
+                losses, damages, or consequences arising from the use of this
+                platform or reliance on any predictions, analyses, or
+                information provided by our AI oracles.
               </p>
             </div>
           </div>
@@ -986,10 +1019,7 @@ export default function App() {
         onOpenChange={setPrivacyDialogOpen}
       />
 
-      <TermsOfUse
-        open={termsDialogOpen}
-        onOpenChange={setTermsDialogOpen}
-      />
+      <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
 
       <Toaster />
     </div>

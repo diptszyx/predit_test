@@ -15,7 +15,6 @@ interface MainNavigationProps {
 export function MainNavigation({ currentPage, onNavigate, requiresAuth = false, user, mobile = false, onOpenWalletDialog, onSetPendingNavigation }: MainNavigationProps) {
   const handleNavigate = (page: string, requiresLogin: boolean = false) => {
     if (requiresLogin && !user) {
-      toast.info("Please connect your wallet to access Dashboard");
       // Set pending navigation so user goes to dashboard after login
       if (onSetPendingNavigation) {
         onSetPendingNavigation(page);
@@ -30,8 +29,8 @@ export function MainNavigation({ currentPage, onNavigate, requiresAuth = false, 
 
   const navItems = [
     {
-      id: "oracles",
-      label: "Oracles",
+      id: "aiAgents",
+      label: "AI Agents",
       icon: Home,
       requiresLogin: false,
     },
@@ -42,8 +41,8 @@ export function MainNavigation({ currentPage, onNavigate, requiresAuth = false, 
       requiresLogin: true,
     },
     {
-      id: "houses",
-      label: "Houses",
+      id: "leaderboard",
+      label: "Leaderboard",
       icon: Users,
       requiresLogin: false,
     },
@@ -96,9 +95,10 @@ export function MainNavigation({ currentPage, onNavigate, requiresAuth = false, 
             onClick={() => handleNavigate(item.id, item.requiresLogin)}
             className={`gap-2 ${
               isActive
-                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                ? "text-white hover:opacity-90"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent"
             }`}
+            style={isActive ? { backgroundColor: "#9810FA" } : undefined}
           >
             <Icon className="w-4 h-4" />
             {item.label}

@@ -13,7 +13,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
       <DialogContent className="sm:max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
               <FileText className="w-4 h-4 text-white" />
             </div>
             Terms of Use
@@ -1285,8 +1285,8 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 </p>
               </div>
 
-              <div className="p-6 rounded-xl bg-purple-500/10 border border-purple-500/30">
-                <p className="text-sm text-purple-600 dark:text-purple-400">
+              <div className="p-6 rounded-xl bg-blue-500/10 border border-blue-500/30">
+                <p className="text-sm text-blue-600 dark:text-blue-400">
                   <strong>🤖 AI LIMITATIONS:</strong> AI predictions are probabilistic and may be inaccurate, biased, or misleading. AI systems cannot account for unforeseen events or rapid changes. Different oracles may provide contradictory predictions. AI-generated content should NEVER be the sole basis for important decisions. Historical accuracy does not guarantee future performance.
                 </p>
               </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Moon, Sun } from "lucide-react";
 import logoIcon from "/logo.png";
 
 interface SharedPredictionPageProps {
@@ -12,9 +12,9 @@ interface SharedPredictionPageProps {
 interface PredictionData {
   question: string;
   answer: string;
-  oracleName: string;
-  oracleAvatar: string;
-  oracleEmoji: string;
+  aiAgentName: string;
+  aiAgentAvatar: string;
+  aiAgentEmoji: string;
   timestamp: string;
 }
 
@@ -25,6 +25,22 @@ export function SharedPredictionPage({
   const [predictionData, setPredictionData] = useState<PredictionData | null>(
     null
   );
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored) return stored === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  // Update theme
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     // Load prediction data from localStorage
@@ -69,12 +85,12 @@ export function SharedPredictionPage({
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10 blur-3xl scale-110"
           style={{
-            backgroundImage: `url(${predictionData.oracleAvatar})`,
+            backgroundImage: `url(${predictionData.aiAgentAvatar})`,
           }}
         />
         {/* Gradient overlays for better contrast */}
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-pink-600/5 to-blue-600/5" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-cyan-600/5 to-blue-600/5" />
       </div>
 
       {/* Header */}
@@ -84,17 +100,31 @@ export function SharedPredictionPage({
             <div className="flex items-center gap-3">
               <img
                 src={logoIcon}
-                alt="Dehouse of Oracles"
+                alt="Dehouse of Predictions"
                 className="w-8 h-8"
               />
-              <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Dehouse of Oracles
+              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                Dehouse of Predictions
               </span>
             </div>
-            <Button variant="ghost" size="sm" onClick={onBack}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Platform
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDarkMode(!darkMode)}
+                className="h-9 w-9"
+              >
+                {darkMode ? (
+                  <Sun className="w-4 h-4" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onBack}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Platform
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -104,34 +134,34 @@ export function SharedPredictionPage({
         <div className="mb-6 text-center">
           <h1 className="mb-2">Shared Prediction</h1>
           <p className="text-muted-foreground">
-            From {predictionData.oracleName} on{" "}
+            From {predictionData.aiAgentName} on{" "}
             {new Date(predictionData.timestamp).toLocaleDateString()}
           </p>
         </div>
 
-        {/* Oracle Avatar */}
+        {/* AI Agent Avatar */}
         <div className="mb-8 flex justify-center">
           <div className="relative">
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-purple-600/30 shadow-xl">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-600/30 shadow-xl">
               <img
-                src={predictionData.oracleAvatar}
-                alt={predictionData.oracleName}
+                src={predictionData.aiAgentAvatar}
+                alt={predictionData.aiAgentName}
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg">
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 shadow-lg">
               <span className="text-sm text-white">
-                {predictionData.oracleName}
+                {predictionData.aiAgentName}
               </span>
             </div>
           </div>
         </div>
 
         {/* Question Card */}
-        <Card className="mb-6 border-purple-600/30 bg-gradient-to-br from-purple-600/10 to-pink-600/10 backdrop-blur-sm shadow-xl">
+        <Card className="mb-6 border-blue-600/30 bg-gradient-to-br from-blue-600/10 to-cyan-600/10 backdrop-blur-sm shadow-xl">
           <CardContent className="p-6">
             <div className="flex items-start gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center flex-shrink-0 shadow-lg">
                 <span className="text-lg">❓</span>
               </div>
               <div className="flex-1">
@@ -147,11 +177,11 @@ export function SharedPredictionPage({
           <CardContent className="p-6">
             <div className="flex items-start gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                <span className="text-lg">{predictionData.oracleEmoji}</span>
+                <span className="text-lg">{predictionData.aiAgentEmoji}</span>
               </div>
               <div className="flex-1">
                 <h3 className="text-sm mb-2">
-                  {predictionData.oracleName}'s Prediction
+                  {predictionData.aiAgentName}'s Prediction
                 </h3>
                 <p className="leading-relaxed whitespace-pre-wrap">
                   {predictionData.answer}
@@ -162,16 +192,16 @@ export function SharedPredictionPage({
         </Card>
 
         {/* CTA Section */}
-        <Card className="border-border bg-gradient-to-br from-purple-600/10 via-pink-600/10 to-blue-600/10 backdrop-blur-sm shadow-xl">
+        <Card className="border-border bg-gradient-to-br from-blue-600/10 via-cyan-600/10 to-blue-600/10 backdrop-blur-sm shadow-xl">
           <CardContent className="p-8 text-center">
             <h3 className="mb-3">Want your own prediction?</h3>
             <p className="text-muted-foreground mb-6">
-              Join Dehouse of Oracles and chat with specialized AI oracle agents
-              for free!
+              Join Dehouse of Predictions and chat with specialized AI
+              prediction agents for free!
             </p>
             <Button
               size="lg"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white shadow-lg hover:shadow-purple-500/50 transition-shadow"
+              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90 text-white shadow-lg hover:shadow-blue-500/50 transition-shadow"
               onClick={onBack}
             >
               <ExternalLink className="w-4 h-4 mr-2" />

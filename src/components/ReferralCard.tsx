@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Users, Copy, CheckCircle, Gift, Zap, Trophy, Share2 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
+import { copyToClipboard } from "../lib/clipboardUtils";
 
 interface ReferralCardProps {
   user: {
@@ -34,52 +35,26 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
   const referredCount = user.referredFriends?.length || 0;
   const totalXPFromReferrals = (user.referredFriends || []).reduce((sum, friend) => sum + 500, 0); // 200 invite + 300 join = 500 per friend
 
-  const copyToClipboard = async (text?: string) => {
+  const handleCopyToClipboard = async (text?: string) => {
     const textToCopy = text || referralLink;
     
-    try {
-      // Try modern Clipboard API first
-      await navigator.clipboard.writeText(textToCopy);
+    const success = await copyToClipboard(textToCopy);
+    if (success) {
       setCopied(true);
       toast.success("Referral link copied to clipboard!", {
         description: "Share it with friends to earn XP!"
       });
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      // Fallback method for browsers that block Clipboard API
-      try {
-        const textArea = document.createElement('textarea');
-        textArea.value = textToCopy;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        
-        if (successful) {
-          setCopied(true);
-          toast.success("Referral link copied to clipboard!", {
-            description: "Share it with friends to earn XP!"
-          });
-          setTimeout(() => setCopied(false), 2000);
-        } else {
-          throw new Error('Copy command failed');
-        }
-      } catch (fallbackErr) {
-        // If both methods fail, show the text in a toast for manual copying
-        toast.error("Unable to copy automatically", {
-          description: "Please copy the link manually from the input field"
-        });
-      }
+    } else {
+      // If both methods fail, show the text in a toast for manual copying
+      toast.error("Unable to copy automatically", {
+        description: "Please copy the link manually from the input field"
+      });
     }
   };
 
   const shareViaTwitter = () => {
-    const text = `Join me on Dehouse of Oracles - Get AI predictions from specialized oracle agents! Use my code: ${referralCode}`;
+    const text = `Join me on Dehouse of Predictions - Get AI predictions from specialized prediction agents! Use my code: ${referralCode}`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(referralLink)}`;
     window.open(url, '_blank');
     
@@ -90,10 +65,10 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
   };
 
   return (
-    <Card className="border-border bg-gradient-to-br from-green-500/5 to-emerald-500/5">
+    <Card className="border-border bg-gradient-to-br from-blue-500/5 to-cyan-500/5">
       <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center gap-2">
-          <Gift className="w-5 h-5 text-green-500" />
+          <Gift className="w-5 h-5 text-blue-500" />
           Invite Friends & Earn XP
         </CardTitle>
       </CardHeader>
@@ -105,34 +80,34 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
             <p className="text-xs text-muted-foreground">Friends Referred</p>
           </div>
           <div className="p-4 rounded-lg bg-accent text-center">
-            <div className="text-2xl mb-1 text-green-400">{totalXPFromReferrals.toLocaleString()}</div>
+            <div className="text-2xl mb-1 text-blue-400">{totalXPFromReferrals.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">XP from Referrals</p>
           </div>
           <div className="p-4 rounded-lg bg-accent text-center">
-            <div className="text-2xl mb-1 text-purple-400">500</div>
+            <div className="text-2xl mb-1 text-blue-400">500</div>
             <p className="text-xs text-muted-foreground">XP per Referral</p>
           </div>
         </div>
 
         {/* How It Works */}
-        <div className="p-4 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+        <div className="p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
           <h4 className="text-sm font-medium mb-3">🎁 How Referral Rewards Work</h4>
           <div className="space-y-2">
             <div className="flex items-start gap-3 text-sm">
-              <Badge variant="outline" className="bg-green-500/10 border-green-500/30 shrink-0">
+              <Badge variant="outline" className="bg-blue-500/10 border-blue-500/30 shrink-0">
                 <Zap className="w-3 h-3 mr-1" />
                 +200 XP
               </Badge>
               <span className="text-muted-foreground">You get 200 XP instantly when you share your referral link</span>
             </div>
             <div className="flex items-start gap-3 text-sm">
-              <Badge variant="outline" className="bg-purple-500/10 border-purple-500/30 shrink-0">
+              <Badge variant="outline" className="bg-blue-500/10 border-blue-500/30 shrink-0">
                 <Trophy className="w-3 h-3 mr-1" />
                 +300 XP
               </Badge>
               <span className="text-muted-foreground">You get 300 XP bonus when your friend creates an account</span>
             </div>
-            <div className="flex items-center gap-2 text-sm mt-3 p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
+            <div className="flex items-center gap-2 text-sm mt-3 p-2 rounded bg-blue-500/10 border border-blue-500/20">
               <span className="text-lg">💎</span>
               <span className="text-muted-foreground">Your friend also gets <strong className="text-foreground">100 XP bonus</strong> when they sign up with your code!</span>
             </div>
@@ -155,7 +130,7 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
             >
               {copied ? (
                 <>
-                  <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                  <CheckCircle className="w-4 h-4 mr-2 text-blue-500" />
                   Copied!
                 </>
               ) : (
@@ -178,7 +153,7 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
               className="text-sm"
             />
             <Button
-              onClick={copyToClipboard}
+              onClick={handleCopyToClipboard}
               variant="outline"
               className="shrink-0"
             >
@@ -190,7 +165,7 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
         {/* Share Buttons */}
         <div className="flex gap-2">
           <Button
-            onClick={copyToClipboard}
+            onClick={handleCopyToClipboard}
             variant="outline"
             className="flex-1"
           >
@@ -211,7 +186,7 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
         {referredCount > 0 && (
           <div className="border-t border-border pt-4">
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-              <Users className="w-4 h-4 text-green-500" />
+              <Users className="w-4 h-4 text-blue-500" />
               Your Referred Friends ({referredCount})
             </h4>
             <div className="space-y-2 max-h-[200px] overflow-y-auto">
@@ -228,7 +203,7 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
                         className="w-8 h-8 rounded-full"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
                         <Users className="w-4 h-4 text-white" />
                       </div>
                     )}
@@ -239,7 +214,7 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
                       </div>
                     </div>
                   </div>
-                  <Badge variant="outline" className="bg-green-500/10 border-green-500/30">
+                  <Badge variant="outline" className="bg-blue-500/10 border-blue-500/30">
                     +500 XP
                   </Badge>
                 </div>
@@ -251,7 +226,7 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
         {/* No Referrals Yet */}
         {referredCount === 0 && (
           <div className="border-t border-border pt-4 text-center">
-            <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center opacity-20">
+            <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center opacity-20">
               <Users className="w-8 h-8 text-white" />
             </div>
             <p className="text-sm text-muted-foreground mb-2">

@@ -18,7 +18,7 @@ export function XPNotification({ xpGained, source, multiplier, show }: XPNotific
       exit={{ opacity: 0, y: -20, scale: 0.8 }}
       className="fixed top-20 right-4 z-50 pointer-events-none"
     >
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg shadow-2xl border border-purple-400 flex items-center gap-3">
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-lg shadow-2xl border border-blue-400 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
           <Sparkles className="w-5 h-5 text-white" />
         </div>
@@ -61,7 +61,7 @@ export function LevelUpNotification({ level, title, show }: LevelUpNotificationP
       <motion.div
         initial={{ y: 50 }}
         animate={{ y: 0 }}
-        className="relative bg-gradient-to-br from-purple-900 to-pink-900 p-8 rounded-2xl shadow-2xl border-2 border-yellow-400"
+        className="relative bg-gradient-to-br from-blue-900 to-cyan-900 p-8 rounded-2xl shadow-2xl border-2 border-yellow-400"
       >
         {/* Sparkles animation */}
         <div className="absolute inset-0 overflow-hidden rounded-2xl">

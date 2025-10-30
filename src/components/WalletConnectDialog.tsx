@@ -50,7 +50,7 @@ const wallets: WalletOption[] = [
     name: "Phantom",
     description: "Connect with Phantom wallet",
     icon: "👻",
-    color: "from-purple-600 to-pink-600",
+    color: "from-blue-600 to-cyan-600",
     supported: true,
   },
   {
@@ -190,7 +190,7 @@ export function WalletConnectDialog({ open, onOpenChange, onConnect, onSocialCon
             {step === 'connect' ? (
               <>
                 <Wallet className="w-5 h-5" />
-                Connect to Dehouse of Oracles
+                Connect to Dehouse of Predictions
               </>
             ) : (
               <>
@@ -219,14 +219,14 @@ export function WalletConnectDialog({ open, onOpenChange, onConnect, onSocialCon
                   onClick={() => handleSocialConnect(social.id)}
                   disabled={isConnecting}
                   className={`w-full p-3 rounded-lg border-2 transition-all text-left ${social.color} ${
-                    isConnecting ? "border-purple-500 bg-accent" : "border-border"
+                    isConnecting ? "border-blue-500 bg-accent" : "border-border"
                   }`}
                 >
                   <div className="flex items-center justify-center gap-3">
                     <span className="text-2xl">{social.icon}</span>
                     <span className="text-sm flex-1">{social.name}</span>
                     {isConnecting && (
-                      <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
                     )}
                   </div>
                 </button>
@@ -254,9 +254,9 @@ export function WalletConnectDialog({ open, onOpenChange, onConnect, onSocialCon
                   disabled={!wallet.supported || isConnecting}
                   className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
                     wallet.supported
-                      ? "border-border hover:border-purple-500 hover:bg-accent cursor-pointer"
+                      ? "border-border hover:border-blue-500 hover:bg-accent cursor-pointer"
                       : "border-border opacity-50 cursor-not-allowed"
-                  } ${isConnecting ? "border-purple-500 bg-accent" : ""}`}
+                  } ${isConnecting ? "border-blue-500 bg-accent" : ""}`}
                 >
                   <div className="flex items-center gap-4">
                     {/* Wallet Icon */}
@@ -287,7 +287,7 @@ export function WalletConnectDialog({ open, onOpenChange, onConnect, onSocialCon
 
                     {/* Loading State */}
                     {isConnecting && (
-                      <Loader2 className="w-5 h-5 animate-spin text-purple-500" />
+                      <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
                     )}
                   </div>
                 </button>
@@ -308,14 +308,14 @@ export function WalletConnectDialog({ open, onOpenChange, onConnect, onSocialCon
               By continuing, you agree to our{" "}
               <button
                 onClick={onOpenPrivacy}
-                className="text-purple-500 hover:underline"
+                className="text-blue-500 hover:underline"
               >
                 Privacy Policy
               </button>
               {" "}and{" "}
               <button
                 onClick={onOpenTerms}
-                className="text-purple-500 hover:underline"
+                className="text-blue-500 hover:underline"
               >
                 Terms of Use
               </button>
@@ -331,7 +331,7 @@ export function WalletConnectDialog({ open, onOpenChange, onConnect, onSocialCon
                 href="https://metamask.io"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-purple-500 hover:underline"
+                className="text-blue-500 hover:underline"
               >
                 Learn how to get started
               </a>
@@ -351,16 +351,16 @@ export function WalletConnectDialog({ open, onOpenChange, onConnect, onSocialCon
                   <img 
                     src={profileData.avatar} 
                     alt="Avatar preview" 
-                    className="w-20 h-20 rounded-full object-cover border-2 border-purple-500"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-blue-500"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
                     <User className="w-10 h-10 text-white" />
                   </div>
                 )}
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-0 right-0 p-1.5 rounded-full bg-purple-600 hover:bg-purple-700 transition-colors"
+                  className="absolute bottom-0 right-0 p-1.5 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors"
                 >
                   <Camera className="w-3.5 h-3.5 text-white" />
                 </button>
@@ -432,8 +432,8 @@ export function WalletConnectDialog({ open, onOpenChange, onConnect, onSocialCon
           <Separator />
 
           {/* Info Banner */}
-          <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
-            <p className="text-xs text-purple-400">
+          <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+            <p className="text-xs text-blue-400">
               🔒 <strong>Privacy First:</strong> Your personal information is encrypted and never shared with third parties. You can update or remove this information anytime in Settings.
             </p>
           </div>

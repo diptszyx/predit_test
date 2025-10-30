@@ -16,14 +16,11 @@ export function TopBar({ darkMode, onToggleDarkMode }: TopBarProps) {
       <div className="flex items-center gap-4 p-4">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-emerald-600 flex items-center justify-center shadow-lg">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center">
+            <span className="text-xl">🔮</span>
           </div>
           <div className="hidden md:block">
-            <div className="flex items-baseline gap-1.5">
-              <h1 className="leading-none">Dehouse</h1>
-              <span className="text-xs text-muted-foreground">of Oracles</span>
-            </div>
+            <h1 className="leading-none">Dehouse of Predictions</h1>
           </div>
         </div>
 

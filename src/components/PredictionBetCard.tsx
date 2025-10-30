@@ -161,7 +161,7 @@ export const oracleBets: Record<string, PredictionBet[]> = {
     {
       id: "politics-4",
       icon: Users,
-      iconColor: "bg-gradient-to-br from-violet-600 to-purple-600",
+      iconColor: "bg-gradient-to-br from-blue-600 to-cyan-600",
       title: "Supreme Court ruling on abortion by year end?",
       date: "12/31 11:59 PM UTC",
       currentPrice: "56%",
@@ -249,7 +249,7 @@ export const oracleBets: Record<string, PredictionBet[]> = {
     {
       id: "ent-5",
       icon: Star,
-      iconColor: "bg-gradient-to-br from-pink-600 to-purple-600",
+      iconColor: "bg-gradient-to-br from-pink-600 to-cyan-600",
       title: "Beyoncé Renaissance tour extended to 2026?",
       date: "12/01 11:59 PM UTC",
       currentPrice: "56%",
@@ -961,7 +961,7 @@ export const oracleBets: Record<string, PredictionBet[]> = {
     {
       id: "fashion-1",
       icon: Shirt,
-      iconColor: "bg-gradient-to-br from-violet-600 to-purple-600",
+      iconColor: "bg-gradient-to-br from-blue-600 to-cyan-600",
       title: "Cargo pants trend peaks in 2026?",
       date: "12/31 11:59 PM UTC",
       currentPrice: "88%",

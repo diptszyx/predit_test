@@ -8,9 +8,9 @@ interface SharePredictionDialogProps {
   onOpenChange: (open: boolean) => void;
   question: string;
   answer: string;
-  oracleName: string;
-  oracleAvatar: string;
-  oracleEmoji: string;
+  aiAgentName: string;
+  aiAgentAvatar: string;
+  aiAgentEmoji: string;
 }
 
 export function SharePredictionDialog({
@@ -18,12 +18,12 @@ export function SharePredictionDialog({
   onOpenChange,
   question,
   answer,
-  oracleName,
-  oracleAvatar,
-  oracleEmoji,
+  aiAgentName,
+  aiAgentAvatar,
+  aiAgentEmoji,
 }: SharePredictionDialogProps) {
   // Generate a unique ID for this prediction
-  const predictionId = btoa(`${oracleName}-${Date.now()}`).replace(/[/+=]/g, '');
+  const predictionId = btoa(`${aiAgentName}-${Date.now()}`).replace(/[/+=]/g, '');
   
   // Create the shareable URL
   const shareUrl = `${window.location.origin}/prediction/${predictionId}`;
@@ -31,7 +31,7 @@ export function SharePredictionDialog({
   console.log('SharePredictionDialog rendered');
   console.log('Question:', question);
   console.log('Answer:', answer);
-  console.log('Oracle:', oracleName);
+  console.log('AI Agent:', aiAgentName);
   console.log('Generated URL:', shareUrl);
   
   // Store prediction data in localStorage for the shared page
@@ -39,9 +39,9 @@ export function SharePredictionDialog({
     const predictionData = {
       question,
       answer,
-      oracleName,
-      oracleAvatar,
-      oracleEmoji,
+      aiAgentName,
+      aiAgentAvatar,
+      aiAgentEmoji,
       timestamp: new Date().toISOString(),
     };
     localStorage.setItem(`prediction-${predictionId}`, JSON.stringify(predictionData));
@@ -175,7 +175,7 @@ export function SharePredictionDialog({
 
   const handleTwitterShare = () => {
     storePredictionData();
-    const text = `Check out this prediction from ${oracleName} on Dehouse of Oracles! 🔮`;
+    const text = `Check out this prediction from ${aiAgentName} on Dehouse of Predictions! 🔮`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(url, '_blank');
   };
@@ -188,7 +188,7 @@ export function SharePredictionDialog({
 
   const handleRedditShare = () => {
     storePredictionData();
-    const title = `Prediction from ${oracleName} on Dehouse of Oracles`;
+    const title = `Prediction from ${aiAgentName} on Dehouse of Predictions`;
     const url = `https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(title)}`;
     window.open(url, '_blank');
   };

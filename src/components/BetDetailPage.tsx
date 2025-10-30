@@ -451,7 +451,7 @@ export function BetDetailPage({ betId, onBack, user, userCreatedMarkets = [] }: 
                     ].map((activity, i) => (
                       <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-xs">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center text-xs">
                             {activity.user.slice(0, 2)}
                           </div>
                           <div>

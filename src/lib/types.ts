@@ -1,6 +1,6 @@
-// Core type definitions for Dehouse of Oracles
+// Core type definitions for Dehouse of Predictions
 
-export interface Oracle {
+export interface AIAgent {
   id: string;
   name: string;
   emoji: string;
@@ -8,7 +8,7 @@ export interface Oracle {
   description: string;
   gradient: string;
   category: string;
-  accuracy: string;
+  rating: string;
   likes: string;
   specialty: string;
   tags: string[];
@@ -16,8 +16,7 @@ export interface Oracle {
   bgColor: string;
   level?: number;
   xp?: number;
-  tier?: 'free' | 'premium' | 'elite';
-  house?: string;
+  tier?: "free" | "premium" | "elite";
   consultSessions?: string;
 }
 
@@ -27,76 +26,55 @@ export interface User {
   avatar: string;
   level: number;
   xp: number;
-  house?: string;
-  houseRole?: 'member' | 'officer' | 'leader'; // House role based on level (20-24: officer, 25+: leader)
-  houseSwitchesUsed?: number; // Track number of house switches (max 3 before Nov 20)
-  dailyKicksUsed?: number; // Track member kicks used today (max 5/day for Officers & Leaders)
-  dailyKicksResetDate?: string; // Date when daily kicks were last reset
   streak: number;
   totalPredictions: number;
   accurateRate: number;
-  oraclesVisited: number;
-  achievements: string[];
+  aiAgentsVisited: number;
   walletAddress?: string;
-  walletType?: 'metamask' | 'phantom' | 'backpack';
-  socialProvider?: 'google' | 'apple'; // Social login provider
-  email?: string; // User's email address for account recovery
-  phone?: string; // User's phone number for 2FA and SMS alerts
-  subscriptionTier?: 'free' | 'master';
-  visitedOracles?: string[]; // Track which oracles have been visited
-  dailyPredictionsUsed?: number; // Track predictions used today
-  dailyPredictionsResetDate?: string; // Date when daily predictions were last reset
-  dailyLinesUsed?: number; // Track text lines sent today (free tier: 100/day limit)
-  dailyLinesResetDate?: string; // Date when daily lines were last reset
-  referralCode?: string; // User's unique referral code
-  referredBy?: string; // Referral code of user who invited them
+  walletType?: "metamask" | "phantom" | "backpack";
+  socialProvider?: "google" | "apple";
+  email?: string;
+  phone?: string;
+  subscriptionTier?: "free" | "master";
+  visitedAIAgents?: string[];
+  dailyPredictionsUsed?: number;
+  dailyPredictionsResetDate?: string;
+  dailyLinesUsed?: number;
+  dailyLinesResetDate?: string;
+  referralCode?: string;
+  referredBy?: string;
   referredFriends?: Array<{
     username: string;
     joinedAt: string;
     xpEarned: number;
     avatar?: string;
-  }>; // List of friends referred by this user
+  }>;
+  dailyQuestProgress?: {
+    visitAIAgents: number;
+    makePredictions: number;
+    shareContent: number;
+    lastResetDate: string;
+  };
+  predictionHistory?: Array<{
+    id: string;
+    question: string;
+    aiAgentName: string;
+    timestamp: string;
+  }>;
 }
 
 export interface Prediction {
   id: string;
-  oracleId: string;
+  aiAgentId: string;
   userId: string;
   question: string;
   prediction: string;
   confidence: number;
-  outcome?: 'correct' | 'incorrect' | 'pending';
+  outcome?: "correct" | "incorrect" | "pending";
   stake?: number;
   reward?: number;
   timestamp: Date;
   category: string;
-}
-
-export interface House {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  description: string;
-  memberCount: number;
-  totalXP: number;
-  rank: number;
-  quest?: {
-    title: string;
-    description: string;
-    reward: string;
-  };
-}
-
-export interface HouseMember {
-  walletAddress: string;
-  username: string;
-  xpEarned: number;
-  currentMultiplier: number;
-  rank: number;
-  avatar?: string;
-  level?: number;
-  role?: 'member' | 'officer' | 'leader'; // Automatically assigned based on level
 }
 
 export interface Quest {
@@ -130,7 +108,7 @@ export interface PredictionMarket {
   endDate: Date;
   totalStaked: number;
   options: MarketOption[];
-  status: 'active' | 'closed' | 'resolved';
+  status: "active" | "closed" | "resolved";
 }
 
 export interface MarketOption {

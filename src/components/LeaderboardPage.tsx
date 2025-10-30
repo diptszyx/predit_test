@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Trophy, Medal, Crown, Star } from "lucide-react";
-import { getLevelTitle } from "../lib/xpSystem";
+import { Button } from "./ui/button";
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -45,6 +46,7 @@ const generateLeaderboard = (currentUser: any) => {
 };
 
 export function LeaderboardPage({ user }: LeaderboardPageProps) {
+  const [sortBy, setSortBy] = useState<"xp" | "level">("xp");
   const leaderboard = generateLeaderboard(user);
   
   // Determine user's rank based on their XP
@@ -80,66 +82,52 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
     };
   }
   
-  const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Crown className="w-5 h-5 text-yellow-500" />;
-    if (rank === 2) return <Medal className="w-5 h-5 text-gray-400" />;
-    if (rank === 3) return <Medal className="w-5 h-5 text-amber-600" />;
-    return null;
-  };
+  // Sort leaderboard based on selected option
+  const sortedLeaderboard = [...leaderboard].sort((a, b) => {
+    if (sortBy === "xp") {
+      return b.xp - a.xp;
+    } else {
+      // Sort by level (descending), then by XP if levels are equal
+      if (b.level !== a.level) {
+        return b.level - a.level;
+      }
+      return b.xp - a.xp;
+    }
+  });
+  
+  // Re-assign ranks based on sort
+  sortedLeaderboard.forEach((entry, index) => {
+    entry.rank = index + 1;
+  });
   
   const getRankBadge = (rank: number) => {
-    if (rank === 1) return "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white";
-    if (rank === 2) return "bg-gradient-to-r from-gray-400 to-gray-500 text-white";
-    if (rank === 3) return "bg-gradient-to-r from-amber-600 to-amber-700 text-white";
-    if (rank <= 10) return "bg-purple-500/20 border-purple-500/30 text-purple-400";
+    if (rank === 1) return "bg-primary text-primary-foreground border-primary";
+    if (rank === 2) return "bg-muted-foreground/20 border-muted-foreground/30";
+    if (rank === 3) return "bg-muted-foreground/10 border-muted-foreground/20";
+    if (rank <= 10) return "bg-primary/10 border-primary/30";
     return "";
   };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 mb-6">
-          <Trophy className="w-4 h-4 text-yellow-400" />
-          <span className="text-sm text-yellow-400">Top XP Earners • Season 1</span>
-        </div>
-        <h1 className="text-4xl md:text-5xl mb-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent">
-          XP Leaderboard
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Compete for the top spot and earn bragging rights as a legendary Summoner
-        </p>
-      </div>
-
       {/* User's Current Standing */}
-      <Card className="border-purple-500/30 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
+      <Card className="border-border">
         <CardContent className="p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
-                <Star className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Your Current Rank</p>
-                <h3 className="text-2xl">
-                  {userRank <= 100 ? `#${userRank}` : `#${userRank}+`}
-                </h3>
-              </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Your Current Rank</p>
+              <h3 className="text-2xl">
+                {userRank <= 100 ? `#${userRank}` : `#${userRank}+`}
+              </h3>
             </div>
             <div className="flex items-center gap-6">
               <div>
-                <p className="text-sm text-muted-foreground">Your XP</p>
+                <p className="text-sm text-muted-foreground mb-1">Your XP</p>
                 <p className="text-lg">{userXP.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Your Level</p>
+                <p className="text-sm text-muted-foreground mb-1">Your Level</p>
                 <p className="text-lg">Level {userLevel}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Level Title</p>
-                <Badge variant="outline" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
-                  {getLevelTitle(userLevel)}
-                </Badge>
               </div>
             </div>
           </div>
@@ -149,10 +137,28 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
       {/* Leaderboard Table */}
       <Card className="border-border">
         <CardHeader className="border-b border-border">
-          <CardTitle className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-500" />
-            Top 100 Summoners
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Top 100 Players</CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Sort by:</span>
+              <div className="flex gap-1">
+                <Button
+                  variant={sortBy === "xp" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSortBy("xp")}
+                >
+                  XP Earned
+                </Button>
+                <Button
+                  variant={sortBy === "level" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSortBy("level")}
+                >
+                  Level
+                </Button>
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -160,28 +166,24 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-20">Rank</TableHead>
-                  <TableHead>Summoner</TableHead>
+                  <TableHead>Player</TableHead>
                   <TableHead className="text-right">XP Earned</TableHead>
                   <TableHead className="text-right">Level</TableHead>
-                  <TableHead className="text-right">Level Title</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {leaderboard.map((entry) => (
+                {sortedLeaderboard.map((entry, index) => (
                   <TableRow 
-                    key={entry.rank}
-                    className={entry.isCurrentUser ? "bg-purple-500/10 border-purple-500/30" : ""}
+                    key={`${entry.address}-${index}`}
+                    className={entry.isCurrentUser ? "bg-primary/5 border-primary/20" : ""}
                   >
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getRankIcon(entry.rank)}
-                        <Badge 
-                          variant="outline" 
-                          className={getRankBadge(entry.rank)}
-                        >
-                          #{entry.rank}
-                        </Badge>
-                      </div>
+                      <Badge 
+                        variant="outline" 
+                        className={getRankBadge(entry.rank)}
+                      >
+                        #{entry.rank}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -195,12 +197,7 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
                       {entry.xp.toLocaleString()} XP
                     </TableCell>
                     <TableCell className="text-right">
-                      Level {entry.level}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant="outline" className="text-xs">
-                        {getLevelTitle(entry.level)}
-                      </Badge>
+                      Lvl {entry.level}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -209,11 +206,11 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
                 {!isUserInTop100 && (
                   <>
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-2">
+                      <TableCell colSpan={4} className="text-center py-2">
                         <div className="border-t border-dashed border-border"></div>
                       </TableCell>
                     </TableRow>
-                    <TableRow className="bg-purple-500/10 border-purple-500/30">
+                    <TableRow className="bg-blue-500/10 border-blue-500/30">
                       <TableCell>
                         <Badge variant="outline">
                           #{userRank}+
@@ -231,27 +228,12 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
                       <TableCell className="text-right">
                         Level {userLevel}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Badge variant="outline" className="text-xs">
-                          {getLevelTitle(userLevel)}
-                        </Badge>
-                      </TableCell>
                     </TableRow>
                   </>
                 )}
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Info Card */}
-      <Card className="border-blue-500/30 bg-gradient-to-r from-blue-500/5 to-cyan-500/5">
-        <CardContent className="p-4">
-          <p className="text-sm text-muted-foreground">
-            <strong>Note:</strong> Rankings are updated in real-time. Keep earning XP through oracle consultations, 
-            daily quests, and house activities to climb the leaderboard. Season 1 ends November 30, 2025.
-          </p>
         </CardContent>
       </Card>
     </div>

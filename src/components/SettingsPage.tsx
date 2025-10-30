@@ -1,37 +1,73 @@
 import { useState, useRef } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
-import { Switch } from "./ui/switch";
-import { Slider } from "./ui/slider";
 import { Badge } from "./ui/badge";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
-import { ArrowLeft, Bell, Zap, Filter, Link as LinkIcon, Save, User, Camera, Mail, Phone, Edit2, Check } from "lucide-react";
+import { Progress } from "./ui/progress";
+import {
+  ArrowLeft,
+  Save,
+  User,
+  Camera,
+  Mail,
+  Phone,
+  Edit2,
+  Check,
+  Flame,
+  Star,
+  TrendingUp,
+  Crown,
+  Sparkles,
+  Infinity,
+  Lock,
+  Zap,
+} from "lucide-react";
 import { Separator } from "./ui/separator";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
+import { ReferralCard } from "./ReferralCard";
+import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
+import { mockUser } from "../lib/mockData";
+import {
+  getXPForNextLevel,
+  getXPForCurrentLevel,
+  getLevelProgress,
+  getSubscriptionMultiplier,
+  getStreakMultiplier,
+} from "../lib/xpSystem";
 
 interface SettingsPageProps {
   onBack: () => void;
+  user?: typeof mockUser;
 }
 
-export function SettingsPage({ onBack }: SettingsPageProps) {
+export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   // Profile Settings
-  const [avatar, setAvatar] = useState('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80');
-  const [email, setEmail] = useState('oracle.seeker@example.com');
-  const [phone, setPhone] = useState('+1 (555) 123-4567');
+  const [avatar, setAvatar] = useState(
+    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+  );
+  const [nickname, setNickname] = useState("Oracle Seeker");
+  const [email, setEmail] = useState("oracle.seeker@example.com");
+  const [phone, setPhone] = useState("+1 (555) 123-4567");
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Oracle Preferences
-  const [politicsEnabled, setPoliticsEnabled] = useState(true);
-  const [economicsEnabled, setEconomicsEnabled] = useState(true);
-  const [newsVolume, setNewsVolume] = useState([70]);
-  const [highAlertMode, setHighAlertMode] = useState(false);
-  const [sentimentAnalysis, setSentimentAnalysis] = useState(true);
-  const [predictiveStrategies, setPredictiveStrategies] = useState(true);
-  const [polymarketConnected, setPolymarketConnected] = useState(false);
-  const [notifications, setNotifications] = useState(true);
+  // XP and Level calculations
+  const xpForCurrentLevel = getXPForCurrentLevel(user.level);
+  const xpForNextLevel = getXPForNextLevel(user.level);
+  const xpProgress = getLevelProgress(user.xp, user.level);
+  const xpIntoLevel = user.xp - xpForCurrentLevel;
+  const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
+  const subscriptionMult = getSubscriptionMultiplier(
+    user.subscriptionTier || "free"
+  );
+  const streakMult = getStreakMultiplier(user.streak);
+  const totalMult = subscriptionMult * streakMult;
+
+  // Subscription Dialog
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,7 +76,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
         toast.error("File size must be less than 5MB");
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatar(reader.result as string);
@@ -68,32 +104,38 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
     toast.success("Phone number updated successfully");
   };
 
+  const handleSaveNickname = () => {
+    if (!nickname || nickname.trim().length === 0) {
+      toast.error("Please enter a nickname");
+      return;
+    }
+    if (nickname.length > 30) {
+      toast.error("Nickname must be less than 30 characters");
+      return;
+    }
+    setIsEditingNickname(false);
+    toast.success("Nickname updated successfully");
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto p-4">
-          <Button variant="ghost" onClick={onBack} className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
+      <div className="max-w-4xl mx-auto p-4 lg:p-6 space-y-6">
+        {/* Page Header */}
+        <div>
           <h1>Settings & Customization</h1>
           <p className="text-sm text-muted-foreground">
             Tailor your feed for optimal Polymarket trading insights
           </p>
         </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto p-4 lg:p-6 space-y-6">
         {/* Profile Settings */}
         <Card className="border-border bg-card">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <User className="w-5 h-5 text-purple-400" />
+              <User className="w-5 h-5 text-blue-400" />
               <h3>Profile Settings</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-6">
-              Manage your avatar, email, and phone number
+              Manage your nickname, avatar, email, and phone number
             </p>
 
             <div className="space-y-6">
@@ -102,19 +144,41 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                 <Label className="text-sm mb-3 block">Profile Avatar</Label>
                 <div className="flex items-center gap-6">
                   <div className="relative">
-                    <img 
-                      src={avatar} 
-                      alt="Profile avatar" 
-                      className="w-24 h-24 rounded-full object-cover border-2 border-purple-500"
+                    <img
+                      src={avatar}
+                      alt="Profile avatar"
+                      className="w-24 h-24 rounded-full object-cover border-2 border-blue-500"
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-0 right-0 p-2 rounded-full bg-purple-600 hover:bg-purple-700 transition-colors shadow-lg"
+                      className="absolute bottom-0 right-0 p-2 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors shadow-lg"
                     >
                       <Camera className="w-4 h-4 text-white" />
                     </button>
                   </div>
                   <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge
+                        variant="outline"
+                        className={
+                          user.subscriptionTier === "master"
+                            ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50"
+                            : "bg-muted border-border"
+                        }
+                      >
+                        {user.subscriptionTier === "master" ? (
+                          <>
+                            <Crown className="w-3 h-3 mr-1" />
+                            Pro
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            Basic
+                          </>
+                        )}
+                      </Badge>
+                    </div>
                     <Button
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
@@ -138,9 +202,70 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
               <Separator />
 
+              {/* Nickname Section */}
+              <div className="space-y-3">
+                <Label
+                  htmlFor="nickname"
+                  className="text-sm flex items-center gap-2"
+                >
+                  <User className="w-4 h-4" />
+                  Nickname
+                </Label>
+                <div className="flex gap-3">
+                  <Input
+                    id="nickname"
+                    type="text"
+                    placeholder="Enter your nickname"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    disabled={!isEditingNickname}
+                    className={`flex-1 ${
+                      !isEditingNickname ? "bg-accent" : ""
+                    }`}
+                    maxLength={30}
+                  />
+                  {!isEditingNickname ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditingNickname(true)}
+                    >
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditingNickname(false);
+                          setNickname("Oracle Seeker");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSaveNickname}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Save
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Your display name shown to other users (max 30 characters)
+                </p>
+              </div>
+
+              <Separator />
+
               {/* Email Section */}
               <div className="space-y-3">
-                <Label htmlFor="email" className="text-sm flex items-center gap-2">
+                <Label
+                  htmlFor="email"
+                  className="text-sm flex items-center gap-2"
+                >
                   <Mail className="w-4 h-4" />
                   Email Address
                 </Label>
@@ -152,7 +277,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={!isEditingEmail}
-                    className={`flex-1 ${!isEditingEmail ? 'bg-accent' : ''}`}
+                    className={`flex-1 ${!isEditingEmail ? "bg-accent" : ""}`}
                   />
                   {!isEditingEmail ? (
                     <Button
@@ -168,14 +293,14 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                         variant="outline"
                         onClick={() => {
                           setIsEditingEmail(false);
-                          setEmail('oracle.seeker@example.com');
+                          setEmail("oracle.seeker@example.com");
                         }}
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleSaveEmail}
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className="bg-blue-600 hover:bg-blue-700"
                       >
                         <Check className="w-4 h-4 mr-2" />
                         Save
@@ -190,7 +315,10 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
 
               {/* Phone Section */}
               <div className="space-y-3">
-                <Label htmlFor="phone" className="text-sm flex items-center gap-2">
+                <Label
+                  htmlFor="phone"
+                  className="text-sm flex items-center gap-2"
+                >
                   <Phone className="w-4 h-4" />
                   Phone Number
                 </Label>
@@ -202,7 +330,7 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={!isEditingPhone}
-                    className={`flex-1 ${!isEditingPhone ? 'bg-accent' : ''}`}
+                    className={`flex-1 ${!isEditingPhone ? "bg-accent" : ""}`}
                   />
                   {!isEditingPhone ? (
                     <Button
@@ -218,14 +346,14 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                         variant="outline"
                         onClick={() => {
                           setIsEditingPhone(false);
-                          setPhone('+1 (555) 123-4567');
+                          setPhone("+1 (555) 123-4567");
                         }}
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleSavePhone}
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className="bg-blue-600 hover:bg-blue-700"
                       >
                         <Check className="w-4 h-4 mr-2" />
                         Save
@@ -239,280 +367,339 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
               </div>
 
               {/* Privacy Note */}
-              <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                <p className="text-xs text-purple-400">
-                  🔒 <strong>Privacy First:</strong> Your personal information is encrypted and never shared with third parties. You can remove this information anytime.
+              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                <p className="text-xs text-blue-400">
+                  🔒 <strong>Privacy First:</strong> Your personal information
+                  is encrypted and never shared with third parties. You can
+                  remove this information anytime.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Oracle Preferences */}
+        {/* Subscription Management */}
         <Card className="border-border bg-card">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Filter className="w-5 h-5 text-blue-400" />
-              <h3>Oracle Preferences</h3>
+              <Crown className="w-5 h-5 text-blue-400" />
+              <h3>Subscription</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-6">
-              Enable or disable specific AI Oracles to customize your news feed
+              Manage your subscription and unlock premium features
             </p>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-accent rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
-                    <span className="text-xl">🏛️</span>
-                  </div>
-                  <div>
-                    <Label>Politics Oracle</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Elections, geopolitics, policy analysis
-                    </p>
-                  </div>
-                </div>
-                <Switch checked={politicsEnabled} onCheckedChange={setPoliticsEnabled} />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-accent rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center">
-                    <span className="text-xl">📊</span>
-                  </div>
-                  <div>
-                    <Label>Economics Oracle</Label>
-                    <p className="text-xs text-muted-foreground">
-                      Market trends, Fed rates, economic indicators
-                    </p>
-                  </div>
-                </div>
-                <Switch checked={economicsEnabled} onCheckedChange={setEconomicsEnabled} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* News Volume Control */}
-        <Card className="border-border bg-card">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="w-5 h-5 text-yellow-400" />
-              <h3>News Volume</h3>
-            </div>
-            <p className="text-sm text-muted-foreground mb-6">
-              Control how much news you receive and set alert preferences
-            </p>
-
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <Label>Feed Intensity</Label>
-                  <Badge variant="outline">{newsVolume[0]}%</Badge>
-                </div>
-                <Slider
-                  value={newsVolume}
-                  onValueChange={setNewsVolume}
-                  max={100}
-                  step={10}
-                  className="mb-2"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Minimal</span>
-                  <span>Moderate</span>
-                  <span>Maximum</span>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between p-4 bg-accent rounded-lg">
-                <div>
-                  <Label>High Alert Mode</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Get instant notifications for breaking news
-                  </p>
-                </div>
-                <Switch checked={highAlertMode} onCheckedChange={setHighAlertMode} />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-accent rounded-lg">
-                <div>
-                  <Label>Push Notifications</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Receive real-time alerts for market-moving events
-                  </p>
-                </div>
-                <Switch checked={notifications} onCheckedChange={setNotifications} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* AI Analysis Preferences */}
-        <Card className="border-border bg-card">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="w-5 h-5 text-purple-400" />
-              <h3>AI Analysis Focus</h3>
-            </div>
-            <p className="text-sm text-muted-foreground mb-6">
-              Choose which AI capabilities to emphasize in your feed
-            </p>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-accent rounded-lg">
-                <div>
-                  <Label>Sentiment Analysis</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Bullish/bearish indicators on every article
-                  </p>
-                </div>
-                <Switch checked={sentimentAnalysis} onCheckedChange={setSentimentAnalysis} />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-accent rounded-lg">
-                <div>
-                  <Label>Predictive Strategies</Label>
-                  <p className="text-xs text-muted-foreground">
-                    AI-generated betting recommendations
-                  </p>
-                </div>
-                <Switch checked={predictiveStrategies} onCheckedChange={setPredictiveStrategies} />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-accent rounded-lg">
-                <div>
-                  <Label>Ripple Effect Analysis</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Cross-market impact predictions
-                  </p>
-                </div>
-                <Switch checked={true} disabled />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Polymarket Integration */}
-        <Card className="border-border bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border-emerald-500/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <LinkIcon className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-emerald-400">Polymarket Integration</h3>
-            </div>
-            <p className="text-sm text-muted-foreground mb-6">
-              Connect your Polymarket wallet to auto-filter news based on your active bets
-            </p>
-
-            {!polymarketConnected ? (
+            {user.subscriptionTier === "master" ? (
+              /* Pro User View */
               <div className="space-y-4">
-                <div className="p-4 bg-card/50 rounded-lg border border-border">
-                  <h4 className="mb-3 text-sm">Benefits:</h4>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-400">✓</span>
-                      Auto-filter news tied to your open positions
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-400">✓</span>
-                      Real-time odds updates on your bets
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-400">✓</span>
-                      One-click market access from articles
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-400">✓</span>
-                      Portfolio-aware AI predictions
-                    </li>
-                  </ul>
-                </div>
-                <Button
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  onClick={() => setPolymarketConnected(true)}
-                >
-                  <LinkIcon className="w-4 h-4 mr-2" />
-                  Connect Polymarket Wallet
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm">Status</span>
-                    <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                      Connected
+                <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
+                        <Crown className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="flex items-center gap-2">
+                          Pro Subscription
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          $4.99/month
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                      Active
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Wallet: 0x7a2F...9d3B
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                    <div className="p-3 rounded-lg bg-background/50 text-center">
+                      <Infinity className="w-5 h-5 mx-auto mb-1 text-blue-400" />
+                      <p className="text-xs text-muted-foreground">Unlimited</p>
+                      <p className="text-sm">Predictions</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-background/50 text-center">
+                      <Zap className="w-5 h-5 mx-auto mb-1 text-blue-400" />
+                      <p className="text-xs text-muted-foreground">2x XP</p>
+                      <p className="text-sm">Multiplier</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-background/50 text-center">
+                      <Star className="w-5 h-5 mx-auto mb-1 text-blue-400" />
+                      <p className="text-xs text-muted-foreground">Priority</p>
+                      <p className="text-sm">Responses</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-blue-500/20">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Next billing date
+                    </p>
+                    <p className="text-sm mb-3">November 28, 2025</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setSubscriptionDialogOpen(true)}
+                    >
+                      Manage Subscription
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Basic User View */
+              <div className="space-y-4">
+                <div className="p-6 rounded-lg border border-border bg-muted/30">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h4>Basic (Free)</h4>
+                      <p className="text-sm text-muted-foreground">
+                        5 total predictions
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">
+                        Predictions Used
+                      </span>
+                      <span className="text-sm">
+                        {user.totalPredictions || 0}/5
+                      </span>
+                    </div>
+                    <Progress
+                      value={((user.totalPredictions || 0) / 5) * 100}
+                      className="h-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Crown className="w-5 h-5 text-blue-400" />
+                    <h4>Upgrade to Pro</h4>
+                  </div>
+
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>Unlimited predictions</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>2x XP multiplier on all actions</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>
+                        <strong>1,500 XP bonus</strong> when you subscribe
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span>Priority AI responses</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-blue-500/20 mb-4">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <span className="text-lg text-muted-foreground line-through">
+                        $19.99/mo
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-500/10 border-blue-500/30"
+                      >
+                        75% OFF
+                      </Badge>
+                    </div>
+                    <p className="text-center text-3xl mb-1">
+                      $4.99
+                      <span className="text-sm text-muted-foreground">
+                        /month
+                      </span>
+                    </p>
+                  </div>
+
+                  <Button
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90"
+                    onClick={() => setSubscriptionDialogOpen(true)}
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade to Pro
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground mt-2">
+                    Cancel anytime • Full access immediately
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 bg-card/50 rounded-lg text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Active Bets</p>
-                    <p className="text-emerald-400">12</p>
-                  </div>
-                  <div className="p-3 bg-card/50 rounded-lg text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Total Volume</p>
-                    <p className="text-emerald-400">$4,280</p>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full" onClick={() => setPolymarketConnected(false)}>
-                  Disconnect Wallet
-                </Button>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Preview */}
+        {/* Prediction History */}
+        {user.predictionHistory && user.predictionHistory.length > 0 && (
+          <Card className="border-border bg-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="w-5 h-5 text-blue-400" />
+                <h3>Recent Predictions</h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                Your last {user.predictionHistory.length} prediction
+                {user.predictionHistory.length !== 1 ? "s" : ""}
+              </p>
+
+              <div className="space-y-3">
+                {user.predictionHistory.map((prediction, index) => (
+                  <div
+                    key={prediction.id}
+                    className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/30 transition-colors"
+                  >
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-xs text-primary font-medium">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm mb-2 line-clamp-2">
+                        {prediction.question}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" />
+                          {prediction.oracleName}
+                        </span>
+                        <span>•</span>
+                        <span>
+                          {new Date(prediction.timestamp).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Account Stats */}
         <Card className="border-border bg-card">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Bell className="w-5 h-5 text-blue-400" />
-              <h3>Feed Preview</h3>
+              <Star className="w-5 h-5 text-blue-400" />
+              <h3>Account Stats</h3>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
-              Based on your settings, your feed will show:
+            <p className="text-sm text-muted-foreground mb-6">
+              Track your progress and achievements
             </p>
-            <div className="space-y-2">
-              {politicsEnabled && (
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">Politics</Badge>
-                  <span className="text-sm text-muted-foreground">~15 articles/day</span>
+
+            <div className="space-y-6">
+              {/* Current Streak */}
+              <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-sky-500/10 border border-blue-500/20">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-sky-600 flex items-center justify-center">
+                      <Flame className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <Label className="text-sm">Current Streak</Label>
+                      <p className="text-2xl mt-1">{user.streak} days</p>
+                    </div>
+                  </div>
+                  {streakMult > 1 && (
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-500/10 border-blue-500/30"
+                    >
+                      {streakMult}x XP Bonus
+                    </Badge>
+                  )}
                 </div>
-              )}
-              {economicsEnabled && (
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">Economics</Badge>
-                  <span className="text-sm text-muted-foreground">~12 articles/day</span>
+                <p className="text-xs text-muted-foreground">
+                  Keep visiting daily to maintain your streak and earn bonus XP!
+                </p>
+              </div>
+
+              <Separator />
+
+              {/* Summon Level */}
+              <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
+                      <Star className="w-6 h-6 text-white fill-white" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm">
+                          Summon Level {user.level}
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {xpIntoLevel.toLocaleString()} /{" "}
+                        {xpNeededForLevel.toLocaleString()} XP
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Total XP</p>
+                    <p className="text-xl">{user.xp.toLocaleString()}</p>
+                  </div>
                 </div>
-              )}
-              {highAlertMode && (
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-                    High Alert
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">Instant breaking news</span>
+
+                <Progress value={xpProgress} className="h-2 mb-3" />
+
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{xpProgress}% to next level</span>
+                  {subscriptionMult > 1 && (
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-500/10 border-blue-500/30 text-xs"
+                    >
+                      <TrendingUp className="w-3 h-3 mr-1" />
+                      {totalMult.toFixed(2)}x Total Multiplier
+                    </Badge>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Referral System */}
+        <ReferralCard user={user} />
+
         {/* Save Button */}
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={onBack}>
-            Cancel
-          </Button>
+        <div className="flex justify-end">
           <Button onClick={onBack} className="bg-blue-600 hover:bg-blue-700">
             <Save className="w-4 h-4 mr-2" />
             Save Changes
           </Button>
         </div>
       </div>
+
+      {/* Subscription Management Dialog */}
+      <SubscriptionManagementDialog
+        open={subscriptionDialogOpen}
+        onOpenChange={setSubscriptionDialogOpen}
+        currentTier={user.subscriptionTier || "free"}
+        onSubscriptionSuccess={() => {
+          toast.success("Subscription updated successfully!");
+        }}
+      />
     </div>
   );
 }

@@ -143,7 +143,6 @@ This ensures copy functionality works across all browsers and security contexts.
 Potential future additions:
 - Referral leaderboards
 - Tier-based referral bonuses (5 refs = bonus XP)
-- Referral milestones achievements
 - House-based referral competitions
 - Referral analytics and tracking
 - Limited-time referral XP multipliers

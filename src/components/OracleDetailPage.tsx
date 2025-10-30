@@ -26,17 +26,17 @@ export function OracleDetailPage({ type, news, onBack }: OracleDetailPageProps) 
     {
       id: "1",
       role: "oracle",
-      content: `Hello! I'm the ${type === "politics" ? "Politics" : "Economics"} Oracle. I analyze ${type === "politics" ? "political events, elections, and geopolitical developments" : "economic indicators, market trends, and financial data"} to help you make informed trading decisions. Ask me anything!`,
+      content: `Hello! I'm the ${type === "crypto-crystal" ? "Crypto Crystal Czar" : "Economics"} Oracle. I analyze ${type === "crypto-crystal" ? "cryptocurrency markets, blockchain technology, and DeFi protocols" : "economic indicators, market trends, and financial data"} to help you make informed trading decisions. Ask me anything!`,
       timestamp: "Just now"
     }
   ]);
 
-  const oracleDetails = type === "politics" 
+  const oracleDetails = type === "crypto-crystal" 
     ? {
-        name: "Politics Oracle",
-        avatar: "🏛️",
-        gradient: "from-blue-600 to-indigo-700",
-        description: "Expert in political analysis and geopolitical forecasting"
+        name: "Crypto Crystal Czar",
+        avatar: "💎",
+        gradient: "from-cyan-500 to-blue-600",
+        description: "Expert in cryptocurrency markets and blockchain technology"
       }
     : {
         name: "Economics Oracle",
@@ -201,7 +201,7 @@ export function OracleDetailPage({ type, news, onBack }: OracleDetailPageProps) 
           {/* Sidebar - Insights & Markets */}
           <div className="space-y-4">
             {/* Market Psychology */}
-            <Card className="border-border bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+            <Card className="border-border bg-gradient-to-br from-blue-500/10 to-cyan-500/10">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="w-5 h-5 text-blue-400" />

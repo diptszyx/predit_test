@@ -13,7 +13,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
       <DialogContent className="sm:max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
               <Shield className="w-4 h-4 text-white" />
             </div>
             Privacy Policy
@@ -65,7 +65,6 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
                 <li>Subscription tier selections and payment confirmations</li>
                 <li>Prediction market participations, bets, and outcomes</li>
                 <li>Gas fees and transaction costs</li>
-                <li>Guild/House memberships and contributions</li>
               </ul>
 
               <h4>2.1.3 User-Generated Content</h4>
@@ -177,8 +176,8 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
                 <li>Facilitating prediction market participation and settlements</li>
                 <li>Providing AI oracle consultations and predictions</li>
                 <li>Managing subscriptions, memberships, and access tiers</li>
-                <li>Enabling guild/house formations and community features</li>
-                <li>Implementing gamification elements (quests, achievements, leveling)</li>
+                <li>Enabling community features and interactions</li>
+                <li>Implementing gamification elements (quests, leveling, XP rewards)</li>
                 <li>Providing customer support and responding to inquiries</li>
               </ul>
 
@@ -768,8 +767,8 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
                 </p>
               </div>
 
-              <div className="p-6 rounded-xl bg-purple-500/10 border border-purple-500/30">
-                <p className="text-sm text-purple-600 dark:text-purple-400">
+              <div className="p-6 rounded-xl bg-blue-500/10 border border-blue-500/30">
+                <p className="text-sm text-blue-600 dark:text-blue-400">
                   <strong>🤖 AI Processing Notice:</strong> Our AI oracles process your queries to provide predictions and insights. All AI-generated content is for entertainment purposes only. You can opt out of AI training data collection in your privacy settings.
                 </p>
               </div>

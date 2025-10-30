@@ -16,8 +16,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   const steps = [
     {
-      title: "Welcome to Dehouse of Oracles",
-      subtitle: "Your AI Oracles for Smarter Bets",
+      title: "Welcome to Dehouse of Predictions",
+      subtitle: "Your AI Prediction Agents for Smarter Insights",
       content: (
         <div className="text-center space-y-6">
           <div className="w-32 h-32 mx-auto rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-2xl">
@@ -26,7 +26,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="space-y-2">
             <h2>AI-Powered Market Intelligence</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Get real-time insights from specialized AI Oracles trained on politics, economics, and geopolitics to make informed trading decisions on Polymarket.
+              Get real-time insights from specialized AI Oracles trained on cryptocurrency, blockchain, and digital assets to make informed trading decisions on Polymarket.
             </p>
           </div>
           <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto pt-4">
@@ -43,7 +43,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <p className="text-xs text-muted-foreground">Real-Time Updates</p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-purple-500/20 flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-blue-500/20 flex items-center justify-center">
                 <span className="text-2xl">📊</span>
               </div>
               <p className="text-xs text-muted-foreground">Market Analysis</p>
@@ -60,36 +60,36 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <Card
             onClick={() => {
               setSelectedOracles(prev =>
-                prev.includes("politics") ? prev.filter(o => o !== "politics") : [...prev, "politics"]
+                prev.includes("crypto-crystal") ? prev.filter(o => o !== "crypto-crystal") : [...prev, "crypto-crystal"]
               );
             }}
             className={`cursor-pointer transition-all ${
-              selectedOracles.includes("politics")
-                ? "border-blue-500 bg-blue-500/10"
-                : "border-border hover:border-blue-500/50"
+              selectedOracles.includes("crypto-crystal")
+                ? "border-cyan-500 bg-cyan-500/10"
+                : "border-border hover:border-cyan-500/50"
             }`}
           >
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center flex-shrink-0">
-                  <Landmark className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                  <span className="text-3xl">💎</span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">
-                    <h3>Politics Oracle</h3>
-                    {selectedOracles.includes("politics") && (
-                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                    <h3>Crypto Crystal Czar</h3>
+                    {selectedOracles.includes("crypto-crystal") && (
+                      <div className="w-6 h-6 rounded-full bg-cyan-500 flex items-center justify-center">
                         <Check className="w-4 h-4 text-white" />
                       </div>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">
-                    Expert analysis of elections, geopolitical events, and policy changes that impact prediction markets.
+                    Expert analysis of cryptocurrency markets, blockchain technology, DeFi protocols, and digital asset trends.
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="text-xs">US Elections</Badge>
-                    <Badge variant="outline" className="text-xs">Global Politics</Badge>
-                    <Badge variant="outline" className="text-xs">Policy Analysis</Badge>
+                    <Badge variant="outline" className="text-xs">Bitcoin</Badge>
+                    <Badge variant="outline" className="text-xs">DeFi</Badge>
+                    <Badge variant="outline" className="text-xs">Altcoins</Badge>
                   </div>
                 </div>
               </div>

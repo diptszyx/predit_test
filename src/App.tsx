@@ -25,6 +25,9 @@ import { XPInfoDialog } from "./components/XPInfoDialog";
 import { PrivacyPolicy } from "./components/PrivacyPolicy";
 import { TermsOfUse } from "./components/TermsOfUse";
 import { AIAgentCard } from "./components/AIAgentCard";
+import { LoginForm } from "./components/LoginForm";
+import { Button } from "./components/ui/button";
+import useAuthStore from "./store/auth.store";
 
 // Constants
 const AI_AGENT_IMAGES = {
@@ -138,9 +141,14 @@ export default function App() {
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
 
+  // Auth state from global store
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+  const updateUserInStore = useAuthStore((state) => state.updateUser);
+  const logout = useAuthStore((state) => state.logout);
+
   // App state
   const [currentPage, setCurrentPage] = useState<string>("chat");
-  const [user, setUser] = useState<User | null>(null);
   const [selectedAIAgent, setSelectedAIAgent] = useState<AIAgent | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<HotTakeArticle | null>(
     null
@@ -164,7 +172,7 @@ export default function App() {
 
   // Update user function
   const updateUser = (updates: Partial<User>) => {
-    setUser((prev) => (prev ? { ...prev, ...updates } : null));
+    updateUserInStore(updates);
   };
 
   // XP system hook
@@ -298,7 +306,7 @@ export default function App() {
   };
 
   const handleWalletDisconnect = () => {
-    setUser(null);
+    logout();
     setCurrentPage("chat");
     toast.info("Wallet disconnected");
   };
@@ -352,6 +360,46 @@ export default function App() {
           window.history.pushState({}, "", "/");
         }}
       />
+    );
+  }
+
+  // Render login screen when no authenticated user
+  if (!user) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
+          <div className="w-full max-w-md space-y-6 rounded-xl border border-border bg-card p-8 shadow-sm">
+            <div className="space-y-2 text-center">
+              <h1 className="text-2xl font-semibold">Sign in to Dehouse</h1>
+              <p className="text-sm text-muted-foreground">
+                Access personalized predictions, XP tracking, and subscriptions.
+              </p>
+            </div>
+            <LoginForm
+              onSuccess={() => {
+                if (pendingNavigation) {
+                  setCurrentPage(pendingNavigation);
+                  setPendingNavigation(null);
+                } else {
+                  setCurrentPage("chat");
+                }
+              }}
+            />
+            <div className="text-center text-sm text-muted-foreground">
+              or continue with
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => setWalletDialogOpen(true)}
+            >
+              Connect Wallet
+            </Button>
+          </div>
+        </div>
+        {commonDialogProps}
+      </>
     );
   }
 

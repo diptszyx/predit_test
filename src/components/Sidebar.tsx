@@ -79,7 +79,7 @@ export function Sidebar({
   onToggleDarkMode,
 }: SidebarProps) {
   const userLevel = user ? getUserLevel(user.totalPredictions) : 1;
-
+  console.log(user)
   const handleNavigation = (pageId: string, requiresAuth: boolean) => {
     if (requiresAuth && !user) {
       onSetPendingNavigation(pageId);
@@ -193,7 +193,7 @@ export function Sidebar({
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={user.avatar} alt={user.username} />
                   <AvatarFallback>
-                    {user.username.slice(0, 2).toUpperCase()}
+                    {/* {user.username.slice(0, 2).toUpperCase()} */}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
@@ -210,7 +210,7 @@ export function Sidebar({
               <div className="flex items-center gap-3 text-xs">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-primary" />
-                  <span className="font-medium">{user.xp.toLocaleString()}</span>
+                  <span className="font-medium">{user?.xp?.toLocaleString() || 1}</span>
                   <span className="text-muted-foreground">XP</span>
                 </div>
                 <div className="flex items-center gap-1">

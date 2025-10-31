@@ -11,9 +11,9 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["node"]
+    "types": ["node", "vite/client"]
   },
-  "include": ["src"]
+  "include": ["src", "src/vite-env.d.ts"]
 }
 
 

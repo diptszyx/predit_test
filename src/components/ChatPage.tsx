@@ -1,20 +1,21 @@
-import { useState, useRef, useEffect } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { ScrollArea } from "./ui/scroll-area";
-import { ArrowLeft, Send, Sparkles, ExternalLink, Newspaper, X, ThumbsUp, ThumbsDown, Star, Zap, Lock, Crown, Plus, TrendingUp, MessageSquare, Share2, Check, Bot, Gamepad2, Moon, Sun } from "lucide-react";
-import { Skeleton } from "./ui/skeleton";
-import { PredictionBetCard, getBetsForOracle } from "./PredictionBetCard";
-import { Sidebar } from "./Sidebar";
-import { SharePredictionDialog } from "./SharePredictionDialog";
-import { ShareAIAgentDialog } from "./ShareAIAgentDialog";
-import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
-import { DisclaimerDialog } from "./DisclaimerDialog";
+import { ArrowLeft, Check, Crown, Lock, MessageSquare, Moon, Send, Share2, Sparkles, Star, Sun, ThumbsUp, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import type { HotTakeArticle } from "./ArticleDetailPage";
+import { DisclaimerDialog } from "./DisclaimerDialog";
+import { ShareAIAgentDialog } from "./ShareAIAgentDialog";
+import { SharePredictionDialog } from "./SharePredictionDialog";
+import { Sidebar } from "./Sidebar";
+import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { ScrollArea } from "./ui/scroll-area";
+import { Skeleton } from "./ui/skeleton";
 
 import { toast } from "sonner@2.0.3";
+import apiClient from "../lib/axios";
+import type { User } from "../lib/types";
+import { ImageWithFallback } from "./figma/ImageWithFallback";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,8 +26,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
-import type { User } from "../lib/types";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 interface AIAgent {
   id: string;
@@ -94,15 +93,22 @@ interface ChatPageProps {
   onOpenXPInfo?: () => void;
 }
 
+type ChatMessage = {
+  id: string;
+  content: string;
+  sender: "user" | "assistant";
+  userId?: string;
+  oracleId?: string;
+  createdAt: string;
+};
+
+type SendChatResponse = {
+  userMessage: ChatMessage;
+  assistantMessage: ChatMessage;
+};
+
 export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, user, onOpenWalletDialog, onNavigate, totalQuestionsAsked = 0, onQuestionAsked, userCreatedMarkets = [], onAddMarket, currentPage = "chat", onWalletDisconnect, shortenAddress, updateUser, awardXPToUser, trackQuestProgress, onArticleClick, onOpenSettings, onSetPendingNavigation, articleContext, onArticleContextUsed, onOpenXPInfo }: ChatPageProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content: getWelcomeMessage(aiAgent),
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
@@ -111,7 +117,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   const [articleCounter, setArticleCounter] = useState(5);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationContextRef = useRef<string[]>([]);
-  
+
   // Rating and Like states
   const [userRating, setUserRating] = useState<number>(0);
   const [hasLiked, setHasLiked] = useState(false);
@@ -121,7 +127,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     return parseInt(likesStr.replace('K', '000').replace('M', '000000'));
   });
   const [localRating, setLocalRating] = useState(aiAgent.rating);
-  
+
   // Sign-in and subscription tracking
   const [userMessageCount, setUserMessageCount] = useState(0);
   const [signInDialogOpen, setSignInDialogOpen] = useState(false);
@@ -129,20 +135,18 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   const [pendingMessage, setPendingMessage] = useState<string>("");
   const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false);
   const [limitReachedType, setLimitReachedType] = useState<'prediction' | 'textline' | 'total-predictions' | null>(null);
-  
+
   // Share functionality
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareFlashing, setShareFlashing] = useState(false);
-  const [lastPrediction, setLastPrediction] = useState<{question: string; answer: string} | null>(null);
-  
+  const [lastPrediction, setLastPrediction] = useState<{ question: string; answer: string } | null>(null);
+
   // Disclaimer dialog
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
   const [shareAIAgentDialogOpen, setShareAIAgentDialogOpen] = useState(false);
-  
+
   // Rating flash functionality
   const [ratingFlashing, setRatingFlashing] = useState(false);
-  
-
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -152,6 +156,24 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const oracleId = "1e557572-aaa8-4cab-8af6-d86f65613f19";
+
+        const { data } = await apiClient.get<ChatMessage[]>("/messages", {
+          params: { oracleId },
+        });
+
+        setMessages(data.reverse());
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
+    fetchMessages();
+  }, []);
+
+
   // Load default hot takes on mount
   useEffect(() => {
     const defaultHotTakes = generateDefaultHotTakes(aiAgent);
@@ -160,9 +182,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
   // Auto-send pending message after user signs in or upgrades subscription
   useEffect(() => {
-    const shouldSendPending = 
-      pendingMessage && 
-      !signInDialogOpen && 
+    const shouldSendPending =
+      pendingMessage &&
+      !signInDialogOpen &&
       !subscriptionDialogOpen &&
       (
         // Either just signed in
@@ -178,7 +200,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
         const isPrediction = isPredictionQuestion(pendingMessage);
         console.log('Auto-send message:', pendingMessage);
         console.log('Auto-send is prediction:', isPrediction);
-        
+
         const userMessage: Message = {
           id: Date.now().toString(),
           role: "user",
@@ -217,7 +239,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
             suggestedQuestions: generateSuggestedQuestions(aiAgent, pendingMessage),
           };
           setMessages((prev) => [...prev, assistantMessage]);
-          
+
           // If this was a prediction, store it and flash the share button
           if (isPrediction) {
             console.log('✓ PREDICTION DETECTED (pending message)!');
@@ -230,7 +252,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
             console.log('Storing prediction data:', predictionData);
             setLastPrediction(predictionData);
             setShareFlashing(true);
-            
+
             // Stop flashing after 3 seconds
             setTimeout(() => {
               setShareFlashing(false);
@@ -247,56 +269,6 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     }
   }, [user?.walletAddress, user?.subscriptionTier, pendingMessage, signInDialogOpen, subscriptionDialogOpen]);
 
-  // Auto-submit "Summarize" when article context is provided
-  useEffect(() => {
-    if (articleContext && !isLoading) {
-      // Create user message with article attachment
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        role: "user",
-        content: "Summarize",
-        timestamp: new Date(),
-        articleAttachment: articleContext,
-      };
-
-      setMessages((prev) => [...prev, userMessage]);
-      setIsLoading(true);
-
-      // Track question
-      if (onQuestionAsked) {
-        onQuestionAsked();
-      }
-
-      // Send to oracle with article context
-      const sendArticleSummaryRequest = async () => {
-        try {
-          const contextualPrompt = `Please provide a summary and analysis of this article: "${articleContext.title}". ${articleContext.relevance ? `Relevance: ${articleContext.relevance}.` : ''} Share your expert insights on this topic.`;
-          
-          const response = await sendToGrokAPI(contextualPrompt, aiAgent);
-          const assistantMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: response,
-            timestamp: new Date(),
-            suggestedQuestions: generateSuggestedQuestions(aiAgent, "article analysis"),
-          };
-          setMessages((prev) => [...prev, assistantMessage]);
-        } catch (error) {
-          console.error("Error sending article summary request:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      sendArticleSummaryRequest();
-
-      // Mark article context as used
-      if (onArticleContextUsed) {
-        onArticleContextUsed();
-      }
-    }
-  }, [articleContext]);
-
   // Helper function to detect if a message is asking for a prediction
   function isPredictionQuestion(message: string): boolean {
     const predictionKeywords = [
@@ -307,19 +279,19 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
       'expect', 'anticipate', 'foresee', 'outlook',
       'trend', 'estimate', 'projection', 'gonna',
       'going to', 'happen', 'come true', 'think will',
-      
+
       // Time-based future indicators
       'tomorrow', 'next week', 'next month', 'next year',
       'in 2025', 'in 2026', 'in 2027', 'this year', 'next',
       'upcoming', 'soon', 'later', 'eventually', 'by the end',
-      
+
       // Question patterns about future
       'what will', 'where will', 'when will', 'who will', 'how will',
       'what is going to', 'what do you think',
       'what are the chances', 'what is the', 'what price',
       'how much will', 'how high', 'how low', 'could it', 'might it'
     ];
-    
+
     const lowerMessage = message.toLowerCase();
     return predictionKeywords.some(keyword => lowerMessage.includes(keyword));
   }
@@ -445,7 +417,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     // Generate contextual funny responses based on AI agent personality
     const responses = getAIAgentResponses(aiAgent.id, userMessage.toLowerCase());
     const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    
+
     return randomResponse;
   }
 
@@ -548,7 +520,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     // Generate mock news articles based on message keywords
     const keywords = extractKeywords(userMessage);
     const mockArticles = generateMockNews(keywords, aiAgent.category);
-    
+
     setNewsArticles(mockArticles);
     setIsLoadingNews(false);
   }
@@ -887,7 +859,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
   function generateMockNews(keywords: string[], category: string): NewsArticle[] {
     const topics = keywords.length > 0 ? keywords : ["future", "prediction", "trends"];
-    
+
     const mockNews: NewsArticle[] = [
       {
         id: "1",
@@ -1003,17 +975,17 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   const handleDeleteArticle = (articleId: string) => {
     // Add to deleted set
     setDeletedArticleIds(prev => new Set([...prev, articleId]));
-    
+
     // Remove the article
     setNewsArticles(prev => prev.filter(article => article.id !== articleId));
-    
+
     // Generate and add a new article
-    const newArticle = generateSingleArticle(conversationContextRef.current);
+    // const newArticle = generateSingleArticle(conversationContextRef.current);
     setArticleCounter(prev => prev + 1);
-    
+
     // Add new article after a brief delay for smooth transition
     setTimeout(() => {
-      setNewsArticles(prev => [...prev, newArticle]);
+      // setNewsArticles(prev => [...prev, newArticle]);
     }, 300);
   };
 
@@ -1028,7 +1000,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
       image: article.image,
       aiAgentEmoji: aiAgent.emoji,
     };
-    
+
     if (onArticleClick) {
       onArticleClick(hotTakeArticle);
     }
@@ -1042,7 +1014,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     const isPrediction = isPredictionQuestion(trimmedInput);
 
     // Check if user is signed in - required to send any message
-    if (!user?.walletAddress) {
+    if (!user) {
       setPendingMessage(trimmedInput); // Store the message to send after sign-in
       setInput(""); // Clear input field
       setSignInDialogOpen(true);
@@ -1053,115 +1025,16 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     const newMessageCount = userMessageCount + 1;
     setUserMessageCount(newMessageCount);
 
-    // Check daily line limit for free users (signed-in users)
-    if (user?.walletAddress && (!user?.subscriptionTier || user?.subscriptionTier === 'free')) {
-      const { allowed, remaining, linesInMessage } = checkDailyLineLimit(trimmedInput);
-      
-      if (!allowed) {
-        // User has hit their daily line limit - show upgrade dialog
-        setLimitReachedType('textline');
-        setLimitReachedDialogOpen(true);
-        setInput(""); // Clear input
-        return;
-      }
-      
-      // Show warning when approaching limit (at 80% usage)
-      if (remaining <= 20 && remaining > 0) {
-        toast.warning(
-          `⚠️ Only ${remaining} text lines remaining today`,
-          {
-            duration: 3000,
-          }
-        );
-      }
-    }
-
-    // Check daily prediction limit for predictions only (signed-in users)
-    if (user?.walletAddress && isPrediction) {
-      const { allowed, remaining } = checkDailyPredictionLimit();
-      
-      if (!allowed) {
-        // User has hit their daily prediction limit - show upgrade dialog
-        setLimitReachedType('prediction');
-        setLimitReachedDialogOpen(true);
-        setInput(""); // Clear input
-        return;
-      }
-    }
-
-    // Check if free user has exceeded 5 predictions (block from 6th onwards)
-    if (user?.walletAddress && (!user?.subscriptionTier || user?.subscriptionTier === 'free') && isPrediction && (user?.totalPredictions || 0) >= 5) {
-      setLimitReachedType('total-predictions');
-      setLimitReachedDialogOpen(true);
-      setInput(""); // Clear input
-      return;
-    }
-
     // Track total questions asked
     if (onQuestionAsked) {
       onQuestionAsked();
     }
 
-    // Increment daily prediction count if this is a prediction
-    if (isPrediction && user?.walletAddress) {
-      incrementDailyPredictions();
-      
-      // Increment total predictions and award XP with exponential curve
-      if (updateUser) {
-        const newTotalPredictions = (user.totalPredictions || 0) + 1;
-        
-        // Add to prediction history (keep last 5)
-        const newPredictionHistory = [
-          {
-            id: Date.now().toString(),
-            question: trimmedInput,
-            aiAgentName: aiAgent.name,
-            timestamp: new Date().toISOString(),
-          },
-          ...(user.predictionHistory || []),
-        ].slice(0, 5);
-        
-        updateUser({ 
-          totalPredictions: newTotalPredictions,
-          predictionHistory: newPredictionHistory,
-        });
-        
-        // Show subscription popup after 5th prediction
-        if (newTotalPredictions === 5 && (!user?.subscriptionTier || user?.subscriptionTier === 'free')) {
-          // Delay showing the dialog to allow the prediction to complete
-          setTimeout(() => {
-            setLimitReachedType('total-predictions');
-            setLimitReachedDialogOpen(true);
-          }, 2000); // Show after 2 seconds
-        }
-      }
-      
-      // Award XP for prediction (will use exponential curve based on totalPredictions)
-      if (awardXPToUser) {
-        awardXPToUser('MAKE_PREDICTION');
-      }
-      
-      // Track quest progress
-      if (trackQuestProgress) {
-        trackQuestProgress('makePredictions', 1);
-      }
-    }
-
-    // Increment daily line count for free users
-    if (user?.walletAddress && (!user?.subscriptionTier || user?.subscriptionTier === 'free')) {
-      const linesInMessage = countLines(trimmedInput);
-      incrementDailyLines(linesInMessage);
-    }
-    
-    console.log('Message:', trimmedInput);
-    console.log('Is Prediction:', isPrediction);
-
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      role: "user",
-      content: `I want a prediction on: ${trimmedInput}`,
-      timestamp: new Date(),
-      isPrediction,
+      sender: "user",
+      content: `${trimmedInput}`,
+      createdAt: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -1173,16 +1046,15 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
     try {
       const response = await sendToGrokAPI(trimmedInput, aiAgent);
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: response,
-        timestamp: new Date(),
-        isPrediction,
-        suggestedQuestions: generateSuggestedQuestions(aiAgent, trimmedInput),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      
+      const { data } = await apiClient.post<SendChatResponse>(
+        "/messages",
+        {
+          content: trimmedInput,
+          oracleId: '1e557572-aaa8-4cab-8af6-d86f65613f19'
+        }
+      );
+      setMessages((prev) => [...prev, data.assistantMessage]);
+
       // If this was a prediction, store it and flash the share button and rating section
       if (isPrediction) {
         console.log('✓ PREDICTION DETECTED!');
@@ -1196,7 +1068,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
         setLastPrediction(predictionData);
         setShareFlashing(true);
         setRatingFlashing(true);
-        
+
         // Stop flashing after 3 seconds
         setTimeout(() => {
           setShareFlashing(false);
@@ -1216,10 +1088,17 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      handleSend(input);
     }
   };
-
+  function formatTime(isoString: string) {
+    return new Date(isoString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Ho_Chi_Minh",
+    });
+  }
   const handleLike = () => {
     if (!hasLiked) {
       setHasLiked(true);
@@ -1318,334 +1197,333 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           </header>
         )}
 
-      {/* Main Chat Area */}
-      <div className="w-full px-2 sm:px-4 py-4 md:py-6 md:px-6">
-        <div className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-7xl mx-auto justify-center m-[0px]">
-          {/* Chat Section - Center with max width */}
-          <div className="w-full lg:max-w-3xl space-y-0">
-            {/* Welcome Intro Section - Only show on first load */}
-            {messages.length === 1 && (
-              <div className="mb-8">
-                {/* Call to Action */}
-                <div className="py-8">
-                  <h2 className="text-2xl sm:text-3xl bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-6 pb-1">
-                    Gain the Edge with Our Elite AI Agents
-                  </h2>
-                  
-                  {/* Features Grid */}
-                  <div className="grid gap-4 mb-6">
-                    {/* Feature 1 */}
-                    <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                      <h3 className="text-base sm:text-lg mb-2">
-                        ✨ Specialized Expertise for Pinpoint Accuracy
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Fine-tuned on niche data for stocks, cryptos, politics, sports, and more—delivering spot-on predictions that crush the competition.
-                      </p>
-                    </div>
-                    
-                    {/* Feature 2 */}
-                    <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                      <h3 className="text-base sm:text-lg mb-2">
-                        🚀 Supercharge Your Bets and Investments
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Spot trends, minimize risks, and maximize wins with actionable insights tailored just for you.
-                      </p>
-                    </div>
-                  </div>
+        {/* Main Chat Area */}
+        <div className="w-full px-2 sm:px-4 py-4 md:py-6 md:px-6">
+          <div className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-7xl mx-auto justify-center m-[0px]">
+            {/* Chat Section - Center with max width */}
+            <div className="w-full lg:max-w-3xl space-y-0">
+              {/* Welcome Intro Section - Only show on first load */}
+              {messages.length === 1 && (
+                <div className="mb-8">
+                  {/* Call to Action */}
+                  <div className="py-8">
+                    <h2 className="text-2xl sm:text-3xl bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-6 pb-1">
+                      Gain the Edge with Our Elite AI Agents
+                    </h2>
 
-                  <p className="text-base sm:text-lg text-foreground">
-                    Ready to win? Ask our AI for a prediction right now
-                  </p>
-                </div>
-              </div>
-            )}
-            {/* Oracle Header - Above conversation box */}
-            <Card className="border-border bg-background/80 backdrop-blur-md">
-              <CardContent className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onBack}
-                    className="flex-shrink-0 hover:bg-white/10 h-8 sm:h-9 px-2"
-                  >
-                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </Button>
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
-                    <ImageWithFallback 
-                      src={aiAgent.avatar}
-                      alt={aiAgent.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm sm:text-base md:text-lg truncate">{aiAgent.name}</CardTitle>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShareOracleDialogOpen(true)}
-                    className="flex-shrink-0 hover:bg-blue-500/20 h-8 sm:h-9 px-2 sm:px-3"
-                  >
-                    <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">Share</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Chat Container with Background */}
-            <div className="relative h-[calc(100vh-16rem)] sm:h-[calc(100vh-18rem)] rounded-lg md:rounded-xl overflow-hidden">
-              {/* Background Color */}
-              <div className="absolute inset-0 bg-card/50" />
-
-              {/* Chat Interface - Full Height */}
-              <div className="absolute inset-0 flex flex-col pointer-events-none">
-                {/* Input Section - Fixed at top with semi-transparent background */}
-                <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl border-b border-border pointer-events-auto bg-card/90">
-                  <div className="max-w-4xl mx-auto">
-                    {/* Daily Prediction Limit Counter for Free Users */}
-                    {user?.walletAddress && user?.subscriptionTier !== 'master' && (() => {
-                      const today = new Date().toDateString();
-                      const lastResetDate = user?.dailyPredictionsResetDate;
-                      const dailyUsed = (lastResetDate === today) ? (user?.dailyPredictionsUsed || 0) : 0;
-                      const remaining = 5 - dailyUsed;
-                      
-                      if (remaining <= 2) {
-                        return (
-                          <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-xs sm:text-sm text-foreground truncate">
-                                <Lock className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                                {remaining} prediction{remaining !== 1 ? 's' : ''} left
-                              </p>
-                              <Button
-                                size="sm"
-                                onClick={() => setSubscriptionDialogOpen(true)}
-                                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
-                              >
-                                <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
-                                <span className="text-xs">Upgrade</span>
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-
-                    {/* Daily Line Limit Counter for Free Users */}
-                    {user?.walletAddress && user?.subscriptionTier !== 'master' && (() => {
-                      const today = new Date().toDateString();
-                      const lastResetDate = user?.dailyLinesResetDate;
-                      const dailyUsed = (lastResetDate === today) ? (user?.dailyLinesUsed || 0) : 0;
-                      const remaining = 100 - dailyUsed;
-                      const percentage = (dailyUsed / 100) * 100;
-                      
-                      if (remaining <= 30) {
-                        return (
-                          <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
-                            <div className="flex items-center justify-between mb-2 gap-2">
-                              <p className="text-xs sm:text-sm text-foreground truncate">
-                                <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                                {remaining} lines left
-                              </p>
-                              <Button
-                                size="sm"
-                                onClick={() => setSubscriptionDialogOpen(true)}
-                                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
-                              >
-                                <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
-                                <span className="text-xs">Upgrade</span>
-                              </Button>
-                            </div>
-                            <div className="w-full bg-black/30 rounded-full h-1.5">
-                              <div 
-                                className="bg-gradient-to-r from-orange-500 to-red-500 h-1.5 rounded-full transition-all"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">{dailyUsed}/100 lines used</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-
-                    <div className="flex gap-1.5 sm:gap-2">
-                      <div 
-                        className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-md px-3 h-9 sm:h-10 cursor-pointer"
-                        onClick={() => {
-                          if (!user?.walletAddress) {
-                            setSignInDialogOpen(true);
-                          }
-                        }}
-                      >
-                        <span className="text-foreground text-sm whitespace-nowrap flex-shrink-0">I want a prediction on:</span>
-                        {!user?.walletAddress ? (
-                          <span className="flex-1 text-muted-foreground text-sm">Sign in to chat</span>
-                        ) : (
-                          <input
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm"
-                            placeholder=""
-                            disabled={isLoading}
-                          />
-                        )}
+                    {/* Features Grid */}
+                    <div className="grid gap-4 mb-6">
+                      {/* Feature 1 */}
+                      <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                        <h3 className="text-base sm:text-lg mb-2">
+                          ✨ Specialized Expertise for Pinpoint Accuracy
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Fine-tuned on niche data for stocks, cryptos, politics, sports, and more—delivering spot-on predictions that crush the competition.
+                        </p>
                       </div>
-                      <Button
-                        onClick={handleSend}
-                        disabled={!input.trim() || isLoading || !user?.walletAddress}
-                        className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg h-9 sm:h-10 px-3 sm:px-4"
-                      >
-                        <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      </Button>
+
+                      {/* Feature 2 */}
+                      <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                        <h3 className="text-base sm:text-lg mb-2">
+                          🚀 Supercharge Your Bets and Investments
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Spot trends, minimize risks, and maximize wins with actionable insights tailored just for you.
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center sm:text-left">
-                      AI agents can make mistakes. Check{' '}
-                      <button
-                        onClick={() => setDisclaimerDialogOpen(true)}
-                        className="text-blue-400 hover:text-blue-300 underline transition-colors"
-                      >
-                        Disclaimer
-                      </button>
+
+                    <p className="text-base sm:text-lg text-foreground">
+                      Ready to win? Ask our AI for a prediction right now
                     </p>
                   </div>
                 </div>
+              )}
+              {/* Oracle Header - Above conversation box */}
+              <Card className="border-border bg-background/80 backdrop-blur-md">
+                <CardContent className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onBack}
+                      className="flex-shrink-0 hover:bg-white/10 h-8 sm:h-9 px-2"
+                    >
+                      <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </Button>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
+                      <ImageWithFallback
+                        src={aiAgent.avatar}
+                        alt={aiAgent.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-sm sm:text-base md:text-lg truncate">{aiAgent.name}</CardTitle>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShareOracleDialogOpen(true)}
+                      className="flex-shrink-0 hover:bg-blue-500/20 h-8 sm:h-9 px-2 sm:px-3"
+                    >
+                      <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">Share</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-                {/* Messages Area - Scrollable with transparent background */}
-                <div className="flex-1 overflow-hidden pointer-events-auto">
-                  <ScrollArea className="h-full p-2 sm:p-3 md:p-4">
-                    <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
-                      {messages.map((message, index) => (
-                        <div key={message.id}>
-                          <div
-                            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                          >
-                            <div
-                              className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
-                                message.role === "user"
-                                  ? "bg-blue-600 text-white backdrop-blur-sm"
-                                  : "bg-muted/80 backdrop-blur-md text-foreground border border-border"
-                              }`}
-                            >
-                              {/* Article Attachment Thumbnail */}
-                              {message.articleAttachment && (
-                                <div className="mb-2 rounded-lg overflow-hidden border border-border">
-                                  <div className="aspect-video relative bg-muted/20">
-                                    <ImageWithFallback
-                                      src={message.articleAttachment.image || ''}
-                                      alt={message.articleAttachment.title}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  <div className="p-2 bg-muted/30">
-                                    <p className="text-xs line-clamp-2">{message.articleAttachment.title}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">{message.articleAttachment.source}</p>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                              <span className={`text-xs mt-1 block ${message.role === "user" ? "text-white/70" : "text-muted-foreground"}`}>
-                                {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
-                          {message.role === "assistant" && message.suggestedQuestions && index === messages.length - 1 && !isLoading && (
-                            <div className="flex justify-start mt-2 sm:mt-3">
-                              <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
-                                {message.suggestedQuestions.map((question, qIndex) => (
-                                  <button
-                                    key={qIndex}
-                                    onClick={() => handleSend(question)}
-                                    className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left"
-                                  >
-                                    {question}
-                                  </button>
-                                ))}
+              {/* Chat Container with Background */}
+              <div className="relative h-[calc(100vh-16rem)] sm:h-[calc(100vh-16rem)] rounded-lg md:rounded-xl overflow-hidden">
+                {/* Background Color */}
+                <div className="absolute inset-0 bg-card/50" />
+
+                {/* Chat Interface - Full Height */}
+                <div className="absolute inset-0 flex flex-col pointer-events-none">
+                  {/* Input Section - Fixed at top with semi-transparent background */}
+                  <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl border-b border-border pointer-events-auto bg-card/90">
+                    <div className="max-w-4xl mx-auto">
+                      {/* Daily Prediction Limit Counter for Free Users */}
+                      {user?.walletAddress && user?.subscriptionTier !== 'master' && (() => {
+                        const today = new Date().toDateString();
+                        const lastResetDate = user?.dailyPredictionsResetDate;
+                        const dailyUsed = (lastResetDate === today) ? (user?.dailyPredictionsUsed || 0) : 0;
+                        const remaining = 5 - dailyUsed;
+
+                        if (remaining <= 2) {
+                          return (
+                            <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs sm:text-sm text-foreground truncate">
+                                  <Lock className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
+                                  {remaining} prediction{remaining !== 1 ? 's' : ''} left
+                                </p>
+                                <Button
+                                  size="sm"
+                                  onClick={() => setSubscriptionDialogOpen(true)}
+                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
+                                >
+                                  <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
+                                  <span className="text-xs">Upgrade</span>
+                                </Button>
                               </div>
                             </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      {/* Daily Line Limit Counter for Free Users */}
+                      {user?.walletAddress && user?.subscriptionTier !== 'master' && (() => {
+                        const today = new Date().toDateString();
+                        const lastResetDate = user?.dailyLinesResetDate;
+                        const dailyUsed = (lastResetDate === today) ? (user?.dailyLinesUsed || 0) : 0;
+                        const remaining = 100 - dailyUsed;
+                        const percentage = (dailyUsed / 100) * 100;
+
+                        if (remaining <= 30) {
+                          return (
+                            <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
+                              <div className="flex items-center justify-between mb-2 gap-2">
+                                <p className="text-xs sm:text-sm text-foreground truncate">
+                                  <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
+                                  {remaining} lines left
+                                </p>
+                                <Button
+                                  size="sm"
+                                  onClick={() => setSubscriptionDialogOpen(true)}
+                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
+                                >
+                                  <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
+                                  <span className="text-xs">Upgrade</span>
+                                </Button>
+                              </div>
+                              <div className="w-full bg-black/30 rounded-full h-1.5">
+                                <div
+                                  className="bg-gradient-to-r from-orange-500 to-red-500 h-1.5 rounded-full transition-all"
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">{dailyUsed}/100 lines used</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
+                      <div className="flex gap-1.5 sm:gap-2">
+                        <div
+                          className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-md px-3 h-9 sm:h-10 cursor-pointer"
+                          onClick={() => {
+                            if (!user) {
+                              setSignInDialogOpen(true);
+                            }
+                          }}
+                        >
+                          {!user ? (
+                            <span className="flex-1 text-muted-foreground text-sm">Sign in to chat</span>
+                          ) : (
+                            <input
+                              type="text"
+                              value={input}
+                              onChange={(e) => setInput(e.target.value)}
+                              onKeyPress={handleKeyPress}
+                              className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm"
+                              placeholder="I want a prediction on..."
+                              disabled={isLoading}
+                            />
                           )}
                         </div>
-                      ))}
-                      {isLoading && (
-                        <div className="flex justify-start">
-                          <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
-                            <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                              <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
-                                <ImageWithFallback 
-                                  src={aiAgent.avatar}
-                                  alt={aiAgent.name}
-                                  className="w-full h-full object-cover"
-                                />
+                        <Button
+                          onClick={() => handleSend(input)}
+                          disabled={!input.trim() || isLoading || !user}
+                          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg h-9 sm:h-10 px-3 sm:px-4"
+                        >
+                          <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center sm:text-left">
+                        AI agents can make mistakes. Check{' '}
+                        <button
+                          onClick={() => setDisclaimerDialogOpen(true)}
+                          className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                        >
+                          Disclaimer
+                        </button>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Messages Area - Scrollable with transparent background */}
+                  <div className="flex-1 overflow-hidden pointer-events-auto">
+                    <ScrollArea className="h-full p-2 sm:p-3 md:p-4">
+                      <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
+                        {messages.map((message, index) => (
+                          <div key={message.id}>
+                            <div
+                              className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                            >
+                              <div
+                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === "user"
+                                  ? "bg-blue-600 text-white backdrop-blur-sm"
+                                  : "bg-muted/80 backdrop-blur-md text-foreground border border-border"
+                                  }`}
+                              >
+                                {/* Article Attachment Thumbnail */}
+                                {/* {message.articleAttachment && (
+                                  <div className="mb-2 rounded-lg overflow-hidden border border-border">
+                                    <div className="aspect-video relative bg-muted/20">
+                                      <ImageWithFallback
+                                        src={message.articleAttachment.image || ''}
+                                        alt={message.articleAttachment.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <div className="p-2 bg-muted/30">
+                                      <p className="text-xs line-clamp-2">{message.articleAttachment.title}</p>
+                                      <p className="text-xs text-muted-foreground mt-1">{message.articleAttachment.source}</p>
+                                    </div>
+                                  </div>
+                                )} */}
+
+                                <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                                <span className={`text-xs mt-1 block ${message.sender === "user" ? "text-white/70" : "text-muted-foreground"}`}>
+                                  {formatTime(message.createdAt)}
+                                </span>
                               </div>
-                              <span className="text-xs text-foreground">{aiAgent.name} is typing...</span>
                             </div>
-                            <div className="flex gap-1">
-                              <div className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                              <div className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                              <div className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+
+                            {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
+                            {/* {message.sender === "assistant"
+                              && message.suggestedQuestions && index === messages.length - 1 && !isLoading &&
+                              (
+                              <div className="flex justify-start mt-2 sm:mt-3">
+                                <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
+                                  {message.suggestedQuestions.map((question, qIndex) => (
+                                    <button
+                                      key={qIndex}
+                                      onClick={() => handleSend(question)}
+                                      className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left"
+                                    >
+                                      {question}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )} */}
+                          </div>
+                        ))}
+                        {isLoading && (
+                          <div className="flex justify-start">
+                            <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
+                              <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                                <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
+                                  <ImageWithFallback
+                                    src={aiAgent.avatar}
+                                    alt={aiAgent.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <span className="text-xs text-foreground">{aiAgent.name} is typing...</span>
+                              </div>
+                              <div className="flex gap-1">
+                                <div className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                                <div className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                                <div className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  </ScrollArea>
-                </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    </ScrollArea>
+                  </div>
 
-                {/* Rating and Like Section - Fixed at bottom */}
-                <div className="p-3 sm:p-4 border-t border-border pointer-events-auto bg-card">
-                  <div className="max-w-4xl mx-auto">
-                    <div className={`p-3 sm:p-4 rounded-lg border border-border transition-all ${
-                      ratingFlashing ? 'border-primary' : ''
-                    }`}>
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <p className="text-xs text-muted-foreground mb-2">Rate this prediction</p>
-                          <div className="flex items-center gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                onClick={() => handleRating(star)}
-                                className="transition-opacity hover:opacity-70"
-                              >
-                                <Star
-                                  className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                                    star <= userRating
+                  {/* Rating and Like Section - Fixed at bottom */}
+                  <div className="p-3 sm:p-4 border-t border-border pointer-events-auto bg-card">
+                    <div className="max-w-4xl mx-auto">
+                      <div className={`p-3 sm:p-4 rounded-lg border border-border transition-all ${ratingFlashing ? 'border-primary' : ''
+                        }`}>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="text-xs text-muted-foreground mb-2">Rate this prediction</p>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  onClick={() => handleRating(star)}
+                                  className="transition-opacity hover:opacity-70"
+                                >
+                                  <Star
+                                    className={`w-4 h-4 sm:w-5 sm:h-5 ${star <= userRating
                                       ? "fill-primary text-primary"
                                       : "text-muted-foreground"
-                                  }`}
-                                />
-                              </button>
-                            ))}
-                            {userRating > 0 && (
-                              <span className="text-xs text-muted-foreground ml-2">
-                                {userRating}/5
-                              </span>
-                            )}
+                                      }`}
+                                  />
+                                </button>
+                              ))}
+                              {userRating > 0 && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  {userRating}/5
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleLike}
-                            className={hasLiked ? "bg-primary text-primary-foreground border-primary" : ""}
-                          >
-                            Like
-                          </Button>
-                          <span className="text-xs text-muted-foreground">
-                            {formatLikes(localLikes)}
-                          </span>
+                          <div className="flex flex-col items-end gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleLike}
+                              className={hasLiked ? "bg-primary text-primary-foreground border-primary" : ""}
+                            >
+                              Like
+                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                              {formatLikes(localLikes)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1653,63 +1531,147 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                 </div>
               </div>
             </div>
+
+            {/* News Feed - Right - Hidden on mobile */}
+            <div className="hidden lg:block w-full lg:w-80 flex-shrink-0 space-y-4">
+              {/* AI Agent Profile Card */}
+              <Card className="border-border overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="relative flex-shrink-0">
+                      <ImageWithFallback
+                        src={aiAgent.avatar}
+                        alt={aiAgent.name}
+                        className="w-16 h-16 rounded-full object-cover ring-2 ring-blue-500/20"
+                      />
+                      <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-1">
+                        <Sparkles className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="truncate mb-0.5">{aiAgent.name}</h3>
+                      <p className="text-xs text-blue-400 mb-2">{aiAgent.title}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
+                        {aiAgent.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <Star className="w-3.5 h-3.5 text-yellow-500" />
+                        <span className="text-sm">{aiAgent.rating}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Rating</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 mb-1">
+                        <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+                        <span className="text-sm">{aiAgent.consultSessions}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Predictions</p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    className="w-full mt-3 text-xs h-8 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50 transition-colors"
+                    onClick={() => setShareOracleDialogOpen(true)}
+                  >
+                    <Share2 className="w-3 h-3 mr-1.5" />
+                    Share Oracle
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Hot Takes Section */}
+              <Card className="border-border overflow-hidden h-[calc(100vh-28rem)]">
+                <CardHeader className="border-b border-border pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Zap className="w-4 h-4" />
+                    <span>Hot Takes</span>
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Latest insights from {aiAgent.name}
+                  </p>
+                </CardHeader>
+                <ScrollArea className="h-full">
+                  <div className="p-3 space-y-3">
+                    {isLoadingNews ? (
+                      <>
+                        {[1, 2].map((i) => (
+                          <div key={i} className="space-y-2">
+                            <Skeleton className="h-20 w-full rounded-lg" />
+                            <Skeleton className="h-3 w-full" />
+                            <Skeleton className="h-2 w-2/3" />
+                          </div>
+                        ))}
+                      </>
+                    ) : newsArticles.length > 0 ? (
+                      newsArticles.map((article) => (
+                        <Card
+                          key={article.id}
+                          className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
+                          onClick={() => handleArticleClick(article)}
+                        >
+                          <div className="relative h-20 overflow-hidden">
+                            <ImageWithFallback
+                              src={article.image}
+                              alt={article.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute top-1 right-1">
+                              <Badge variant="secondary" className="text-xs h-4 px-1.5">
+                                {article.relevance}
+                              </Badge>
+                            </div>
+                          </div>
+                          <CardContent className="p-2">
+                            <h4 className="text-xs mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors leading-tight">
+                              {article.title}
+                            </h4>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+                              <span className="truncate text-xs flex items-center gap-1">
+                                <span className="text-blue-400">{aiAgent.emoji}</span>
+                                {article.source}
+                              </span>
+                              <span className="text-xs">{article.publishedAt}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
+                              <span className="flex items-center gap-1">
+                                <ThumbsUp className="w-3 h-3" />
+                                {article.likes || 0}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MessageSquare className="w-3 h-3" />
+                                {article.comments || 0}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Share2 className="w-3 h-3" />
+                                {article.shares || 0}
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <Zap className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                        <p className="text-xs text-muted-foreground">
+                          No hot takes available
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+              </Card>
+            </div>
           </div>
 
-          {/* News Feed - Right - Hidden on mobile */}
-          <div className="hidden lg:block w-full lg:w-80 flex-shrink-0 space-y-4">
-            {/* AI Agent Profile Card */}
+          {/* Mobile Hot Takes Section - Visible only on mobile */}
+          <div className="lg:hidden mt-4 px-2 sm:px-4 pb-4">
             <Card className="border-border overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="relative flex-shrink-0">
-                    <ImageWithFallback
-                      src={aiAgent.avatar}
-                      alt={aiAgent.name}
-                      className="w-16 h-16 rounded-full object-cover ring-2 ring-blue-500/20"
-                    />
-                    <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-1">
-                      <Sparkles className="w-3 h-3 text-white" />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="truncate mb-0.5">{aiAgent.name}</h3>
-                    <p className="text-xs text-blue-400 mb-2">{aiAgent.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
-                      {aiAgent.description}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <Star className="w-3.5 h-3.5 text-yellow-500" />
-                      <span className="text-sm">{aiAgent.rating}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Rating</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                      <span className="text-sm">{aiAgent.consultSessions}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Predictions</p>
-                  </div>
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full mt-3 text-xs h-8 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50 transition-colors"
-                  onClick={() => setShareOracleDialogOpen(true)}
-                >
-                  <Share2 className="w-3 h-3 mr-1.5" />
-                  Share Oracle
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Hot Takes Section */}
-            <Card className="border-border overflow-hidden h-[calc(100vh-28rem)]">
               <CardHeader className="border-b border-border pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Zap className="w-4 h-4" />
@@ -1719,374 +1681,289 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                   Latest insights from {aiAgent.name}
                 </p>
               </CardHeader>
-              <ScrollArea className="h-full">
-                <div className="p-3 space-y-3">
-                  {isLoadingNews ? (
-                    <>
-                      {[1, 2].map((i) => (
-                        <div key={i} className="space-y-2">
-                          <Skeleton className="h-20 w-full rounded-lg" />
-                          <Skeleton className="h-3 w-full" />
-                          <Skeleton className="h-2 w-2/3" />
+              <div className="p-3 space-y-3 max-h-96 overflow-y-auto">
+                {isLoadingNews ? (
+                  <>
+                    {[1, 2].map((i) => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton className="h-20 w-full rounded-lg" />
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-2 w-2/3" />
+                      </div>
+                    ))}
+                  </>
+                ) : newsArticles.length > 0 ? (
+                  newsArticles.map((article) => (
+                    <Card
+                      key={article.id}
+                      className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
+                      onClick={() => handleArticleClick(article)}
+                    >
+                      <div className="relative h-20 overflow-hidden">
+                        <ImageWithFallback
+                          src={article.image}
+                          alt={article.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute top-1 right-1">
+                          <Badge variant="secondary" className="text-xs h-4 px-1.5">
+                            {article.relevance}
+                          </Badge>
                         </div>
-                      ))}
-                    </>
-                  ) : newsArticles.length > 0 ? (
-                    newsArticles.map((article) => (
-                      <Card 
-                        key={article.id} 
-                        className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
-                        onClick={() => handleArticleClick(article)}
-                      >
-                        <div className="relative h-20 overflow-hidden">
-                          <ImageWithFallback
-                            src={article.image}
-                            alt={article.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute top-1 right-1">
-                            <Badge variant="secondary" className="text-xs h-4 px-1.5">
-                              {article.relevance}
-                            </Badge>
-                          </div>
+                      </div>
+                      <CardContent className="p-2">
+                        <h4 className="text-xs mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors leading-tight">
+                          {article.title}
+                        </h4>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+                          <span className="truncate text-xs flex items-center gap-1">
+                            <div className="w-4 h-4 rounded-full overflow-hidden border border-blue-500/30 flex-shrink-0">
+                              <ImageWithFallback
+                                src={aiAgent.avatar}
+                                alt={aiAgent.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            {article.source}
+                          </span>
+                          <span className="text-xs">{article.publishedAt}</span>
                         </div>
-                        <CardContent className="p-2">
-                          <h4 className="text-xs mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors leading-tight">
-                            {article.title}
-                          </h4>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-                            <span className="truncate text-xs flex items-center gap-1">
-                              <span className="text-blue-400">{aiAgent.emoji}</span>
-                              {article.source}
-                            </span>
-                            <span className="text-xs">{article.publishedAt}</span>
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
-                            <span className="flex items-center gap-1">
-                              <ThumbsUp className="w-3 h-3" />
-                              {article.likes || 0}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MessageSquare className="w-3 h-3" />
-                              {article.comments || 0}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Share2 className="w-3 h-3" />
-                              {article.shares || 0}
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="text-center py-8">
-                      <Zap className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
-                      <p className="text-xs text-muted-foreground">
-                        No hot takes available
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
+                          <span className="flex items-center gap-1">
+                            <ThumbsUp className="w-3 h-3" />
+                            {article.likes || 0}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="w-3 h-3" />
+                            {article.comments || 0}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Share2 className="w-3 h-3" />
+                            {article.shares || 0}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Zap className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                    <p className="text-xs text-muted-foreground">
+                      No hot takes available
+                    </p>
+                  </div>
+                )}
+              </div>
             </Card>
           </div>
         </div>
 
-        {/* Mobile Hot Takes Section - Visible only on mobile */}
-        <div className="lg:hidden mt-4 px-2 sm:px-4 pb-4">
-          <Card className="border-border overflow-hidden">
-            <CardHeader className="border-b border-border pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Zap className="w-4 h-4" />
-                <span>Hot Takes</span>
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Latest insights from {aiAgent.name}
-              </p>
-            </CardHeader>
-            <div className="p-3 space-y-3 max-h-96 overflow-y-auto">
-              {isLoadingNews ? (
-                <>
-                  {[1, 2].map((i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-20 w-full rounded-lg" />
-                      <Skeleton className="h-3 w-full" />
-                      <Skeleton className="h-2 w-2/3" />
-                    </div>
-                  ))}
-                </>
-              ) : newsArticles.length > 0 ? (
-                newsArticles.map((article) => (
-                  <Card 
-                    key={article.id} 
-                    className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
-                    onClick={() => handleArticleClick(article)}
-                  >
-                    <div className="relative h-20 overflow-hidden">
-                      <ImageWithFallback
-                        src={article.image}
-                        alt={article.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-1 right-1">
-                        <Badge variant="secondary" className="text-xs h-4 px-1.5">
-                          {article.relevance}
-                        </Badge>
-                      </div>
-                    </div>
-                    <CardContent className="p-2">
-                      <h4 className="text-xs mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors leading-tight">
-                        {article.title}
-                      </h4>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-                        <span className="truncate text-xs flex items-center gap-1">
-                          <div className="w-4 h-4 rounded-full overflow-hidden border border-blue-500/30 flex-shrink-0">
-                            <ImageWithFallback 
-                              src={aiAgent.avatar}
-                              alt={aiAgent.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          {article.source}
-                        </span>
-                        <span className="text-xs">{article.publishedAt}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
-                        <span className="flex items-center gap-1">
-                          <ThumbsUp className="w-3 h-3" />
-                          {article.likes || 0}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageSquare className="w-3 h-3" />
-                          {article.comments || 0}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Share2 className="w-3 h-3" />
-                          {article.shares || 0}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <Zap className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
-                  <p className="text-xs text-muted-foreground">
-                    No hot takes available
+        {/* Sign In Dialog */}
+        <AlertDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen}>
+          <AlertDialogContent className="max-w-md mx-4 sm:mx-auto">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                Sign In to Continue
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3">
+                  <p className="text-sm">
+                    Sign in required to chat with {aiAgent.name} and get personalized AI predictions!
                   </p>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* Sign In Dialog */}
-      <AlertDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen}>
-        <AlertDialogContent className="max-w-md mx-4 sm:mx-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-              Sign In to Continue
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3">
-                <p className="text-sm">
-                  Sign in required to chat with {aiAgent.name} and get personalized AI predictions!
-                </p>
-                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                  <p className="text-sm font-medium mb-2">Sign in to get:</p>
-                  <ul className="text-xs sm:text-sm space-y-1 text-muted-foreground">
-                    <li>✓ Get predictions from all AI agents</li>
-                    <li>✓ Save your conversation history</li>
-                    <li>✓ Level up and earn XP</li>
-                    <li>✓ Share predictions</li>
-                    <li>✓ Access to premium features</li>
-                  </ul>
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto">Maybe Later</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setSignInDialogOpen(false);
-                if (onOpenWalletDialog) {
-                  onOpenWalletDialog();
-                }
-              }}
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white w-full sm:w-auto"
-            >
-              Sign In Now
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Subscription Management Dialog */}
-      <SubscriptionManagementDialog
-        open={subscriptionDialogOpen}
-        onOpenChange={setSubscriptionDialogOpen}
-        currentTier={user?.subscriptionTier || 'free'}
-        onSubscriptionSuccess={() => {
-          if (updateUser) {
-            updateUser({ subscriptionTier: 'master' });
-          }
-          if (awardXPToUser) {
-            awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
-          }
-          toast.success("Welcome to Pro! 🎉");
-        }}
-      />
-
-      {/* Daily Limit Reached Dialog */}
-      <AlertDialog open={limitReachedDialogOpen} onOpenChange={setLimitReachedDialogOpen}>
-        <AlertDialogContent className="max-w-md mx-4 sm:mx-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
-              Daily Limit Reached
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-4">
-                {limitReachedType === 'textline' ? (
-                  <>
-                    <p className="text-sm">
-                      You've used all <strong>100 free text lines</strong> for today. Your limit resets tomorrow!
-                    </p>
-                    <div className="p-3 sm:p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <MessageSquare className="w-4 h-4 text-orange-400" />
-                        <p className="text-xs sm:text-sm font-medium text-foreground">Current Usage</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Free tier: 100 text lines per day
-                      </p>
-                      <div className="w-full bg-black/30 rounded-full h-2">
-                        <div className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full" style={{ width: '100%' }} />
-                      </div>
-                      <p className="text-xs text-orange-400 mt-1 text-center">100/100 lines used</p>
-                    </div>
-                  </>
-                ) : limitReachedType === 'total-predictions' ? (
-                  <>
-                    <p className="text-sm">
-                      You've used all <strong>5 free predictions</strong> on the Basic tier. Upgrade to Pro to continue making unlimited predictions!
-                    </p>
-                    <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-4 h-4 text-blue-400" />
-                        <p className="text-xs sm:text-sm font-medium text-foreground">Free Tier Limit Reached</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Basic tier: 5 total predictions
-                      </p>
-                      <div className="w-full bg-black/30 rounded-full h-2">
-                        <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: '100%' }} />
-                      </div>
-                      <p className="text-xs text-blue-400 mt-1 text-center">5/5 predictions used</p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-sm">
-                      You've used all <strong>5 free predictions</strong> for today. Your limit resets tomorrow!
-                    </p>
-                    <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-4 h-4 text-blue-400" />
-                        <p className="text-xs sm:text-sm font-medium text-foreground">Current Usage</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Free tier: 5 predictions per day
-                      </p>
-                      <div className="w-full bg-black/30 rounded-full h-2">
-                        <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: '100%' }} />
-                      </div>
-                      <p className="text-xs text-blue-400 mt-1 text-center">5/5 predictions used</p>
-                    </div>
-                  </>
-                )}
-
-                <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-                    <p className="text-xs sm:text-sm font-medium text-foreground">Upgrade to Pro</p>
-                  </div>
-                  <ul className="text-xs sm:text-sm space-y-2 text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                      <span><strong>Unlimited</strong> predictions</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                      <span><strong>2x XP</strong> multiplier on all actions</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                      <span><strong className="text-yellow-400">+1,500 XP bonus</strong> when you subscribe</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                      <span>Priority AI responses</span>
-                    </li>
-                  </ul>
-                  <div className="mt-3 pt-3 border-t border-blue-500/20">
-                    <p className="text-xs text-center">
-                      <span className="line-through text-muted-foreground">$19.99/mo</span>
-                      <span className="ml-2 text-base sm:text-lg font-semibold text-blue-400">$4.99/mo</span>
-                      <span className="ml-2 text-xs text-green-400">75% OFF</span>
-                    </p>
+                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                    <p className="text-sm font-medium mb-2">Sign in to get:</p>
+                    <ul className="text-xs sm:text-sm space-y-1 text-muted-foreground">
+                      <li>✓ Get predictions from all AI agents</li>
+                      <li>✓ Save your conversation history</li>
+                      <li>✓ Level up and earn XP</li>
+                      <li>✓ Share predictions</li>
+                      <li>✓ Access to premium features</li>
+                    </ul>
                   </div>
                 </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto">Maybe Later</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setLimitReachedDialogOpen(false);
-                setSubscriptionDialogOpen(true);
-              }}
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 w-full sm:w-auto"
-            >
-              <Crown className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-              Upgrade Now
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <AlertDialogCancel className="w-full sm:w-auto">Maybe Later</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setSignInDialogOpen(false);
+                  if (onOpenWalletDialog) {
+                    onOpenWalletDialog();
+                  }
+                }}
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white w-full sm:w-auto"
+              >
+                Sign In Now
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      {/* Share Prediction Dialog */}
-      {lastPrediction && (
-        <SharePredictionDialog
-          open={shareDialogOpen}
-          onOpenChange={setShareDialogOpen}
-          question={lastPrediction.question}
-          answer={lastPrediction.answer}
+        {/* Subscription Management Dialog */}
+        <SubscriptionManagementDialog
+          open={subscriptionDialogOpen}
+          onOpenChange={setSubscriptionDialogOpen}
+          currentTier={user?.subscriptionTier || 'free'}
+          onSubscriptionSuccess={() => {
+            if (updateUser) {
+              updateUser({ subscriptionTier: 'master' });
+            }
+            if (awardXPToUser) {
+              awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
+            }
+            toast.success("Welcome to Pro! 🎉");
+          }}
+        />
+
+        {/* Daily Limit Reached Dialog */}
+        <AlertDialog open={limitReachedDialogOpen} onOpenChange={setLimitReachedDialogOpen}>
+          <AlertDialogContent className="max-w-md mx-4 sm:mx-auto">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
+                Daily Limit Reached
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-4">
+                  {limitReachedType === 'textline' ? (
+                    <>
+                      <p className="text-sm">
+                        You've used all <strong>100 free text lines</strong> for today. Your limit resets tomorrow!
+                      </p>
+                      <div className="p-3 sm:p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MessageSquare className="w-4 h-4 text-orange-400" />
+                          <p className="text-xs sm:text-sm font-medium text-foreground">Current Usage</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Free tier: 100 text lines per day
+                        </p>
+                        <div className="w-full bg-black/30 rounded-full h-2">
+                          <div className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full" style={{ width: '100%' }} />
+                        </div>
+                        <p className="text-xs text-orange-400 mt-1 text-center">100/100 lines used</p>
+                      </div>
+                    </>
+                  ) : limitReachedType === 'total-predictions' ? (
+                    <>
+                      <p className="text-sm">
+                        You've used all <strong>5 free predictions</strong> on the Basic tier. Upgrade to Pro to continue making unlimited predictions!
+                      </p>
+                      <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="w-4 h-4 text-blue-400" />
+                          <p className="text-xs sm:text-sm font-medium text-foreground">Free Tier Limit Reached</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Basic tier: 5 total predictions
+                        </p>
+                        <div className="w-full bg-black/30 rounded-full h-2">
+                          <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: '100%' }} />
+                        </div>
+                        <p className="text-xs text-blue-400 mt-1 text-center">5/5 predictions used</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm">
+                        You've used all <strong>5 free predictions</strong> for today. Your limit resets tomorrow!
+                      </p>
+                      <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="w-4 h-4 text-blue-400" />
+                          <p className="text-xs sm:text-sm font-medium text-foreground">Current Usage</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Free tier: 5 predictions per day
+                        </p>
+                        <div className="w-full bg-black/30 rounded-full h-2">
+                          <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: '100%' }} />
+                        </div>
+                        <p className="text-xs text-blue-400 mt-1 text-center">5/5 predictions used</p>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+                      <p className="text-xs sm:text-sm font-medium text-foreground">Upgrade to Pro</p>
+                    </div>
+                    <ul className="text-xs sm:text-sm space-y-2 text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
+                        <span><strong>Unlimited</strong> predictions</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
+                        <span><strong>2x XP</strong> multiplier on all actions</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
+                        <span><strong className="text-yellow-400">+1,500 XP bonus</strong> when you subscribe</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
+                        <span>Priority AI responses</span>
+                      </li>
+                    </ul>
+                    <div className="mt-3 pt-3 border-t border-blue-500/20">
+                      <p className="text-xs text-center">
+                        <span className="line-through text-muted-foreground">$19.99/mo</span>
+                        <span className="ml-2 text-base sm:text-lg font-semibold text-blue-400">$4.99/mo</span>
+                        <span className="ml-2 text-xs text-green-400">75% OFF</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <AlertDialogCancel className="w-full sm:w-auto">Maybe Later</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setLimitReachedDialogOpen(false);
+                  setSubscriptionDialogOpen(true);
+                }}
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 w-full sm:w-auto"
+              >
+                <Crown className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                Upgrade Now
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Share Prediction Dialog */}
+        {lastPrediction && (
+          <SharePredictionDialog
+            open={shareDialogOpen}
+            onOpenChange={setShareDialogOpen}
+            question={lastPrediction.question}
+            answer={lastPrediction.answer}
+            aiAgentName={aiAgent.name}
+            aiAgentAvatar={aiAgent.avatar}
+            aiAgentEmoji={aiAgent.emoji}
+          />
+        )}
+
+        {/* Share AI Agent Dialog */}
+        <ShareAIAgentDialog
+          open={shareAIAgentDialogOpen}
+          onOpenChange={setShareAIAgentDialogOpen}
           aiAgentName={aiAgent.name}
           aiAgentAvatar={aiAgent.avatar}
-          aiAgentEmoji={aiAgent.emoji}
+          aiAgentTitle={aiAgent.title}
+          aiAgentId={aiAgent.id}
         />
-      )}
 
-      {/* Share AI Agent Dialog */}
-      <ShareAIAgentDialog
-        open={shareAIAgentDialogOpen}
-        onOpenChange={setShareAIAgentDialogOpen}
-        aiAgentName={aiAgent.name}
-        aiAgentAvatar={aiAgent.avatar}
-        aiAgentTitle={aiAgent.title}
-        aiAgentId={aiAgent.id}
-      />
-
-      {/* Disclaimer Dialog */}
-      <DisclaimerDialog
-        open={disclaimerDialogOpen}
-        onOpenChange={setDisclaimerDialogOpen}
-      />
+        {/* Disclaimer Dialog */}
+        <DisclaimerDialog
+          open={disclaimerDialogOpen}
+          onOpenChange={setDisclaimerDialogOpen}
+        />
       </div>
     </div>
   );

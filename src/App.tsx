@@ -206,10 +206,6 @@ export default function App() {
   };
 
   const handleProfileDialogOpenChange = (isOpen: boolean) => {
-    if (!isOpen && profileDialogRequireCompletion) {
-      return;
-    }
-
     if (!isOpen) {
       closeProfileDialog();
     } else {
@@ -328,34 +324,15 @@ export default function App() {
       : `user${timestamp}@icloud.com`;
   };
 
-  // Auth handlers
-  const handleWalletConnect = (walletType: WalletType) => {
-    const walletAddress = generateMockAddress();
-    const referralCode = sessionStorage.getItem('pendingReferralCode');
-    let initialXP = mockUser.xp;
-
-    if (referralCode) {
-      initialXP += 100;
-      toast.success('🎉 Referral bonus applied! +100 XP', {
-        description: 'Welcome to Dehouse of Predictions!',
-      });
-      sessionStorage.removeItem('pendingReferralCode');
-    }
-
-    const newUser: User = {
-      ...mockUser,
-      walletAddress,
-      walletType,
-      xp: initialXP,
-      referredBy: referralCode || undefined,
-      referralCode: undefined,
-      referredFriends: [],
-    };
-
-    setUser(newUser);
+  const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);
     toast.success(`Connected with ${walletType}!`);
-    openProfileDialog({ user: newUser, require: true });
+
+    const createdAt = new Date(user.createdAt).getTime();
+    const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+    if (createdAt >= tenMinutesAgo) {
+      openProfileDialog({ user, require: true });
+    }
 
     if (pendingNavigation) {
       setCurrentPage(pendingNavigation);
@@ -445,7 +422,6 @@ export default function App() {
         open={profileDialogOpen}
         onOpenChange={handleProfileDialogOpenChange}
         user={profileDialogUser}
-        requireCompletion={profileDialogRequireCompletion}
         onProfileUpdated={handleProfileUpdated}
       />
       <Toaster />

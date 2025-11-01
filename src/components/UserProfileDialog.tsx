@@ -36,7 +36,6 @@ interface UserProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: User | null;
-  requireCompletion?: boolean;
   onProfileUpdated?: (updates?: Partial<User>) => void;
 }
 
@@ -44,7 +43,6 @@ export function UserProfileDialog({
   open,
   onOpenChange,
   user,
-  requireCompletion = false,
   onProfileUpdated,
 }: UserProfileDialogProps) {
   const [formData, setFormData] = useState<UserProfileFormData>(
@@ -80,10 +78,9 @@ export function UserProfileDialog({
     setFormData((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  const handleSkip = useCallback(() => {
-    if (requireCompletion || submitting) return;
+  const handleSkip = () => {
     onOpenChange(false);
-  }, [requireCompletion, submitting, onOpenChange]);
+  };
 
   const handleComplete = useCallback(async () => {
     if (submitting) return;
@@ -154,18 +151,13 @@ export function UserProfileDialog({
     submitting,
   ]);
 
-  const title = requireCompletion ? 'Complete Your Profile' : 'Update Profile';
-  const description = requireCompletion
-    ? 'Welcome aboard! Add a few details so we can personalize your experience.'
-    : 'Keep your contact details up to date for account recovery and notifications.';
+  const title = 'Complete Your Profile';
+  const description = 'Add your profile details (optional)';
 
   return (
     <Dialog
       open={open}
       onOpenChange={(nextOpen: any) => {
-        if (!nextOpen && (requireCompletion || submitting)) {
-          return;
-        }
         onOpenChange(nextOpen);
       }}
     >

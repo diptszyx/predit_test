@@ -1,3 +1,8 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AxiosError } from 'axios';
+import { toast } from 'sonner';
+import { User as UserIcon } from 'lucide-react';
+
 import {
   Dialog,
   DialogContent,
@@ -9,40 +14,160 @@ import {
   UserProfileForm,
   type UserProfileForm as UserProfileFormData,
 } from './UserProfileForm';
-import { User as UserIcon } from 'lucide-react';
+import apiClient from '../lib/axios';
+import type { User } from '../lib/types';
+
+const buildFormData = (user: User | null): UserProfileFormData => ({
+  avatar: user?.avatar ?? '',
+  email: user?.email ?? '',
+  phoneNumber: user?.phoneNumber ?? '',
+});
+
+const resolveProvider = (user: User | null): string | null => {
+  if (!user) return null;
+  const rawProvider =
+    (user?.socialProvider as string | undefined) ??
+    (user as unknown as { provider?: string | null | undefined })?.provider ??
+    null;
+  return rawProvider ? rawProvider.toLowerCase() : null;
+};
 
 interface UserProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  data: UserProfileFormData;
-  onChange: (updates: Partial<UserProfileFormData>) => void;
-  onSkip?: () => void;
-  onComplete: () => void;
-  isNewUser?: boolean;
-  emailLocked?: boolean;
-  emailProvider?: string | null;
+  user: User | null;
+  requireCompletion?: boolean;
+  onProfileUpdated?: (updates?: Partial<User>) => void;
 }
 
 export function UserProfileDialog({
   open,
   onOpenChange,
-  data,
-  onChange,
-  onSkip,
-  onComplete,
-  isNewUser = false,
-  emailLocked = false,
-  emailProvider = null,
+  user,
+  requireCompletion = false,
+  onProfileUpdated,
 }: UserProfileDialogProps) {
-  const title = isNewUser ? 'Complete Your Profile' : 'Update Profile';
-  const description = isNewUser
+  const [formData, setFormData] = useState<UserProfileFormData>(
+    buildFormData(null)
+  );
+  const [initialFormData, setInitialFormData] = useState<UserProfileFormData>(
+    buildFormData(null)
+  );
+  const [emailLocked, setEmailLocked] = useState(false);
+  const [emailProvider, setEmailProvider] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const nextData = buildFormData(user);
+    setFormData(nextData);
+    setInitialFormData(nextData);
+
+    const provider = resolveProvider(user);
+    setEmailLocked(provider === 'google' || provider === 'email');
+    setEmailProvider(provider);
+  }, [open, user]);
+
+  const emailProviderLabel = useMemo(() => {
+    if (!emailProvider) return 'your login provider';
+    if (emailProvider === 'google') return 'Google';
+    if (emailProvider === 'email') return 'your email login';
+    return emailProvider;
+  }, [emailProvider]);
+
+  const handleChange = useCallback((updates: Partial<UserProfileFormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const handleSkip = useCallback(() => {
+    if (requireCompletion || submitting) return;
+    onOpenChange(false);
+  }, [requireCompletion, submitting, onOpenChange]);
+
+  const handleComplete = useCallback(async () => {
+    if (submitting) return;
+
+    const { email, phoneNumber, avatar } = formData;
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    if (phoneNumber && !/^\+?[\d\s-()]+$/.test(phoneNumber)) {
+      toast.error('Please enter a valid phone number');
+      return;
+    }
+
+    const updates: Partial<User> = {};
+
+    if (avatar && avatar !== initialFormData.avatar) {
+      updates.avatar = avatar;
+    }
+
+    if (!emailLocked && email !== initialFormData.email) {
+      updates.email = email;
+    }
+
+    if (phoneNumber !== initialFormData.phoneNumber) {
+      updates.phoneNumber = phoneNumber;
+    }
+
+    setSubmitting(true);
+    try {
+      if (Object.keys(updates).length > 0) {
+        await apiClient.patch('/auth/me', updates);
+        toast.success('Profile updated successfully.');
+        onProfileUpdated?.(updates);
+      } else {
+        toast.success('Profile saved.');
+        onProfileUpdated?.({});
+      }
+
+      onOpenChange(false);
+    } catch (error: unknown) {
+      let message = 'Unable to update your profile. Please try again.';
+      if (error instanceof AxiosError) {
+        const apiMessage = (
+          error.response?.data as { message?: string } | undefined
+        )?.message;
+        if (apiMessage) {
+          message = apiMessage;
+        } else if (error.message) {
+          message = error.message;
+        }
+      } else if (error instanceof Error && error.message) {
+        message = error.message;
+      }
+
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [
+    emailLocked,
+    formData,
+    initialFormData,
+    onOpenChange,
+    onProfileUpdated,
+    submitting,
+  ]);
+
+  const title = requireCompletion ? 'Complete Your Profile' : 'Update Profile';
+  const description = requireCompletion
     ? 'Welcome aboard! Add a few details so we can personalize your experience.'
     : 'Keep your contact details up to date for account recovery and notifications.';
 
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(nextOpen: any) => {
+        if (!nextOpen && (requireCompletion || submitting)) {
+          return;
+        }
+        onOpenChange(nextOpen);
+      }}
     >
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -54,14 +179,15 @@ export function UserProfileDialog({
         </DialogHeader>
 
         <UserProfileForm
-          data={data}
-          onChange={onChange}
-          onSkip={isNewUser ? undefined : onSkip}
-          onComplete={onComplete}
+          data={formData}
+          onChange={handleChange}
+          onSkip={handleSkip}
+          onComplete={handleComplete}
           emailLocked={emailLocked}
-          emailProvider={emailProvider ?? undefined}
-          completeLabel={isNewUser ? 'Save & Continue' : 'Save Changes'}
-          skipLabel="I'll do this later"
+          emailProvider={emailProviderLabel}
+          isSubmitting={submitting}
+          completeLabel={'Complete Setup'}
+          skipLabel="Skip for Now"
         />
       </DialogContent>
     </Dialog>

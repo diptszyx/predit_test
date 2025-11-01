@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { AxiosError } from 'axios';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { useXP } from './lib/useXP';
@@ -29,9 +28,8 @@ import { AIAgentCard } from './components/AIAgentCard';
 import { LoginForm } from './components/LoginForm';
 import { Button } from './components/ui/button';
 import UserProfileDialog from './components/UserProfileDialog';
-import type { UserProfileForm as UserProfileFormData } from './components/UserProfileForm';
 import useAuthStore from './store/auth.store';
-import axios, { apiClient } from './lib/axios';
+import { shortenAddress } from './lib/address';
 
 // Constants
 const AI_AGENT_IMAGES = {
@@ -137,14 +135,6 @@ const AI_AGENTS: AIAgent[] = [
   },
 ];
 
-const buildProfileFormData = (
-  target?: User | null
-): UserProfileFormData => ({
-  avatar: target?.avatar ?? '',
-  email: target?.email ?? '',
-  phoneNumber: target?.phoneNumber ?? '',
-});
-
 export default function App() {
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
@@ -179,12 +169,9 @@ export default function App() {
     null
   );
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
-  const [profileFormData, setProfileFormData] =
-    useState<UserProfileFormData>(() => buildProfileFormData(null));
-  const [requireProfileCompletion, setRequireProfileCompletion] =
+  const [profileDialogUser, setProfileDialogUser] = useState<User | null>(null);
+  const [profileDialogRequireCompletion, setProfileDialogRequireCompletion] =
     useState(false);
-  const [profileEmailLocked, setProfileEmailLocked] = useState(false);
-  const [profileEmailProvider, setProfileEmailProvider] = useState<string | null>(null);
 
   // Dialog state
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
@@ -197,97 +184,29 @@ export default function App() {
     require?: boolean;
   }) => {
     const storeUser = useAuthStore.getState().user;
-    const targetUser = options?.user ?? storeUser ?? user;
-    setProfileFormData(buildProfileFormData(targetUser));
-    setRequireProfileCompletion(Boolean(options?.require));
-    const providerRaw =
-      (targetUser?.socialProvider as string | undefined) ??
-      ((targetUser as unknown as { provider?: string | null | undefined })?.provider ?? undefined);
-    const provider = providerRaw?.toLowerCase();
-    const shouldLockEmail = provider === 'google' || provider === 'email';
-    setProfileEmailLocked(shouldLockEmail);
-    setProfileEmailProvider(provider ?? null);
+    const targetUser = options?.user ?? storeUser ?? user ?? null;
+    setProfileDialogUser(targetUser);
+    setProfileDialogRequireCompletion(Boolean(options?.require));
     setProfileDialogOpen(true);
   };
 
   const closeProfileDialog = () => {
     setProfileDialogOpen(false);
-    setRequireProfileCompletion(false);
-    setProfileEmailLocked(false);
-    setProfileEmailProvider(null);
+    setProfileDialogRequireCompletion(false);
+    setProfileDialogUser(null);
   };
 
-  const handleProfileFieldChange = (
-    updates: Partial<UserProfileFormData>
-  ) => {
-    const nextUpdates = { ...updates };
-    if (profileEmailLocked) {
-      delete (nextUpdates as Partial<UserProfileFormData>).email;
+  const handleProfileUpdated = (updates?: Partial<User>) => {
+    if (updates && Object.keys(updates).length > 0) {
+      updateUser(updates);
+      setProfileDialogUser((prev) => (prev ? { ...prev, ...updates } : prev));
+      setProfileDialogOpen(false);
     }
-    setProfileFormData((prev) => ({ ...prev, ...nextUpdates }));
-  };
-
-  const handleProfileComplete = async () => {
-    const { email, phoneNumber, avatar } = profileFormData;
-
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
-    if (phoneNumber && !/^\+?[\d\s-()]+$/.test(phoneNumber)) {
-      toast.error('Please enter a valid phone number');
-      return;
-    }
-
-    const updates: Partial<User> = {};
-    if (avatar) {
-      updates.avatar = avatar;
-    }
-    if (!profileEmailLocked && email) {
-      updates.email = email;
-    }
-    if (phoneNumber) {
-      updates.phoneNumber = phoneNumber;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      try {
-        await apiClient.patch('/auth/me', updates);
-        updateUser(updates);
-        toast.success('Profile updated successfully.');
-        if (user) {
-          setProfileFormData(buildProfileFormData({ ...user, ...updates }));
-        }
-      } catch (error) {
-        let message = 'Unable to update your profile. Please try again.';
-        if (error instanceof AxiosError) {
-          const apiMessage = (error.response?.data as { message?: string } | undefined)?.message;
-          if (apiMessage) {
-            message = apiMessage;
-          } else if (error.message) {
-            message = error.message;
-          }
-        } else if (error instanceof Error && error.message) {
-          message = error.message;
-        }
-
-        toast.error(message);
-        return;
-      }
-    } else {
-      toast.success('Profile saved.');
-    }
-
-    closeProfileDialog();
-  };
-
-  const handleProfileSkip = () => {
-    closeProfileDialog();
+    setProfileDialogRequireCompletion(false);
   };
 
   const handleProfileDialogOpenChange = (isOpen: boolean) => {
-    if (!isOpen && requireProfileCompletion) {
+    if (!isOpen && profileDialogRequireCompletion) {
       return;
     }
 
@@ -382,7 +301,7 @@ export default function App() {
               require: true,
             });
           } else if (authenticatedUser) {
-            setProfileFormData(buildProfileFormData(authenticatedUser));
+            setProfileDialogUser(authenticatedUser);
           }
         } catch {
           toast.error("We couldn't sign you in. Please try again.");
@@ -392,9 +311,6 @@ export default function App() {
   }, [authenticateWithToken, pendingNavigation]);
 
   // Utility functions
-  const shortenAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
 
   const generateMockAddress = (): string => {
     const chars = '0123456789abcdef';
@@ -528,13 +444,9 @@ export default function App() {
       <UserProfileDialog
         open={profileDialogOpen}
         onOpenChange={handleProfileDialogOpenChange}
-        data={profileFormData}
-        onChange={handleProfileFieldChange}
-        onSkip={requireProfileCompletion ? undefined : handleProfileSkip}
-        onComplete={handleProfileComplete}
-        isNewUser={requireProfileCompletion}
-        emailLocked={profileEmailLocked}
-        emailProvider={profileEmailProvider}
+        user={profileDialogUser}
+        requireCompletion={profileDialogRequireCompletion}
+        onProfileUpdated={handleProfileUpdated}
       />
       <Toaster />
     </>

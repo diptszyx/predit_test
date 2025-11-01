@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { ChangeEvent, useRef } from 'react';
 import { toast } from 'sonner';
 import { Camera, Mail, Phone, Upload, User } from 'lucide-react';
 
@@ -22,6 +22,7 @@ interface UserProfileFormProps {
   skipLabel?: string;
   emailLocked?: boolean;
   emailProvider?: string;
+  isSubmitting?: boolean;
 }
 
 export function UserProfileForm({
@@ -33,6 +34,7 @@ export function UserProfileForm({
   skipLabel = 'Skip for Now',
   emailLocked = false,
   emailProvider,
+  isSubmitting = false,
 }: UserProfileFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,7 +42,7 @@ export function UserProfileForm({
     fileInputRef.current?.click();
   };
 
-  const handleFileUpload = (event: any) => {
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -132,7 +134,7 @@ export function UserProfileForm({
           type="email"
           placeholder="your.email@example.com"
           value={data.email}
-          onChange={(event: any) =>
+          onChange={(event: ChangeEvent<HTMLInputElement>) =>
             onChange({ email: event.target.value })
           }
           className="w-full"
@@ -158,7 +160,7 @@ export function UserProfileForm({
           type="tel"
           placeholder="+1 (555) 123-4567"
           value={data.phoneNumber}
-          onChange={(event: any) =>
+          onChange={(event: ChangeEvent<HTMLInputElement>) =>
             onChange({ phoneNumber: event.target.value })
           }
           className="w-full"
@@ -184,6 +186,7 @@ export function UserProfileForm({
             variant="outline"
             onClick={onSkip}
             className="flex-1"
+            disabled={isSubmitting}
           >
             {skipLabel}
           </Button>
@@ -191,6 +194,7 @@ export function UserProfileForm({
         <Button
           onClick={onComplete}
           className="flex-1"
+          disabled={isSubmitting}
         >
           {completeLabel}
         </Button>

@@ -1,4 +1,5 @@
 @custom-variant dark (&:is(.dark *));
+@import '@wallet-ui/tailwind/index.css';
 
 :root {
   --font-size: 16px;

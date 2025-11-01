@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const AUTH_TOKEN_STORAGE_KEY = "deor.authToken";
-const DEFAULT_API_BASE_URL = "http://localhost:8080/api/v1";
+const DEFAULT_API_BASE_URL = "https://deor-be-production.up.railway.app/api/v1";
 
 const apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL;
@@ -40,7 +40,7 @@ apiClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export default apiClient;

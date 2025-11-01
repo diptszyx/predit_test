@@ -63,6 +63,10 @@ export interface User {
     aiAgentName: string;
     timestamp: string;
   }>;
+  photo?: {
+    id: string;
+    path?: string;
+  };
 }
 
 export interface Prediction {

@@ -22,6 +22,7 @@ import {
   Infinity,
   Lock,
   Zap,
+  Loader2,
 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { toast } from "sonner";
@@ -35,6 +36,8 @@ import {
   getSubscriptionMultiplier,
   getStreakMultiplier,
 } from "../lib/xpSystem";
+import { uploadFile, updateUserPhoto } from "../services/file.service";
+import { useAuthStore } from "../store/auth.store";
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -42,16 +45,29 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
+  console.log("user--", user);
+
+  // Auth store
+  const { updateProfile, fetchCurrentUser } = useAuthStore();
+
   // Profile Settings
   const [avatar, setAvatar] = useState(
-    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+    user.photo?.path ||
+      user.avatar ||
+      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
   );
-  const [nickname, setNickname] = useState("Oracle Seeker");
-  const [email, setEmail] = useState("oracle.seeker@example.com");
-  const [phone, setPhone] = useState("+1 (555) 123-4567");
+  const [nickname, setNickname] = useState(user.username || "Oracle Seeker");
+  const [email, setEmail] = useState(user.email || "oracle.seeker@example.com");
+  const [phone, setPhone] = useState(
+    user.phone || user.phoneNumber || "+1 (555) 123-4567"
+  );
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isSavingNickname, setIsSavingNickname] = useState(false);
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
+  const [isSavingPhone, setIsSavingPhone] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // XP and Level calculations
@@ -69,42 +85,63 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   // Subscription Dialog
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("File size must be less than 5MB");
-        return;
+    if (!file) return;
+
+    // Validate file size
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file (JPG, PNG, GIF)");
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+
+    try {
+      // Step 1: Upload file to server
+      const uploadResponse = await uploadFile(file);
+
+      // Step 2: Update user profile with the photo ID
+      await updateUserPhoto(uploadResponse.file.id);
+
+      // Step 3: Fetch updated user profile
+      await fetchCurrentUser();
+
+      // Step 4: Update local avatar display
+      if (uploadResponse.file.path) {
+        setAvatar(uploadResponse.file.path);
+      } else {
+        // Fallback to local preview if path is not provided
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setAvatar(reader.result as string);
+        };
+        reader.readAsDataURL(file);
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result as string);
-        toast.success("Avatar updated successfully");
-      };
-      reader.readAsDataURL(file);
+      toast.success("Avatar updated successfully");
+    } catch (error: any) {
+      console.error("Error uploading photo:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to upload photo. Please try again."
+      );
+    } finally {
+      setIsUploadingPhoto(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
-  const handleSaveEmail = () => {
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-    setIsEditingEmail(false);
-    toast.success("Email updated successfully");
-  };
-
-  const handleSavePhone = () => {
-    if (phone && !/^\+?[\d\s-()]+$/.test(phone)) {
-      toast.error("Please enter a valid phone number");
-      return;
-    }
-    setIsEditingPhone(false);
-    toast.success("Phone number updated successfully");
-  };
-
-  const handleSaveNickname = () => {
+  const handleSaveNickname = async () => {
     if (!nickname || nickname.trim().length === 0) {
       toast.error("Please enter a nickname");
       return;
@@ -113,8 +150,65 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       toast.error("Nickname must be less than 30 characters");
       return;
     }
-    setIsEditingNickname(false);
-    toast.success("Nickname updated successfully");
+
+    setIsSavingNickname(true);
+    try {
+      await updateProfile({ username: nickname.trim() });
+      setIsEditingNickname(false);
+      toast.success("Nickname updated successfully");
+    } catch (error: any) {
+      console.error("Error updating nickname:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to update nickname. Please try again."
+      );
+    } finally {
+      setIsSavingNickname(false);
+    }
+  };
+
+  const handleSaveEmail = async () => {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setIsSavingEmail(true);
+    try {
+      await updateProfile({ email: email.trim() });
+      setIsEditingEmail(false);
+      toast.success("Email updated successfully");
+    } catch (error: any) {
+      console.error("Error updating email:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to update email. Please try again."
+      );
+    } finally {
+      setIsSavingEmail(false);
+    }
+  };
+
+  const handleSavePhone = async () => {
+    if (phone && !/^\+?[\d\s-()]+$/.test(phone)) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+
+    setIsSavingPhone(true);
+    try {
+      await updateProfile({ phoneNumber: phone.trim() });
+      setIsEditingPhone(false);
+      toast.success("Phone number updated successfully");
+    } catch (error: any) {
+      console.error("Error updating phone:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to update phone number. Please try again."
+      );
+    } finally {
+      setIsSavingPhone(false);
+    }
   };
 
   return (
@@ -151,9 +245,14 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-0 right-0 p-2 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors shadow-lg"
+                      disabled={isUploadingPhoto}
+                      className="absolute bottom-0 right-0 p-2 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Camera className="w-4 h-4 text-white" />
+                      {isUploadingPhoto ? (
+                        <Loader2 className="w-4 h-4 text-white animate-spin" />
+                      ) : (
+                        <Camera className="w-4 h-4 text-white" />
+                      )}
                     </button>
                   </div>
                   <div className="flex-1">
@@ -182,9 +281,19 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     <Button
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingPhoto}
                     >
-                      <Camera className="w-4 h-4 mr-2" />
-                      Change Avatar
+                      {isUploadingPhoto ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-4 h-4 mr-2" />
+                          Change Avatar
+                        </>
+                      )}
                     </Button>
                     <p className="text-xs text-muted-foreground mt-2">
                       Max 5MB (JPG, PNG, GIF)
@@ -196,6 +305,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     accept="image/*"
                     onChange={handleFileUpload}
                     className="hidden"
+                    disabled={isUploadingPhoto}
                   />
                 </div>
               </div>
@@ -228,6 +338,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     <Button
                       variant="outline"
                       onClick={() => setIsEditingNickname(true)}
+                      disabled={isSavingNickname}
                     >
                       <Edit2 className="w-4 h-4 mr-2" />
                       Edit
@@ -238,17 +349,28 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         variant="outline"
                         onClick={() => {
                           setIsEditingNickname(false);
-                          setNickname("Oracle Seeker");
+                          setNickname(user.username || "Oracle Seeker");
                         }}
+                        disabled={isSavingNickname}
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleSaveNickname}
                         className="bg-blue-600 hover:bg-blue-700"
+                        disabled={isSavingNickname}
                       >
-                        <Check className="w-4 h-4 mr-2" />
-                        Save
+                        {isSavingNickname ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Save
+                          </>
+                        )}
                       </Button>
                     </div>
                   )}
@@ -283,6 +405,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     <Button
                       variant="outline"
                       onClick={() => setIsEditingEmail(true)}
+                      disabled={isSavingEmail}
                     >
                       <Edit2 className="w-4 h-4 mr-2" />
                       Edit
@@ -293,17 +416,28 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         variant="outline"
                         onClick={() => {
                           setIsEditingEmail(false);
-                          setEmail("oracle.seeker@example.com");
+                          setEmail(user.email || "oracle.seeker@example.com");
                         }}
+                        disabled={isSavingEmail}
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleSaveEmail}
                         className="bg-blue-600 hover:bg-blue-700"
+                        disabled={isSavingEmail}
                       >
-                        <Check className="w-4 h-4 mr-2" />
-                        Save
+                        {isSavingEmail ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Save
+                          </>
+                        )}
                       </Button>
                     </div>
                   )}
@@ -336,6 +470,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     <Button
                       variant="outline"
                       onClick={() => setIsEditingPhone(true)}
+                      disabled={isSavingPhone}
                     >
                       <Edit2 className="w-4 h-4 mr-2" />
                       Edit
@@ -346,17 +481,32 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         variant="outline"
                         onClick={() => {
                           setIsEditingPhone(false);
-                          setPhone("+1 (555) 123-4567");
+                          setPhone(
+                            user.phone ||
+                              user.phoneNumber ||
+                              "+1 (555) 123-4567"
+                          );
                         }}
+                        disabled={isSavingPhone}
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleSavePhone}
                         className="bg-blue-600 hover:bg-blue-700"
+                        disabled={isSavingPhone}
                       >
-                        <Check className="w-4 h-4 mr-2" />
-                        Save
+                        {isSavingPhone ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Save
+                          </>
+                        )}
                       </Button>
                     </div>
                   )}
@@ -649,14 +799,14 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         </Label>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {xpIntoLevel.toLocaleString()} /{" "}
-                        {xpNeededForLevel.toLocaleString()} XP
+                        {xpIntoLevel?.toLocaleString()} /{" "}
+                        {xpNeededForLevel?.toLocaleString()} XP
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">Total XP</p>
-                    <p className="text-xl">{user.xp.toLocaleString()}</p>
+                    <p className="text-xl">{user.xp?.toLocaleString()}</p>
                   </div>
                 </div>
 

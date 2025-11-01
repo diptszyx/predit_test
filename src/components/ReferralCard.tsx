@@ -3,8 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Users, Copy, CheckCircle, Gift, Zap, Trophy, Share2 } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import {
+  Users,
+  Copy,
+  CheckCircle,
+  Gift,
+  Zap,
+  Trophy,
+  Share2,
+} from "lucide-react";
+import { toast } from "sonner";
 import { copyToClipboard } from "../lib/clipboardUtils";
 
 interface ReferralCardProps {
@@ -23,44 +31,62 @@ interface ReferralCardProps {
   onAwardXP?: (amount: number, description: string) => void;
 }
 
-export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardProps) {
+export function ReferralCard({
+  user,
+  onGenerateCode,
+  onAwardXP,
+}: ReferralCardProps) {
   const [copied, setCopied] = useState(false);
-  
+
   // Generate referral code if not exists (format: USERNAME-XXXX)
-  const referralCode = user.referralCode || 
-    (onGenerateCode ? onGenerateCode() : 
-    `${user.username.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`);
-  
+  const referralCode =
+    user.referralCode ||
+    (onGenerateCode
+      ? onGenerateCode()
+      : `${
+          user.username
+            ? user.username
+                .toUpperCase()
+                .replace(/[^A-Z0-9]/g, "")
+                .slice(0, 8)
+            : "User"
+        }-${Math.random().toString(36).slice(2, 6)?.toUpperCase()} `);
+
   const referralLink = `${window.location.origin}?ref=${referralCode}`;
   const referredCount = user.referredFriends?.length || 0;
-  const totalXPFromReferrals = (user.referredFriends || []).reduce((sum, friend) => sum + 500, 0); // 200 invite + 300 join = 500 per friend
+  const totalXPFromReferrals = (user.referredFriends || []).reduce(
+    (sum, friend) => sum + 500,
+    0
+  ); // 200 invite + 300 join = 500 per friend
 
   const handleCopyToClipboard = async (text?: string) => {
     const textToCopy = text || referralLink;
-    
+
     const success = await copyToClipboard(textToCopy);
     if (success) {
       setCopied(true);
       toast.success("Referral link copied to clipboard!", {
-        description: "Share it with friends to earn XP!"
+        description: "Share it with friends to earn XP!",
       });
       setTimeout(() => setCopied(false), 2000);
     } else {
       // If both methods fail, show the text in a toast for manual copying
       toast.error("Unable to copy automatically", {
-        description: "Please copy the link manually from the input field"
+        description: "Please copy the link manually from the input field",
       });
     }
   };
 
   const shareViaTwitter = () => {
     const text = `Join me on Dehouse of Predictions - Get AI predictions from specialized prediction agents! Use my code: ${referralCode}`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(referralLink)}`;
-    window.open(url, '_blank');
-    
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      text
+    )}&url=${encodeURIComponent(referralLink)}`;
+    window.open(url, "_blank");
+
     // Award XP for sharing (same as share_prediction)
     if (onAwardXP) {
-      onAwardXP(15, 'Shared referral link');
+      onAwardXP(15, "Shared referral link");
     }
   };
 
@@ -80,7 +106,9 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
             <p className="text-xs text-muted-foreground">Friends Referred</p>
           </div>
           <div className="p-4 rounded-lg bg-accent text-center">
-            <div className="text-2xl mb-1 text-blue-400">{totalXPFromReferrals.toLocaleString()}</div>
+            <div className="text-2xl mb-1 text-blue-400">
+              {totalXPFromReferrals.toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground">XP from Referrals</p>
           </div>
           <div className="p-4 rounded-lg bg-accent text-center">
@@ -91,34 +119,52 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
 
         {/* How It Works */}
         <div className="p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
-          <h4 className="text-sm font-medium mb-3">🎁 How Referral Rewards Work</h4>
+          <h4 className="text-sm font-medium mb-3">
+            🎁 How Referral Rewards Work
+          </h4>
           <div className="space-y-2">
             <div className="flex items-start gap-3 text-sm">
-              <Badge variant="outline" className="bg-blue-500/10 border-blue-500/30 shrink-0">
+              <Badge
+                variant="outline"
+                className="bg-blue-500/10 border-blue-500/30 shrink-0"
+              >
                 <Zap className="w-3 h-3 mr-1" />
                 +200 XP
               </Badge>
-              <span className="text-muted-foreground">You get 200 XP instantly when you share your referral link</span>
+              <span className="text-muted-foreground">
+                You get 200 XP instantly when you share your referral link
+              </span>
             </div>
             <div className="flex items-start gap-3 text-sm">
-              <Badge variant="outline" className="bg-blue-500/10 border-blue-500/30 shrink-0">
+              <Badge
+                variant="outline"
+                className="bg-blue-500/10 border-blue-500/30 shrink-0"
+              >
                 <Trophy className="w-3 h-3 mr-1" />
                 +300 XP
               </Badge>
-              <span className="text-muted-foreground">You get 300 XP bonus when your friend creates an account</span>
+              <span className="text-muted-foreground">
+                You get 300 XP bonus when your friend creates an account
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm mt-3 p-2 rounded bg-blue-500/10 border border-blue-500/20">
               <span className="text-lg">💎</span>
-              <span className="text-muted-foreground">Your friend also gets <strong className="text-foreground">100 XP bonus</strong> when they sign up with your code!</span>
+              <span className="text-muted-foreground">
+                Your friend also gets{" "}
+                <strong className="text-foreground">100 XP bonus</strong> when
+                they sign up with your code!
+              </span>
             </div>
           </div>
         </div>
 
         {/* Referral Code Section */}
         <div>
-          <label className="text-sm font-medium mb-2 block">Your Referral Code</label>
+          <label className="text-sm font-medium mb-2 block">
+            Your Referral Code
+          </label>
           <div className="flex gap-2">
-            <Input 
+            <Input
               value={referralCode}
               readOnly
               className="font-mono text-center text-lg tracking-wider"
@@ -145,13 +191,11 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
 
         {/* Referral Link Section */}
         <div>
-          <label className="text-sm font-medium mb-2 block">Referral Link</label>
+          <label className="text-sm font-medium mb-2 block">
+            Referral Link
+          </label>
           <div className="flex gap-2">
-            <Input 
-              value={referralLink}
-              readOnly
-              className="text-sm"
-            />
+            <Input value={referralLink} readOnly className="text-sm" />
             <Button
               onClick={handleCopyToClipboard}
               variant="outline"
@@ -197,8 +241,8 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
                 >
                   <div className="flex items-center gap-3">
                     {friend.avatar ? (
-                      <img 
-                        src={friend.avatar} 
+                      <img
+                        src={friend.avatar}
                         alt={friend.username}
                         className="w-8 h-8 rounded-full"
                       />
@@ -208,13 +252,18 @@ export function ReferralCard({ user, onGenerateCode, onAwardXP }: ReferralCardPr
                       </div>
                     )}
                     <div>
-                      <div className="text-sm font-medium">{friend.username}</div>
+                      <div className="text-sm font-medium">
+                        {friend.username}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         Joined {new Date(friend.joinedAt).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
-                  <Badge variant="outline" className="bg-blue-500/10 border-blue-500/30">
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-500/10 border-blue-500/30"
+                  >
                     +500 XP
                   </Badge>
                 </div>

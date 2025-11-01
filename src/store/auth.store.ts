@@ -2,9 +2,7 @@ import { AxiosError } from "axios";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import apiClient, {
-  AUTH_TOKEN_STORAGE_KEY,
-} from "../lib/axios";
+import apiClient, { AUTH_TOKEN_STORAGE_KEY } from "../lib/axios";
 import type { User } from "../lib/types";
 
 export interface LoginCredentials {
@@ -25,6 +23,7 @@ interface AuthState {
   login: (credentials: LoginCredentials) => Promise<User>;
   authenticateWithToken: (token: string) => Promise<User>;
   fetchCurrentUser: () => Promise<User | null>;
+  updateProfile: (updates: Partial<User>) => Promise<User>;
   logout: () => void;
   setUser: (user: User | null, accessToken?: string | null) => void;
   updateUser: (updates: Partial<User>) => void;
@@ -87,9 +86,9 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           let errorMessage = "Unable to login. Please try again.";
           if (error instanceof AxiosError) {
-            const apiMessage =
-              (error.response?.data as { message?: string } | undefined)
-                ?.message;
+            const apiMessage = (
+              error.response?.data as { message?: string } | undefined
+            )?.message;
             if (apiMessage) {
               errorMessage = apiMessage;
             } else if (error.message) {
@@ -146,9 +145,9 @@ export const useAuthStore = create<AuthState>()(
 
           let errorMessage = "Authentication failed. Please try again.";
           if (error instanceof AxiosError) {
-            const apiMessage =
-              (error.response?.data as { message?: string } | undefined)
-                ?.message;
+            const apiMessage = (
+              error.response?.data as { message?: string } | undefined
+            )?.message;
             if (apiMessage) {
               errorMessage = apiMessage;
             } else if (error.message) {
@@ -182,9 +181,9 @@ export const useAuthStore = create<AuthState>()(
 
           let errorMessage = "Failed to load your profile.";
           if (error instanceof AxiosError) {
-            const apiMessage =
-              (error.response?.data as { message?: string } | undefined)
-                ?.message;
+            const apiMessage = (
+              error.response?.data as { message?: string } | undefined
+            )?.message;
             if (apiMessage) {
               errorMessage = apiMessage;
             } else if (error.message) {
@@ -198,6 +197,33 @@ export const useAuthStore = create<AuthState>()(
           return null;
         } finally {
           set({ isAuthenticating: false });
+        }
+      },
+      async updateProfile(updates) {
+        try {
+          const { data } = await apiClient.patch<User>("/auth/me", updates);
+          set({
+            user: data,
+            error: null,
+          });
+          return data;
+        } catch (error) {
+          let errorMessage = "Failed to update your profile.";
+          if (error instanceof AxiosError) {
+            const apiMessage = (
+              error.response?.data as { message?: string } | undefined
+            )?.message;
+            if (apiMessage) {
+              errorMessage = apiMessage;
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+          } else if (error instanceof Error && error.message) {
+            errorMessage = error.message;
+          }
+
+          set({ error: errorMessage });
+          throw error;
         }
       },
       logout() {
@@ -220,10 +246,7 @@ export const useAuthStore = create<AuthState>()(
 
         if (typeof window !== "undefined") {
           if (tokenToPersist) {
-            window.localStorage.setItem(
-              AUTH_TOKEN_STORAGE_KEY,
-              tokenToPersist,
-            );
+            window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, tokenToPersist);
             apiClient.defaults.headers.common.Authorization = `Bearer ${tokenToPersist}`;
           } else {
             window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
@@ -262,15 +285,15 @@ export const useAuthStore = create<AuthState>()(
 
         if (typeof window !== "undefined") {
           const existingToken = window.localStorage.getItem(
-            AUTH_TOKEN_STORAGE_KEY,
+            AUTH_TOKEN_STORAGE_KEY
           );
           if (!existingToken) {
             window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
           }
         }
       },
-    },
-  ),
+    }
+  )
 );
 
 export default useAuthStore;

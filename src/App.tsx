@@ -1,144 +1,156 @@
-import { useState, useEffect } from "react";
-import { Toaster } from "./components/ui/sonner";
-import { toast } from "sonner";
-import { useXP } from "./lib/useXP";
-import { mockUser } from "./lib/mockData";
-import type { AIAgent, User } from "./lib/types";
+import { useState, useEffect } from 'react';
+import { AxiosError } from 'axios';
+import { Toaster } from './components/ui/sonner';
+import { toast } from 'sonner';
+import { useXP } from './lib/useXP';
+import { mockUser } from './lib/mockData';
+import type { AIAgent, User } from './lib/types';
 import type {
   WalletType,
   SocialProvider,
-} from "./components/WalletConnectDialog";
+} from './components/WalletConnectDialog';
 
 // Components
-import { ChatPage } from "./components/ChatPage";
-import { LeaderboardPage } from "./components/LeaderboardPage";
-import { SettingsPage } from "./components/SettingsPage";
-import { HotTakesPage } from "./components/HotTakesPage";
-import { SharedPredictionPage } from "./components/SharedPredictionPage";
+import { ChatPage } from './components/ChatPage';
+import { LeaderboardPage } from './components/LeaderboardPage';
+import { SettingsPage } from './components/SettingsPage';
+import { HotTakesPage } from './components/HotTakesPage';
+import { SharedPredictionPage } from './components/SharedPredictionPage';
 import {
   ArticleDetailPage,
   type HotTakeArticle,
-} from "./components/ArticleDetailPage";
-import { Sidebar } from "./components/Sidebar";
-import { WalletConnectDialog } from "./components/WalletConnectDialog";
-import { XPInfoDialog } from "./components/XPInfoDialog";
-import { PrivacyPolicy } from "./components/PrivacyPolicy";
-import { TermsOfUse } from "./components/TermsOfUse";
-import { AIAgentCard } from "./components/AIAgentCard";
-import { LoginForm } from "./components/LoginForm";
-import { Button } from "./components/ui/button";
-import useAuthStore from "./store/auth.store";
+} from './components/ArticleDetailPage';
+import { Sidebar } from './components/Sidebar';
+import { WalletConnectDialog } from './components/WalletConnectDialog';
+import { XPInfoDialog } from './components/XPInfoDialog';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfUse } from './components/TermsOfUse';
+import { AIAgentCard } from './components/AIAgentCard';
+import { LoginForm } from './components/LoginForm';
+import { Button } from './components/ui/button';
+import UserProfileDialog from './components/UserProfileDialog';
+import type { UserProfileForm as UserProfileFormData } from './components/UserProfileForm';
+import useAuthStore from './store/auth.store';
+import axios, { apiClient } from './lib/axios';
 
 // Constants
 const AI_AGENT_IMAGES = {
   crypto:
-    "https://images.unsplash.com/photo-1672071673701-4c9a564c8046?w=800&q=80",
-  tech: "https://images.unsplash.com/photo-1643962579365-3a9222e923b8?w=800&q=80",
+    'https://images.unsplash.com/photo-1672071673701-4c9a564c8046?w=800&q=80',
+  tech: 'https://images.unsplash.com/photo-1643962579365-3a9222e923b8?w=800&q=80',
   politics:
-    "https://images.unsplash.com/photo-1567619863607-cb9e8f595a95?w=800&q=80",
+    'https://images.unsplash.com/photo-1567619863607-cb9e8f595a95?w=800&q=80',
   sports:
-    "https://images.unsplash.com/photo-1744782211816-c5224434614f?w=800&q=80",
+    'https://images.unsplash.com/photo-1744782211816-c5224434614f?w=800&q=80',
   entertainment:
-    "https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?w=800&q=80",
+    'https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?w=800&q=80',
   fortune:
-    "https://images.unsplash.com/photo-1618071264149-da6cfa159cfd?w=800&q=80",
+    'https://images.unsplash.com/photo-1618071264149-da6cfa159cfd?w=800&q=80',
   gaming:
-    "https://images.unsplash.com/photo-1719937075989-795943caad2a?w=800&q=80",
+    'https://images.unsplash.com/photo-1719937075989-795943caad2a?w=800&q=80',
   general:
-    "https://images.unsplash.com/photo-1676410205325-5d01d0107039?w=800&q=80",
+    'https://images.unsplash.com/photo-1676410205325-5d01d0107039?w=800&q=80',
 };
 
 // Hot Takes Articles Data
 const HOT_TAKE_ARTICLES: HotTakeArticle[] = [
   {
-    id: "art-1",
+    id: 'art-1',
     title: "Bitcoin's Next Move: Why $100K Is Just The Beginning",
-    source: "Crypto AI Agent",
-    url: "#",
-    publishedAt: "2 hours ago",
-    relevance: "High",
+    source: 'Crypto AI Agent',
+    url: '#',
+    publishedAt: '2 hours ago',
+    relevance: 'High',
     image:
-      "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800&q=80",
+      'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800&q=80',
     aiAgentAvatar: AI_AGENT_IMAGES.crypto,
     likes: 342,
     comments: 87,
     shares: 156,
-    aiAgentId: "crypto",
+    aiAgentId: 'crypto',
   },
   {
-    id: "art-2",
-    title: "The AI Revolution: What Most Investors Are Missing",
-    source: "Tech Prophet",
-    url: "#",
-    publishedAt: "5 hours ago",
-    relevance: "High",
+    id: 'art-2',
+    title: 'The AI Revolution: What Most Investors Are Missing',
+    source: 'Tech Prophet',
+    url: '#',
+    publishedAt: '5 hours ago',
+    relevance: 'High',
     image:
-      "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
+      'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80',
     aiAgentAvatar: AI_AGENT_IMAGES.tech,
     likes: 521,
     comments: 143,
     shares: 234,
-    aiAgentId: "technical-analysis",
+    aiAgentId: 'technical-analysis',
   },
   {
-    id: "art-3",
-    title: "Election 2024: The Prediction Markets Were Right All Along",
-    source: "Political Sage",
-    url: "#",
-    publishedAt: "1 day ago",
-    relevance: "Medium",
+    id: 'art-3',
+    title: 'Election 2024: The Prediction Markets Were Right All Along',
+    source: 'Political Sage',
+    url: '#',
+    publishedAt: '1 day ago',
+    relevance: 'Medium',
     image:
-      "https://images.unsplash.com/photo-1569690784119-2bcf528a2663?w=800&q=80",
+      'https://images.unsplash.com/photo-1569690784119-2bcf528a2663?w=800&q=80',
     aiAgentAvatar: AI_AGENT_IMAGES.fortune,
     likes: 289,
     comments: 92,
     shares: 178,
-    aiAgentId: "crypto-crystal",
+    aiAgentId: 'crypto-crystal',
   },
   {
-    id: "art-4",
+    id: 'art-4',
     title: "Ethereum's Layer 2 Explosion: The Silent Revolution",
-    source: "Crypto AI Agent",
-    url: "#",
-    publishedAt: "1 day ago",
-    relevance: "High",
+    source: 'Crypto AI Agent',
+    url: '#',
+    publishedAt: '1 day ago',
+    relevance: 'High',
     image:
-      "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80",
+      'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80',
     aiAgentAvatar: AI_AGENT_IMAGES.crypto,
     likes: 467,
     comments: 124,
     shares: 201,
-    aiAgentId: "crypto",
+    aiAgentId: 'crypto',
   },
 ];
 
 // AI Agents Data
 const AI_AGENTS: AIAgent[] = [
   {
-    id: "crypto-crystal",
-    name: "Crypto Crystal Czar",
-    emoji: "💎",
-    title: "Cryptocurrency Expert",
+    id: 'crypto-crystal',
+    name: 'Crypto Crystal Czar',
+    emoji: '💎',
+    title: 'Cryptocurrency Expert',
     description:
-      "Master of blockchain technology and cryptocurrency markets. Analyzes market trends, tokenomics, DeFi protocols, and on-chain data to provide insights on Bitcoin, Ethereum, altcoins, and emerging crypto projects.",
-    gradient: "from-cyan-500 via-blue-600 to-blue-700",
-    category: "Cryptocurrency",
-    rating: "91%",
-    likes: "12.3K",
-    consultSessions: "58.2K",
-    specialty: "Crypto Analysis",
-    tags: ["Bitcoin", "DeFi", "Altcoins", "Blockchain"],
+      'Master of blockchain technology and cryptocurrency markets. Analyzes market trends, tokenomics, DeFi protocols, and on-chain data to provide insights on Bitcoin, Ethereum, altcoins, and emerging crypto projects.',
+    gradient: 'from-cyan-500 via-blue-600 to-blue-700',
+    category: 'Cryptocurrency',
+    rating: '91%',
+    likes: '12.3K',
+    consultSessions: '58.2K',
+    specialty: 'Crypto Analysis',
+    tags: ['Bitcoin', 'DeFi', 'Altcoins', 'Blockchain'],
     avatar: AI_AGENT_IMAGES.fortune,
-    bgColor: "bg-cyan-500/10",
+    bgColor: 'bg-cyan-500/10',
   },
 ];
+
+const buildProfileFormData = (
+  target?: User | null
+): UserProfileFormData => ({
+  avatar: target?.avatar ?? '',
+  email: target?.email ?? '',
+  phoneNumber: target?.phoneNumber ?? '',
+});
 
 export default function App() {
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored) return stored === "dark";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const stored = localStorage.getItem('theme');
+    if (stored) return stored === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
   // Auth state from global store
@@ -146,9 +158,12 @@ export default function App() {
   const setUser = useAuthStore((state) => state.setUser);
   const updateUserInStore = useAuthStore((state) => state.updateUser);
   const logout = useAuthStore((state) => state.logout);
+  const authenticateWithToken = useAuthStore(
+    (state) => state.authenticateWithToken
+  );
 
   // App state
-  const [currentPage, setCurrentPage] = useState<string>("chat");
+  const [currentPage, setCurrentPage] = useState<string>('chat');
   const [selectedAIAgent, setSelectedAIAgent] = useState<AIAgent | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<HotTakeArticle | null>(
     null
@@ -163,12 +178,125 @@ export default function App() {
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(
     null
   );
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [profileFormData, setProfileFormData] =
+    useState<UserProfileFormData>(() => buildProfileFormData(null));
+  const [requireProfileCompletion, setRequireProfileCompletion] =
+    useState(false);
+  const [profileEmailLocked, setProfileEmailLocked] = useState(false);
+  const [profileEmailProvider, setProfileEmailProvider] = useState<string | null>(null);
 
   // Dialog state
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
   const [xpInfoDialogOpen, setXPInfoDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
+
+  const openProfileDialog = (options?: {
+    user?: User | null;
+    require?: boolean;
+  }) => {
+    const storeUser = useAuthStore.getState().user;
+    const targetUser = options?.user ?? storeUser ?? user;
+    setProfileFormData(buildProfileFormData(targetUser));
+    setRequireProfileCompletion(Boolean(options?.require));
+    const providerRaw =
+      (targetUser?.socialProvider as string | undefined) ??
+      ((targetUser as unknown as { provider?: string | null | undefined })?.provider ?? undefined);
+    const provider = providerRaw?.toLowerCase();
+    const shouldLockEmail = provider === 'google' || provider === 'email';
+    setProfileEmailLocked(shouldLockEmail);
+    setProfileEmailProvider(provider ?? null);
+    setProfileDialogOpen(true);
+  };
+
+  const closeProfileDialog = () => {
+    setProfileDialogOpen(false);
+    setRequireProfileCompletion(false);
+    setProfileEmailLocked(false);
+    setProfileEmailProvider(null);
+  };
+
+  const handleProfileFieldChange = (
+    updates: Partial<UserProfileFormData>
+  ) => {
+    const nextUpdates = { ...updates };
+    if (profileEmailLocked) {
+      delete (nextUpdates as Partial<UserProfileFormData>).email;
+    }
+    setProfileFormData((prev) => ({ ...prev, ...nextUpdates }));
+  };
+
+  const handleProfileComplete = async () => {
+    const { email, phoneNumber, avatar } = profileFormData;
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    if (phoneNumber && !/^\+?[\d\s-()]+$/.test(phoneNumber)) {
+      toast.error('Please enter a valid phone number');
+      return;
+    }
+
+    const updates: Partial<User> = {};
+    if (avatar) {
+      updates.avatar = avatar;
+    }
+    if (!profileEmailLocked && email) {
+      updates.email = email;
+    }
+    if (phoneNumber) {
+      updates.phoneNumber = phoneNumber;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      try {
+        await apiClient.patch('/auth/me', updates);
+        updateUser(updates);
+        toast.success('Profile updated successfully.');
+        if (user) {
+          setProfileFormData(buildProfileFormData({ ...user, ...updates }));
+        }
+      } catch (error) {
+        let message = 'Unable to update your profile. Please try again.';
+        if (error instanceof AxiosError) {
+          const apiMessage = (error.response?.data as { message?: string } | undefined)?.message;
+          if (apiMessage) {
+            message = apiMessage;
+          } else if (error.message) {
+            message = error.message;
+          }
+        } else if (error instanceof Error && error.message) {
+          message = error.message;
+        }
+
+        toast.error(message);
+        return;
+      }
+    } else {
+      toast.success('Profile saved.');
+    }
+
+    closeProfileDialog();
+  };
+
+  const handleProfileSkip = () => {
+    closeProfileDialog();
+  };
+
+  const handleProfileDialogOpenChange = (isOpen: boolean) => {
+    if (!isOpen && requireProfileCompletion) {
+      return;
+    }
+
+    if (!isOpen) {
+      closeProfileDialog();
+    } else {
+      setProfileDialogOpen(true);
+    }
+  };
 
   // Update user function
   const updateUser = (updates: Partial<User>) => {
@@ -181,11 +309,11 @@ export default function App() {
   // Apply dark mode
   useEffect(() => {
     if (darkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
 
@@ -196,26 +324,72 @@ export default function App() {
     }
   }, [selectedAIAgent]);
 
-  // Check for shared prediction or referral code in URL
+  // Check for shared prediction, referral code, or OAuth token in URL
   useEffect(() => {
     const path = window.location.pathname;
     const predictionMatch = path.match(/\/prediction\/([^/]+)/);
 
     if (predictionMatch) {
       setSharedPredictionId(predictionMatch[1]);
-      setCurrentPage("shared-prediction");
+      setCurrentPage('shared-prediction');
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    const referralCode = urlParams.get("ref");
+    const referralCode = urlParams.get('ref');
+    const oauthToken = urlParams.get('token');
+    const isNewUser = urlParams.get('isNew') === 'true';
 
     if (referralCode) {
-      sessionStorage.setItem("pendingReferralCode", referralCode);
-      toast.info("Referral code detected! Sign up to get your bonus.", {
+      sessionStorage.setItem('pendingReferralCode', referralCode);
+      toast.info('Referral code detected! Sign up to get your bonus.', {
         description: "You'll earn 100 XP when you create your account!",
       });
     }
-  }, []);
+
+    if (oauthToken) {
+      const cleanedParams = new URLSearchParams(urlParams);
+      cleanedParams.delete('token');
+      cleanedParams.delete('isNew');
+      const baseUrl = `${window.location.origin}${window.location.pathname}`;
+      const newUrl = cleanedParams.toString()
+        ? `${baseUrl}?${cleanedParams.toString()}`
+        : baseUrl;
+      window.history.replaceState({}, '', newUrl);
+
+      void (async () => {
+        try {
+          const authenticatedUser = await authenticateWithToken(oauthToken);
+
+          toast.success(
+            isNewUser ? 'Welcome to Dehouse!' : 'Signed in successfully.',
+            {
+              description: isNewUser
+                ? "Your Google account is now linked. Let's get started."
+                : "You're back in. Pick up where you left off.",
+            }
+          );
+
+          if (pendingNavigation) {
+            setCurrentPage(pendingNavigation);
+            setPendingNavigation(null);
+          } else {
+            setCurrentPage('chat');
+          }
+
+          if (isNewUser) {
+            openProfileDialog({
+              user: authenticatedUser,
+              require: true,
+            });
+          } else if (authenticatedUser) {
+            setProfileFormData(buildProfileFormData(authenticatedUser));
+          }
+        } catch {
+          toast.error("We couldn't sign you in. Please try again.");
+        }
+      })();
+    }
+  }, [authenticateWithToken, pendingNavigation]);
 
   // Utility functions
   const shortenAddress = (address: string) => {
@@ -223,8 +397,8 @@ export default function App() {
   };
 
   const generateMockAddress = (): string => {
-    const chars = "0123456789abcdef";
-    let address = "0x";
+    const chars = '0123456789abcdef';
+    let address = '0x';
     for (let i = 0; i < 40; i++) {
       address += chars[Math.floor(Math.random() * chars.length)];
     }
@@ -233,7 +407,7 @@ export default function App() {
 
   const generateMockEmail = (provider: SocialProvider): string => {
     const timestamp = Date.now();
-    return provider === "google"
+    return provider === 'google'
       ? `user${timestamp}@gmail.com`
       : `user${timestamp}@icloud.com`;
   };
@@ -241,15 +415,15 @@ export default function App() {
   // Auth handlers
   const handleWalletConnect = (walletType: WalletType) => {
     const walletAddress = generateMockAddress();
-    const referralCode = sessionStorage.getItem("pendingReferralCode");
+    const referralCode = sessionStorage.getItem('pendingReferralCode');
     let initialXP = mockUser.xp;
 
     if (referralCode) {
       initialXP += 100;
-      toast.success("🎉 Referral bonus applied! +100 XP", {
-        description: "Welcome to Dehouse of Predictions!",
+      toast.success('🎉 Referral bonus applied! +100 XP', {
+        description: 'Welcome to Dehouse of Predictions!',
       });
-      sessionStorage.removeItem("pendingReferralCode");
+      sessionStorage.removeItem('pendingReferralCode');
     }
 
     const newUser: User = {
@@ -265,6 +439,7 @@ export default function App() {
     setUser(newUser);
     setWalletDialogOpen(false);
     toast.success(`Connected with ${walletType}!`);
+    openProfileDialog({ user: newUser, require: true });
 
     if (pendingNavigation) {
       setCurrentPage(pendingNavigation);
@@ -274,15 +449,15 @@ export default function App() {
 
   const handleSocialConnect = (provider: SocialProvider) => {
     const email = generateMockEmail(provider);
-    const referralCode = sessionStorage.getItem("pendingReferralCode");
+    const referralCode = sessionStorage.getItem('pendingReferralCode');
     let initialXP = mockUser.xp;
 
     if (referralCode) {
       initialXP += 100;
-      toast.success("🎉 Referral bonus applied! +100 XP", {
-        description: "Welcome to Dehouse of Predictions!",
+      toast.success('🎉 Referral bonus applied! +100 XP', {
+        description: 'Welcome to Dehouse of Predictions!',
       });
-      sessionStorage.removeItem("pendingReferralCode");
+      sessionStorage.removeItem('pendingReferralCode');
     }
 
     const newUser: User = {
@@ -298,6 +473,7 @@ export default function App() {
     setUser(newUser);
     setWalletDialogOpen(false);
     toast.success(`Connected with ${provider}!`);
+    openProfileDialog({ user: newUser, require: true });
 
     if (pendingNavigation) {
       setCurrentPage(pendingNavigation);
@@ -307,8 +483,9 @@ export default function App() {
 
   const handleWalletDisconnect = () => {
     logout();
-    setCurrentPage("chat");
-    toast.info("Wallet disconnected");
+    closeProfileDialog();
+    setCurrentPage('chat');
+    toast.info('Wallet disconnected');
   };
 
   // Common sidebar and dialog props
@@ -319,7 +496,7 @@ export default function App() {
     onOpenWalletDialog: () => setWalletDialogOpen(true),
     onWalletDisconnect: handleWalletDisconnect,
     shortenAddress,
-    onOpenSettings: () => setCurrentPage("settings"),
+    onOpenSettings: () => setCurrentPage('settings'),
     onSetPendingNavigation: setPendingNavigation,
     onOpenXPInfo: () => setXPInfoDialogOpen(true),
     darkMode,
@@ -344,67 +521,41 @@ export default function App() {
         open={privacyDialogOpen}
         onOpenChange={setPrivacyDialogOpen}
       />
-      <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
+      <TermsOfUse
+        open={termsDialogOpen}
+        onOpenChange={setTermsDialogOpen}
+      />
+      <UserProfileDialog
+        open={profileDialogOpen}
+        onOpenChange={handleProfileDialogOpenChange}
+        data={profileFormData}
+        onChange={handleProfileFieldChange}
+        onSkip={requireProfileCompletion ? undefined : handleProfileSkip}
+        onComplete={handleProfileComplete}
+        isNewUser={requireProfileCompletion}
+        emailLocked={profileEmailLocked}
+        emailProvider={profileEmailProvider}
+      />
       <Toaster />
     </>
   );
 
   // Render shared prediction page
-  if (currentPage === "shared-prediction" && sharedPredictionId) {
+  if (currentPage === 'shared-prediction' && sharedPredictionId) {
     return (
       <SharedPredictionPage
         predictionId={sharedPredictionId}
         onBack={() => {
           setSharedPredictionId(null);
-          setCurrentPage("chat");
-          window.history.pushState({}, "", "/");
+          setCurrentPage('chat');
+          window.history.pushState({}, '', '/');
         }}
       />
     );
   }
 
-  // Render login screen when no authenticated user
-  if (!user) {
-    return (
-      <>
-        <div className="min-h-screen flex items-center justify-center bg-background px-4">
-          <div className="w-full max-w-md space-y-6 rounded-xl border border-border bg-card p-8 shadow-sm">
-            <div className="space-y-2 text-center">
-              <h1 className="text-2xl font-semibold">Sign in to Dehouse</h1>
-              <p className="text-sm text-muted-foreground">
-                Access personalized predictions, XP tracking, and subscriptions.
-              </p>
-            </div>
-            <LoginForm
-              onSuccess={() => {
-                if (pendingNavigation) {
-                  setCurrentPage(pendingNavigation);
-                  setPendingNavigation(null);
-                } else {
-                  setCurrentPage("chat");
-                }
-              }}
-            />
-            <div className="text-center text-sm text-muted-foreground">
-              or continue with
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => setWalletDialogOpen(true)}
-            >
-              Connect Wallet
-            </Button>
-          </div>
-        </div>
-        {commonDialogProps}
-      </>
-    );
-  }
-
   // Render hot takes page
-  if (currentPage === "hotTakes") {
+  if (currentPage === 'hotTakes') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
         <Sidebar {...commonSidebarProps} />
@@ -413,10 +564,10 @@ export default function App() {
             articles={HOT_TAKE_ARTICLES}
             onArticleClick={(article) => {
               setSelectedArticle(article);
-              setPreviousPage("hotTakes");
-              setCurrentPage("articleDetail");
+              setPreviousPage('hotTakes');
+              setCurrentPage('articleDetail');
             }}
-            onBack={() => setCurrentPage("chat")}
+            onBack={() => setCurrentPage('chat')}
           />
         </div>
         {commonDialogProps}
@@ -425,21 +576,21 @@ export default function App() {
   }
 
   // Render article detail page
-  if (currentPage === "articleDetail" && selectedArticle) {
+  if (currentPage === 'articleDetail' && selectedArticle) {
     return (
       <ArticleDetailPage
         hotTake={selectedArticle}
         onBack={() => {
           setSelectedArticle(null);
-          if (previousPage === "chat" && selectedAIAgent) {
+          if (previousPage === 'chat' && selectedAIAgent) {
             setPreviousPage(null);
-            setCurrentPage("chat");
-          } else if (previousPage === "hotTakes") {
+            setCurrentPage('chat');
+          } else if (previousPage === 'hotTakes') {
             setPreviousPage(null);
-            setCurrentPage("hotTakes");
+            setCurrentPage('hotTakes');
           } else {
             setPreviousPage(null);
-            setCurrentPage("chat");
+            setCurrentPage('chat');
           }
         }}
         aiAgentName={selectedAIAgent?.name}
@@ -452,7 +603,7 @@ export default function App() {
         onWalletDisconnect={handleWalletDisconnect}
         shortenAddress={shortenAddress}
         onSetPendingNavigation={setPendingNavigation}
-        onOpenSettings={() => setCurrentPage("settings")}
+        onOpenSettings={() => setCurrentPage('settings')}
         currentPage={currentPage}
         onWalletConnect={handleWalletConnect}
         onSocialConnect={handleSocialConnect}
@@ -463,8 +614,8 @@ export default function App() {
           if (aiAgent) {
             setSelectedAIAgent(aiAgent);
             setArticleContext(selectedArticle);
-            setPreviousPage("articleDetail");
-            setCurrentPage("chat");
+            setPreviousPage('articleDetail');
+            setCurrentPage('chat');
           }
         }}
       />
@@ -472,20 +623,20 @@ export default function App() {
   }
 
   // Render chat page
-  if (currentPage === "chat" && selectedAIAgent) {
+  if (currentPage === 'chat' && selectedAIAgent) {
     return (
       <>
         <ChatPage
           aiAgent={selectedAIAgent}
           onBack={() => {
-            if (previousPage === "articleDetail" && selectedArticle) {
+            if (previousPage === 'articleDetail' && selectedArticle) {
               setPreviousPage(null);
-              setCurrentPage("articleDetail");
+              setCurrentPage('articleDetail');
             } else {
               setSelectedAIAgent(null);
               setArticleContext(null);
               setPreviousPage(null);
-              setCurrentPage("chat");
+              setCurrentPage('chat');
             }
           }}
           darkMode={darkMode}
@@ -501,10 +652,10 @@ export default function App() {
           trackQuestProgress={trackQuestProgress}
           onArticleClick={(article) => {
             setSelectedArticle(article);
-            setPreviousPage("chat");
-            setCurrentPage("articleDetail");
+            setPreviousPage('chat');
+            setCurrentPage('articleDetail');
           }}
-          onOpenSettings={() => setCurrentPage("settings")}
+          onOpenSettings={() => setCurrentPage('settings')}
           onSetPendingNavigation={setPendingNavigation}
           articleContext={articleContext}
           onArticleContextUsed={() => setArticleContext(null)}
@@ -516,20 +667,25 @@ export default function App() {
   }
 
   // Render settings page
-  if (currentPage === "settings") {
+  if (currentPage === 'settings') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
         <Sidebar {...commonSidebarProps} />
-        <div className="flex-1 overflow-y-auto">
-          <SettingsPage onBack={() => setCurrentPage("chat")} user={user} />
-        </div>
+        {user && (
+          <div className="flex-1 overflow-y-auto">
+            <SettingsPage
+              onBack={() => setCurrentPage('chat')}
+              user={user}
+            />
+          </div>
+        )}
         {commonDialogProps}
       </div>
     );
   }
 
   // Render leaderboard page
-  if (currentPage === "leaderboard") {
+  if (currentPage === 'leaderboard') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
         <Sidebar {...commonSidebarProps} />
@@ -562,7 +718,7 @@ export default function App() {
                 aiAgent={aiAgent}
                 onClick={() => {
                   setSelectedAIAgent(aiAgent);
-                  setCurrentPage("chat");
+                  setCurrentPage('chat');
                 }}
               />
             ))}

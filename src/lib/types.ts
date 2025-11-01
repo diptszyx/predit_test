@@ -32,9 +32,11 @@ export interface User {
   aiAgentsVisited: number;
   walletAddress?: string;
   walletType?: "metamask" | "phantom" | "backpack";
-  socialProvider?: "google" | "apple";
+  socialProvider?: "google" | "apple" | "email";
   email?: string;
   phone?: string;
+  phoneNumber?: string;
+  provider?: string;
   subscriptionTier?: "free" | "master";
   visitedAIAgents?: string[];
   dailyPredictionsUsed?: number;

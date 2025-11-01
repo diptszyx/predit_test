@@ -23,6 +23,8 @@ interface AuthState {
   isAuthenticating: boolean;
   error: string | null;
   login: (credentials: LoginCredentials) => Promise<User>;
+  authenticateWithToken: (token: string) => Promise<User>;
+  fetchCurrentUser: () => Promise<User | null>;
   logout: () => void;
   setUser: (user: User | null, accessToken?: string | null) => void;
   updateUser: (updates: Partial<User>) => void;
@@ -107,6 +109,95 @@ export const useAuthStore = create<AuthState>()(
           });
 
           throw error;
+        }
+      },
+      async authenticateWithToken(token) {
+        set({
+          isAuthenticating: true,
+          error: null,
+          accessToken: token,
+        });
+
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+        }
+
+        apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
+
+        try {
+          const user = await get().fetchCurrentUser();
+          if (!user) {
+            throw new Error("Unable to load your profile. Please try again.");
+          }
+
+          set({
+            user,
+            accessToken: token,
+            isAuthenticating: false,
+            error: null,
+          });
+
+          return user;
+        } catch (error) {
+          if (typeof window !== "undefined") {
+            window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+          }
+          delete apiClient.defaults.headers.common.Authorization;
+
+          let errorMessage = "Authentication failed. Please try again.";
+          if (error instanceof AxiosError) {
+            const apiMessage =
+              (error.response?.data as { message?: string } | undefined)
+                ?.message;
+            if (apiMessage) {
+              errorMessage = apiMessage;
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+          } else if (error instanceof Error && error.message) {
+            errorMessage = error.message;
+          }
+
+          set({
+            ...initialState,
+            error: errorMessage,
+          });
+
+          throw error;
+        }
+      },
+      async fetchCurrentUser() {
+        try {
+          const { data } = await apiClient.get<User>("/auth/me");
+          set({
+            user: data,
+            error: null,
+          });
+          return data;
+        } catch (error) {
+          if (error instanceof AxiosError && error.response?.status === 401) {
+            get().logout();
+            return null;
+          }
+
+          let errorMessage = "Failed to load your profile.";
+          if (error instanceof AxiosError) {
+            const apiMessage =
+              (error.response?.data as { message?: string } | undefined)
+                ?.message;
+            if (apiMessage) {
+              errorMessage = apiMessage;
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+          } else if (error instanceof Error && error.message) {
+            errorMessage = error.message;
+          }
+
+          set({ error: errorMessage });
+          return null;
+        } finally {
+          set({ isAuthenticating: false });
         }
       },
       logout() {

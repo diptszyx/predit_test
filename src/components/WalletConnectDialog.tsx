@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,10 +6,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
-import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Loader2, Wallet, CheckCircle2 } from 'lucide-react';
+import apiClient from '../lib/axios';
+import { useWallet } from '@solana/wallet-adapter-react';
+import bs58 from 'bs58';
+import useAuthStore from '../store/auth.store';
+import { User } from '../lib/types';
 
 export type WalletType = 'metamask' | 'phantom' | 'backpack';
 export type SocialProvider = 'google' | 'apple';
@@ -39,6 +43,10 @@ interface SocialOption {
   color: string;
 }
 
+const hasMeta = typeof window !== 'undefined' && (window as any).ethereum;
+const hasPhantom =
+  typeof window !== 'undefined' && (window as any).phantom?.solana;
+
 const wallets: WalletOption[] = [
   {
     id: 'metamask',
@@ -46,7 +54,7 @@ const wallets: WalletOption[] = [
     description: 'Connect with MetaMask wallet',
     icon: '🦊',
     color: 'from-orange-600 to-yellow-600',
-    supported: true,
+    supported: false,
   },
   {
     id: 'phantom',
@@ -54,7 +62,7 @@ const wallets: WalletOption[] = [
     description: 'Connect with Phantom wallet',
     icon: '👻',
     color: 'from-blue-600 to-cyan-600',
-    supported: true,
+    supported: hasPhantom,
   },
   {
     id: 'backpack',
@@ -62,7 +70,7 @@ const wallets: WalletOption[] = [
     description: 'Connect with Backpack wallet',
     icon: '🎒',
     color: 'from-blue-600 to-cyan-600',
-    supported: true,
+    supported: false,
   },
 ];
 
@@ -73,12 +81,12 @@ const socialOptions: SocialOption[] = [
     icon: '🔍',
     color: 'hover:bg-blue-500/10 border-blue-500/30',
   },
-  {
-    id: 'apple',
-    name: 'Continue with Apple',
-    icon: '🍎',
-    color: 'hover:bg-gray-500/10 border-gray-500/30',
-  },
+  // {
+  //   id: 'apple',
+  //   name: 'Continue with Apple',
+  //   icon: '🍎',
+  //   color: 'hover:bg-gray-500/10 border-gray-500/30',
+  // },
 ];
 
 export function WalletConnectDialog({
@@ -98,15 +106,6 @@ export function WalletConnectDialog({
   const resetState = () => {
     setConnectingWallet(null);
     setConnectingSocial(null);
-  };
-
-  const handleConnect = async (walletType: WalletType) => {
-    setConnectingWallet(walletType);
-
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    setConnectingWallet(null);
-    onConnect(walletType);
   };
 
   const handleSocialConnect = async (provider: SocialProvider) => {
@@ -192,53 +191,13 @@ export function WalletConnectDialog({
               const isConnecting = connectingWallet === wallet.id;
 
               return (
-                <button
+                <WalletConnectButton
                   key={wallet.id}
-                  onClick={() => handleConnect(wallet.id)}
-                  disabled={!wallet.supported || isConnecting}
-                  className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                    wallet.supported
-                      ? 'border-border hover:border-blue-500 hover:bg-accent cursor-pointer'
-                      : 'border-border opacity-50 cursor-not-allowed'
-                  } ${isConnecting ? 'border-blue-500 bg-accent' : ''}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${wallet.color} flex items-center justify-center text-2xl flex-shrink-0`}
-                    >
-                      {wallet.icon}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-sm">{wallet.name}</h3>
-                        {wallet.supported ? (
-                          <Badge
-                            variant="outline"
-                            className="text-xs bg-green-500/10 border-green-500/30 text-green-500"
-                          >
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Available
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="text-xs"
-                          >
-                            Coming Soon
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {wallet.description}
-                      </p>
-                    </div>
-
-                    {isConnecting && (
-                      <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-                    )}
-                  </div>
-                </button>
+                  loading={isConnecting}
+                  wallet={wallet}
+                  setConnectingWallet={setConnectingWallet}
+                  onConnect={onConnect}
+                />
               );
             })}
           </div>
@@ -288,5 +247,162 @@ export function WalletConnectDialog({
     </Dialog>
   );
 }
+
+const WalletConnectButton = ({
+  loading,
+  wallet,
+  setConnectingWallet,
+  onConnect,
+}: {
+  wallet: WalletOption;
+  loading: boolean;
+  onConnect: (wallet: WalletType, user: User) => void;
+  setConnectingWallet: (walletType: WalletType | null) => void;
+}) => {
+  const {
+    select,
+    connect,
+    wallets,
+    wallet: currentWallet,
+    publicKey,
+    signMessage,
+    disconnect,
+  } = useWallet();
+
+  const [pendingWalletType, setPendingWalletType] = useState<WalletType | null>(
+    null
+  );
+
+  const authenticateWithToken = useAuthStore(
+    (state) => state.authenticateWithToken
+  );
+
+  useEffect(() => {
+    const connectAndSign = async () => {
+      if (!pendingWalletType || !currentWallet?.adapter?.name) return;
+
+      const expectedAdapter =
+        pendingWalletType === 'phantom'
+          ? 'Phantom'
+          : pendingWalletType === 'backpack'
+          ? 'Backpack'
+          : null;
+
+      if (currentWallet.adapter.name !== expectedAdapter) return;
+
+      try {
+        await connect();
+
+        const pubkey = currentWallet?.adapter?.publicKey?.toBase58();
+        if (!pubkey) throw new Error('Public key not available after connect');
+
+        const { data: nonceResp } = await apiClient.post('/auth/nonce', {
+          publicKey: pubkey,
+          walletType: pendingWalletType,
+        });
+
+        const nonce = nonceResp.nonce;
+        const message = `Login to Deor\nNonce=${nonce}`;
+        const signatureBytes = await signMessage(
+          new TextEncoder().encode(message)
+        );
+        const signature = bs58.encode(signatureBytes);
+
+        const { data: verifyResp } = await apiClient.post('/auth/verify', {
+          message,
+          signature,
+          publicKey: pubkey,
+        });
+
+        await authenticateWithToken(verifyResp.token);
+
+        onConnect(pendingWalletType, verifyResp.user);
+      } catch (err) {
+        console.error('Wallet connect error:', err);
+      } finally {
+        setConnectingWallet(null);
+        setPendingWalletType(null);
+      }
+    };
+
+    connectAndSign();
+  }, [currentWallet?.adapter?.name, pendingWalletType]);
+
+  const handleConnect = async (walletType: WalletType) => {
+    setConnectingWallet(walletType);
+    setPendingWalletType(walletType);
+
+    switch (walletType) {
+      case 'phantom':
+        if (!wallets.find((w) => w.adapter.name === 'Phantom')) {
+          alert('Phantom not installed');
+          setConnectingWallet(null);
+          setPendingWalletType(null);
+          return;
+        }
+        await select('Phantom');
+        break;
+      case 'backpack':
+        if (!wallets.find((w) => w.adapter.name === 'Backpack')) {
+          alert('Backpack not installed');
+          setConnectingWallet(null);
+          setPendingWalletType(null);
+          return;
+        }
+        await select('Backpack');
+        break;
+      case 'metamask':
+        alert('Metamask not supported here');
+        setConnectingWallet(null);
+        break;
+    }
+  };
+
+  return (
+    <button
+      key={wallet.id}
+      onClick={() => handleConnect(wallet.id)}
+      disabled={!wallet.supported || loading}
+      className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+        wallet.supported
+          ? 'border-border hover:border-blue-500 hover:bg-accent cursor-pointer'
+          : 'border-border opacity-50 cursor-not-allowed'
+      } ${loading ? 'border-blue-500 bg-accent' : ''}`}
+    >
+      <div className="flex items-center gap-4">
+        <div
+          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${wallet.color} flex items-center justify-center text-2xl flex-shrink-0`}
+        >
+          {wallet.icon}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-sm">{wallet.name}</h3>
+            {wallet.supported ? (
+              <Badge
+                variant="outline"
+                className="text-xs bg-green-500/10 border-green-500/30 text-green-500"
+              >
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Available
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="text-xs"
+              >
+                Coming Soon
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">{wallet.description}</p>
+        </div>
+
+        {loading && <Loader2 className="w-5 h-5 animate-spin text-blue-500" />}
+      </div>
+    </button>
+  );
+};
 
 export default WalletConnectDialog;

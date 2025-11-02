@@ -170,7 +170,10 @@ export function WalletConnectDialog({
                   }`}
                 >
                   <div className="flex items-center justify-center gap-3">
-                    <img className='w-5 h-5' src={social.icon}/>
+                    <img
+                      className="w-5 h-5"
+                      src={social.icon}
+                    />
                     <span className="text-sm flex-1">{social.name}</span>
                     {isConnecting && (
                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -337,7 +340,7 @@ const WalletConnectButton = ({
     };
 
     connectAndSign();
-  }, [currentWallet?.adapter?.name, pendingWalletType]);
+  }, [currentWallet?.adapter?.name, pendingWalletType, signMessage]);
 
   const handleConnect = async (walletType: WalletType) => {
     setConnectingWallet(walletType);
@@ -345,9 +348,7 @@ const WalletConnectButton = ({
 
     switch (walletType) {
       case 'phantom':
-        if (
-          wallets.find((w) => w.adapter.name.toLowerCase().includes(walletType))
-        ) {
+        if (!wallets.find((w) => w.adapter.name === 'Phantom')) {
           toast.error('Phantom not installed');
           setConnectingWallet(null);
           setPendingWalletType(null);

@@ -313,7 +313,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
               <Separator />
 
               {/* Nickname Section */}
-              <div className="space-y-3">
+              {/* <div className="space-y-3">
                 <Label
                   htmlFor="nickname"
                   className="text-sm flex items-center gap-2"
@@ -380,7 +380,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                 </p>
               </div>
 
-              <Separator />
+              <Separator /> */}
 
               {/* Email Section */}
               <div className="space-y-3">

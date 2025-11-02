@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import apiClient from "../lib/axios";
 import type { User } from "../lib/types";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
@@ -155,6 +155,13 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(()=>{
+    if(!user?.id) {
+      setMessages([])
+      setUserMessageCount(0)
+    }
+  },[user])
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -1198,10 +1205,10 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
         )}
 
         {/* Main Chat Area */}
-        <div className="w-full px-2 sm:px-4 py-4 md:py-6 md:px-6">
-          <div className="flex flex-col lg:flex-row gap-4 md:gap-6 max-w-7xl mx-auto justify-center m-[0px]">
+        <div className="w-full h-full px-2 sm:px-4 py-4 md:py-6 md:px-6">
+          <div className="h-full flex flex-col lg:flex-row gap-4 md:gap-6 max-w-7xl mx-auto justify-center m-[0px]">
             {/* Chat Section - Center with max width */}
-            <div className="w-full lg:max-w-3xl space-y-0">
+            <div className="w-full h-full lg:max-w-3xl space-y-0 flex flex-col">
               {/* Welcome Intro Section - Only show on first load */}
               {messages.length === 1 && (
                 <div className="mb-8">
@@ -1276,7 +1283,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
               </Card>
 
               {/* Chat Container with Background */}
-              <div className="relative h-[calc(100vh-16rem)] sm:h-[calc(100vh-16rem)] rounded-lg md:rounded-xl overflow-hidden">
+              <div className="relative sm:h-[calc(100vh-16rem)] flex-1 rounded-lg md:rounded-xl overflow-hidden">
                 {/* Background Color */}
                 <div className="absolute inset-0 bg-card/50" />
 
@@ -1533,7 +1540,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
             </div>
 
             {/* News Feed - Right - Hidden on mobile */}
-            <div className="hidden lg:block w-full lg:w-80 flex-shrink-0 space-y-4">
+            <div className="hidden lg:block w-full lg:w-80 space-y-4">
               {/* AI Agent Profile Card */}
               <Card className="border-border overflow-hidden">
                 <CardContent className="p-4">
@@ -1586,7 +1593,10 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
               </Card>
 
               {/* Hot Takes Section */}
-              <Card className="border-border overflow-hidden h-[calc(100vh-28rem)]">
+              <Card className="border-border overflow-hidden"
+              style={{
+                height: 'calc(100vh - 22rem)'
+              }}>
                 <CardHeader className="border-b border-border pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Zap className="w-4 h-4" />

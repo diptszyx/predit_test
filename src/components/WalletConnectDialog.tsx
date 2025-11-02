@@ -14,6 +14,8 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import bs58 from 'bs58';
 import useAuthStore from '../store/auth.store';
 import { User } from '../lib/types';
+import { toast } from 'sonner';
+import clsx from 'clsx';
 
 export type WalletType = 'metamask' | 'phantom' | 'backpack';
 export type SocialProvider = 'google' | 'apple';
@@ -52,7 +54,7 @@ const wallets: WalletOption[] = [
     id: 'metamask',
     name: 'MetaMask',
     description: 'Connect with MetaMask wallet',
-    icon: '🦊',
+    icon: 'https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg',
     color: 'from-orange-600 to-yellow-600',
     supported: false,
   },
@@ -60,7 +62,7 @@ const wallets: WalletOption[] = [
     id: 'phantom',
     name: 'Phantom',
     description: 'Connect with Phantom wallet',
-    icon: '👻',
+    icon: 'https://mintcdn.com/phantom-e50e2e68/fkWrmnMWhjoXSGZ9/resources/images/Phantom_SVG_Icon.svg?w=840&fit=max&auto=format&n=fkWrmnMWhjoXSGZ9&q=85&s=7311f84864aeebc085a674acff85ff99',
     color: 'from-blue-600 to-cyan-600',
     supported: hasPhantom,
   },
@@ -68,8 +70,8 @@ const wallets: WalletOption[] = [
     id: 'backpack',
     name: 'Backpack',
     description: 'Connect with Backpack wallet',
-    icon: '🎒',
-    color: 'from-blue-600 to-cyan-600',
+    icon: '/backpack.png',
+    color: 'from-green-600 to-red-600',
     supported: false,
   },
 ];
@@ -78,7 +80,7 @@ const socialOptions: SocialOption[] = [
   {
     id: 'google',
     name: 'Continue with Google',
-    icon: '🔍',
+    icon: '/google.png',
     color: 'hover:bg-blue-500/10 border-blue-500/30',
   },
   // {
@@ -168,7 +170,10 @@ export function WalletConnectDialog({
                   }`}
                 >
                   <div className="flex items-center justify-center gap-3">
-                    <span className="text-2xl">{social.icon}</span>
+                    <img
+                      className="w-5 h-5"
+                      src={social.icon}
+                    />
                     <span className="text-sm flex-1">{social.name}</span>
                     {isConnecting && (
                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -303,9 +308,18 @@ const WalletConnectButton = ({
 
         const nonce = nonceResp.nonce;
         const message = `Login to Deor\nNonce=${nonce}`;
+        let retries = 0;
+        while (!signMessage && retries < 10) {
+          await new Promise((r) => setTimeout(r, 200));
+          retries++;
+        }
+
+        if (!signMessage) throw new Error('signMessage not available');
+
         const signatureBytes = await signMessage(
           new TextEncoder().encode(message)
         );
+
         const signature = bs58.encode(signatureBytes);
 
         const { data: verifyResp } = await apiClient.post('/auth/verify', {
@@ -326,7 +340,7 @@ const WalletConnectButton = ({
     };
 
     connectAndSign();
-  }, [currentWallet?.adapter?.name, pendingWalletType]);
+  }, [currentWallet?.adapter?.name, pendingWalletType, signMessage]);
 
   const handleConnect = async (walletType: WalletType) => {
     setConnectingWallet(walletType);
@@ -335,16 +349,20 @@ const WalletConnectButton = ({
     switch (walletType) {
       case 'phantom':
         if (!wallets.find((w) => w.adapter.name === 'Phantom')) {
-          alert('Phantom not installed');
+          toast.error('Phantom not installed');
           setConnectingWallet(null);
           setPendingWalletType(null);
           return;
         }
+
         await select('Phantom');
         break;
       case 'backpack':
-        if (!wallets.find((w) => w.adapter.name === 'Backpack')) {
-          alert('Backpack not installed');
+        if (
+          wallets.find((w) => w.adapter.name.toLowerCase().includes(walletType))
+        ) {
+          toast.error('Backpack not installed');
+
           setConnectingWallet(null);
           setPendingWalletType(null);
           return;
@@ -371,9 +389,15 @@ const WalletConnectButton = ({
     >
       <div className="flex items-center gap-4">
         <div
-          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${wallet.color} flex items-center justify-center text-2xl flex-shrink-0`}
+          className={`w-12 h-12 rounded-xl bg-gradient-to-br overflow-hidden ${wallet.color} flex items-center justify-center text-2xl flex-shrink-0`}
         >
-          {wallet.icon}
+          <img
+            src={wallet.icon}
+            className={clsx({
+              'w-5 h-5': wallet.id === 'metamask',
+              'w-5 h-7 object-center object-cover': wallet.id === 'backpack',
+            })}
+          />
         </div>
 
         <div className="flex-1 min-w-0">

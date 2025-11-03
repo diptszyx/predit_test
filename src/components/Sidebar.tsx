@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
   MessageSquare,
   Trophy,
@@ -17,10 +17,10 @@ import {
   Send,
   Menu,
   X,
-} from "lucide-react";
-import { User as UserType } from "../lib/types";
-import { getUserLevel } from "../lib/xpSystem";
-import { useIsMobile } from "../hooks/useIsMobile";
+} from 'lucide-react';
+import { User as UserType } from '../lib/types';
+import { getUserLevel } from '../lib/xpSystem';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface SidebarProps {
   currentPage: string;
@@ -38,14 +38,14 @@ interface SidebarProps {
 
 const NAVIGATION_ITEMS = [
   {
-    id: "chat",
-    label: "Predictions",
+    id: 'chat',
+    label: 'Predictions',
     icon: MessageSquare,
     requiresAuth: false,
   },
   {
-    id: "leaderboard",
-    label: "Leaderboard",
+    id: 'leaderboard',
+    label: 'Leaderboard',
     icon: Trophy,
     requiresAuth: false,
   },
@@ -53,19 +53,19 @@ const NAVIGATION_ITEMS = [
 
 const SOCIAL_LINKS = [
   {
-    href: "https://twitter.com",
+    href: 'https://twitter.com',
     icon: Twitter,
-    label: "X (Twitter)",
+    label: 'X (Twitter)',
   },
   {
-    href: "https://discord.com",
+    href: 'https://discord.com',
     icon: MessageCircle,
-    label: "Discord",
+    label: 'Discord',
   },
   {
-    href: "https://telegram.org",
+    href: 'https://telegram.org',
     icon: Send,
-    label: "Telegram",
+    label: 'Telegram',
   },
 ];
 
@@ -94,12 +94,12 @@ export function Sidebar({
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     }
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     };
   }, [isMobileMenuOpen]);
 
@@ -151,8 +151,8 @@ export function Sidebar({
               variant="ghost"
               className={`w-full justify-start ${
                 isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
               }`}
               onClick={() => handleNavigation(item.id, item.requiresAuth)}
             >
@@ -229,7 +229,7 @@ export function Sidebar({
                   <AvatarImage
                     src={
                       user.photo?.path ||
-                      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+                      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80'
                     }
                     alt={user.username}
                   />
@@ -239,15 +239,10 @@ export function Sidebar({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {user.email ||
-                      (user?.walletAddress
-                        ? shortenAddress(user.walletAddress)
-                        : "") || shortenAddress(user.id)}
+                    {user.email || shortenAddress(user.appWallet)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {user.email && user?.walletAddress
-                      ? shortenAddress(user.walletAddress)
-                      : ""}
+                    {user.email ? shortenAddress(user.appWallet) : ''}
                   </p>
                 </div>
               </div>
@@ -267,7 +262,7 @@ export function Sidebar({
                     Lv {!Number.isNaN(userLevel) ? userLevel : 0}
                   </span>
                 </div>
-                {user.subscriptionTier === "master" && (
+                {user.subscriptionTier === 'master' && (
                   <Badge
                     variant="outline"
                     className="bg-primary/10 text-primary border-primary/20 text-xs px-1.5 py-0"
@@ -301,7 +296,10 @@ export function Sidebar({
             </div>
           </div>
         ) : (
-          <Button className="w-full" onClick={onOpenWalletDialog}>
+          <Button
+            className="w-full"
+            onClick={onOpenWalletDialog}
+          >
             <User className="w-4 h-4 mr-2" />
             Sign In
           </Button>
@@ -317,8 +315,8 @@ export function Sidebar({
         <button
           className="fixed p-3 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors"
           style={{
-            top: "1rem",
-            left: "0.5rem",
+            top: '1rem',
+            left: '0.5rem',
             zIndex: 9999,
           }}
           onClick={() => setIsMobileMenuOpen(true)}
@@ -376,8 +374,8 @@ export function Sidebar({
                   variant="ghost"
                   className={`w-full justify-start ${
                     isActive
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   }`}
                   onClick={() => handleNavigation(item.id, item.requiresAuth)}
                 >
@@ -454,7 +452,7 @@ export function Sidebar({
                       <AvatarImage
                         src={
                           user.photo?.path ||
-                          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+                          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80'
                         }
                         alt={user.username}
                       />
@@ -464,15 +462,10 @@ export function Sidebar({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
-                        {user.email ||
-                          (user?.walletAddress
-                            ? shortenAddress(user.walletAddress)
-                            : "")}
+                        {user.email || shortenAddress(user.appWallet)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {user.email && user?.walletAddress
-                          ? shortenAddress(user.walletAddress)
-                          : ""}
+                        {user.email ? shortenAddress(user.appWallet) : ''}
                       </p>
                     </div>
                   </div>
@@ -492,7 +485,7 @@ export function Sidebar({
                         Lv {!Number.isNaN(userLevel) ? userLevel : 0}
                       </span>
                     </div>
-                    {user.subscriptionTier === "master" && (
+                    {user.subscriptionTier === 'master' && (
                       <Badge
                         variant="outline"
                         className="bg-primary/10 text-primary border-primary/20 text-xs px-1.5 py-0"
@@ -526,7 +519,10 @@ export function Sidebar({
                 </div>
               </div>
             ) : (
-              <Button className="w-full" onClick={onOpenWalletDialog}>
+              <Button
+                className="w-full"
+                onClick={onOpenWalletDialog}
+              >
                 <User className="w-4 h-4 mr-2" />
                 Sign In
               </Button>

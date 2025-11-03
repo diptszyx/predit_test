@@ -8,6 +8,7 @@ import type {
   WalletType,
   SocialProvider,
 } from './components/WalletConnectDialog';
+import { useUserPhotoRefresh } from './hooks';
 
 // Components
 import { ChatPage } from './components/ChatPage';
@@ -220,6 +221,9 @@ export default function App() {
 
   // XP system hook
   const { awardXPToUser, trackQuestProgress } = useXP(user, updateUser);
+
+  // Auto-refresh user profile to prevent presigned URL expiration
+  useUserPhotoRefresh();
 
   // Apply dark mode
   useEffect(() => {

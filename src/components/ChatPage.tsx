@@ -1,4 +1,18 @@
-import { ArrowLeft, Check, Crown, Lock, MessageSquare, Moon, Send, Share2, Sparkles, Star, Sun, ThumbsUp, Zap } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Crown,
+  Lock,
+  MessageSquare,
+  Moon,
+  Send,
+  Share2,
+  Sparkles,
+  Star,
+  Sun,
+  ThumbsUp,
+  Zap,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { HotTakeArticle } from "./ArticleDetailPage";
 import { DisclaimerDialog } from "./DisclaimerDialog";
@@ -43,7 +57,7 @@ interface AIAgent {
   avatar: string;
   bgColor: string;
   level?: number;
-  tier?: 'free' | 'premium' | 'elite';
+  tier?: "free" | "premium" | "elite";
 }
 
 interface Message {
@@ -83,8 +97,14 @@ interface ChatPageProps {
   onWalletDisconnect?: () => void;
   shortenAddress?: (address: string) => string;
   updateUser?: (updates: Partial<User>) => void;
-  awardXPToUser?: (actionKey: string, options?: { showToast?: boolean; customMultipliers?: number[] }) => any;
-  trackQuestProgress?: (questType: 'visitAIAgents' | 'makePredictions' | 'shareContent', amount?: number) => void;
+  awardXPToUser?: (
+    actionKey: string,
+    options?: { showToast?: boolean; customMultipliers?: number[] }
+  ) => any;
+  trackQuestProgress?: (
+    questType: "visitAIAgents" | "makePredictions" | "shareContent",
+    amount?: number
+  ) => void;
   onArticleClick?: (article: HotTakeArticle) => void;
   onOpenSettings?: () => void;
   onSetPendingNavigation?: (page: string) => void;
@@ -107,13 +127,40 @@ type SendChatResponse = {
   assistantMessage: ChatMessage;
 };
 
-export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, user, onOpenWalletDialog, onNavigate, totalQuestionsAsked = 0, onQuestionAsked, userCreatedMarkets = [], onAddMarket, currentPage = "chat", onWalletDisconnect, shortenAddress, updateUser, awardXPToUser, trackQuestProgress, onArticleClick, onOpenSettings, onSetPendingNavigation, articleContext, onArticleContextUsed, onOpenXPInfo }: ChatPageProps) {
+export function ChatPage({
+  aiAgent,
+  onBack,
+  darkMode,
+  setDarkMode,
+  onBetClick,
+  user,
+  onOpenWalletDialog,
+  onNavigate,
+  totalQuestionsAsked = 0,
+  onQuestionAsked,
+  userCreatedMarkets = [],
+  onAddMarket,
+  currentPage = "chat",
+  onWalletDisconnect,
+  shortenAddress,
+  updateUser,
+  awardXPToUser,
+  trackQuestProgress,
+  onArticleClick,
+  onOpenSettings,
+  onSetPendingNavigation,
+  articleContext,
+  onArticleContextUsed,
+  onOpenXPInfo,
+}: ChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
   const [isLoadingNews, setIsLoadingNews] = useState(false);
-  const [deletedArticleIds, setDeletedArticleIds] = useState<Set<string>>(new Set());
+  const [deletedArticleIds, setDeletedArticleIds] = useState<Set<string>>(
+    new Set()
+  );
   const [articleCounter, setArticleCounter] = useState(5);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationContextRef = useRef<string[]>([]);
@@ -122,9 +169,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   const [userRating, setUserRating] = useState<number>(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(() => {
-    const likesStr = aiAgent.likes || '0';
-    if (likesStr === '∞') return 999999;
-    return parseInt(likesStr.replace('K', '000').replace('M', '000000'));
+    const likesStr = aiAgent.likes || "0";
+    if (likesStr === "∞") return 999999;
+    return parseInt(likesStr.replace("K", "000").replace("M", "000000"));
   });
   const [localRating, setLocalRating] = useState(aiAgent.rating);
 
@@ -134,12 +181,17 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<string>("");
   const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false);
-  const [limitReachedType, setLimitReachedType] = useState<'prediction' | 'textline' | 'total-predictions' | null>(null);
+  const [limitReachedType, setLimitReachedType] = useState<
+    "prediction" | "textline" | "total-predictions" | null
+  >(null);
 
   // Share functionality
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareFlashing, setShareFlashing] = useState(false);
-  const [lastPrediction, setLastPrediction] = useState<{ question: string; answer: string } | null>(null);
+  const [lastPrediction, setLastPrediction] = useState<{
+    question: string;
+    answer: string;
+  } | null>(null);
 
   // Disclaimer dialog
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
@@ -156,12 +208,12 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     scrollToBottom();
   }, [messages]);
 
-  useEffect(()=>{
-    if(!user?.id) {
-      setMessages([])
-      setUserMessageCount(0)
+  useEffect(() => {
+    if (!user?.id) {
+      setMessages([]);
+      setUserMessageCount(0);
     }
-  },[user])
+  }, [user]);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -180,7 +232,6 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     fetchMessages();
   }, []);
 
-
   // Load default hot takes on mount
   useEffect(() => {
     const defaultHotTakes = generateDefaultHotTakes(aiAgent);
@@ -193,20 +244,18 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
       pendingMessage &&
       !signInDialogOpen &&
       !subscriptionDialogOpen &&
-      (
-        // Either just signed in
-        (user?.walletAddress && !isLoading) ||
+      // Either just signed in
+      ((user?.walletAddress && !isLoading) ||
         // Or has a paid subscription
-        (user?.subscriptionTier && user?.subscriptionTier !== 'free')
-      );
+        (user?.subscriptionTier && user?.subscriptionTier !== "free"));
 
     if (shouldSendPending) {
       // User just signed in or upgraded and we have a pending message
       const sendPendingMessage = async () => {
         // Check if this is a prediction question
         const isPrediction = isPredictionQuestion(pendingMessage);
-        console.log('Auto-send message:', pendingMessage);
-        console.log('Auto-send is prediction:', isPrediction);
+        console.log("Auto-send message:", pendingMessage);
+        console.log("Auto-send is prediction:", isPrediction);
 
         const userMessage: Message = {
           id: Date.now().toString(),
@@ -227,7 +276,10 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
         }
 
         // Increment daily line count for free users (for pending messages)
-        if (user?.walletAddress && (!user?.subscriptionTier || user?.subscriptionTier === 'free')) {
+        if (
+          user?.walletAddress &&
+          (!user?.subscriptionTier || user?.subscriptionTier === "free")
+        ) {
           const linesInMessage = countLines(pendingMessage);
           incrementDailyLines(linesInMessage);
         }
@@ -243,20 +295,23 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
             content: response,
             timestamp: new Date(),
             isPrediction,
-            suggestedQuestions: generateSuggestedQuestions(aiAgent, pendingMessage),
+            suggestedQuestions: generateSuggestedQuestions(
+              aiAgent,
+              pendingMessage
+            ),
           };
           setMessages((prev) => [...prev, assistantMessage]);
 
           // If this was a prediction, store it and flash the share button
           if (isPrediction) {
-            console.log('✓ PREDICTION DETECTED (pending message)!');
-            console.log('Question:', pendingMessage);
-            console.log('Answer:', response);
+            console.log("✓ PREDICTION DETECTED (pending message)!");
+            console.log("Question:", pendingMessage);
+            console.log("Answer:", response);
             const predictionData = {
               question: pendingMessage,
               answer: response,
             };
-            console.log('Storing prediction data:', predictionData);
+            console.log("Storing prediction data:", predictionData);
             setLastPrediction(predictionData);
             setShareFlashing(true);
 
@@ -274,39 +329,88 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
       sendPendingMessage();
     }
-  }, [user?.walletAddress, user?.subscriptionTier, pendingMessage, signInDialogOpen, subscriptionDialogOpen]);
+  }, [
+    user?.walletAddress,
+    user?.subscriptionTier,
+    pendingMessage,
+    signInDialogOpen,
+    subscriptionDialogOpen,
+  ]);
 
   // Helper function to detect if a message is asking for a prediction
   function isPredictionQuestion(message: string): boolean {
     const predictionKeywords = [
       // Direct prediction words
-      'will', 'predict', 'prediction', 'forecast', 'future',
-      'what happens', 'what will happen', 'gonna happen',
-      'chance', 'likelihood', 'probability', 'odds',
-      'expect', 'anticipate', 'foresee', 'outlook',
-      'trend', 'estimate', 'projection', 'gonna',
-      'going to', 'happen', 'come true', 'think will',
+      "will",
+      "predict",
+      "prediction",
+      "forecast",
+      "future",
+      "what happens",
+      "what will happen",
+      "gonna happen",
+      "chance",
+      "likelihood",
+      "probability",
+      "odds",
+      "expect",
+      "anticipate",
+      "foresee",
+      "outlook",
+      "trend",
+      "estimate",
+      "projection",
+      "gonna",
+      "going to",
+      "happen",
+      "come true",
+      "think will",
 
       // Time-based future indicators
-      'tomorrow', 'next week', 'next month', 'next year',
-      'in 2025', 'in 2026', 'in 2027', 'this year', 'next',
-      'upcoming', 'soon', 'later', 'eventually', 'by the end',
+      "tomorrow",
+      "next week",
+      "next month",
+      "next year",
+      "in 2025",
+      "in 2026",
+      "in 2027",
+      "this year",
+      "next",
+      "upcoming",
+      "soon",
+      "later",
+      "eventually",
+      "by the end",
 
       // Question patterns about future
-      'what will', 'where will', 'when will', 'who will', 'how will',
-      'what is going to', 'what do you think',
-      'what are the chances', 'what is the', 'what price',
-      'how much will', 'how high', 'how low', 'could it', 'might it'
+      "what will",
+      "where will",
+      "when will",
+      "who will",
+      "how will",
+      "what is going to",
+      "what do you think",
+      "what are the chances",
+      "what is the",
+      "what price",
+      "how much will",
+      "how high",
+      "how low",
+      "could it",
+      "might it",
     ];
 
     const lowerMessage = message.toLowerCase();
-    return predictionKeywords.some(keyword => lowerMessage.includes(keyword));
+    return predictionKeywords.some((keyword) => lowerMessage.includes(keyword));
   }
 
   // Helper function to check and reset daily predictions
-  function checkDailyPredictionLimit(): { allowed: boolean; remaining: number } {
+  function checkDailyPredictionLimit(): {
+    allowed: boolean;
+    remaining: number;
+  } {
     // Premium users have unlimited predictions
-    if (user?.subscriptionTier === 'master') {
+    if (user?.subscriptionTier === "master") {
       return { allowed: true, remaining: -1 }; // -1 means unlimited
     }
 
@@ -337,7 +441,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
   // Increment daily prediction count
   function incrementDailyPredictions() {
-    if (user && updateUser && user.subscriptionTier !== 'master') {
+    if (user && updateUser && user.subscriptionTier !== "master") {
       const today = new Date().toDateString();
       const currentUsed = user.dailyPredictionsUsed || 0;
       updateUser({
@@ -350,14 +454,18 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   // Helper function to count lines in text
   function countLines(text: string): number {
     // Split by newlines and count non-empty lines
-    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    const lines = text.split("\n").filter((line) => line.trim().length > 0);
     return Math.max(1, lines.length); // At minimum, count as 1 line
   }
 
   // Helper function to check and reset daily line limit
-  function checkDailyLineLimit(messageText: string): { allowed: boolean; remaining: number; linesInMessage: number } {
+  function checkDailyLineLimit(messageText: string): {
+    allowed: boolean;
+    remaining: number;
+    linesInMessage: number;
+  } {
     // Premium users have unlimited lines
-    if (user?.subscriptionTier === 'master') {
+    if (user?.subscriptionTier === "master") {
       return { allowed: true, remaining: -1, linesInMessage: 0 }; // -1 means unlimited
     }
 
@@ -382,20 +490,32 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
       if (linesInMessage > DAILY_LINE_LIMIT) {
         return { allowed: false, remaining: 0, linesInMessage };
       }
-      return { allowed: true, remaining: DAILY_LINE_LIMIT - linesInMessage, linesInMessage };
+      return {
+        allowed: true,
+        remaining: DAILY_LINE_LIMIT - linesInMessage,
+        linesInMessage,
+      };
     }
 
     // Check if limit would be exceeded with this message
     if (dailyUsed + linesInMessage > DAILY_LINE_LIMIT) {
-      return { allowed: false, remaining: DAILY_LINE_LIMIT - dailyUsed, linesInMessage };
+      return {
+        allowed: false,
+        remaining: DAILY_LINE_LIMIT - dailyUsed,
+        linesInMessage,
+      };
     }
 
-    return { allowed: true, remaining: DAILY_LINE_LIMIT - dailyUsed - linesInMessage, linesInMessage };
+    return {
+      allowed: true,
+      remaining: DAILY_LINE_LIMIT - dailyUsed - linesInMessage,
+      linesInMessage,
+    };
   }
 
   // Increment daily line count
   function incrementDailyLines(linesCount: number) {
-    if (user && updateUser && user.subscriptionTier !== 'master') {
+    if (user && updateUser && user.subscriptionTier !== "master") {
       const today = new Date().toDateString();
       const currentUsed = user.dailyLinesUsed || 0;
       updateUser({
@@ -408,43 +528,72 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   // Generate welcome message based on AI agent
   function getWelcomeMessage(aiAgent: AIAgent): string {
     const welcomeMessages: { [key: string]: string } = {
-      fortune: "🔮 *peers into snow globe intensely* Ah, another soul seeking answers from the cosmic depths! Welcome, traveler. I sense you have questions... probably about Tuesdays. Everyone always has questions about Tuesdays. What mysteries shall we unravel today?",
-      crypto: "₿ GM! *checks 47 different charts simultaneously* Welcome to the blockchain prophecy zone! The vibes are telling me you're here for some alpha. Whether it's Bitcoin, altcoins, or the next 100x, Satoshi's Heir is ready. Remember: WAGMI, but also DYOR. What predictions do you seek, anon?",
-      politics: "🎭 *adjusts monocle and checks Twitter drama* Ah, a fellow connoisseur of political chaos! Welcome to the scandal detection chamber. I can already sense the drama in the air today. What political prophecies shall I divine for you? Elections? Policy drama? Who's switching parties this week?",
-      "meme-coins": "🐸 *scrolls through Telegram at light speed* Yo yo yo! The Degen Queen has entered the chat! Ready to find the next PEPE? The next SHIB? The next whatever-animal-coin-goes-100x-this-week? Buckle up, anon - we're going full degen mode. Let's find that moonshot! 🚀",
+      fortune:
+        "🔮 *peers into snow globe intensely* Ah, another soul seeking answers from the cosmic depths! Welcome, traveler. I sense you have questions... probably about Tuesdays. Everyone always has questions about Tuesdays. What mysteries shall we unravel today?",
+      crypto:
+        "₿ GM! *checks 47 different charts simultaneously* Welcome to the blockchain prophecy zone! The vibes are telling me you're here for some alpha. Whether it's Bitcoin, altcoins, or the next 100x, Satoshi's Heir is ready. Remember: WAGMI, but also DYOR. What predictions do you seek, anon?",
+      politics:
+        "🎭 *adjusts monocle and checks Twitter drama* Ah, a fellow connoisseur of political chaos! Welcome to the scandal detection chamber. I can already sense the drama in the air today. What political prophecies shall I divine for you? Elections? Policy drama? Who's switching parties this week?",
+      "meme-coins":
+        "🐸 *scrolls through Telegram at light speed* Yo yo yo! The Degen Queen has entered the chat! Ready to find the next PEPE? The next SHIB? The next whatever-animal-coin-goes-100x-this-week? Buckle up, anon - we're going full degen mode. Let's find that moonshot! 🚀",
     };
-    return welcomeMessages[aiAgent.id] || `${aiAgent.emoji} Welcome! I'm ${aiAgent.name}, ${aiAgent.title}. ${aiAgent.description} What would you like to know?`;
+    return (
+      welcomeMessages[aiAgent.id] ||
+      `${aiAgent.emoji} Welcome! I'm ${aiAgent.name}, ${aiAgent.title}. ${aiAgent.description} What would you like to know?`
+    );
   }
 
   // Mock Grok API call with personality-driven responses
-  async function sendToGrokAPI(userMessage: string, aiAgent: AIAgent): Promise<string> {
+  async function sendToGrokAPI(
+    userMessage: string,
+    aiAgent: AIAgent
+  ): Promise<string> {
     // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1500 + Math.random() * 1000)
+    );
 
     // Generate contextual funny responses based on AI agent personality
-    const responses = getAIAgentResponses(aiAgent.id, userMessage.toLowerCase());
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    const responses = getAIAgentResponses(
+      aiAgent.id,
+      userMessage.toLowerCase()
+    );
+    const randomResponse =
+      responses[Math.floor(Math.random() * responses.length)];
 
     return randomResponse;
   }
 
   // AI agent-specific response generator
-  function getAIAgentResponses(aiAgentId: string, userMessage: string): string[] {
+  function getAIAgentResponses(
+    aiAgentId: string,
+    userMessage: string
+  ): string[] {
     // Crystal Ball Carl (fortune) responses
     if (aiAgentId === "fortune") {
-      if (userMessage.includes("future") || userMessage.includes("what will happen")) {
+      if (
+        userMessage.includes("future") ||
+        userMessage.includes("what will happen")
+      ) {
         return [
           "🔮 *shakes snow globe vigorously* Ah yes, I see it now... the future is cloudy with a chance of... wait, that's just the glitter settling. But seriously, I'm seeing a Tuesday in your near future. Possibly even a Wednesday. Trust the process.",
           "🔮 The mystical orb reveals... *squints* ...that you should probably drink more water. Also, I'm getting strong vibes that something will happen. Or maybe it won't. The cosmos is being cryptic today.",
           "🔮 *gazes deeply into the snow globe* I foresee... a decision you'll need to make. It could go either way. My advice? Trust the cat. There's always a cat involved somehow.",
         ];
-      } else if (userMessage.includes("love") || userMessage.includes("relationship")) {
+      } else if (
+        userMessage.includes("love") ||
+        userMessage.includes("relationship")
+      ) {
         return [
           "🔮 Ah, matters of the heart! *snow globe intensifies* The cosmic forces suggest that your love life will involve... a person. Possibly multiple persons if you're ambitious. Beware of anyone who doesn't like pizza though. That's a red flag from the universe.",
           "🔮 *mystic humming* I see romance in your future! It may involve awkward first dates, questionable text messages, or someone who quotes The Office too much. The stars are pointing towards... compatibility? Or maybe that's just Jupiter being dramatic again.",
           "🔮 The orb of destiny speaks! Your romantic future involves either great happiness or valuable life lessons. Possibly both. My mystical advice: don't ghost people, the karma is real (I checked).",
         ];
-      } else if (userMessage.includes("money") || userMessage.includes("rich") || userMessage.includes("lottery")) {
+      } else if (
+        userMessage.includes("money") ||
+        userMessage.includes("rich") ||
+        userMessage.includes("lottery")
+      ) {
         return [
           "🔮 *snow globe swirls mysteriously* Financial fortunes, eh? I'm seeing... numbers. Lots of numbers. Some go up, some go down. My cosmic tip: maybe don't bet it all on that 'guaranteed' crypto your cousin mentioned.",
           "🔮 The universe reveals that money flows to those who... *checks notes* ...work for it. I know, I was hoping for something more mystical too. But hey, I also see a potential windfall! Could be $5, could be $5,000. The cosmos doesn't do specifics.",
@@ -466,7 +615,11 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           "₿ Ah, the king of crypto! Look, BTC is like that friend who shows up late to everything but somehow makes it worth it. We're still early (we're always early). Just stack sats and trust the 4-year cycle. Not financial advice tho! 🚀",
           "₿ Bitcoin? *50 charts appear* This is either the best or worst time to buy, depending on when you ask me. The blockchain doesn't lie, but it also doesn't give clear signals. HODL and pray to Satoshi. WAGMI! 📈",
         ];
-      } else if (userMessage.includes("shitcoin") || userMessage.includes("altcoin") || userMessage.includes("meme")) {
+      } else if (
+        userMessage.includes("shitcoin") ||
+        userMessage.includes("altcoin") ||
+        userMessage.includes("meme")
+      ) {
         return [
           "₿ *sniffs the air* I smell a potential rug pull from 100 blocks away! But also... imagine if this one actually moons? Do your own research means 'yes, buy a small bag and prepare for chaos.' The degen life chose us. 🎲",
           "₿ Meme coins? Those are my specialty! Look, I can't predict which dog/cat/food-themed token will 100x next, but I CAN tell you that you'll definitely check the chart 487 times today. It's basically financial astrology. Love it. 🐕🚀",
@@ -488,7 +641,10 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           "🐸 Dogecoin: started as a joke, became a movement, stayed a meme. It's basically the internet's favorite currency. My prediction? It'll pump whenever you least expect it. That's the DOGE way! 💎",
           "🐸 The original degen play! DOGE has survived every crypto winter and still has the best community. Do Only Good Everyday, but also buy the dips. Not financial advice, just vibes! 🌙",
         ];
-      } else if (userMessage.includes("shib") || userMessage.includes("shiba")) {
+      } else if (
+        userMessage.includes("shib") ||
+        userMessage.includes("shiba")
+      ) {
         return [
           "🐸 *army of Shiba Inus appears* SHIB! The DOGE killer that became its own legend. Will burning tokens make it moon? Will Shibarium change everything? Will we all get Lambos? Probably not, but the memes are top tier! 🔥",
           "🐸 Shiba Inu: when one dog coin wasn't enough. The community is passionate, the supply is... let's say 'abundant,' and the dream is alive! Just remember: always DYOR before aping in! 🐕",
@@ -510,7 +666,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
     // Default responses for other AI agents
     return [
-      `${aiAgent.emoji} *channels cosmic energy* Interesting question! My ${aiAgent.specialty.toLowerCase()} powers are tingling. Based on my extensive research (and vibes), I predict that things will definitely happen. The exact details are still materializing in the prediction realm!`,
+      `${
+        aiAgent.emoji
+      } *channels cosmic energy* Interesting question! My ${aiAgent.specialty.toLowerCase()} powers are tingling. Based on my extensive research (and vibes), I predict that things will definitely happen. The exact details are still materializing in the prediction realm!`,
       `${aiAgent.emoji} Ooh, spicy topic! Let me consult my sources... *shuffles imaginary cards* ...and by sources I mean my incredibly tuned intuition and this lucky coin. My ${aiAgent.rating} rated prediction: expect the unexpected, but also the expected. Balance!`,
       `${aiAgent.emoji} *activates ${aiAgent.specialty} mode* You've come to the right AI agent! My analysis suggests a 73% chance of something interesting, a 25% chance of something boring, and a 2% chance of something absolutely wild. The math might not add up but neither does reality anymore! 🎲`,
     ];
@@ -522,7 +680,10 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Add to conversation context
-    conversationContextRef.current = [...conversationContextRef.current, userMessage].slice(-5);
+    conversationContextRef.current = [
+      ...conversationContextRef.current,
+      userMessage,
+    ].slice(-5);
 
     // Generate mock news articles based on message keywords
     const keywords = extractKeywords(userMessage);
@@ -534,71 +695,212 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
   function extractKeywords(message: string): string[] {
     const words = message.toLowerCase().split(" ");
-    const commonWords = ["the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "is", "will", "what", "when", "where", "how", "why", "tell", "me", "about", "should", "could", "would"];
-    return words.filter(word => word.length > 3 && !commonWords.includes(word));
+    const commonWords = [
+      "the",
+      "a",
+      "an",
+      "and",
+      "or",
+      "but",
+      "in",
+      "on",
+      "at",
+      "to",
+      "for",
+      "of",
+      "with",
+      "is",
+      "will",
+      "what",
+      "when",
+      "where",
+      "how",
+      "why",
+      "tell",
+      "me",
+      "about",
+      "should",
+      "could",
+      "would",
+    ];
+    return words.filter(
+      (word) => word.length > 3 && !commonWords.includes(word)
+    );
   }
 
   // Generate suggested follow-up questions based on AI agent specialty
-  function generateSuggestedQuestions(aiAgentData: AIAgent, userMessage: string): string[] {
+  function generateSuggestedQuestions(
+    aiAgentData: AIAgent,
+    userMessage: string
+  ): string[] {
     const questionsByAIAgent: Record<string, string[][]> = {
-      "crypto": [
-        ["What's your Bitcoin price prediction for 2026?", "Which altcoins are undervalued right now?", "Will we see another crypto winter?"],
-        ["How will regulation affect crypto markets?", "What's the next big trend in DeFi?", "Should I hold or sell my crypto?"],
-        ["Which Layer 2 solutions will dominate?", "What do you think about Ethereum's future?", "Are meme coins still worth it?"],
+      crypto: [
+        [
+          "What's your Bitcoin price prediction for 2026?",
+          "Which altcoins are undervalued right now?",
+          "Will we see another crypto winter?",
+        ],
+        [
+          "How will regulation affect crypto markets?",
+          "What's the next big trend in DeFi?",
+          "Should I hold or sell my crypto?",
+        ],
+        [
+          "Which Layer 2 solutions will dominate?",
+          "What do you think about Ethereum's future?",
+          "Are meme coins still worth it?",
+        ],
       ],
       "meme-coins": [
-        ["What's the next 100x meme coin?", "Is PEPE still a good investment?", "How do you spot early meme coins?"],
-        ["Will DOGE hit $1 in 2026?", "What makes a meme coin successful?", "Which meme coin communities are strongest?"],
-        ["Are meme coins dead or thriving?", "How to avoid rug pulls?", "Best strategy for meme coin trading?"],
+        [
+          "What's the next 100x meme coin?",
+          "Is PEPE still a good investment?",
+          "How do you spot early meme coins?",
+        ],
+        [
+          "Will DOGE hit $1 in 2026?",
+          "What makes a meme coin successful?",
+          "Which meme coin communities are strongest?",
+        ],
+        [
+          "Are meme coins dead or thriving?",
+          "How to avoid rug pulls?",
+          "Best strategy for meme coin trading?",
+        ],
       ],
       "crypto-crystal": [
-        ["What's your Bitcoin price prediction for 2026?", "Which altcoins are undervalued right now?", "Will we see another crypto winter?"],
-        ["How will regulation affect crypto markets?", "What's the next big trend in DeFi?", "Which Layer 2 solutions will dominate?"],
-        ["What do you think about Ethereum's future?", "Are NFTs coming back?", "Best strategy for crypto investing?"],
+        [
+          "What's your Bitcoin price prediction for 2026?",
+          "Which altcoins are undervalued right now?",
+          "Will we see another crypto winter?",
+        ],
+        [
+          "How will regulation affect crypto markets?",
+          "What's the next big trend in DeFi?",
+          "Which Layer 2 solutions will dominate?",
+        ],
+        [
+          "What do you think about Ethereum's future?",
+          "Are NFTs coming back?",
+          "Best strategy for crypto investing?",
+        ],
       ],
-      "sports": [
-        ["Who will win the championship?", "Which team is most underrated?", "What's your boldest sports prediction?"],
-        ["Will there be any major upsets?", "Which player will break out?", "What trends are shaping the sport?"],
-        ["Who are the top contenders?", "Any dark horse teams to watch?", "What's the biggest storyline?"],
+      sports: [
+        [
+          "Who will win the championship?",
+          "Which team is most underrated?",
+          "What's your boldest sports prediction?",
+        ],
+        [
+          "Will there be any major upsets?",
+          "Which player will break out?",
+          "What trends are shaping the sport?",
+        ],
+        [
+          "Who are the top contenders?",
+          "Any dark horse teams to watch?",
+          "What's the biggest storyline?",
+        ],
       ],
-      "entertainment": [
-        ["What's the next big entertainment trend?", "Which shows will dominate?", "Who's the breakout star of 2026?"],
-        ["Will streaming wars intensify?", "What movies will be blockbusters?", "Which celebrities are rising?"],
-        ["What's the future of entertainment?", "Any surprise hits coming?", "Which franchises will succeed?"],
+      entertainment: [
+        [
+          "What's the next big entertainment trend?",
+          "Which shows will dominate?",
+          "Who's the breakout star of 2026?",
+        ],
+        [
+          "Will streaming wars intensify?",
+          "What movies will be blockbusters?",
+          "Which celebrities are rising?",
+        ],
+        [
+          "What's the future of entertainment?",
+          "Any surprise hits coming?",
+          "Which franchises will succeed?",
+        ],
       ],
-      "tech": [
-        ["What's the next big tech breakthrough?", "Will AI transform everything?", "Which tech stocks look good?"],
-        ["What are the hottest tech trends?", "Is the tech bubble real?", "Which startups will succeed?"],
-        ["How will quantum computing evolve?", "What's next for social media?", "Will VR/AR finally take off?"],
+      tech: [
+        [
+          "What's the next big tech breakthrough?",
+          "Will AI transform everything?",
+          "Which tech stocks look good?",
+        ],
+        [
+          "What are the hottest tech trends?",
+          "Is the tech bubble real?",
+          "Which startups will succeed?",
+        ],
+        [
+          "How will quantum computing evolve?",
+          "What's next for social media?",
+          "Will VR/AR finally take off?",
+        ],
       ],
-      "fundamental": [
-        ["Which stocks are undervalued now?", "What sectors will outperform?", "Is the market overvalued?"],
-        ["Best value stocks for 2026?", "How to identify quality companies?", "What's your market outlook?"],
-        ["Which industries have strong moats?", "Best dividend stocks?", "How to analyze cash flow?"],
+      fundamental: [
+        [
+          "Which stocks are undervalued now?",
+          "What sectors will outperform?",
+          "Is the market overvalued?",
+        ],
+        [
+          "Best value stocks for 2026?",
+          "How to identify quality companies?",
+          "What's your market outlook?",
+        ],
+        [
+          "Which industries have strong moats?",
+          "Best dividend stocks?",
+          "How to analyze cash flow?",
+        ],
       ],
-      "fortune": [
-        ["What does my financial future hold?", "Will I have good luck soon?", "What opportunities should I watch for?"],
-        ["How can I improve my fortune?", "What's blocking my success?", "When will things turn around?"],
-        ["Should I take a big risk?", "What does the universe say?", "Any warnings for me?"],
+      fortune: [
+        [
+          "What does my financial future hold?",
+          "Will I have good luck soon?",
+          "What opportunities should I watch for?",
+        ],
+        [
+          "How can I improve my fortune?",
+          "What's blocking my success?",
+          "When will things turn around?",
+        ],
+        [
+          "Should I take a big risk?",
+          "What does the universe say?",
+          "Any warnings for me?",
+        ],
       ],
     };
 
     // Get questions for this AI agent or use defaults
     const aiAgentQuestions = questionsByAIAgent[aiAgentData.id] || [
-      [`What's your prediction for ${aiAgentData.category}?`, `What trends do you see in ${aiAgentData.category}?`, `What should I know about ${aiAgentData.category}?`],
-      [`Any bold predictions for this year?`, `What's your hot take?`, `What are you most excited about?`],
-      [`What's the biggest risk right now?`, `What's being overlooked?`, `What should people pay attention to?`],
+      [
+        `What's your prediction for ${aiAgentData.category}?`,
+        `What trends do you see in ${aiAgentData.category}?`,
+        `What should I know about ${aiAgentData.category}?`,
+      ],
+      [
+        `Any bold predictions for this year?`,
+        `What's your hot take?`,
+        `What are you most excited about?`,
+      ],
+      [
+        `What's the biggest risk right now?`,
+        `What's being overlooked?`,
+        `What should people pay attention to?`,
+      ],
     ];
 
     // Randomly select one set of 3 questions
-    const randomSet = aiAgentQuestions[Math.floor(Math.random() * aiAgentQuestions.length)];
+    const randomSet =
+      aiAgentQuestions[Math.floor(Math.random() * aiAgentQuestions.length)];
     return randomSet;
   }
 
   function generateDefaultHotTakes(aiAgentData: AIAgent): NewsArticle[] {
     // Generate AI agent-specific hot takes based on their specialty
     const hotTakesByAIAgent: Record<string, NewsArticle[]> = {
-      "crypto": [
+      crypto: [
         {
           id: "crypto-1",
           title: "Bitcoin's Next Move: Why $100K is Just the Beginning",
@@ -606,7 +908,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "2 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400&q=80",
         },
         {
           id: "crypto-2",
@@ -615,7 +918,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "5 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80",
         },
         {
           id: "crypto-3",
@@ -624,7 +928,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "1 day ago",
           relevance: "Trending",
-          image: "https://images.unsplash.com/photo-1640826514546-7d2d97887e67?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1640826514546-7d2d97887e67?w=400&q=80",
         },
       ],
       "meme-coins": [
@@ -635,7 +940,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "1 hour ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80",
         },
         {
           id: "meme-2",
@@ -644,7 +950,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "4 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=400&q=80",
         },
         {
           id: "meme-3",
@@ -653,7 +960,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "12 hours ago",
           relevance: "Trending",
-          image: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&q=80",
         },
       ],
       "crypto-crystal": [
@@ -664,7 +972,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "3 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=400&q=80",
         },
         {
           id: "crypto-2",
@@ -673,7 +982,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "6 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80",
         },
         {
           id: "crypto-3",
@@ -682,10 +992,11 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "1 day ago",
           relevance: "Trending",
-          image: "https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=400&q=80",
         },
       ],
-      "fortune": [
+      fortune: [
         {
           id: "fortune-1",
           title: "Your Cosmic Alignment for 2026: Major Shifts Ahead",
@@ -693,7 +1004,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "2 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1532968961962-8a0cb3a2d4f5?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1532968961962-8a0cb3a2d4f5?w=400&q=80",
         },
         {
           id: "fortune-2",
@@ -702,7 +1014,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "8 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1533693706533-435a7b8f5eb3?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1533693706533-435a7b8f5eb3?w=400&q=80",
         },
         {
           id: "fortune-3",
@@ -711,7 +1024,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "1 day ago",
           relevance: "Trending",
-          image: "https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=400&q=80",
         },
       ],
       "technical-analysis": [
@@ -722,7 +1036,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "1 hour ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80",
         },
         {
           id: "tech-analysis-2",
@@ -731,7 +1046,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "5 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80",
         },
         {
           id: "tech-analysis-3",
@@ -740,7 +1056,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "10 hours ago",
           relevance: "Trending",
-          image: "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=400&q=80",
         },
       ],
       "financial-markets": [
@@ -751,7 +1068,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "2 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80",
         },
         {
           id: "financial-2",
@@ -760,7 +1078,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "7 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1559589689-577aabd1db4f?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1559589689-577aabd1db4f?w=400&q=80",
         },
         {
           id: "financial-3",
@@ -769,10 +1088,11 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "1 day ago",
           relevance: "Trending",
-          image: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80",
         },
       ],
-      "economics": [
+      economics: [
         {
           id: "economics-1",
           title: "The Inflation Narrative Nobody's Talking About",
@@ -780,7 +1100,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "3 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&q=80",
         },
         {
           id: "economics-2",
@@ -789,7 +1110,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "6 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80",
         },
         {
           id: "economics-3",
@@ -798,7 +1120,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "14 hours ago",
           relevance: "Trending",
-          image: "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=400&q=80",
         },
       ],
       "fundamental-analysis": [
@@ -809,7 +1132,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "4 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&q=80",
         },
         {
           id: "fundamental-2",
@@ -818,7 +1142,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "8 hours ago",
           relevance: "Hot",
-          image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80",
         },
         {
           id: "fundamental-3",
@@ -827,55 +1152,68 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           url: "#",
           publishedAt: "1 day ago",
           relevance: "Trending",
-          image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&q=80",
+          image:
+            "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&q=80",
         },
       ],
     };
 
     // Return AI agent-specific hot takes or default ones
-    return hotTakesByAIAgent[aiAgentData.id] || [
-      {
-        id: "default-1",
-        title: `${aiAgentData.category}: My Bold Predictions for 2026`,
-        source: aiAgentData.name,
-        url: "#",
-        publishedAt: "3 hours ago",
-        relevance: "Hot",
-        image: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80",
-      },
-      {
-        id: "default-2",
-        title: `Why Everyone Is Wrong About ${aiAgentData.category}`,
-        source: aiAgentData.name,
-        url: "#",
-        publishedAt: "7 hours ago",
-        relevance: "Hot",
-        image: "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&q=80",
-      },
-      {
-        id: "default-3",
-        title: `The ${aiAgentData.category} Trends You Can't Ignore`,
-        source: aiAgentData.name,
-        url: "#",
-        publishedAt: "1 day ago",
-        relevance: "Trending",
-        image: "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=400&q=80",
-      },
-    ];
+    return (
+      hotTakesByAIAgent[aiAgentData.id] || [
+        {
+          id: "default-1",
+          title: `${aiAgentData.category}: My Bold Predictions for 2026`,
+          source: aiAgentData.name,
+          url: "#",
+          publishedAt: "3 hours ago",
+          relevance: "Hot",
+          image:
+            "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80",
+        },
+        {
+          id: "default-2",
+          title: `Why Everyone Is Wrong About ${aiAgentData.category}`,
+          source: aiAgentData.name,
+          url: "#",
+          publishedAt: "7 hours ago",
+          relevance: "Hot",
+          image:
+            "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&q=80",
+        },
+        {
+          id: "default-3",
+          title: `The ${aiAgentData.category} Trends You Can't Ignore`,
+          source: aiAgentData.name,
+          url: "#",
+          publishedAt: "1 day ago",
+          relevance: "Trending",
+          image:
+            "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=400&q=80",
+        },
+      ]
+    );
   }
 
-  function generateMockNews(keywords: string[], category: string): NewsArticle[] {
-    const topics = keywords.length > 0 ? keywords : ["future", "prediction", "trends"];
+  function generateMockNews(
+    keywords: string[],
+    category: string
+  ): NewsArticle[] {
+    const topics =
+      keywords.length > 0 ? keywords : ["future", "prediction", "trends"];
 
     const mockNews: NewsArticle[] = [
       {
         id: "1",
-        title: `Breaking: ${topics[0]?.toUpperCase() || "MYSTERY"} Trends Hit All-Time High`,
+        title: `Breaking: ${
+          topics[0]?.toUpperCase() || "MYSTERY"
+        } Trends Hit All-Time High`,
         source: aiAgent.name,
         url: "#",
         publishedAt: "2 hours ago",
         relevance: "Hot",
-        image: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80",
       },
       {
         id: "2",
@@ -884,16 +1222,20 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
         url: "#",
         publishedAt: "5 hours ago",
         relevance: "Trending",
-        image: "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&q=80",
       },
       {
         id: "3",
-        title: `${topics[Math.min(1, topics.length - 1)] || "Things"}: More Popular Than Ever - My Take`,
+        title: `${
+          topics[Math.min(1, topics.length - 1)] || "Things"
+        }: More Popular Than Ever - My Take`,
         source: aiAgent.name,
         url: "#",
         publishedAt: "1 day ago",
         relevance: "Trending",
-        image: "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=400&q=80",
       },
       {
         id: "4",
@@ -902,7 +1244,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
         url: "#",
         publishedAt: "2 days ago",
         relevance: "Popular",
-        image: "https://images.unsplash.com/photo-1586339277861-b0b1cf004b68?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1586339277861-b0b1cf004b68?w=400&q=80",
       },
     ];
 
@@ -910,63 +1253,97 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   }
 
   function generateSingleArticle(context: string[]): NewsArticle {
-    const allKeywords = context.flatMap(msg => extractKeywords(msg));
+    const allKeywords = context.flatMap((msg) => extractKeywords(msg));
     const uniqueKeywords = [...new Set(allKeywords)];
-    const topic = uniqueKeywords[Math.floor(Math.random() * uniqueKeywords.length)] || "trending topics";
+    const topic =
+      uniqueKeywords[Math.floor(Math.random() * uniqueKeywords.length)] ||
+      "trending topics";
 
     const articleTemplates = [
       {
-        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)}: My Analysis on the Unexpected Surge`,
+        title: `${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        }: My Analysis on the Unexpected Surge`,
         source: aiAgent.name,
         relevance: "Hot",
-        image: "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=400&q=80",
       },
       {
-        title: `Why ${topic.charAt(0).toUpperCase() + topic.slice(1)} Could Be The Future - My Take`,
+        title: `Why ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Could Be The Future - My Take`,
         source: aiAgent.name,
         relevance: "Trending",
-        image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80",
       },
       {
-        title: `My Expert Opinion on ${topic.charAt(0).toUpperCase() + topic.slice(1)}: What You Need to Know`,
+        title: `My Expert Opinion on ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        }: What You Need to Know`,
         source: aiAgent.name,
         relevance: "Trending",
-        image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80",
       },
       {
-        title: `How ${topic.charAt(0).toUpperCase() + topic.slice(1)} Is Changing ${aiAgent.category}`,
+        title: `How ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Is Changing ${aiAgent.category}`,
         source: aiAgent.name,
         relevance: "Popular",
-        image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80",
       },
       {
-        title: `Is ${topic.charAt(0).toUpperCase() + topic.slice(1)} Over? My Bold Prediction`,
+        title: `Is ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Over? My Bold Prediction`,
         source: aiAgent.name,
         relevance: "Trending",
-        image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=80",
       },
       {
-        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)} Predictions for 2026: My Forecast`,
+        title: `${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Predictions for 2026: My Forecast`,
         source: aiAgent.name,
         relevance: "Hot",
-        image: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&q=80",
       },
       {
-        title: `My Bold Take on ${topic.charAt(0).toUpperCase() + topic.slice(1)} Everyone Missed`,
+        title: `My Bold Take on ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Everyone Missed`,
         source: aiAgent.name,
         relevance: "Hot",
-        image: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&q=80",
       },
       {
-        title: `The ${topic.charAt(0).toUpperCase() + topic.slice(1)} Opportunity: My Insider Analysis`,
+        title: `The ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Opportunity: My Insider Analysis`,
         source: aiAgent.name,
         relevance: "Trending",
-        image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400&q=80",
       },
     ];
 
-    const template = articleTemplates[Math.floor(Math.random() * articleTemplates.length)];
-    const timeframes = ["30 minutes ago", "1 hour ago", "3 hours ago", "6 hours ago", "12 hours ago", "1 day ago"];
+    const template =
+      articleTemplates[Math.floor(Math.random() * articleTemplates.length)];
+    const timeframes = [
+      "30 minutes ago",
+      "1 hour ago",
+      "3 hours ago",
+      "6 hours ago",
+      "12 hours ago",
+      "1 day ago",
+    ];
 
     return {
       id: `article-${articleCounter}`,
@@ -981,14 +1358,16 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
   const handleDeleteArticle = (articleId: string) => {
     // Add to deleted set
-    setDeletedArticleIds(prev => new Set([...prev, articleId]));
+    setDeletedArticleIds((prev) => new Set([...prev, articleId]));
 
     // Remove the article
-    setNewsArticles(prev => prev.filter(article => article.id !== articleId));
+    setNewsArticles((prev) =>
+      prev.filter((article) => article.id !== articleId)
+    );
 
     // Generate and add a new article
     // const newArticle = generateSingleArticle(conversationContextRef.current);
-    setArticleCounter(prev => prev + 1);
+    setArticleCounter((prev) => prev + 1);
 
     // Add new article after a brief delay for smooth transition
     setTimeout(() => {
@@ -1053,25 +1432,22 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
     try {
       const response = await sendToGrokAPI(trimmedInput, aiAgent);
-      const { data } = await apiClient.post<SendChatResponse>(
-        "/messages",
-        {
-          content: trimmedInput,
-          oracleId: '1e557572-aaa8-4cab-8af6-d86f65613f19'
-        }
-      );
+      const { data } = await apiClient.post<SendChatResponse>("/messages", {
+        content: trimmedInput,
+        oracleId: "1e557572-aaa8-4cab-8af6-d86f65613f19",
+      });
       setMessages((prev) => [...prev, data.assistantMessage]);
 
       // If this was a prediction, store it and flash the share button and rating section
       if (isPrediction) {
-        console.log('✓ PREDICTION DETECTED!');
-        console.log('Question:', trimmedInput);
-        console.log('Answer:', response);
+        console.log("✓ PREDICTION DETECTED!");
+        console.log("Question:", trimmedInput);
+        console.log("Answer:", response);
         const predictionData = {
           question: trimmedInput,
           answer: response,
         };
-        console.log('Storing prediction data:', predictionData);
+        console.log("Storing prediction data:", predictionData);
         setLastPrediction(predictionData);
         setShareFlashing(true);
         setRatingFlashing(true);
@@ -1082,8 +1458,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
           setRatingFlashing(false);
         }, 3000);
       } else {
-        console.log('✗ Not a prediction question');
-        console.log('Message was:', trimmedInput);
+        console.log("✗ Not a prediction question");
+        console.log("Message was:", trimmedInput);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -1109,10 +1485,10 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   const handleLike = () => {
     if (!hasLiked) {
       setHasLiked(true);
-      setLocalLikes(prev => prev + 1);
+      setLocalLikes((prev) => prev + 1);
     } else {
       setHasLiked(false);
-      setLocalLikes(prev => prev - 1);
+      setLocalLikes((prev) => prev - 1);
     }
   };
 
@@ -1137,46 +1513,82 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
   };
 
   return (
-    <div className={onNavigate && shortenAddress && onWalletDisconnect && onOpenWalletDialog ? "flex h-screen bg-background overflow-hidden" : "min-h-screen bg-background"}>
+    <div
+      className={
+        onNavigate && shortenAddress && onWalletDisconnect && onOpenWalletDialog
+          ? "flex h-screen bg-background overflow-hidden"
+          : "min-h-screen bg-background"
+      }
+    >
       {/* Sidebar */}
-      {onNavigate && shortenAddress && onWalletDisconnect && onOpenWalletDialog && (
-        <Sidebar
-          currentPage={currentPage}
-          onNavigate={(page) => {
-            if (page === "oracles") {
-              onBack();
-            } else {
-              onNavigate(page);
-            }
-          }}
-          user={user}
-          onOpenWalletDialog={onOpenWalletDialog}
-          onWalletDisconnect={onWalletDisconnect}
-          shortenAddress={shortenAddress}
-          onOpenSettings={onOpenSettings}
-          onSetPendingNavigation={onSetPendingNavigation}
-          onOpenXPInfo={onOpenXPInfo}
-          darkMode={darkMode}
-          onToggleDarkMode={() => setDarkMode(!darkMode)}
-        />
-      )}
+      {onNavigate &&
+        shortenAddress &&
+        onWalletDisconnect &&
+        onOpenWalletDialog && (
+          <Sidebar
+            currentPage={currentPage}
+            onNavigate={(page) => {
+              if (page === "oracles") {
+                onBack();
+              } else {
+                onNavigate(page);
+              }
+            }}
+            user={user}
+            onOpenWalletDialog={onOpenWalletDialog}
+            onWalletDisconnect={onWalletDisconnect}
+            shortenAddress={shortenAddress}
+            onOpenSettings={onOpenSettings}
+            onSetPendingNavigation={onSetPendingNavigation}
+            onOpenXPInfo={onOpenXPInfo}
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+          />
+        )}
 
       {/* Main Content */}
-      <div className={onNavigate && shortenAddress && onWalletDisconnect && onOpenWalletDialog ? "flex-1 overflow-y-auto" : ""}>
+      <div
+        className={
+          onNavigate &&
+          shortenAddress &&
+          onWalletDisconnect &&
+          onOpenWalletDialog
+            ? "flex-1 overflow-y-auto"
+            : ""
+        }
+      >
         {/* Oracle Header Bar */}
-        {!(onNavigate && shortenAddress && onWalletDisconnect && onOpenWalletDialog) && (
+        {!(
+          onNavigate &&
+          shortenAddress &&
+          onWalletDisconnect &&
+          onOpenWalletDialog
+        ) && (
           <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
             <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
               <div className="flex items-center gap-3 min-w-0">
-                <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+                >
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
                 <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                  <img src={aiAgent.avatar} alt={aiAgent.name} className="w-full h-full object-cover" />
+                  <img
+                    src={aiAgent.avatar}
+                    alt={aiAgent.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-sm sm:text-base leading-none truncate">{aiAgent.name}</h1>
-                  <p className="text-xs text-muted-foreground truncate hidden sm:block">{aiAgent.title}</p>
+                  <h1 className="text-sm sm:text-base leading-none truncate">
+                    {aiAgent.name}
+                  </h1>
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                    {aiAgent.title}
+                  </p>
                 </div>
               </div>
 
@@ -1185,7 +1597,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                   <span>{localRating} rating</span>
                   <span>{formatLikes(localLikes)} likes</span>
                   {aiAgent.consultSessions && (
-                    <span className="hidden md:inline">{aiAgent.consultSessions} sessions</span>
+                    <span className="hidden md:inline">
+                      {aiAgent.consultSessions} sessions
+                    </span>
                   )}
                 </div>
                 <div className="flex sm:hidden">
@@ -1197,7 +1611,11 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                   onClick={() => setDarkMode(!darkMode)}
                   className="h-8 w-8"
                 >
-                  {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {darkMode ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -1226,7 +1644,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                           ✨ Specialized Expertise for Pinpoint Accuracy
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          Fine-tuned on niche data for stocks, cryptos, politics, sports, and more—delivering spot-on predictions that crush the competition.
+                          Fine-tuned on niche data for stocks, cryptos,
+                          politics, sports, and more—delivering spot-on
+                          predictions that crush the competition.
                         </p>
                       </div>
 
@@ -1236,7 +1656,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                           🚀 Supercharge Your Bets and Investments
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          Spot trends, minimize risks, and maximize wins with actionable insights tailored just for you.
+                          Spot trends, minimize risks, and maximize wins with
+                          actionable insights tailored just for you.
                         </p>
                       </div>
                     </div>
@@ -1249,7 +1670,7 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
               )}
               {/* Oracle Header - Above conversation box */}
               <Card className="border-border bg-background/80 backdrop-blur-md">
-                <CardContent className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md">
+                <CardContent className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Button
                       variant="ghost"
@@ -1267,7 +1688,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-sm sm:text-base md:text-lg truncate">{aiAgent.name}</CardTitle>
+                      <CardTitle className="text-sm sm:text-base md:text-lg truncate">
+                        {aiAgent.name}
+                      </CardTitle>
                     </div>
                     <Button
                       variant="ghost"
@@ -1276,7 +1699,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                       className="flex-shrink-0 hover:bg-blue-500/20 h-8 sm:h-9 px-2 sm:px-3"
                     >
                       <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">Share</span>
+                      <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
+                        Share
+                      </span>
                     </Button>
                   </div>
                 </CardContent>
@@ -1289,117 +1714,61 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
 
                 {/* Chat Interface - Full Height */}
                 <div className="absolute inset-0 flex flex-col pointer-events-none">
-                  {/* Input Section - Fixed at top with semi-transparent background */}
-                  <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl border-b border-border pointer-events-auto bg-card/90">
+                  {/* Rating and Like Section - Fixed at bottom */}
+                  <div className="p-3 sm:p-4 border-t border-border pointer-events-auto bg-card">
                     <div className="max-w-4xl mx-auto">
-                      {/* Daily Prediction Limit Counter for Free Users */}
-                      {user?.walletAddress && user?.subscriptionTier !== 'master' && (() => {
-                        const today = new Date().toDateString();
-                        const lastResetDate = user?.dailyPredictionsResetDate;
-                        const dailyUsed = (lastResetDate === today) ? (user?.dailyPredictionsUsed || 0) : 0;
-                        const remaining = 5 - dailyUsed;
-
-                        if (remaining <= 2) {
-                          return (
-                            <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-xs sm:text-sm text-foreground truncate">
-                                  <Lock className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                                  {remaining} prediction{remaining !== 1 ? 's' : ''} left
-                                </p>
-                                <Button
-                                  size="sm"
-                                  onClick={() => setSubscriptionDialogOpen(true)}
-                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
+                      <div
+                        className={`p-3 sm:p-4 rounded-lg border border-border transition-all ${
+                          ratingFlashing ? "border-primary" : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Rate this prediction
+                            </p>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  onClick={() => handleRating(star)}
+                                  className="transition-opacity hover:opacity-70"
                                 >
-                                  <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
-                                  <span className="text-xs">Upgrade</span>
-                                </Button>
-                              </div>
+                                  <Star
+                                    className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                                      star <= userRating
+                                        ? "fill-primary text-primary"
+                                        : "text-muted-foreground"
+                                    }`}
+                                  />
+                                </button>
+                              ))}
+                              {userRating > 0 && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  {userRating}/5
+                                </span>
+                              )}
                             </div>
-                          );
-                        }
-                        return null;
-                      })()}
-
-                      {/* Daily Line Limit Counter for Free Users */}
-                      {user?.walletAddress && user?.subscriptionTier !== 'master' && (() => {
-                        const today = new Date().toDateString();
-                        const lastResetDate = user?.dailyLinesResetDate;
-                        const dailyUsed = (lastResetDate === today) ? (user?.dailyLinesUsed || 0) : 0;
-                        const remaining = 100 - dailyUsed;
-                        const percentage = (dailyUsed / 100) * 100;
-
-                        if (remaining <= 30) {
-                          return (
-                            <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
-                              <div className="flex items-center justify-between mb-2 gap-2">
-                                <p className="text-xs sm:text-sm text-foreground truncate">
-                                  <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                                  {remaining} lines left
-                                </p>
-                                <Button
-                                  size="sm"
-                                  onClick={() => setSubscriptionDialogOpen(true)}
-                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
-                                >
-                                  <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
-                                  <span className="text-xs">Upgrade</span>
-                                </Button>
-                              </div>
-                              <div className="w-full bg-black/30 rounded-full h-1.5">
-                                <div
-                                  className="bg-gradient-to-r from-orange-500 to-red-500 h-1.5 rounded-full transition-all"
-                                  style={{ width: `${percentage}%` }}
-                                />
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">{dailyUsed}/100 lines used</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-
-                      <div className="flex gap-1.5 sm:gap-2">
-                        <div
-                          className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-md px-3 h-9 sm:h-10 cursor-pointer"
-                          onClick={() => {
-                            if (!user) {
-                              setSignInDialogOpen(true);
-                            }
-                          }}
-                        >
-                          {!user ? (
-                            <span className="flex-1 text-muted-foreground text-sm">Sign in to chat</span>
-                          ) : (
-                            <input
-                              type="text"
-                              value={input}
-                              onChange={(e) => setInput(e.target.value)}
-                              onKeyPress={handleKeyPress}
-                              className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm"
-                              placeholder="I want a prediction on..."
-                              disabled={isLoading}
-                            />
-                          )}
+                          </div>
+                          <div className="flex flex-col items-end gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleLike}
+                              className={
+                                hasLiked
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : ""
+                              }
+                            >
+                              Like
+                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                              {formatLikes(localLikes)}
+                            </span>
+                          </div>
                         </div>
-                        <Button
-                          onClick={() => handleSend(input)}
-                          disabled={!input.trim() || isLoading || !user}
-                          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg h-9 sm:h-10 px-3 sm:px-4"
-                        >
-                          <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center sm:text-left">
-                        AI agents can make mistakes. Check{' '}
-                        <button
-                          onClick={() => setDisclaimerDialogOpen(true)}
-                          className="text-blue-400 hover:text-blue-300 underline transition-colors"
-                        >
-                          Disclaimer
-                        </button>
-                      </p>
                     </div>
                   </div>
 
@@ -1410,13 +1779,18 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                         {messages.map((message, index) => (
                           <div key={message.id}>
                             <div
-                              className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                              className={`flex ${
+                                message.sender === "user"
+                                  ? "justify-end"
+                                  : "justify-start"
+                              }`}
                             >
                               <div
-                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === "user"
-                                  ? "bg-blue-600 text-white backdrop-blur-sm"
-                                  : "bg-muted/80 backdrop-blur-md text-foreground border border-border"
-                                  }`}
+                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
+                                  message.sender === "user"
+                                    ? "bg-blue-600 text-white backdrop-blur-sm"
+                                    : "bg-muted/80 backdrop-blur-md text-foreground border border-border"
+                                }`}
                               >
                                 {/* Article Attachment Thumbnail */}
                                 {/* {message.articleAttachment && (
@@ -1435,8 +1809,16 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                                   </div>
                                 )} */}
 
-                                <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                                <span className={`text-xs mt-1 block ${message.sender === "user" ? "text-white/70" : "text-muted-foreground"}`}>
+                                <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                                  {message.content}
+                                </p>
+                                <span
+                                  className={`text-xs mt-1 block ${
+                                    message.sender === "user"
+                                      ? "text-white/70"
+                                      : "text-muted-foreground"
+                                  }`}
+                                >
                                   {formatTime(message.createdAt)}
                                 </span>
                               </div>
@@ -1473,12 +1855,23 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                                     className="w-full h-full object-cover"
                                   />
                                 </div>
-                                <span className="text-xs text-foreground">{aiAgent.name} is typing...</span>
+                                <span className="text-xs text-foreground">
+                                  {aiAgent.name} is typing...
+                                </span>
                               </div>
                               <div className="flex gap-1">
-                                <div className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                                <div className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                                <div className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                                <div
+                                  className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                  style={{ animationDelay: "0ms" }}
+                                />
+                                <div
+                                  className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                  style={{ animationDelay: "150ms" }}
+                                />
+                                <div
+                                  className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                  style={{ animationDelay: "300ms" }}
+                                />
                               </div>
                             </div>
                           </div>
@@ -1488,51 +1881,136 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                     </ScrollArea>
                   </div>
 
-                  {/* Rating and Like Section - Fixed at bottom */}
-                  <div className="p-3 sm:p-4 border-t border-border pointer-events-auto bg-card">
+                  {/* Input Section - Fixed at top with semi-transparent background */}
+                  <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl border-b border-border pointer-events-auto bg-card/90">
                     <div className="max-w-4xl mx-auto">
-                      <div className={`p-3 sm:p-4 rounded-lg border border-border transition-all ${ratingFlashing ? 'border-primary' : ''
-                        }`}>
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <p className="text-xs text-muted-foreground mb-2">Rate this prediction</p>
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                  key={star}
-                                  onClick={() => handleRating(star)}
-                                  className="transition-opacity hover:opacity-70"
-                                >
-                                  <Star
-                                    className={`w-4 h-4 sm:w-5 sm:h-5 ${star <= userRating
-                                      ? "fill-primary text-primary"
-                                      : "text-muted-foreground"
-                                      }`}
+                      {/* Daily Prediction Limit Counter for Free Users */}
+                      {user?.walletAddress &&
+                        user?.subscriptionTier !== "master" &&
+                        (() => {
+                          const today = new Date().toDateString();
+                          const lastResetDate = user?.dailyPredictionsResetDate;
+                          const dailyUsed =
+                            lastResetDate === today
+                              ? user?.dailyPredictionsUsed || 0
+                              : 0;
+                          const remaining = 5 - dailyUsed;
+
+                          if (remaining <= 2) {
+                            return (
+                              <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="text-xs sm:text-sm text-foreground truncate">
+                                    <Lock className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
+                                    {remaining} prediction
+                                    {remaining !== 1 ? "s" : ""} left
+                                  </p>
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      setSubscriptionDialogOpen(true)
+                                    }
+                                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
+                                  >
+                                    <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
+                                    <span className="text-xs">Upgrade</span>
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+
+                      {/* Daily Line Limit Counter for Free Users */}
+                      {user?.walletAddress &&
+                        user?.subscriptionTier !== "master" &&
+                        (() => {
+                          const today = new Date().toDateString();
+                          const lastResetDate = user?.dailyLinesResetDate;
+                          const dailyUsed =
+                            lastResetDate === today
+                              ? user?.dailyLinesUsed || 0
+                              : 0;
+                          const remaining = 100 - dailyUsed;
+                          const percentage = (dailyUsed / 100) * 100;
+
+                          if (remaining <= 30) {
+                            return (
+                              <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
+                                <div className="flex items-center justify-between mb-2 gap-2">
+                                  <p className="text-xs sm:text-sm text-foreground truncate">
+                                    <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
+                                    {remaining} lines left
+                                  </p>
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      setSubscriptionDialogOpen(true)
+                                    }
+                                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
+                                  >
+                                    <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
+                                    <span className="text-xs">Upgrade</span>
+                                  </Button>
+                                </div>
+                                <div className="w-full bg-black/30 rounded-full h-1.5">
+                                  <div
+                                    className="bg-gradient-to-r from-orange-500 to-red-500 h-1.5 rounded-full transition-all"
+                                    style={{ width: `${percentage}%` }}
                                   />
-                                </button>
-                              ))}
-                              {userRating > 0 && (
-                                <span className="text-xs text-muted-foreground ml-2">
-                                  {userRating}/5
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleLike}
-                              className={hasLiked ? "bg-primary text-primary-foreground border-primary" : ""}
-                            >
-                              Like
-                            </Button>
-                            <span className="text-xs text-muted-foreground">
-                              {formatLikes(localLikes)}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {dailyUsed}/100 lines used
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+
+                      <div className="flex gap-1.5 sm:gap-2">
+                        <div
+                          className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-md px-3 h-9 sm:h-10 cursor-pointer"
+                          onClick={() => {
+                            if (!user) {
+                              setSignInDialogOpen(true);
+                            }
+                          }}
+                        >
+                          {!user ? (
+                            <span className="flex-1 text-muted-foreground text-sm">
+                              Sign in to chat
                             </span>
-                          </div>
+                          ) : (
+                            <input
+                              type="text"
+                              value={input}
+                              onChange={(e) => setInput(e.target.value)}
+                              onKeyPress={handleKeyPress}
+                              className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-sm"
+                              placeholder="I want a prediction on..."
+                              disabled={isLoading}
+                            />
+                          )}
                         </div>
+                        <Button
+                          onClick={() => handleSend(input)}
+                          disabled={!input.trim() || isLoading || !user}
+                          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg h-9 sm:h-10 px-3 sm:px-4"
+                        >
+                          <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </Button>
                       </div>
+                      <p className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center sm:text-left">
+                        AI agents can make mistakes. Check{" "}
+                        <button
+                          onClick={() => setDisclaimerDialogOpen(true)}
+                          className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                        >
+                          Disclaimer
+                        </button>
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1557,7 +2035,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="truncate mb-0.5">{aiAgent.name}</h3>
-                      <p className="text-xs text-blue-400 mb-2">{aiAgent.title}</p>
+                      <p className="text-xs text-blue-400 mb-2">
+                        {aiAgent.title}
+                      </p>
                       <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
                         {aiAgent.description}
                       </p>
@@ -1575,9 +2055,13 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 mb-1">
                         <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                        <span className="text-sm">{aiAgent.consultSessions}</span>
+                        <span className="text-sm">
+                          {aiAgent.consultSessions}
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground">Predictions</p>
+                      <p className="text-xs text-muted-foreground">
+                        Predictions
+                      </p>
                     </div>
                   </div>
 
@@ -1593,10 +2077,12 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
               </Card>
 
               {/* Hot Takes Section */}
-              <Card className="border-border overflow-hidden"
-              style={{
-                height: 'calc(100vh - 22rem)'
-              }}>
+              <Card
+                className="border-border overflow-hidden"
+                style={{
+                  height: "calc(100vh - 22rem)",
+                }}
+              >
                 <CardHeader className="border-b border-border pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Zap className="w-4 h-4" />
@@ -1632,7 +2118,10 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             <div className="absolute top-1 right-1">
-                              <Badge variant="secondary" className="text-xs h-4 px-1.5">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs h-4 px-1.5"
+                              >
                                 {article.relevance}
                               </Badge>
                             </div>
@@ -1643,10 +2132,14 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                             </h4>
                             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
                               <span className="truncate text-xs flex items-center gap-1">
-                                <span className="text-blue-400">{aiAgent.emoji}</span>
+                                <span className="text-blue-400">
+                                  {aiAgent.emoji}
+                                </span>
                                 {article.source}
                               </span>
-                              <span className="text-xs">{article.publishedAt}</span>
+                              <span className="text-xs">
+                                {article.publishedAt}
+                              </span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
                               <span className="flex items-center gap-1">
@@ -1716,7 +2209,10 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         <div className="absolute top-1 right-1">
-                          <Badge variant="secondary" className="text-xs h-4 px-1.5">
+                          <Badge
+                            variant="secondary"
+                            className="text-xs h-4 px-1.5"
+                          >
                             {article.relevance}
                           </Badge>
                         </div>
@@ -1779,7 +2275,8 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
               <AlertDialogDescription asChild>
                 <div className="space-y-3">
                   <p className="text-sm">
-                    Sign in required to chat with {aiAgent.name} and get personalized AI predictions!
+                    Sign in required to chat with {aiAgent.name} and get
+                    personalized AI predictions!
                   </p>
                   <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
                     <p className="text-sm font-medium mb-2">Sign in to get:</p>
@@ -1795,7 +2292,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-              <AlertDialogCancel className="w-full sm:w-auto">Maybe Later</AlertDialogCancel>
+              <AlertDialogCancel className="w-full sm:w-auto">
+                Maybe Later
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
                   setSignInDialogOpen(false);
@@ -1815,20 +2314,23 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
         <SubscriptionManagementDialog
           open={subscriptionDialogOpen}
           onOpenChange={setSubscriptionDialogOpen}
-          currentTier={user?.subscriptionTier || 'free'}
+          currentTier={user?.subscriptionTier || "free"}
           onSubscriptionSuccess={() => {
             if (updateUser) {
-              updateUser({ subscriptionTier: 'master' });
+              updateUser({ subscriptionTier: "master" });
             }
             if (awardXPToUser) {
-              awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
+              awardXPToUser("SUBSCRIBE_MASTER", { showToast: false });
             }
             toast.success("Welcome to Pro! 🎉");
           }}
         />
 
         {/* Daily Limit Reached Dialog */}
-        <AlertDialog open={limitReachedDialogOpen} onOpenChange={setLimitReachedDialogOpen}>
+        <AlertDialog
+          open={limitReachedDialogOpen}
+          onOpenChange={setLimitReachedDialogOpen}
+        >
           <AlertDialogContent className="max-w-md mx-4 sm:mx-auto">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -1837,61 +2339,86 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-4">
-                  {limitReachedType === 'textline' ? (
+                  {limitReachedType === "textline" ? (
                     <>
                       <p className="text-sm">
-                        You've used all <strong>100 free text lines</strong> for today. Your limit resets tomorrow!
+                        You've used all <strong>100 free text lines</strong> for
+                        today. Your limit resets tomorrow!
                       </p>
                       <div className="p-3 sm:p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
                         <div className="flex items-center gap-2 mb-2">
                           <MessageSquare className="w-4 h-4 text-orange-400" />
-                          <p className="text-xs sm:text-sm font-medium text-foreground">Current Usage</p>
+                          <p className="text-xs sm:text-sm font-medium text-foreground">
+                            Current Usage
+                          </p>
                         </div>
                         <p className="text-xs text-muted-foreground mb-2">
                           Free tier: 100 text lines per day
                         </p>
                         <div className="w-full bg-black/30 rounded-full h-2">
-                          <div className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full" style={{ width: '100%' }} />
+                          <div
+                            className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full"
+                            style={{ width: "100%" }}
+                          />
                         </div>
-                        <p className="text-xs text-orange-400 mt-1 text-center">100/100 lines used</p>
+                        <p className="text-xs text-orange-400 mt-1 text-center">
+                          100/100 lines used
+                        </p>
                       </div>
                     </>
-                  ) : limitReachedType === 'total-predictions' ? (
+                  ) : limitReachedType === "total-predictions" ? (
                     <>
                       <p className="text-sm">
-                        You've used all <strong>5 free predictions</strong> on the Basic tier. Upgrade to Pro to continue making unlimited predictions!
+                        You've used all <strong>5 free predictions</strong> on
+                        the Basic tier. Upgrade to Pro to continue making
+                        unlimited predictions!
                       </p>
                       <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
                         <div className="flex items-center gap-2 mb-2">
                           <Sparkles className="w-4 h-4 text-blue-400" />
-                          <p className="text-xs sm:text-sm font-medium text-foreground">Free Tier Limit Reached</p>
+                          <p className="text-xs sm:text-sm font-medium text-foreground">
+                            Free Tier Limit Reached
+                          </p>
                         </div>
                         <p className="text-xs text-muted-foreground mb-2">
                           Basic tier: 5 total predictions
                         </p>
                         <div className="w-full bg-black/30 rounded-full h-2">
-                          <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: '100%' }} />
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                            style={{ width: "100%" }}
+                          />
                         </div>
-                        <p className="text-xs text-blue-400 mt-1 text-center">5/5 predictions used</p>
+                        <p className="text-xs text-blue-400 mt-1 text-center">
+                          5/5 predictions used
+                        </p>
                       </div>
                     </>
                   ) : (
                     <>
                       <p className="text-sm">
-                        You've used all <strong>5 free predictions</strong> for today. Your limit resets tomorrow!
+                        You've used all <strong>5 free predictions</strong> for
+                        today. Your limit resets tomorrow!
                       </p>
                       <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
                         <div className="flex items-center gap-2 mb-2">
                           <Sparkles className="w-4 h-4 text-blue-400" />
-                          <p className="text-xs sm:text-sm font-medium text-foreground">Current Usage</p>
+                          <p className="text-xs sm:text-sm font-medium text-foreground">
+                            Current Usage
+                          </p>
                         </div>
                         <p className="text-xs text-muted-foreground mb-2">
                           Free tier: 5 predictions per day
                         </p>
                         <div className="w-full bg-black/30 rounded-full h-2">
-                          <div className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full" style={{ width: '100%' }} />
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                            style={{ width: "100%" }}
+                          />
                         </div>
-                        <p className="text-xs text-blue-400 mt-1 text-center">5/5 predictions used</p>
+                        <p className="text-xs text-blue-400 mt-1 text-center">
+                          5/5 predictions used
+                        </p>
                       </div>
                     </>
                   )}
@@ -1899,20 +2426,31 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                   <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30">
                     <div className="flex items-center gap-2 mb-3">
                       <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-                      <p className="text-xs sm:text-sm font-medium text-foreground">Upgrade to Pro</p>
+                      <p className="text-xs sm:text-sm font-medium text-foreground">
+                        Upgrade to Pro
+                      </p>
                     </div>
                     <ul className="text-xs sm:text-sm space-y-2 text-muted-foreground">
                       <li className="flex items-center gap-2">
                         <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span><strong>Unlimited</strong> predictions</span>
+                        <span>
+                          <strong>Unlimited</strong> predictions
+                        </span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span><strong>2x XP</strong> multiplier on all actions</span>
+                        <span>
+                          <strong>2x XP</strong> multiplier on all actions
+                        </span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span><strong className="text-yellow-400">+1,500 XP bonus</strong> when you subscribe</span>
+                        <span>
+                          <strong className="text-yellow-400">
+                            +1,500 XP bonus
+                          </strong>{" "}
+                          when you subscribe
+                        </span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
@@ -1921,9 +2459,15 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
                     </ul>
                     <div className="mt-3 pt-3 border-t border-blue-500/20">
                       <p className="text-xs text-center">
-                        <span className="line-through text-muted-foreground">$19.99/mo</span>
-                        <span className="ml-2 text-base sm:text-lg font-semibold text-blue-400">$4.99/mo</span>
-                        <span className="ml-2 text-xs text-green-400">75% OFF</span>
+                        <span className="line-through text-muted-foreground">
+                          $19.99/mo
+                        </span>
+                        <span className="ml-2 text-base sm:text-lg font-semibold text-blue-400">
+                          $4.99/mo
+                        </span>
+                        <span className="ml-2 text-xs text-green-400">
+                          75% OFF
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -1931,7 +2475,9 @@ export function ChatPage({ aiAgent, onBack, darkMode, setDarkMode, onBetClick, u
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-              <AlertDialogCancel className="w-full sm:w-auto">Maybe Later</AlertDialogCancel>
+              <AlertDialogCancel className="w-full sm:w-auto">
+                Maybe Later
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
                   setLimitReachedDialogOpen(false);

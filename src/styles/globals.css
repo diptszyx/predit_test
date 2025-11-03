@@ -225,3 +225,17 @@ html {
 input, textarea, select, button {
   transition: none;
 }
+
+/* Mobile sidebar slide-in animation */
+@keyframes slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 300ms ease-out;
+}

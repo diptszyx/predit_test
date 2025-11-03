@@ -1,17 +1,20 @@
 import {
   ArrowLeft,
+  ArrowRight,
   Check,
   Crown,
+  Loader2,
   Lock,
   MessageSquare,
   Moon,
-  Send,
+  PanelLeft,
+  PanelLeftClose,
   Share2,
   Sparkles,
   Star,
   Sun,
   ThumbsUp,
-  Zap,
+  Zap
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { HotTakeArticle } from "./ArticleDetailPage";
@@ -22,7 +25,7 @@ import { Sidebar } from "./Sidebar";
 import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 
@@ -154,6 +157,7 @@ export function ChatPage({
   onOpenXPInfo,
 }: ChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [threadsExpanded, setThreadsExpanded] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
@@ -164,7 +168,6 @@ export function ChatPage({
   const [articleCounter, setArticleCounter] = useState(5);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationContextRef = useRef<string[]>([]);
-
   // Rating and Like states
   const [userRating, setUserRating] = useState<number>(0);
   const [hasLiked, setHasLiked] = useState(false);
@@ -239,103 +242,103 @@ export function ChatPage({
   }, [aiAgent.id]);
 
   // Auto-send pending message after user signs in or upgrades subscription
-  useEffect(() => {
-    const shouldSendPending =
-      pendingMessage &&
-      !signInDialogOpen &&
-      !subscriptionDialogOpen &&
-      // Either just signed in
-      ((user?.walletAddress && !isLoading) ||
-        // Or has a paid subscription
-        (user?.subscriptionTier && user?.subscriptionTier !== "free"));
+  // useEffect(() => {
+  //   const shouldSendPending =
+  //     pendingMessage &&
+  //     !signInDialogOpen &&
+  //     !subscriptionDialogOpen &&
+  //     // Either just signed in
+  //     ((user?.walletAddress && !isLoading) ||
+  //       // Or has a paid subscription
+  //       (user?.subscriptionTier && user?.subscriptionTier !== "free"));
 
-    if (shouldSendPending) {
-      // User just signed in or upgraded and we have a pending message
-      const sendPendingMessage = async () => {
-        // Check if this is a prediction question
-        const isPrediction = isPredictionQuestion(pendingMessage);
-        console.log("Auto-send message:", pendingMessage);
-        console.log("Auto-send is prediction:", isPrediction);
+  //   if (shouldSendPending) {
+  //     // User just signed in or upgraded and we have a pending message
+  //     const sendPendingMessage = async () => {
+  //       // Check if this is a prediction question
+  //       const isPrediction = isPredictionQuestion(pendingMessage);
+  //       console.log("Auto-send message:", pendingMessage);
+  //       console.log("Auto-send is prediction:", isPrediction);
 
-        const userMessage: Message = {
-          id: Date.now().toString(),
-          role: "user",
-          content: `I want a prediction on: ${pendingMessage}`,
-          timestamp: new Date(),
-          isPrediction,
-        };
+  //       const userMessage: Message = {
+  //         id: Date.now().toString(),
+  //         role: "user",
+  //         content: `I want a prediction on: ${pendingMessage}`,
+  //         timestamp: new Date(),
+  //         isPrediction,
+  //       };
 
-        setMessages((prev) => [...prev, userMessage]);
-        setInput(""); // Clear input
-        setPendingMessage(""); // Clear pending message
-        setIsLoading(true);
+  //       setMessages((prev) => [...prev, userMessage]);
+  //       setInput(""); // Clear input
+  //       setPendingMessage(""); // Clear pending message
+  //       setIsLoading(true);
 
-        // Track total questions asked
-        if (onQuestionAsked) {
-          onQuestionAsked();
-        }
+  //       // Track total questions asked
+  //       if (onQuestionAsked) {
+  //         onQuestionAsked();
+  //       }
 
-        // Increment daily line count for free users (for pending messages)
-        if (
-          user?.walletAddress &&
-          (!user?.subscriptionTier || user?.subscriptionTier === "free")
-        ) {
-          const linesInMessage = countLines(pendingMessage);
-          incrementDailyLines(linesInMessage);
-        }
+  //       // Increment daily line count for free users (for pending messages)
+  //       if (
+  //         user?.walletAddress &&
+  //         (!user?.subscriptionTier || user?.subscriptionTier === "free")
+  //       ) {
+  //         const linesInMessage = countLines(pendingMessage);
+  //         incrementDailyLines(linesInMessage);
+  //       }
 
-        // Fetch relevant news
-        fetchRelevantNews(pendingMessage);
+  //       // Fetch relevant news
+  //       fetchRelevantNews(pendingMessage);
 
-        try {
-          const response = await sendToGrokAPI(pendingMessage, aiAgent);
-          const assistantMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: response,
-            timestamp: new Date(),
-            isPrediction,
-            suggestedQuestions: generateSuggestedQuestions(
-              aiAgent,
-              pendingMessage
-            ),
-          };
-          setMessages((prev) => [...prev, assistantMessage]);
+  //       try {
+  //         const response = await sendToGrokAPI(pendingMessage, aiAgent);
+  //         const assistantMessage: Message = {
+  //           id: (Date.now() + 1).toString(),
+  //           role: "assistant",
+  //           content: response,
+  //           timestamp: new Date(),
+  //           isPrediction,
+  //           suggestedQuestions: generateSuggestedQuestions(
+  //             aiAgent,
+  //             pendingMessage
+  //           ),
+  //         };
+  //         setMessages((prev) => [...prev, assistantMessage]);
 
-          // If this was a prediction, store it and flash the share button
-          if (isPrediction) {
-            console.log("✓ PREDICTION DETECTED (pending message)!");
-            console.log("Question:", pendingMessage);
-            console.log("Answer:", response);
-            const predictionData = {
-              question: pendingMessage,
-              answer: response,
-            };
-            console.log("Storing prediction data:", predictionData);
-            setLastPrediction(predictionData);
-            setShareFlashing(true);
+  //         // If this was a prediction, store it and flash the share button
+  //         if (isPrediction) {
+  //           console.log("✓ PREDICTION DETECTED (pending message)!");
+  //           console.log("Question:", pendingMessage);
+  //           console.log("Answer:", response);
+  //           const predictionData = {
+  //             question: pendingMessage,
+  //             answer: response,
+  //           };
+  //           console.log("Storing prediction data:", predictionData);
+  //           setLastPrediction(predictionData);
+  //           setShareFlashing(true);
 
-            // Stop flashing after 3 seconds
-            setTimeout(() => {
-              setShareFlashing(false);
-            }, 3000);
-          }
-        } catch (error) {
-          console.error("Error sending message:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
+  //           // Stop flashing after 3 seconds
+  //           setTimeout(() => {
+  //             setShareFlashing(false);
+  //           }, 3000);
+  //         }
+  //       } catch (error) {
+  //         console.error("Error sending message:", error);
+  //       } finally {
+  //         setIsLoading(false);
+  //       }
+  //     };
 
-      sendPendingMessage();
-    }
-  }, [
-    user?.walletAddress,
-    user?.subscriptionTier,
-    pendingMessage,
-    signInDialogOpen,
-    subscriptionDialogOpen,
-  ]);
+  //     sendPendingMessage();
+  //   }
+  // }, [
+  //   user?.walletAddress,
+  //   user?.subscriptionTier,
+  //   pendingMessage,
+  //   signInDialogOpen,
+  //   subscriptionDialogOpen,
+  // ]);
 
   // Helper function to detect if a message is asking for a prediction
   function isPredictionQuestion(message: string): boolean {
@@ -666,8 +669,7 @@ export function ChatPage({
 
     // Default responses for other AI agents
     return [
-      `${
-        aiAgent.emoji
+      `${aiAgent.emoji
       } *channels cosmic energy* Interesting question! My ${aiAgent.specialty.toLowerCase()} powers are tingling. Based on my extensive research (and vibes), I predict that things will definitely happen. The exact details are still materializing in the prediction realm!`,
       `${aiAgent.emoji} Ooh, spicy topic! Let me consult my sources... *shuffles imaginary cards* ...and by sources I mean my incredibly tuned intuition and this lucky coin. My ${aiAgent.rating} rated prediction: expect the unexpected, but also the expected. Balance!`,
       `${aiAgent.emoji} *activates ${aiAgent.specialty} mode* You've come to the right AI agent! My analysis suggests a 73% chance of something interesting, a 25% chance of something boring, and a 2% chance of something absolutely wild. The math might not add up but neither does reality anymore! 🎲`,
@@ -1205,9 +1207,8 @@ export function ChatPage({
     const mockNews: NewsArticle[] = [
       {
         id: "1",
-        title: `Breaking: ${
-          topics[0]?.toUpperCase() || "MYSTERY"
-        } Trends Hit All-Time High`,
+        title: `Breaking: ${topics[0]?.toUpperCase() || "MYSTERY"
+          } Trends Hit All-Time High`,
         source: aiAgent.name,
         url: "#",
         publishedAt: "2 hours ago",
@@ -1227,9 +1228,8 @@ export function ChatPage({
       },
       {
         id: "3",
-        title: `${
-          topics[Math.min(1, topics.length - 1)] || "Things"
-        }: More Popular Than Ever - My Take`,
+        title: `${topics[Math.min(1, topics.length - 1)] || "Things"
+          }: More Popular Than Ever - My Take`,
         source: aiAgent.name,
         url: "#",
         publishedAt: "1 day ago",
@@ -1261,72 +1261,64 @@ export function ChatPage({
 
     const articleTemplates = [
       {
-        title: `${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        }: My Analysis on the Unexpected Surge`,
+        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)
+          }: My Analysis on the Unexpected Surge`,
         source: aiAgent.name,
         relevance: "Hot",
         image:
           "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=400&q=80",
       },
       {
-        title: `Why ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Could Be The Future - My Take`,
+        title: `Why ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Could Be The Future - My Take`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
           "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80",
       },
       {
-        title: `My Expert Opinion on ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        }: What You Need to Know`,
+        title: `My Expert Opinion on ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          }: What You Need to Know`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
           "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80",
       },
       {
-        title: `How ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Is Changing ${aiAgent.category}`,
+        title: `How ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Is Changing ${aiAgent.category}`,
         source: aiAgent.name,
         relevance: "Popular",
         image:
           "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80",
       },
       {
-        title: `Is ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Over? My Bold Prediction`,
+        title: `Is ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Over? My Bold Prediction`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
           "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=80",
       },
       {
-        title: `${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Predictions for 2026: My Forecast`,
+        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Predictions for 2026: My Forecast`,
         source: aiAgent.name,
         relevance: "Hot",
         image:
           "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&q=80",
       },
       {
-        title: `My Bold Take on ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Everyone Missed`,
+        title: `My Bold Take on ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Everyone Missed`,
         source: aiAgent.name,
         relevance: "Hot",
         image:
           "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&q=80",
       },
       {
-        title: `The ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Opportunity: My Insider Analysis`,
+        title: `The ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Opportunity: My Insider Analysis`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
@@ -1550,9 +1542,9 @@ export function ChatPage({
       <div
         className={
           onNavigate &&
-          shortenAddress &&
-          onWalletDisconnect &&
-          onOpenWalletDialog
+            shortenAddress &&
+            onWalletDisconnect &&
+            onOpenWalletDialog
             ? "flex-1 overflow-y-auto"
             : ""
         }
@@ -1564,67 +1556,67 @@ export function ChatPage({
           onWalletDisconnect &&
           onOpenWalletDialog
         ) && (
-          <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
-            <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-              <div className="flex items-center gap-3 min-w-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onBack}
-                  className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                  <img
-                    src={aiAgent.avatar}
-                    alt={aiAgent.name}
-                    className="w-full h-full object-cover"
-                  />
+            <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+              <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onBack}
+                    className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                    <img
+                      src={aiAgent.avatar}
+                      alt={aiAgent.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="text-sm sm:text-base leading-none truncate">
+                      {aiAgent.name}
+                    </h1>
+                    <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                      {aiAgent.title}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h1 className="text-sm sm:text-base leading-none truncate">
-                    {aiAgent.name}
-                  </h1>
-                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                    {aiAgent.title}
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
-                <div className="hidden sm:flex items-center gap-3">
-                  <span>{localRating} rating</span>
-                  <span>{formatLikes(localLikes)} likes</span>
-                  {aiAgent.consultSessions && (
-                    <span className="hidden md:inline">
-                      {aiAgent.consultSessions} sessions
-                    </span>
-                  )}
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
+                  <div className="hidden sm:flex items-center gap-3">
+                    <span>{localRating} rating</span>
+                    <span>{formatLikes(localLikes)} likes</span>
+                    {aiAgent.consultSessions && (
+                      <span className="hidden md:inline">
+                        {aiAgent.consultSessions} sessions
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex sm:hidden">
+                    <span>{localRating}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="h-8 w-8"
+                  >
+                    {darkMode ? (
+                      <Sun className="w-4 h-4" />
+                    ) : (
+                      <Moon className="w-4 h-4" />
+                    )}
+                  </Button>
                 </div>
-                <div className="flex sm:hidden">
-                  <span>{localRating}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="h-8 w-8"
-                >
-                  {darkMode ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  )}
-                </Button>
               </div>
-            </div>
-          </header>
-        )}
+            </header>
+          )}
 
         {/* Main Chat Area */}
-        <div className="w-full h-full px-2 sm:px-4 py-4 md:py-6 md:px-6">
-          <div className="h-full flex flex-col lg:flex-row gap-4 md:gap-6 max-w-7xl mx-auto justify-center m-[0px]">
+        <div className="w-full h-full">
+          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px]">
             {/* Chat Section - Center with max width */}
             <div className="w-full h-full lg:max-w-3xl space-y-0 flex flex-col">
               {/* Welcome Intro Section - Only show on first load */}
@@ -1669,16 +1661,21 @@ export function ChatPage({
                 </div>
               )}
               {/* Oracle Header - Above conversation box */}
-              <Card className="border-border bg-background/80 backdrop-blur-md">
-                <CardContent className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl">
+              <Card className="border-border bg-background/80 backdrop-blur-md" style={{
+                borderRadius: '0px',
+                borderRight: 'none'
+              }}>
+                <CardContent className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl" style={{
+                  borderRadius: '0px'
+                }}>
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={onBack}
-                      className="flex-shrink-0 hover:bg-white/10 h-8 sm:h-9 px-2"
+                      // onClick={() => setThreadsExpanded(!threadsExpanded)}
+                      className="flex-shrink-0 hover:bg-muted/50 h-9 px-2 lg:flex"
                     >
-                      <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                      {threadsExpanded ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeft className="w-5 h-5" />}
                     </Button>
                     <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
                       <ImageWithFallback
@@ -1691,12 +1688,15 @@ export function ChatPage({
                       <CardTitle className="text-sm sm:text-base md:text-lg truncate">
                         {aiAgent.name}
                       </CardTitle>
+                      <CardDescription className='text-xs'>
+                        {aiAgent.title}
+                      </CardDescription>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setShareOracleDialogOpen(true)}
-                      className="flex-shrink-0 hover:bg-blue-500/20 h-8 sm:h-9 px-2 sm:px-3"
+                      className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
                     >
                       <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
                       <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
@@ -1708,89 +1708,43 @@ export function ChatPage({
               </Card>
 
               {/* Chat Container with Background */}
-              <div className="relative sm:h-[calc(100vh-16rem)] flex-1 rounded-lg md:rounded-xl overflow-hidden">
+              <div className="relative sm:h-[calc(100vh-16rem)] flex-1 overflow-hidden">
                 {/* Background Color */}
                 <div className="absolute inset-0 bg-card/50" />
 
                 {/* Chat Interface - Full Height */}
                 <div className="absolute inset-0 flex flex-col pointer-events-none">
-                  {/* Rating and Like Section - Fixed at bottom */}
-                  <div className="p-3 sm:p-4 border-t border-border pointer-events-auto bg-card">
-                    <div className="max-w-4xl mx-auto">
-                      <div
-                        className={`p-3 sm:p-4 rounded-lg border border-border transition-all ${
-                          ratingFlashing ? "border-primary" : ""
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <p className="text-xs text-muted-foreground mb-2">
-                              Rate this prediction
-                            </p>
-                            <div className="flex items-center gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                  key={star}
-                                  onClick={() => handleRating(star)}
-                                  className="transition-opacity hover:opacity-70"
-                                >
-                                  <Star
-                                    className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                                      star <= userRating
-                                        ? "fill-primary text-primary"
-                                        : "text-muted-foreground"
-                                    }`}
-                                  />
-                                </button>
-                              ))}
-                              {userRating > 0 && (
-                                <span className="text-xs text-muted-foreground ml-2">
-                                  {userRating}/5
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleLike}
-                              className={
-                                hasLiked
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : ""
-                              }
-                            >
-                              Like
-                            </Button>
-                            <span className="text-xs text-muted-foreground">
-                              {formatLikes(localLikes)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Messages Area - Scrollable with transparent background */}
-                  <div className="flex-1 overflow-hidden pointer-events-auto">
-                    <ScrollArea className="h-full p-2 sm:p-3 md:p-4">
+                  <div className="flex-1 overflow-hidden pointer-events-auto rounded-none">
+                    <ScrollArea className="h-full p-2 sm:p-3 md:p-4 bg-muted/80">
+                      {!user && (
+                        <div className="flex flex-col items-center justify-center my-12 px-4 text-center">
+                          <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mb-4">
+                            <MessageSquare className="w-8 h-8 text-blue-600" />
+                          </div>
+                          <h3 className="text-lg font-semibold mb-2">Start a New Conversation</h3>
+                          <p className="text-sm text-muted-foreground max-w-md">
+                            Ask {aiAgent.name} anything. Get predictions, insights, and expert analysis on {aiAgent.category}.
+                          </p>
+                        </div>
+                      )}
                       <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
                         {messages.map((message, index) => (
                           <div key={message.id}>
                             <div
-                              className={`flex ${
-                                message.sender === "user"
-                                  ? "justify-end"
-                                  : "justify-start"
-                              }`}
+                              className={`flex ${message.sender === "user"
+                                ? "justify-end"
+                                : "justify-start"
+                                }`}
                             >
                               <div
-                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
-                                  message.sender === "user"
-                                    ? "bg-blue-600 text-white backdrop-blur-sm"
-                                    : "bg-muted/80 backdrop-blur-md text-foreground border border-border"
-                                }`}
+                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === "user"
+                                  ? "bg-blue-600 text-white backdrop-blur-sm"
+                                  : "bg-white backdrop-blur-md text-foreground border border-border"
+                                  }`}
+                                style={{
+                                  backgroundColor: message.sender !== "user" ? "white" : undefined
+                                }}
                               >
                                 {/* Article Attachment Thumbnail */}
                                 {/* {message.articleAttachment && (
@@ -1812,17 +1766,13 @@ export function ChatPage({
                                 <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
                                   {message.content}
                                 </p>
-                                <span
-                                  className={`text-xs mt-1 block ${
-                                    message.sender === "user"
-                                      ? "text-white/70"
-                                      : "text-muted-foreground"
-                                  }`}
-                                >
-                                  {formatTime(message.createdAt)}
-                                </span>
                               </div>
                             </div>
+                            <span
+                              className={`text-xs mt-2 block text-muted-foreground ml-2`}
+                            >
+                              {formatTime(message.createdAt)}
+                            </span>
 
                             {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
                             {/* {message.sender === "assistant"
@@ -1882,7 +1832,7 @@ export function ChatPage({
                   </div>
 
                   {/* Input Section - Fixed at top with semi-transparent background */}
-                  <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl border-b border-border pointer-events-auto bg-card/90">
+                  <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90">
                     <div className="max-w-4xl mx-auto">
                       {/* Daily Prediction Limit Counter for Free Users */}
                       {user?.walletAddress &&
@@ -1971,13 +1921,14 @@ export function ChatPage({
 
                       <div className="flex gap-1.5 sm:gap-2">
                         <div
-                          className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-md px-3 h-9 sm:h-10 cursor-pointer"
+                          className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-11 cursor-pointer"
                           onClick={() => {
                             if (!user) {
                               setSignInDialogOpen(true);
                             }
                           }}
                         >
+                          {/* Input Field */}
                           {!user ? (
                             <span className="flex-1 text-muted-foreground text-sm">
                               Sign in to chat
@@ -1993,24 +1944,43 @@ export function ChatPage({
                               disabled={isLoading}
                             />
                           )}
+
+                          {/* Circular Submit Button - Matching Home Page */}
+                          <button
+                            onClick={() => handleSend(input)}
+                            disabled={!input.trim() || isLoading || !user}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed group flex-shrink-0 shadow-sm cursor-pointer hover:scale-105"
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              background: "rgba(59, 130, 246, 0.25)",
+                              backdropFilter: "blur(4px)",
+                              border: "1px solid rgba(59, 130, 246, 0.25)",
+                              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.15)",
+                            }}
+                          >
+                            {isLoading ? (
+                              <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
+                            ) : (
+                              <ArrowRight
+                                className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-2"
+                                style={{
+                                  filter: "drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))",
+                                }}
+                              />
+                            )}
+                          </button>
                         </div>
-                        <Button
-                          onClick={() => handleSend(input)}
-                          disabled={!input.trim() || isLoading || !user}
-                          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg h-9 sm:h-10 px-3 sm:px-4"
-                        >
-                          <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center sm:text-left">
-                        AI agents can make mistakes. Check{" "}
-                        <button
-                          onClick={() => setDisclaimerDialogOpen(true)}
-                          className="text-blue-400 hover:text-blue-300 underline transition-colors"
-                        >
-                          Disclaimer
-                        </button>
-                      </p>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center mx-auto">
+                      AI agents can make mistakes. Check{" "}
+                      <button
+                        onClick={() => setDisclaimerDialogOpen(true)}
+                        className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                      >
+                        Disclaimer
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -2044,7 +2014,7 @@ export function ChatPage({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
+                  <div className="grid grid-cols-2 gap-3 mt-4 py-4 border-t border-b border-border">
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 mb-1">
                         <Star className="w-3.5 h-3.5 text-yellow-500" />
@@ -2065,13 +2035,42 @@ export function ChatPage({
                     </div>
                   </div>
 
+                  {/* Rate section */}
+                  <div className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${ratingFlashing ? 'ring-2 ring-blue-500' : ''
+                    }`}>
+                    <p className="text-xs text-muted-foreground mb-2">Rate this AI Agent</p>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => handleRating(star)}
+                          className="transition-opacity hover:opacity-70"
+                        >
+                          <Star
+                            className={`w-4 h-4 sm:w-5 sm:h-5 ${star <= userRating
+                              ? "fill-primary text-primary"
+                              : "text-muted-foreground"
+                              }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    {userRating > 0 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        You rated {userRating}/5
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Like Button */}
                   <Button
                     variant="outline"
-                    className="w-full mt-3 text-xs h-8 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50 transition-colors"
-                    onClick={() => setShareOracleDialogOpen(true)}
+                    className={`w-full mt-3 h-9 transition-all ${hasLiked ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700" : "border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50"
+                      }`}
+                    onClick={handleLike}
                   >
-                    <Share2 className="w-3 h-3 mr-1.5" />
-                    Share Oracle
+                    <ThumbsUp className={`w-4 h-4 mr-2 ${hasLiked ? "fill-current" : ""}`} />
+                    {hasLiked ? "Liked" : "Like"} • {formatLikes(localLikes)}
                   </Button>
                 </CardContent>
               </Card>

@@ -146,7 +146,10 @@ export function WalletConnectDialog({
         onOpenChange(isOpen);
       }}
     >
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="sm:max-w-md max-h-[90vh] overflow-y-auto"
+        style={{ zIndex: '99999' }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="w-5 h-5" />

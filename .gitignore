@@ -12,3 +12,4 @@
 /backup
 /old
 .DS_Store
+.env

@@ -242,7 +242,7 @@ export function Sidebar({
                     {user.email ||
                       (user?.walletAddress
                         ? shortenAddress(user.walletAddress)
-                        : "")}
+                        : "") || shortenAddress(user.id)}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {user.email && user?.walletAddress

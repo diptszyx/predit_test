@@ -1,26 +1,28 @@
-import { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
-  MessageSquare,
-  Trophy,
-  Settings,
+  Crown,
+  Home,
   LogOut,
-  Moon,
-  Sun,
-  Sparkles,
-  User,
-  Zap,
-  Twitter,
-  MessageCircle,
-  Send,
   Menu,
+  MessageCircle,
+  MessageSquare,
+  Moon,
+  Send,
+  Settings,
+  Sparkles,
+  Sun,
+  Trophy,
+  Twitter,
+  User,
   X,
-} from 'lucide-react';
-import { User as UserType } from '../lib/types';
-import { getUserLevel } from '../lib/xpSystem';
-import { useIsMobile } from '../hooks/useIsMobile';
+  Zap,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useIsMobile } from "../hooks/useIsMobile";
+import { User as UserType } from "../lib/types";
+import { getUserLevel } from "../lib/xpSystem";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 
 interface SidebarProps {
   currentPage: string;
@@ -38,8 +40,14 @@ interface SidebarProps {
 
 const NAVIGATION_ITEMS = [
   {
-    id: 'chat',
-    label: 'Predictions',
+    id: "home",
+    label: "Home",
+    icon: Home,
+    requiresAuth: false,
+  },
+  {
+    id: "chat",
+    label: "Predictions",
     icon: MessageSquare,
     requiresAuth: false,
   },
@@ -47,6 +55,12 @@ const NAVIGATION_ITEMS = [
     id: 'leaderboard',
     label: 'Leaderboard',
     icon: Trophy,
+    requiresAuth: false,
+  },
+  {
+    id: "subscription",
+    label: "Subscription",
+    icon: Crown,
     requiresAuth: false,
   },
 ];
@@ -149,11 +163,10 @@ export function Sidebar({
             <Button
               key={item.id}
               variant="ghost"
-              className={`w-full justify-start ${
-                isActive
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-              }`}
+              className={`w-full justify-start ${isActive
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                }`}
               onClick={() => handleNavigation(item.id, item.requiresAuth)}
             >
               <Icon className="w-4 h-4 mr-3" />
@@ -372,11 +385,10 @@ export function Sidebar({
                 <Button
                   key={item.id}
                   variant="ghost"
-                  className={`w-full justify-start ${
-                    isActive
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
+                  className={`w-full justify-start ${isActive
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    }`}
                   onClick={() => handleNavigation(item.id, item.requiresAuth)}
                 >
                   <Icon className="w-4 h-4 mr-3" />

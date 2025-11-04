@@ -16,6 +16,7 @@ import useAuthStore from '../store/auth.store';
 import { User } from '../lib/types';
 import { toast } from 'sonner';
 import clsx from 'clsx';
+import { ethers } from 'ethers';
 
 export type WalletType = 'metamask' | 'phantom' | 'backpack';
 export type SocialProvider = 'google' | 'x';
@@ -56,7 +57,7 @@ const wallets: WalletOption[] = [
     description: 'Connect with MetaMask wallet',
     icon: 'https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg',
     color: 'from-orange-600 to-yellow-600',
-    supported: false,
+    supported: hasMeta,
   },
   {
     id: 'phantom',
@@ -90,6 +91,20 @@ const socialOptions: SocialOption[] = [
     color: 'hover:bg-gray-500/10 border-gray-500/30',
   },
 ];
+
+const getMetaMaskProvider = (): any => {
+  const eth = window.ethereum as any;
+
+  if (eth?.providers?.length) {
+    return eth.providers.find((p: any) => p.isMetaMask);
+  }
+
+  if (eth?.isMetaMask) {
+    return eth;
+  }
+
+  return null;
+};
 
 export function WalletConnectDialog({
   open,
@@ -377,8 +392,45 @@ const WalletConnectButton = ({
         await select('Backpack');
         break;
       case 'metamask':
-        alert('Metamask not supported here');
-        setConnectingWallet(null);
+        try {
+          const metaMaskProvider = getMetaMaskProvider();
+
+          if (!metaMaskProvider) {
+            return alert('MetaMask not found');
+          }
+
+          // Request access
+          await metaMaskProvider.request({ method: 'eth_requestAccounts' });
+
+          const provider = new ethers.BrowserProvider(metaMaskProvider);
+          const signer = await provider.getSigner();
+          const address = await signer.getAddress();
+
+          const { data: nonceResp } = await apiClient.post('/auth/nonce', {
+            publicKey: address,
+            walletType: 'metamask',
+          });
+
+          const nonce = nonceResp.nonce;
+          const message = `Login to Deor\nNonce=${nonce}`;
+
+          const signature = await signer.signMessage(message);
+
+          const { data: verifyResp } = await apiClient.post('/auth/verify', {
+            message,
+            signature,
+            publicKey: address,
+          });
+
+          await authenticateWithToken(verifyResp.token);
+
+          onConnect(walletType, verifyResp.user);
+        } catch (e: any) {
+          toast.error(e.message);
+        } finally {
+          setConnectingWallet(null);
+        }
+
         break;
     }
   };

@@ -30,6 +30,7 @@ export interface User {
   totalPredictions: number;
   accurateRate: number;
   aiAgentsVisited: number;
+  appWallet: string;
   walletAddress?: string;
   walletType?: 'metamask' | 'phantom' | 'backpack';
   socialProvider?: 'google' | 'apple' | 'email';

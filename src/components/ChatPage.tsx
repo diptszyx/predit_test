@@ -675,8 +675,7 @@ export function ChatPage({
 
     // Default responses for other AI agents
     return [
-      `${
-        aiAgent.emoji
+      `${aiAgent.emoji
       } *channels cosmic energy* Interesting question! My ${aiAgent.specialty.toLowerCase()} powers are tingling. Based on my extensive research (and vibes), I predict that things will definitely happen. The exact details are still materializing in the prediction realm!`,
       `${aiAgent.emoji} Ooh, spicy topic! Let me consult my sources... *shuffles imaginary cards* ...and by sources I mean my incredibly tuned intuition and this lucky coin. My ${aiAgent.rating} rated prediction: expect the unexpected, but also the expected. Balance!`,
       `${aiAgent.emoji} *activates ${aiAgent.specialty} mode* You've come to the right AI agent! My analysis suggests a 73% chance of something interesting, a 25% chance of something boring, and a 2% chance of something absolutely wild. The math might not add up but neither does reality anymore! 🎲`,
@@ -1214,9 +1213,8 @@ export function ChatPage({
     const mockNews: NewsArticle[] = [
       {
         id: "1",
-        title: `Breaking: ${
-          topics[0]?.toUpperCase() || "MYSTERY"
-        } Trends Hit All-Time High`,
+        title: `Breaking: ${topics[0]?.toUpperCase() || "MYSTERY"
+          } Trends Hit All-Time High`,
         source: aiAgent.name,
         url: "#",
         publishedAt: "2 hours ago",
@@ -1236,9 +1234,8 @@ export function ChatPage({
       },
       {
         id: "3",
-        title: `${
-          topics[Math.min(1, topics.length - 1)] || "Things"
-        }: More Popular Than Ever - My Take`,
+        title: `${topics[Math.min(1, topics.length - 1)] || "Things"
+          }: More Popular Than Ever - My Take`,
         source: aiAgent.name,
         url: "#",
         publishedAt: "1 day ago",
@@ -1270,72 +1267,64 @@ export function ChatPage({
 
     const articleTemplates = [
       {
-        title: `${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        }: My Analysis on the Unexpected Surge`,
+        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)
+          }: My Analysis on the Unexpected Surge`,
         source: aiAgent.name,
         relevance: "Hot",
         image:
           "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=400&q=80",
       },
       {
-        title: `Why ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Could Be The Future - My Take`,
+        title: `Why ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Could Be The Future - My Take`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
           "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80",
       },
       {
-        title: `My Expert Opinion on ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        }: What You Need to Know`,
+        title: `My Expert Opinion on ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          }: What You Need to Know`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
           "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80",
       },
       {
-        title: `How ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Is Changing ${aiAgent.category}`,
+        title: `How ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Is Changing ${aiAgent.category}`,
         source: aiAgent.name,
         relevance: "Popular",
         image:
           "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80",
       },
       {
-        title: `Is ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Over? My Bold Prediction`,
+        title: `Is ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Over? My Bold Prediction`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
           "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=80",
       },
       {
-        title: `${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Predictions for 2026: My Forecast`,
+        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Predictions for 2026: My Forecast`,
         source: aiAgent.name,
         relevance: "Hot",
         image:
           "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&q=80",
       },
       {
-        title: `My Bold Take on ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Everyone Missed`,
+        title: `My Bold Take on ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Everyone Missed`,
         source: aiAgent.name,
         relevance: "Hot",
         image:
           "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&q=80",
       },
       {
-        title: `The ${
-          topic.charAt(0).toUpperCase() + topic.slice(1)
-        } Opportunity: My Insider Analysis`,
+        title: `The ${topic.charAt(0).toUpperCase() + topic.slice(1)
+          } Opportunity: My Insider Analysis`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
@@ -1559,9 +1548,9 @@ export function ChatPage({
       <div
         className={
           onNavigate &&
-          shortenAddress &&
-          onWalletDisconnect &&
-          onOpenWalletDialog
+            shortenAddress &&
+            onWalletDisconnect &&
+            onOpenWalletDialog
             ? "flex-1 overflow-y-auto"
             : ""
         }
@@ -1573,63 +1562,63 @@ export function ChatPage({
           onWalletDisconnect &&
           onOpenWalletDialog
         ) && (
-          <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
-            <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-              <div className="flex items-center gap-3 min-w-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onBack}
-                  className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                  <img
-                    src={aiAgent.avatar}
-                    alt={aiAgent.name}
-                    className="w-full h-full object-cover"
-                  />
+            <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+              <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onBack}
+                    className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                    <img
+                      src={aiAgent.avatar}
+                      alt={aiAgent.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="text-sm sm:text-base leading-none truncate">
+                      {aiAgent.name}
+                    </h1>
+                    <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                      {aiAgent.title}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h1 className="text-sm sm:text-base leading-none truncate">
-                    {aiAgent.name}
-                  </h1>
-                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                    {aiAgent.title}
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
-                <div className="hidden sm:flex items-center gap-3">
-                  <span>{localRating} rating</span>
-                  <span>{formatLikes(localLikes)} likes</span>
-                  {aiAgent.consultSessions && (
-                    <span className="hidden md:inline">
-                      {aiAgent.consultSessions} sessions
-                    </span>
-                  )}
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
+                  <div className="hidden sm:flex items-center gap-3">
+                    <span>{localRating} rating</span>
+                    <span>{formatLikes(localLikes)} likes</span>
+                    {aiAgent.consultSessions && (
+                      <span className="hidden md:inline">
+                        {aiAgent.consultSessions} sessions
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex sm:hidden">
+                    <span>{localRating}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDarkMode(!darkMode)}
+                    className="h-8 w-8"
+                  >
+                    {darkMode ? (
+                      <Sun className="w-4 h-4" />
+                    ) : (
+                      <Moon className="w-4 h-4" />
+                    )}
+                  </Button>
                 </div>
-                <div className="flex sm:hidden">
-                  <span>{localRating}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="h-8 w-8"
-                >
-                  {darkMode ? (
-                    <Sun className="w-4 h-4" />
-                  ) : (
-                    <Moon className="w-4 h-4" />
-                  )}
-                </Button>
               </div>
-            </div>
-          </header>
-        )}
+            </header>
+          )}
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
@@ -1743,7 +1732,7 @@ export function ChatPage({
                   {/* Messages Area - Scrollable with transparent background */}
                   <div className="flex-1 overflow-hidden pointer-events-auto rounded-none border-r">
                     <ScrollArea className="h-full p-2 sm:p-3 md:p-4 bg-muted/80">
-                      {!user && (
+                      {!user && messages.length === 0 && (
                         <div className="flex flex-col items-center justify-center my-12 px-4 text-center">
                           <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mb-4">
                             <MessageSquare className="w-8 h-8 text-blue-600" />
@@ -1761,18 +1750,16 @@ export function ChatPage({
                         {messages.map((message, index) => (
                           <div key={message.id}>
                             <div
-                              className={`flex ${
-                                message.sender === "user"
-                                  ? "justify-end"
-                                  : "justify-start"
-                              }`}
+                              className={`flex ${message.sender === "user"
+                                ? "justify-end"
+                                : "justify-start"
+                                }`}
                             >
                               <div
-                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
-                                  message.sender === "user"
-                                    ? "bg-blue-600 text-white backdrop-blur-sm"
-                                    : `backdrop-blur-md border border-border`
-                                }`}
+                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === "user"
+                                  ? "bg-blue-600 text-white backdrop-blur-sm"
+                                  : `backdrop-blur-md border border-border`
+                                  }`}
                               >
                                 {/* Article Attachment Thumbnail */}
                                 {/* {message.articleAttachment && (
@@ -1797,11 +1784,10 @@ export function ChatPage({
                               </div>
                             </div>
                             <span
-                              className={`text-xs mt-2 block text-muted-foreground ml-2 ${
-                                message.sender === "user"
-                                  ? "text-right"
-                                  : "text-left"
-                              }`}
+                              className={`text-xs mt-2 block text-muted-foreground ${message.sender === "user"
+                                ? "text-right"
+                                : "text-left"
+                                }`}
                             >
                               {formatTime(message.createdAt)}
                             </span>
@@ -2071,9 +2057,8 @@ export function ChatPage({
 
                   {/* Rate section */}
                   <div
-                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${
-                      ratingFlashing ? "ring-2 ring-blue-500" : ""
-                    }`}
+                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${ratingFlashing ? "ring-2 ring-blue-500" : ""
+                      }`}
                   >
                     <p className="text-xs text-muted-foreground mb-2">
                       Rate this AI Agent
@@ -2086,11 +2071,10 @@ export function ChatPage({
                           className="transition-opacity hover:opacity-70"
                         >
                           <Star
-                            className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                              star <= userRating
-                                ? "fill-primary text-primary"
-                                : "text-muted-foreground"
-                            }`}
+                            className={`w-4 h-4 sm:w-5 sm:h-5 ${star <= userRating
+                              ? "fill-primary text-primary"
+                              : "text-muted-foreground"
+                              }`}
                           />
                         </button>
                       ))}
@@ -2105,17 +2089,15 @@ export function ChatPage({
                   {/* Like Button */}
                   <Button
                     variant="outline"
-                    className={`w-full mt-3 h-9 transition-all ${
-                      hasLiked
-                        ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-                        : "border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50"
-                    }`}
+                    className={`w-full mt-3 h-9 transition-all ${hasLiked
+                      ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+                      : "border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50"
+                      }`}
                     onClick={handleLike}
                   >
                     <ThumbsUp
-                      className={`w-4 h-4 mr-2 ${
-                        hasLiked ? "fill-current" : ""
-                      }`}
+                      className={`w-4 h-4 mr-2 ${hasLiked ? "fill-current" : ""
+                        }`}
                     />
                     {hasLiked ? "Liked" : "Like"} • {formatLikes(localLikes)}
                   </Button>

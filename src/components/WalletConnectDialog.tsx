@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import clsx from 'clsx';
 
 export type WalletType = 'metamask' | 'phantom' | 'backpack';
-export type SocialProvider = 'google' | 'apple';
+export type SocialProvider = 'google' | 'x';
 
 interface WalletConnectDialogProps {
   open: boolean;
@@ -83,12 +83,12 @@ const socialOptions: SocialOption[] = [
     icon: '/google.png',
     color: 'hover:bg-blue-500/10 border-blue-500/30',
   },
-  // {
-  //   id: 'apple',
-  //   name: 'Continue with Apple',
-  //   icon: '🍎',
-  //   color: 'hover:bg-gray-500/10 border-gray-500/30',
-  // },
+  {
+    id: 'x',
+    name: 'Continue with X',
+    icon: '/X.png',
+    color: 'hover:bg-gray-500/10 border-gray-500/30',
+  },
 ];
 
 export function WalletConnectDialog({
@@ -115,14 +115,18 @@ export function WalletConnectDialog({
 
     switch (provider) {
       case 'google':
-        const signInLink = `${
+        const signInGoogleLink = `${
           import.meta.env.VITE_API_BASE_URL
         }/auth/${provider}/authorize?redirectUri=${
           import.meta.env.VITE_API_BASE_URL
         }/auth/google/callback`;
-        window.location.href = signInLink;
+        window.location.href = signInGoogleLink;
         break;
-      case 'apple':
+      case 'x':
+        const signInXLink = `${
+          import.meta.env.VITE_API_BASE_URL
+        }/auth/${provider}/authorize`;
+        window.location.href = signInXLink;
         break;
     }
 
@@ -142,7 +146,10 @@ export function WalletConnectDialog({
         onOpenChange(isOpen);
       }}
     >
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="sm:max-w-md max-h-[90vh] overflow-y-auto"
+        style={{ zIndex: '99999' }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="w-5 h-5" />

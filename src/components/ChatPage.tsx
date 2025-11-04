@@ -1391,7 +1391,6 @@ export function ChatPage({
     }
   };
 
-  console.log('generateSuggestedQuestions', generateSuggestedQuestions(aiAgent, 'I want a prediction on Bitcoin'))
   const handleSend = async (messageToSend?: string) => {
     const messageText = messageToSend || input.trim();
     if (!messageText || isLoading) return;

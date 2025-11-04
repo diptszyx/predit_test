@@ -14,7 +14,7 @@ import {
   Star,
   Sun,
   ThumbsUp,
-  Zap
+  Zap,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { HotTakeArticle } from "./ArticleDetailPage";
@@ -25,7 +25,13 @@ import { Sidebar } from "./Sidebar";
 import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Skeleton } from "./ui/skeleton";
 
@@ -669,7 +675,8 @@ export function ChatPage({
 
     // Default responses for other AI agents
     return [
-      `${aiAgent.emoji
+      `${
+        aiAgent.emoji
       } *channels cosmic energy* Interesting question! My ${aiAgent.specialty.toLowerCase()} powers are tingling. Based on my extensive research (and vibes), I predict that things will definitely happen. The exact details are still materializing in the prediction realm!`,
       `${aiAgent.emoji} Ooh, spicy topic! Let me consult my sources... *shuffles imaginary cards* ...and by sources I mean my incredibly tuned intuition and this lucky coin. My ${aiAgent.rating} rated prediction: expect the unexpected, but also the expected. Balance!`,
       `${aiAgent.emoji} *activates ${aiAgent.specialty} mode* You've come to the right AI agent! My analysis suggests a 73% chance of something interesting, a 25% chance of something boring, and a 2% chance of something absolutely wild. The math might not add up but neither does reality anymore! 🎲`,
@@ -1207,8 +1214,9 @@ export function ChatPage({
     const mockNews: NewsArticle[] = [
       {
         id: "1",
-        title: `Breaking: ${topics[0]?.toUpperCase() || "MYSTERY"
-          } Trends Hit All-Time High`,
+        title: `Breaking: ${
+          topics[0]?.toUpperCase() || "MYSTERY"
+        } Trends Hit All-Time High`,
         source: aiAgent.name,
         url: "#",
         publishedAt: "2 hours ago",
@@ -1228,8 +1236,9 @@ export function ChatPage({
       },
       {
         id: "3",
-        title: `${topics[Math.min(1, topics.length - 1)] || "Things"
-          }: More Popular Than Ever - My Take`,
+        title: `${
+          topics[Math.min(1, topics.length - 1)] || "Things"
+        }: More Popular Than Ever - My Take`,
         source: aiAgent.name,
         url: "#",
         publishedAt: "1 day ago",
@@ -1261,64 +1270,72 @@ export function ChatPage({
 
     const articleTemplates = [
       {
-        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)
-          }: My Analysis on the Unexpected Surge`,
+        title: `${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        }: My Analysis on the Unexpected Surge`,
         source: aiAgent.name,
         relevance: "Hot",
         image:
           "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=400&q=80",
       },
       {
-        title: `Why ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Could Be The Future - My Take`,
+        title: `Why ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Could Be The Future - My Take`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
           "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80",
       },
       {
-        title: `My Expert Opinion on ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          }: What You Need to Know`,
+        title: `My Expert Opinion on ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        }: What You Need to Know`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
           "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80",
       },
       {
-        title: `How ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Is Changing ${aiAgent.category}`,
+        title: `How ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Is Changing ${aiAgent.category}`,
         source: aiAgent.name,
         relevance: "Popular",
         image:
           "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80",
       },
       {
-        title: `Is ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Over? My Bold Prediction`,
+        title: `Is ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Over? My Bold Prediction`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
           "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=80",
       },
       {
-        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Predictions for 2026: My Forecast`,
+        title: `${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Predictions for 2026: My Forecast`,
         source: aiAgent.name,
         relevance: "Hot",
         image:
           "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&q=80",
       },
       {
-        title: `My Bold Take on ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Everyone Missed`,
+        title: `My Bold Take on ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Everyone Missed`,
         source: aiAgent.name,
         relevance: "Hot",
         image:
           "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&q=80",
       },
       {
-        title: `The ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Opportunity: My Insider Analysis`,
+        title: `The ${
+          topic.charAt(0).toUpperCase() + topic.slice(1)
+        } Opportunity: My Insider Analysis`,
         source: aiAgent.name,
         relevance: "Trending",
         image:
@@ -1542,9 +1559,9 @@ export function ChatPage({
       <div
         className={
           onNavigate &&
-            shortenAddress &&
-            onWalletDisconnect &&
-            onOpenWalletDialog
+          shortenAddress &&
+          onWalletDisconnect &&
+          onOpenWalletDialog
             ? "flex-1 overflow-y-auto"
             : ""
         }
@@ -1556,67 +1573,67 @@ export function ChatPage({
           onWalletDisconnect &&
           onOpenWalletDialog
         ) && (
-            <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
-              <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onBack}
-                    className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                    <img
-                      src={aiAgent.avatar}
-                      alt={aiAgent.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="text-sm sm:text-base leading-none truncate">
-                      {aiAgent.name}
-                    </h1>
-                    <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                      {aiAgent.title}
-                    </p>
-                  </div>
+          <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+            <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
+              <div className="flex items-center gap-3 min-w-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                  <img
+                    src={aiAgent.avatar}
+                    alt={aiAgent.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
-                  <div className="hidden sm:flex items-center gap-3">
-                    <span>{localRating} rating</span>
-                    <span>{formatLikes(localLikes)} likes</span>
-                    {aiAgent.consultSessions && (
-                      <span className="hidden md:inline">
-                        {aiAgent.consultSessions} sessions
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex sm:hidden">
-                    <span>{localRating}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDarkMode(!darkMode)}
-                    className="h-8 w-8"
-                  >
-                    {darkMode ? (
-                      <Sun className="w-4 h-4" />
-                    ) : (
-                      <Moon className="w-4 h-4" />
-                    )}
-                  </Button>
+                <div className="min-w-0">
+                  <h1 className="text-sm sm:text-base leading-none truncate">
+                    {aiAgent.name}
+                  </h1>
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                    {aiAgent.title}
+                  </p>
                 </div>
               </div>
-            </header>
-          )}
+
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
+                <div className="hidden sm:flex items-center gap-3">
+                  <span>{localRating} rating</span>
+                  <span>{formatLikes(localLikes)} likes</span>
+                  {aiAgent.consultSessions && (
+                    <span className="hidden md:inline">
+                      {aiAgent.consultSessions} sessions
+                    </span>
+                  )}
+                </div>
+                <div className="flex sm:hidden">
+                  <span>{localRating}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="h-8 w-8"
+                >
+                  {darkMode ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </header>
+        )}
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
-          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px]">
+          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4">
             {/* Chat Section - Center with max width */}
             <div className="w-full h-full lg:max-w-3xl space-y-0 flex flex-col">
               {/* Welcome Intro Section - Only show on first load */}
@@ -1661,13 +1678,18 @@ export function ChatPage({
                 </div>
               )}
               {/* Oracle Header - Above conversation box */}
-              <Card className="border-border bg-background/80 backdrop-blur-md" style={{
-                borderRadius: '0px',
-                borderRight: 'none'
-              }}>
-                <CardContent className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl" style={{
-                  borderRadius: '0px'
-                }}>
+              <Card
+                className="border-border bg-background/80 backdrop-blur-md"
+                style={{
+                  borderRadius: "0px",
+                }}
+              >
+                <CardContent
+                  className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
+                  style={{
+                    borderRadius: "0px",
+                  }}
+                >
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Button
                       variant="ghost"
@@ -1675,7 +1697,11 @@ export function ChatPage({
                       // onClick={() => setThreadsExpanded(!threadsExpanded)}
                       className="flex-shrink-0 hover:bg-muted/50 h-9 px-2 lg:flex"
                     >
-                      {threadsExpanded ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeft className="w-5 h-5" />}
+                      {threadsExpanded ? (
+                        <PanelLeftClose className="w-5 h-5" />
+                      ) : (
+                        <PanelLeft className="w-5 h-5" />
+                      )}
                     </Button>
                     <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
                       <ImageWithFallback
@@ -1688,7 +1714,7 @@ export function ChatPage({
                       <CardTitle className="text-sm sm:text-base md:text-lg truncate">
                         {aiAgent.name}
                       </CardTitle>
-                      <CardDescription className='text-xs'>
+                      <CardDescription className="text-xs">
                         {aiAgent.title}
                       </CardDescription>
                     </div>
@@ -1715,16 +1741,19 @@ export function ChatPage({
                 {/* Chat Interface - Full Height */}
                 <div className="absolute inset-0 flex flex-col pointer-events-none">
                   {/* Messages Area - Scrollable with transparent background */}
-                  <div className="flex-1 overflow-hidden pointer-events-auto rounded-none">
+                  <div className="flex-1 overflow-hidden pointer-events-auto rounded-none border-r">
                     <ScrollArea className="h-full p-2 sm:p-3 md:p-4 bg-muted/80">
                       {!user && (
                         <div className="flex flex-col items-center justify-center my-12 px-4 text-center">
                           <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mb-4">
                             <MessageSquare className="w-8 h-8 text-blue-600" />
                           </div>
-                          <h3 className="text-lg font-semibold mb-2">Start a New Conversation</h3>
+                          <h3 className="text-lg font-semibold mb-2">
+                            Start a New Conversation
+                          </h3>
                           <p className="text-sm text-muted-foreground max-w-md">
-                            Ask {aiAgent.name} anything. Get predictions, insights, and expert analysis on {aiAgent.category}.
+                            Ask {aiAgent.name} anything. Get predictions,
+                            insights, and expert analysis on {aiAgent.category}.
                           </p>
                         </div>
                       )}
@@ -1732,19 +1761,18 @@ export function ChatPage({
                         {messages.map((message, index) => (
                           <div key={message.id}>
                             <div
-                              className={`flex ${message.sender === "user"
-                                ? "justify-end"
-                                : "justify-start"
-                                }`}
+                              className={`flex ${
+                                message.sender === "user"
+                                  ? "justify-end"
+                                  : "justify-start"
+                              }`}
                             >
                               <div
-                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === "user"
-                                  ? "bg-blue-600 text-white backdrop-blur-sm"
-                                  : "bg-white backdrop-blur-md text-foreground border border-border"
-                                  }`}
-                                style={{
-                                  backgroundColor: message.sender !== "user" ? "white" : undefined
-                                }}
+                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
+                                  message.sender === "user"
+                                    ? "bg-blue-600 text-white backdrop-blur-sm"
+                                    : `backdrop-blur-md border border-border`
+                                }`}
                               >
                                 {/* Article Attachment Thumbnail */}
                                 {/* {message.articleAttachment && (
@@ -1769,7 +1797,11 @@ export function ChatPage({
                               </div>
                             </div>
                             <span
-                              className={`text-xs mt-2 block text-muted-foreground ml-2`}
+                              className={`text-xs mt-2 block text-muted-foreground ml-2 ${
+                                message.sender === "user"
+                                  ? "text-right"
+                                  : "text-left"
+                              }`}
                             >
                               {formatTime(message.createdAt)}
                             </span>
@@ -1832,7 +1864,7 @@ export function ChatPage({
                   </div>
 
                   {/* Input Section - Fixed at top with semi-transparent background */}
-                  <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90">
+                  <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90 border-r">
                     <div className="max-w-4xl mx-auto">
                       {/* Daily Prediction Limit Counter for Free Users */}
                       {user?.walletAddress &&
@@ -1956,7 +1988,8 @@ export function ChatPage({
                               background: "rgba(59, 130, 246, 0.25)",
                               backdropFilter: "blur(4px)",
                               border: "1px solid rgba(59, 130, 246, 0.25)",
-                              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.15)",
+                              boxShadow:
+                                "0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.15)",
                             }}
                           >
                             {isLoading ? (
@@ -1965,7 +1998,8 @@ export function ChatPage({
                               <ArrowRight
                                 className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-2"
                                 style={{
-                                  filter: "drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))",
+                                  filter:
+                                    "drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))",
                                 }}
                               />
                             )}
@@ -1988,7 +2022,7 @@ export function ChatPage({
             </div>
 
             {/* News Feed - Right - Hidden on mobile */}
-            <div className="hidden lg:block w-full lg:w-80 space-y-4">
+            <div className="hidden lg:block w-full h-full lg:w-80 space-y-4 pt-2">
               {/* AI Agent Profile Card */}
               <Card className="border-border overflow-hidden">
                 <CardContent className="p-4">
@@ -2036,9 +2070,14 @@ export function ChatPage({
                   </div>
 
                   {/* Rate section */}
-                  <div className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${ratingFlashing ? 'ring-2 ring-blue-500' : ''
-                    }`}>
-                    <p className="text-xs text-muted-foreground mb-2">Rate this AI Agent</p>
+                  <div
+                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${
+                      ratingFlashing ? "ring-2 ring-blue-500" : ""
+                    }`}
+                  >
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Rate this AI Agent
+                    </p>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -2047,10 +2086,11 @@ export function ChatPage({
                           className="transition-opacity hover:opacity-70"
                         >
                           <Star
-                            className={`w-4 h-4 sm:w-5 sm:h-5 ${star <= userRating
-                              ? "fill-primary text-primary"
-                              : "text-muted-foreground"
-                              }`}
+                            className={`w-4 h-4 sm:w-5 sm:h-5 ${
+                              star <= userRating
+                                ? "fill-primary text-primary"
+                                : "text-muted-foreground"
+                            }`}
                           />
                         </button>
                       ))}
@@ -2065,11 +2105,18 @@ export function ChatPage({
                   {/* Like Button */}
                   <Button
                     variant="outline"
-                    className={`w-full mt-3 h-9 transition-all ${hasLiked ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700" : "border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50"
-                      }`}
+                    className={`w-full mt-3 h-9 transition-all ${
+                      hasLiked
+                        ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+                        : "border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50"
+                    }`}
                     onClick={handleLike}
                   >
-                    <ThumbsUp className={`w-4 h-4 mr-2 ${hasLiked ? "fill-current" : ""}`} />
+                    <ThumbsUp
+                      className={`w-4 h-4 mr-2 ${
+                        hasLiked ? "fill-current" : ""
+                      }`}
+                    />
                     {hasLiked ? "Liked" : "Like"} • {formatLikes(localLikes)}
                   </Button>
                 </CardContent>
@@ -2079,7 +2126,7 @@ export function ChatPage({
               <Card
                 className="border-border overflow-hidden"
                 style={{
-                  height: "calc(100vh - 22rem)",
+                  height: "calc(100vh - 25rem)",
                 }}
               >
                 <CardHeader className="border-b border-border pb-3">

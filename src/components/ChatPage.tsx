@@ -205,6 +205,7 @@ export function ChatPage({
   // Disclaimer dialog
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
   const [shareAIAgentDialogOpen, setShareAIAgentDialogOpen] = useState(false);
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>(generateSuggestedQuestions(aiAgent, ''));
 
   // Rating flash functionality
   const [ratingFlashing, setRatingFlashing] = useState(false);
@@ -1427,6 +1428,7 @@ export function ChatPage({
 
     // Fetch relevant news
     fetchRelevantNews(trimmedInput);
+    setSuggestedQuestions(generateSuggestedQuestions(aiAgent, trimmedInput))
 
     try {
       const response = await sendToGrokAPI(trimmedInput, aiAgent);
@@ -1626,18 +1628,18 @@ export function ChatPage({
             {/* Chat Section - Center with max width */}
             <div className="w-full h-full lg:max-w-3xl space-y-0 flex flex-col">
               {/* Welcome Intro Section - Only show on first load */}
-              {messages.length === 1 && (
-                <div className="mb-8">
-                  {/* Call to Action */}
-                  <div className="py-8">
+              {/* {messages.length === 1 && (
+                <div className="mb-8"> */}
+              {/* Call to Action */}
+              {/* <div className="py-8">
                     <h2 className="text-2xl sm:text-3xl bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-6 pb-1">
                       Gain the Edge with Our Elite AI Agents
-                    </h2>
+                    </h2> */}
 
-                    {/* Features Grid */}
-                    <div className="grid gap-4 mb-6">
-                      {/* Feature 1 */}
-                      <div className="p-4 rounded-lg bg-muted/30 border border-border">
+              {/* Features Grid */}
+              {/* <div className="grid gap-4 mb-6"> */}
+              {/* Feature 1 */}
+              {/* <div className="p-4 rounded-lg bg-muted/30 border border-border">
                         <h3 className="text-base sm:text-lg mb-2">
                           ✨ Specialized Expertise for Pinpoint Accuracy
                         </h3>
@@ -1646,10 +1648,10 @@ export function ChatPage({
                           politics, sports, and more—delivering spot-on
                           predictions that crush the competition.
                         </p>
-                      </div>
+                      </div> */}
 
-                      {/* Feature 2 */}
-                      <div className="p-4 rounded-lg bg-muted/30 border border-border">
+              {/* Feature 2 */}
+              {/* <div className="p-4 rounded-lg bg-muted/30 border border-border">
                         <h3 className="text-base sm:text-lg mb-2">
                           🚀 Supercharge Your Bets and Investments
                         </h3>
@@ -1665,7 +1667,7 @@ export function ChatPage({
                     </p>
                   </div>
                 </div>
-              )}
+              )} */}
               {/* Oracle Header - Above conversation box */}
               <Card
                 className="border-border bg-background/80 backdrop-blur-md"
@@ -1810,6 +1812,23 @@ export function ChatPage({
                                 </div>
                               </div>
                             )} */}
+                            {message.sender === "assistant"
+                              && suggestedQuestions && index === messages.length - 1 && !isLoading &&
+                              (
+                                <div className="flex justify-start mt-2 sm:mt-3">
+                                  <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
+                                    {suggestedQuestions.map((question, qIndex) => (
+                                      <button
+                                        key={qIndex}
+                                        onClick={() => handleSend(question)}
+                                        className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left"
+                                      >
+                                        {question}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                           </div>
                         ))}
                         {isLoading && (

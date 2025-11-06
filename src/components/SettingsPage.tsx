@@ -53,8 +53,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   // Profile Settings
   const [avatar, setAvatar] = useState(
     user.photo?.path ||
-      user.avatar ||
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+    user.avatar ||
+    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
   );
   const [nickname, setNickname] = useState(user.username || "Oracle Seeker");
   const [email, setEmail] = useState(user.email || "oracle.seeker@example.com");
@@ -79,7 +79,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   const subscriptionMult = getSubscriptionMultiplier(
     user.subscriptionTier || "free"
   );
-  const streakMult = getStreakMultiplier(user.streak);
+  const streakMult = getStreakMultiplier(user.streakDays);
   const totalMult = subscriptionMult * streakMult;
 
   // Subscription Dialog
@@ -130,7 +130,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error("Error uploading photo:", error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to upload photo. Please try again."
+        "Failed to upload photo. Please try again."
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -160,7 +160,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error("Error updating nickname:", error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update nickname. Please try again."
+        "Failed to update nickname. Please try again."
       );
     } finally {
       setIsSavingNickname(false);
@@ -182,7 +182,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error("Error updating email:", error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update email. Please try again."
+        "Failed to update email. Please try again."
       );
     } finally {
       setIsSavingEmail(false);
@@ -204,7 +204,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error("Error updating phone:", error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update phone number. Please try again."
+        "Failed to update phone number. Please try again."
       );
     } finally {
       setIsSavingPhone(false);
@@ -483,8 +483,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                           setIsEditingPhone(false);
                           setPhone(
                             user.phone ||
-                              user.phoneNumber ||
-                              "+1 (555) 123-4567"
+                            user.phoneNumber ||
+                            "+1 (555) 123-4567"
                           );
                         }}
                         disabled={isSavingPhone}
@@ -539,7 +539,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
               Manage your subscription and unlock premium features
             </p>
 
-            {user.subscriptionTier === "master" ? (
+            {user.isPro ? (
               /* Pro User View */
               <div className="space-y-4">
                 <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
@@ -628,64 +628,66 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                   </div>
                 </div>
 
-                <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Crown className="w-5 h-5 text-blue-400" />
-                    <h4>Upgrade to Pro</h4>
-                  </div>
+                {!user.isPro &&
+                  <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Crown className="w-5 h-5 text-blue-400" />
+                      <h4>Upgrade to Pro</h4>
+                    </div>
 
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Unlimited predictions</span>
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>Unlimited predictions</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>2x XP multiplier on all actions</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>
+                          <strong>1,500 XP bonus</strong> when you subscribe
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>Priority AI responses</span>
+                      </div>
                     </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>2x XP multiplier on all actions</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <strong>1,500 XP bonus</strong> when you subscribe
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Priority AI responses</span>
-                    </div>
-                  </div>
 
-                  <div className="pt-4 border-t border-blue-500/20 mb-4">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <span className="text-lg text-muted-foreground line-through">
-                        $19.99/mo
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="bg-blue-500/10 border-blue-500/30"
-                      >
-                        75% OFF
-                      </Badge>
+                    <div className="pt-4 border-t border-blue-500/20 mb-4">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <span className="text-lg text-muted-foreground line-through">
+                          $19.99/mo
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-500/10 border-blue-500/30"
+                        >
+                          75% OFF
+                        </Badge>
+                      </div>
+                      <p className="text-center text-3xl mb-1">
+                        $4.99
+                        <span className="text-sm text-muted-foreground">
+                          /month
+                        </span>
+                      </p>
                     </div>
-                    <p className="text-center text-3xl mb-1">
-                      $4.99
-                      <span className="text-sm text-muted-foreground">
-                        /month
-                      </span>
+
+                    <Button
+                      className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90"
+                      onClick={() => setSubscriptionDialogOpen(true)}
+                    >
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade to Pro
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                      Cancel anytime • Full access immediately
                     </p>
                   </div>
-
-                  <Button
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90"
-                    onClick={() => setSubscriptionDialogOpen(true)}
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Upgrade to Pro
-                  </Button>
-                  <p className="text-xs text-center text-muted-foreground mt-2">
-                    Cancel anytime • Full access immediately
-                  </p>
-                </div>
+                }
               </div>
             )}
           </CardContent>
@@ -766,7 +768,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     </div>
                     <div>
                       <Label className="text-sm">Current Streak</Label>
-                      <p className="text-2xl mt-1">{user.streak} days</p>
+                      <p className="text-2xl mt-1">{user.streakDays} days</p>
                     </div>
                   </div>
                   {streakMult > 1 && (

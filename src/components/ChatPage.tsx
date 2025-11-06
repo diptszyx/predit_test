@@ -1734,7 +1734,7 @@ export function ChatPage({
                   {/* Messages Area - Scrollable with transparent background */}
                   <div className="flex-1 overflow-hidden pointer-events-auto rounded-none border-r">
                     <ScrollArea className="h-full p-2 sm:p-3 md:p-4 bg-muted/80">
-                      {!user && messages.length === 0 && (
+                      {(!user || messages.length === 0) && (
                         <div className="flex flex-col items-center justify-center my-12 px-4 text-center">
                           <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mb-4">
                             <MessageSquare className="w-8 h-8 text-blue-600" />
@@ -1872,42 +1872,33 @@ export function ChatPage({
                   <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90 border-r">
                     <div className="max-w-4xl mx-auto">
                       {/* Daily Prediction Limit Counter for Free Users */}
-                      {user?.walletAddress &&
-                        user?.subscriptionTier !== "master" &&
-                        (() => {
-                          const today = new Date().toDateString();
-                          const lastResetDate = user?.dailyPredictionsResetDate;
-                          const dailyUsed =
-                            lastResetDate === today
-                              ? user?.dailyPredictionsUsed || 0
-                              : 0;
-                          const remaining = 5 - dailyUsed;
+                      {user?.id && !user?.isPro && (() => {
+                        // const today = new Date().toDateString();
+                        // const lastResetDate = user?.dailyMessagesResetDate;
+                        // const dailyUsed = (lastResetDate === today) ? (user?.dailyMessagesUsed || 0) : 0;
+                        // const remaining = 5 - dailyUsed;
 
-                          if (remaining <= 2) {
-                            return (
-                              <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
-                                <div className="flex items-center justify-between gap-2">
-                                  <p className="text-xs sm:text-sm text-foreground truncate">
-                                    <Lock className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                                    {remaining} prediction
-                                    {remaining !== 1 ? "s" : ""} left
-                                  </p>
-                                  <Button
-                                    size="sm"
-                                    onClick={() =>
-                                      setSubscriptionDialogOpen(true)
-                                    }
-                                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
-                                  >
-                                    <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
-                                    <span className="text-xs">Upgrade</span>
-                                  </Button>
-                                </div>
+                        return (
+                          <div className="mb-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <MessageSquare className="w-4 h-4" />
+                                <span>{user.restTodayPredictionCount}/5 messages remaining today</span>
                               </div>
-                            );
-                          }
-                          return null;
-                        })()}
+                              {user.restTodayPredictionCount <= 2 && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => setSubscriptionDialogOpen(true)}
+                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0"
+                                >
+                                  <Crown className="w-3 h-3 mr-1" />
+                                  Upgrade
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Daily Line Limit Counter for Free Users */}
                       {user?.walletAddress &&

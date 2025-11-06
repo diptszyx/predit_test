@@ -21,6 +21,7 @@ const buildFormData = (user: User | null): UserProfileFormData => ({
   avatar: user?.avatar ?? '',
   email: user?.email ?? '',
   phoneNumber: user?.phoneNumber ?? '',
+  referralCode: '',
 });
 
 const resolveProvider = (user: User | null): string | null => {
@@ -85,7 +86,7 @@ export function UserProfileDialog({
   const handleComplete = useCallback(async () => {
     if (submitting) return;
 
-    const { email, phoneNumber, avatar } = formData;
+    const { email, phoneNumber, avatar, referralCode } = formData;
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error('Please enter a valid email address');
@@ -109,6 +110,10 @@ export function UserProfileDialog({
 
     if (phoneNumber !== initialFormData.phoneNumber) {
       updates.phoneNumber = phoneNumber;
+    }
+
+    if (referralCode) {
+      updates.referredBy = referralCode;
     }
 
     setSubmitting(true);

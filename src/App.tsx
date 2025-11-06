@@ -31,6 +31,8 @@ import { Button } from './components/ui/button';
 import UserProfileDialog from './components/UserProfileDialog';
 import useAuthStore from './store/auth.store';
 import { shortenAddress } from './lib/address';
+import { HomePage } from './components/HomePage';
+import { BottomNav } from './components/BottomNav';
 
 // Constants
 const AI_AGENT_IMAGES = {
@@ -154,7 +156,9 @@ export default function App() {
   );
 
   // App state
-  const [currentPage, setCurrentPage] = useState<string>('chat');
+  const [currentPage, setCurrentPage] = useState<string>(() => {
+    return localStorage.getItem("deorCurrentPage") || "chat";
+  });
   const [selectedAIAgent, setSelectedAIAgent] = useState<AIAgent | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<HotTakeArticle | null>(
     null
@@ -173,6 +177,7 @@ export default function App() {
   const [profileDialogUser, setProfileDialogUser] = useState<User | null>(null);
   const [profileDialogRequireCompletion, setProfileDialogRequireCompletion] =
     useState(false);
+  const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
 
   // Dialog state
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
@@ -235,6 +240,11 @@ export default function App() {
       localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    localStorage.setItem("deorCurrentPage", currentPage);
+  }, [currentPage]);
+
 
   // Set default AI agent
   useEffect(() => {
@@ -467,6 +477,53 @@ export default function App() {
     );
   }
 
+  if (currentPage === "home") {
+    return (
+      <div className="flex h-screen bg-background overflow-hidden">
+        {/* Sidebar - Desktop only */}
+        {/* <div className="hidden md:block"> */}
+        <Sidebar {...commonSidebarProps} />
+        {/* </div> */}
+
+        {/* Main content */}
+        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+          <HomePage
+            onGetStarted={() => setWalletDialogOpen(true)}
+            onExplorePredictions={(prompt) => {
+              if (prompt) {
+                setInitialPrompt(prompt);
+              }
+              // Set the first AI agent as selected if none is selected
+              if (!selectedAIAgent && AI_AGENTS.length > 0) {
+                setSelectedAIAgent(AI_AGENTS[0]);
+              }
+              setCurrentPage("chat");
+            }}
+            onViewHotTakes={() => setCurrentPage("hotTakes")}
+            onArticleClick={(article) => {
+              setSelectedArticle(article);
+              setPreviousPage("home");
+              setCurrentPage("articleDetail");
+            }}
+            articles={HOT_TAKE_ARTICLES}
+            user={user}
+          />
+        </div>
+
+        {/* Bottom Navigation - Mobile only */}
+        {/* <BottomNav
+          currentPage={currentPage}
+          onNavigate={setCurrentPage}
+          user={user}
+          onOpenWalletDialog={() => setWalletDialogOpen(true)}
+          onOpenSettings={() => setCurrentPage("settings")}
+        /> */}
+
+        {commonDialogProps}
+      </div>
+    );
+  }
+
   // Render article detail page
   if (currentPage === 'articleDetail' && selectedArticle) {
     return (
@@ -552,6 +609,8 @@ export default function App() {
           articleContext={articleContext}
           onArticleContextUsed={() => setArticleContext(null)}
           onOpenXPInfo={() => setXPInfoDialogOpen(true)}
+          initialPrompt={initialPrompt}
+          onInitialPromptUsed={() => setInitialPrompt(null)}
         />
         {commonDialogProps}
       </>

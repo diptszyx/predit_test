@@ -121,6 +121,8 @@ interface ChatPageProps {
   articleContext?: HotTakeArticle | null;
   onArticleContextUsed?: () => void;
   onOpenXPInfo?: () => void;
+  initialPrompt?: string | null;
+  onInitialPromptUsed?: () => void;
 }
 
 type ChatMessage = {
@@ -162,6 +164,8 @@ export function ChatPage({
   articleContext,
   onArticleContextUsed,
   onOpenXPInfo,
+  initialPrompt,
+  onInitialPromptUsed
 }: ChatPageProps) {
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -243,6 +247,23 @@ export function ChatPage({
     };
     fetchMessages();
   }, []);
+
+  useEffect(() => {
+    if (initialPrompt && !isLoading) {
+      // Set the input field with the prompt
+      setInput(initialPrompt);
+
+      // Auto-submit the prompt after a brief delay
+      setTimeout(() => {
+        handleSend(initialPrompt);
+
+        // Mark initial prompt as used
+        if (onInitialPromptUsed) {
+          onInitialPromptUsed();
+        }
+      }, 500);
+    }
+  }, [initialPrompt]);
 
   // Load default hot takes on mount
   useEffect(() => {
@@ -1978,7 +1999,7 @@ export function ChatPage({
 
                       <div className="flex gap-1.5 sm:gap-2">
                         <div
-                          className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-11 cursor-pointer"
+                          className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-11 cursor-pointer relative"
                           onClick={() => {
                             if (!user) {
                               setSignInDialogOpen(true);
@@ -2006,7 +2027,7 @@ export function ChatPage({
                           <button
                             onClick={() => handleSend(input)}
                             disabled={!input.trim() || isLoading || !user}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed group flex-shrink-0 shadow-sm cursor-pointer hover:scale-105"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed group flex-shrink-0 shadow-sm cursor-pointer hover:scale-105"
                             style={{
                               width: "40px",
                               height: "40px",

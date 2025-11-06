@@ -1,47 +1,46 @@
-import { useState, useRef } from "react";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import { Progress } from "./ui/progress";
 import {
-  ArrowLeft,
-  Save,
-  User,
   Camera,
+  Check,
+  Crown,
+  Edit2,
+  Flame,
+  Infinity,
+  Loader2,
   Mail,
   Phone,
-  Edit2,
-  Check,
-  Flame,
+  Save,
+  Sparkles,
   Star,
   TrendingUp,
-  Crown,
-  Sparkles,
-  Infinity,
-  Lock,
-  Zap,
-  Loader2,
+  User,
+  Zap
 } from "lucide-react";
-import { Separator } from "./ui/separator";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ReferralCard } from "./ReferralCard";
-import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
 import { mockUser } from "../lib/mockData";
 import {
-  getXPForNextLevel,
-  getXPForCurrentLevel,
   getLevelProgress,
-  getSubscriptionMultiplier,
   getStreakMultiplier,
+  getSubscriptionMultiplier,
+  getXPForCurrentLevel,
+  getXPForNextLevel,
 } from "../lib/xpSystem";
-import { uploadFile, updateUserPhoto } from "../services/file.service";
+import { updateUserPhoto, uploadFile } from "../services/file.service";
 import { useAuthStore } from "../store/auth.store";
+import { ReferralCard } from "./ReferralCard";
+import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Progress } from "./ui/progress";
+import { Separator } from "./ui/separator";
+import { MAX_PREDICTIONS_PER_DAY } from "../constants/prediction";
 
 interface SettingsPageProps {
   onBack: () => void;
-  user?: typeof mockUser;
+  user: typeof mockUser;
 }
 
 export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
@@ -607,7 +606,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     <div>
                       <h4>Basic (Free)</h4>
                       <p className="text-sm text-muted-foreground">
-                        5 total predictions
+                        {MAX_PREDICTIONS_PER_DAY} total predictions
                       </p>
                     </div>
                   </div>
@@ -618,11 +617,11 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         Predictions Used
                       </span>
                       <span className="text-sm">
-                        {user.totalPredictions || 0}/5
+                        {user.totalPredictions || 0}/{MAX_PREDICTIONS_PER_DAY}
                       </span>
                     </div>
                     <Progress
-                      value={((user.totalPredictions || 0) / 5) * 100}
+                      value={((user.totalPredictions || 0) / MAX_PREDICTIONS_PER_DAY) * 100}
                       className="h-2"
                     />
                   </div>

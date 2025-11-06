@@ -38,6 +38,7 @@ import { Skeleton } from "./ui/skeleton";
 import { toast } from "sonner";
 import apiClient from "../lib/axios";
 import type { User } from "../lib/types";
+import useAuthStore from "../store/auth.store";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import {
   AlertDialog,
@@ -162,6 +163,7 @@ export function ChatPage({
   onArticleContextUsed,
   onOpenXPInfo,
 }: ChatPageProps) {
+  const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [threadsExpanded, setThreadsExpanded] = useState(false);
   const [input, setInput] = useState("");
@@ -451,12 +453,12 @@ export function ChatPage({
 
   // Increment daily prediction count
   function incrementDailyPredictions() {
-    if (user && updateUser && user.subscriptionTier !== "master") {
-      const today = new Date().toDateString();
-      const currentUsed = user.dailyPredictionsUsed || 0;
+    if (user && updateUser && !user.isPro) {
+      const currentUsed = user.totalPredictions || 0;
+      const remaining = user.restTodayPredictionCount || 0;
       updateUser({
-        dailyPredictionsUsed: currentUsed + 1,
-        dailyPredictionsResetDate: today,
+        totalPredictions: currentUsed + 1,
+        restTodayPredictionCount: remaining - 1
       });
     }
   }
@@ -1410,9 +1412,35 @@ export function ChatPage({
     const newMessageCount = userMessageCount + 1;
     setUserMessageCount(newMessageCount);
 
+    if (user?.id && !user?.isPro && (user?.restTodayPredictionCount || 0) <= 0) {
+      setLimitReachedType('total-predictions');
+      setLimitReachedDialogOpen(true);
+      setInput(""); // Clear input
+      return;
+    }
+
     // Track total questions asked
     if (onQuestionAsked) {
       onQuestionAsked();
+    }
+
+    // Increment daily prediction count if this is a prediction
+    if (user?.id) {
+      incrementDailyPredictions();
+
+      // Increment total predictions and award XP with exponential curve
+      if (updateUser) {
+        const restTodayPredictionCount = (user.restTodayPredictionCount || 0) - 1;
+
+        // Show subscription popup after 5th prediction
+        if (restTodayPredictionCount === 0 && !user.isPro) {
+          // Delay showing the dialog to allow the prediction to complete
+          setTimeout(() => {
+            setLimitReachedType('total-predictions');
+            setLimitReachedDialogOpen(true);
+          }, 2000); // Show after 2 seconds
+        }
+      }
     }
 
     const userMessage: ChatMessage = {
@@ -1437,6 +1465,7 @@ export function ChatPage({
         oracleId: "1e557572-aaa8-4cab-8af6-d86f65613f19",
       });
       setMessages((prev) => [...prev, data.assistantMessage]);
+      fetchUser()
 
       // If this was a prediction, store it and flash the share button and rating section
       if (isPrediction) {

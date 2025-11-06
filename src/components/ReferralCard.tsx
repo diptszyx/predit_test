@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 import {
   Users,
   Copy,
@@ -11,9 +11,9 @@ import {
   Zap,
   Trophy,
   Share2,
-} from "lucide-react";
-import { toast } from "sonner";
-import { copyToClipboard } from "../lib/clipboardUtils";
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { copyToClipboard } from '../lib/clipboardUtils';
 
 interface ReferralCardProps {
   user: {
@@ -47,9 +47,9 @@ export function ReferralCard({
           user.username
             ? user.username
                 .toUpperCase()
-                .replace(/[^A-Z0-9]/g, "")
+                .replace(/[^A-Z0-9]/g, '')
                 .slice(0, 8)
-            : "User"
+            : 'User'
         }-${Math.random().toString(36).slice(2, 6)?.toUpperCase()} `);
 
   const referralLink = `${window.location.origin}?ref=${referralCode}`;
@@ -65,14 +65,14 @@ export function ReferralCard({
     const success = await copyToClipboard(textToCopy);
     if (success) {
       setCopied(true);
-      toast.success("Referral link copied to clipboard!", {
-        description: "Share it with friends to earn XP!",
+      toast.success('Referral link copied to clipboard!', {
+        description: 'Share it with friends to earn XP!',
       });
       setTimeout(() => setCopied(false), 2000);
     } else {
       // If both methods fail, show the text in a toast for manual copying
-      toast.error("Unable to copy automatically", {
-        description: "Please copy the link manually from the input field",
+      toast.error('Unable to copy automatically', {
+        description: 'Please copy the link manually from the input field',
       });
     }
   };
@@ -82,11 +82,11 @@ export function ReferralCard({
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       text
     )}&url=${encodeURIComponent(referralLink)}`;
-    window.open(url, "_blank");
+    window.open(url, '_blank');
 
     // Award XP for sharing (same as share_prediction)
     if (onAwardXP) {
-      onAwardXP(15, "Shared referral link");
+      onAwardXP(15, 'Shared referral link');
     }
   };
 
@@ -150,7 +150,7 @@ export function ReferralCard({
             <div className="flex items-center gap-2 text-sm mt-3 p-2 rounded bg-blue-500/10 border border-blue-500/20">
               <span className="text-lg">💎</span>
               <span className="text-muted-foreground">
-                Your friend also gets{" "}
+                Your friend also gets{' '}
                 <strong className="text-foreground">100 XP bonus</strong> when
                 they sign up with your code!
               </span>
@@ -170,9 +170,9 @@ export function ReferralCard({
               className="font-mono text-center text-lg tracking-wider"
             />
             <Button
-              onClick={copyToClipboard}
+              onClick={() => handleCopyToClipboard(referralCode)}
               variant="outline"
-              className="shrink-0"
+              className="shrink-0 hover:opacity-80 cursor-pointer"
             >
               {copied ? (
                 <>
@@ -195,9 +195,13 @@ export function ReferralCard({
             Referral Link
           </label>
           <div className="flex gap-2">
-            <Input value={referralLink} readOnly className="text-sm" />
+            <Input
+              value={referralLink}
+              readOnly
+              className="text-sm"
+            />
             <Button
-              onClick={handleCopyToClipboard}
+              onClick={() => handleCopyToClipboard(referralLink)}
               variant="outline"
               className="shrink-0"
             >

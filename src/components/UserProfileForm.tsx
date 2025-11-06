@@ -11,6 +11,7 @@ export interface UserProfileForm {
   avatar: string;
   email: string;
   phoneNumber: string;
+  referralCode: string;
 }
 
 interface UserProfileFormProps {
@@ -63,8 +64,8 @@ export function UserProfileForm({
     emailProvider === 'google'
       ? 'Google'
       : emailProvider === 'email'
-        ? 'your email login'
-        : 'your login provider';
+      ? 'your email login'
+      : 'your login provider';
 
   return (
     <div className="space-y-6 py-4">
@@ -168,6 +169,25 @@ export function UserProfileForm({
         <p className="text-xs text-muted-foreground">
           Optional two-factor authentication and SMS alerts
         </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label
+          htmlFor="referralCode"
+          className="text-sm flex items-center gap-2"
+        >
+          referral Code
+        </Label>
+        <Input
+          id="referralCode"
+          type="tel"
+          placeholder="DEH-XXXX"
+          value={data.referralCode}
+          onChange={(event: ChangeEvent<HTMLInputElement>) =>
+            onChange({ referralCode: event.target.value })
+          }
+          className="w-full"
+        />
       </div>
 
       <Separator />

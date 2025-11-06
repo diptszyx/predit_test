@@ -33,6 +33,7 @@ import useAuthStore from './store/auth.store';
 import { shortenAddress } from './lib/address';
 import { HomePage } from './components/HomePage';
 import { BottomNav } from './components/BottomNav';
+import apiClient from './lib/axios';
 
 // Constants
 const AI_AGENT_IMAGES = {
@@ -148,16 +149,16 @@ export default function App() {
 
   // Auth state from global store
   const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
   const updateUserInStore = useAuthStore((state) => state.updateUser);
   const logout = useAuthStore((state) => state.logout);
   const authenticateWithToken = useAuthStore(
     (state) => state.authenticateWithToken
   );
+  const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser);
 
   // App state
   const [currentPage, setCurrentPage] = useState<string>(() => {
-    return localStorage.getItem("deorCurrentPage") || "chat";
+    return localStorage.getItem('deorCurrentPage') || 'chat';
   });
   const [selectedAIAgent, setSelectedAIAgent] = useState<AIAgent | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<HotTakeArticle | null>(
@@ -242,9 +243,8 @@ export default function App() {
   }, [darkMode]);
 
   useEffect(() => {
-    localStorage.setItem("deorCurrentPage", currentPage);
+    localStorage.setItem('deorCurrentPage', currentPage);
   }, [currentPage]);
-
 
   // Set default AI agent
   useEffect(() => {
@@ -320,27 +320,11 @@ export default function App() {
     }
   }, [authenticateWithToken, pendingNavigation]);
 
-  // Utility functions
-
-  const generateMockAddress = (): string => {
-    const chars = '0123456789abcdef';
-    let address = '0x';
-    for (let i = 0; i < 40; i++) {
-      address += chars[Math.floor(Math.random() * chars.length)];
-    }
-    return address;
-  };
-
-  const generateMockEmail = (provider: SocialProvider): string => {
-    const timestamp = Date.now();
-    return provider === 'google'
-      ? `user${timestamp}@gmail.com`
-      : `user${timestamp}@icloud.com`;
-  };
-
   const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);
     toast.success(`Connected with ${walletType}!`);
+
+    handleRefAutoApply();
 
     const createdAt = new Date(user.createdAt).getTime();
     const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
@@ -354,37 +338,27 @@ export default function App() {
     }
   };
 
-  const handleSocialConnect = (provider: SocialProvider) => {
-    const email = generateMockEmail(provider);
-    const referralCode = sessionStorage.getItem('pendingReferralCode');
-    let initialXP = mockUser.xp;
+  const handleSocialConnect = () => {
+    handleRefAutoApply();
+  };
 
-    if (referralCode) {
-      initialXP += 100;
-      toast.success('🎉 Referral bonus applied! +100 XP', {
+  const handleRefAutoApply = async () => {
+    const referralCode = sessionStorage.getItem('pendingReferralCode');
+    if (!referralCode) return;
+
+    try {
+      await apiClient.post('/auth/redeem-referral', {
+        referralCode,
+      });
+
+      toast.success('🎉 Referral bonus applied! +300 XP', {
         description: 'Welcome to Dehouse of Predictions!',
       });
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Failed to apply referral');
+    } finally {
       sessionStorage.removeItem('pendingReferralCode');
-    }
-
-    const newUser: User = {
-      ...mockUser,
-      email,
-      socialProvider: provider,
-      xp: initialXP,
-      referredBy: referralCode || undefined,
-      referralCode: undefined,
-      referredFriends: [],
-    };
-
-    setUser(newUser);
-    setWalletDialogOpen(false);
-    toast.success(`Connected with ${provider}!`);
-    openProfileDialog({ user: newUser, require: true });
-
-    if (pendingNavigation) {
-      setCurrentPage(pendingNavigation);
-      setPendingNavigation(null);
+      fetchCurrentUser();
     }
   };
 
@@ -477,7 +451,7 @@ export default function App() {
     );
   }
 
-  if (currentPage === "home") {
+  if (currentPage === 'home') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
         {/* Sidebar - Desktop only */}
@@ -497,13 +471,13 @@ export default function App() {
               if (!selectedAIAgent && AI_AGENTS.length > 0) {
                 setSelectedAIAgent(AI_AGENTS[0]);
               }
-              setCurrentPage("chat");
+              setCurrentPage('chat');
             }}
-            onViewHotTakes={() => setCurrentPage("hotTakes")}
+            onViewHotTakes={() => setCurrentPage('hotTakes')}
             onArticleClick={(article) => {
               setSelectedArticle(article);
-              setPreviousPage("home");
-              setCurrentPage("articleDetail");
+              setPreviousPage('home');
+              setCurrentPage('articleDetail');
             }}
             articles={HOT_TAKE_ARTICLES}
             user={user}

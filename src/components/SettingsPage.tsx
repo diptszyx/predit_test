@@ -617,11 +617,11 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         Predictions Used
                       </span>
                       <span className="text-sm">
-                        {user.totalPredictions || 0}/{MAX_PREDICTIONS_PER_DAY}
+                        {MAX_PREDICTIONS_PER_DAY - user.restTodayPredictionCount || 0}/{MAX_PREDICTIONS_PER_DAY}
                       </span>
                     </div>
                     <Progress
-                      value={((user.totalPredictions || 0) / MAX_PREDICTIONS_PER_DAY) * 100}
+                      value={((MAX_PREDICTIONS_PER_DAY - user.restTodayPredictionCount || 0) / MAX_PREDICTIONS_PER_DAY) * 100}
                       className="h-2"
                     />
                   </div>

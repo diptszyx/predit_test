@@ -20,6 +20,8 @@ interface ReferralCardProps {
     id: string;
     username: string;
     referralCode?: string;
+    friendsReferred?: number;
+    xpFromReferrals?: number;
     referredFriends?: Array<{
       username: string;
       joinedAt: string;
@@ -43,21 +45,17 @@ export function ReferralCard({
     user.referralCode ||
     (onGenerateCode
       ? onGenerateCode()
-      : `${
-          user.username
-            ? user.username
-                .toUpperCase()
-                .replace(/[^A-Z0-9]/g, '')
-                .slice(0, 8)
-            : 'User'
-        }-${Math.random().toString(36).slice(2, 6)?.toUpperCase()} `);
+      : `${user.username
+        ? user.username
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "")
+          .slice(0, 8)
+        : "User"
+      }-${Math.random().toString(36).slice(2, 6)?.toUpperCase()} `);
 
   const referralLink = `${window.location.origin}?ref=${referralCode}`;
-  const referredCount = user.referredFriends?.length || 0;
-  const totalXPFromReferrals = (user.referredFriends || []).reduce(
-    (sum, friend) => sum + 500,
-    0
-  ); // 200 invite + 300 join = 500 per friend
+  const referredCount = user.friendsReferred || 0;
+  const totalXPFromReferrals = user.xpFromReferrals || 0
 
   const handleCopyToClipboard = async (text?: string) => {
     const textToCopy = text || referralLink;
@@ -112,7 +110,7 @@ export function ReferralCard({
             <p className="text-xs text-muted-foreground">XP from Referrals</p>
           </div>
           <div className="p-4 rounded-lg bg-accent text-center">
-            <div className="text-2xl mb-1 text-blue-400">500</div>
+            <div className="text-2xl mb-1 text-blue-400">200</div>
             <p className="text-xs text-muted-foreground">XP per Referral</p>
           </div>
         </div>

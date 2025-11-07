@@ -1,9 +1,4 @@
-import type {
-  User,
-  Quest,
-  SubscriptionTier,
-  PredictionMarket,
-} from "./types";
+import type { User, Quest, SubscriptionTier, PredictionMarket } from "./types";
 
 export const mockUser: User = {
   id: "user-1",
@@ -13,7 +8,7 @@ export const mockUser: User = {
   walletAddress: "0xABC123...a7f2",
   level: 12,
   xp: 13450,
-  streak: 7,
+  streakDays: 7,
   totalPredictions: 156,
   accurateRate: 73,
   aiAgentsVisited: 12,
@@ -66,6 +61,7 @@ export const mockUser: User = {
         "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80",
     },
   ],
+  isPro: true,
 };
 
 export const dailyQuests: Quest[] = [

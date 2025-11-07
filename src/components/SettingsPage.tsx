@@ -1,47 +1,47 @@
-import { useState, useRef } from "react";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import { Progress } from "./ui/progress";
 import {
-  ArrowLeft,
-  Save,
-  User,
   Camera,
+  Check,
+  Crown,
+  Edit2,
+  Flame,
+  Infinity,
+  Loader2,
   Mail,
   Phone,
-  Edit2,
-  Check,
-  Flame,
+  Save,
+  Sparkles,
   Star,
   TrendingUp,
-  Crown,
-  Sparkles,
-  Infinity,
-  Lock,
-  Zap,
-  Loader2,
+  User,
+  Zap
 } from "lucide-react";
-import { Separator } from "./ui/separator";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { ReferralCard } from "./ReferralCard";
-import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
 import { mockUser } from "../lib/mockData";
 import {
-  getXPForNextLevel,
-  getXPForCurrentLevel,
   getLevelProgress,
-  getSubscriptionMultiplier,
   getStreakMultiplier,
+  getSubscriptionMultiplier,
+  getXPForCurrentLevel,
+  getXPForNextLevel,
 } from "../lib/xpSystem";
-import { uploadFile, updateUserPhoto } from "../services/file.service";
+import { updateUserPhoto, uploadFile } from "../services/file.service";
 import { useAuthStore } from "../store/auth.store";
+import { ReferralCard } from "./ReferralCard";
+import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Progress } from "./ui/progress";
+import { Separator } from "./ui/separator";
+import { MAX_PREDICTIONS_PER_DAY } from "../constants/prediction";
+import { getCurrentProgress, getPredictionsForCurrentLevel, getPredictionsForNextLevel } from "../lib/prediction";
 
 interface SettingsPageProps {
   onBack: () => void;
-  user?: typeof mockUser;
+  user: typeof mockUser;
 }
 
 export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
@@ -53,8 +53,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   // Profile Settings
   const [avatar, setAvatar] = useState(
     user.photo?.path ||
-      user.avatar ||
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+    user.avatar ||
+    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
   );
   const [nickname, setNickname] = useState(user.username || "Oracle Seeker");
   const [email, setEmail] = useState(user.email || "oracle.seeker@example.com");
@@ -71,16 +71,22 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // XP and Level calculations
-  const xpForCurrentLevel = getXPForCurrentLevel(user.level);
-  const xpForNextLevel = getXPForNextLevel(user.level);
-  const xpProgress = getLevelProgress(user.xp, user.level);
-  const xpIntoLevel = user.xp - xpForCurrentLevel;
-  const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
+  // const xpForCurrentLevel = getXPForCurrentLevel(user.level);
+  // const xpForNextLevel = getXPForNextLevel(user.level);
+  // const xpProgress = getLevelProgress(user.xp, user.level);
+  // const xpIntoLevel = user.xp - xpForCurrentLevel;
+  // const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
   const subscriptionMult = getSubscriptionMultiplier(
     user.subscriptionTier || "free"
   );
-  const streakMult = getStreakMultiplier(user.streak);
+  const streakMult = getStreakMultiplier(user.streakDays);
   const totalMult = subscriptionMult * streakMult;
+
+  const predictionForCurrentLevel = getPredictionsForCurrentLevel(user.level)
+  const predictionForNextLevel = getPredictionsForNextLevel(user.level)
+  const predictionProgress = getCurrentProgress(user.totalPredictions, user.level)
+  const predictionIntoLevel = user.totalPredictions - predictionForCurrentLevel
+  const predictionNeededForLevel = predictionForNextLevel - predictionForCurrentLevel
 
   // Subscription Dialog
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
@@ -130,7 +136,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error("Error uploading photo:", error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to upload photo. Please try again."
+        "Failed to upload photo. Please try again."
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -160,7 +166,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error("Error updating nickname:", error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update nickname. Please try again."
+        "Failed to update nickname. Please try again."
       );
     } finally {
       setIsSavingNickname(false);
@@ -182,7 +188,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error("Error updating email:", error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update email. Please try again."
+        "Failed to update email. Please try again."
       );
     } finally {
       setIsSavingEmail(false);
@@ -204,7 +210,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error("Error updating phone:", error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update phone number. Please try again."
+        "Failed to update phone number. Please try again."
       );
     } finally {
       setIsSavingPhone(false);
@@ -483,8 +489,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                           setIsEditingPhone(false);
                           setPhone(
                             user.phone ||
-                              user.phoneNumber ||
-                              "+1 (555) 123-4567"
+                            user.phoneNumber ||
+                            "+1 (555) 123-4567"
                           );
                         }}
                         disabled={isSavingPhone}
@@ -539,7 +545,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
               Manage your subscription and unlock premium features
             </p>
 
-            {user.subscriptionTier === "master" ? (
+            {user.isPro ? (
               /* Pro User View */
               <div className="space-y-4">
                 <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
@@ -607,7 +613,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     <div>
                       <h4>Basic (Free)</h4>
                       <p className="text-sm text-muted-foreground">
-                        5 total predictions
+                        {MAX_PREDICTIONS_PER_DAY} total predictions
                       </p>
                     </div>
                   </div>
@@ -618,74 +624,76 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         Predictions Used
                       </span>
                       <span className="text-sm">
-                        {user.totalPredictions || 0}/5
+                        {MAX_PREDICTIONS_PER_DAY - user.restTodayPredictionCount || 0}/{MAX_PREDICTIONS_PER_DAY}
                       </span>
                     </div>
                     <Progress
-                      value={((user.totalPredictions || 0) / 5) * 100}
+                      value={((MAX_PREDICTIONS_PER_DAY - user.restTodayPredictionCount || 0) / MAX_PREDICTIONS_PER_DAY) * 100}
                       className="h-2"
                     />
                   </div>
                 </div>
 
-                <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Crown className="w-5 h-5 text-blue-400" />
-                    <h4>Upgrade to Pro</h4>
-                  </div>
+                {!user.isPro &&
+                  <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Crown className="w-5 h-5 text-blue-400" />
+                      <h4>Upgrade to Pro</h4>
+                    </div>
 
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Unlimited predictions</span>
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>Unlimited predictions</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>2x XP multiplier on all actions</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>
+                          <strong>1,500 XP bonus</strong> when you subscribe
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>Priority AI responses</span>
+                      </div>
                     </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>2x XP multiplier on all actions</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <strong>1,500 XP bonus</strong> when you subscribe
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Priority AI responses</span>
-                    </div>
-                  </div>
 
-                  <div className="pt-4 border-t border-blue-500/20 mb-4">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <span className="text-lg text-muted-foreground line-through">
-                        $19.99/mo
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="bg-blue-500/10 border-blue-500/30"
-                      >
-                        75% OFF
-                      </Badge>
+                    <div className="pt-4 border-t border-blue-500/20 mb-4">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <span className="text-lg text-muted-foreground line-through">
+                          $19.99/mo
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-500/10 border-blue-500/30"
+                        >
+                          75% OFF
+                        </Badge>
+                      </div>
+                      <p className="text-center text-3xl mb-1">
+                        $4.99
+                        <span className="text-sm text-muted-foreground">
+                          /month
+                        </span>
+                      </p>
                     </div>
-                    <p className="text-center text-3xl mb-1">
-                      $4.99
-                      <span className="text-sm text-muted-foreground">
-                        /month
-                      </span>
+
+                    <Button
+                      className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90"
+                      onClick={() => setSubscriptionDialogOpen(true)}
+                    >
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade to Pro
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                      Cancel anytime • Full access immediately
                     </p>
                   </div>
-
-                  <Button
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90"
-                    onClick={() => setSubscriptionDialogOpen(true)}
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Upgrade to Pro
-                  </Button>
-                  <p className="text-xs text-center text-muted-foreground mt-2">
-                    Cancel anytime • Full access immediately
-                  </p>
-                </div>
+                }
               </div>
             )}
           </CardContent>
@@ -766,7 +774,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     </div>
                     <div>
                       <Label className="text-sm">Current Streak</Label>
-                      <p className="text-2xl mt-1">{user.streak} days</p>
+                      <p className="text-2xl mt-1">{user.streakDays} days</p>
                     </div>
                   </div>
                   {streakMult > 1 && (
@@ -799,21 +807,23 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         </Label>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {xpIntoLevel?.toLocaleString()} /{" "}
-                        {xpNeededForLevel?.toLocaleString()} XP
+                        {/* {xpIntoLevel?.toLocaleString()} /{" "}
+                        {xpNeededForLevel?.toLocaleString()} XP */}
+                        {predictionIntoLevel.toLocaleString()} / {" "}
+                        {predictionNeededForLevel.toLocaleString()} Prediction
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Total XP</p>
-                    <p className="text-xl">{user.xp?.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">Total predictions</p>
+                    <p className="text-xl">{user.totalPredictions?.toLocaleString()}</p>
                   </div>
                 </div>
 
-                <Progress value={xpProgress} className="h-2 mb-3" />
+                <Progress value={[predictionProgress]} className="h-2 mb-3" />
 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{xpProgress}% to next level</span>
+                  <span>{predictionProgress}% to next level</span>
                   {subscriptionMult > 1 && (
                     <Badge
                       variant="outline"
@@ -833,12 +843,12 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
         <ReferralCard user={user} />
 
         {/* Save Button */}
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
           <Button onClick={onBack} className="bg-blue-600 hover:bg-blue-700">
             <Save className="w-4 h-4 mr-2" />
             Save Changes
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Subscription Management Dialog */}

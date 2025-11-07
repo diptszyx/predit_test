@@ -37,6 +37,7 @@ import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
 import { Separator } from "./ui/separator";
 import { MAX_PREDICTIONS_PER_DAY } from "../constants/prediction";
+import { getCurrentProgress, getPredictionsForCurrentLevel, getPredictionsForNextLevel } from "../lib/prediction";
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -70,16 +71,22 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // XP and Level calculations
-  const xpForCurrentLevel = getXPForCurrentLevel(user.level);
-  const xpForNextLevel = getXPForNextLevel(user.level);
-  const xpProgress = getLevelProgress(user.xp, user.level);
-  const xpIntoLevel = user.xp - xpForCurrentLevel;
-  const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
+  // const xpForCurrentLevel = getXPForCurrentLevel(user.level);
+  // const xpForNextLevel = getXPForNextLevel(user.level);
+  // const xpProgress = getLevelProgress(user.xp, user.level);
+  // const xpIntoLevel = user.xp - xpForCurrentLevel;
+  // const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
   const subscriptionMult = getSubscriptionMultiplier(
     user.subscriptionTier || "free"
   );
   const streakMult = getStreakMultiplier(user.streakDays);
   const totalMult = subscriptionMult * streakMult;
+
+  const predictionForCurrentLevel = getPredictionsForCurrentLevel(user.level)
+  const predictionForNextLevel = getPredictionsForNextLevel(user.level)
+  const predictionProgress = getCurrentProgress(user.totalPredictions, user.level)
+  const predictionIntoLevel = user.totalPredictions - predictionForCurrentLevel
+  const predictionNeededForLevel = predictionForNextLevel - predictionForCurrentLevel
 
   // Subscription Dialog
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
@@ -800,21 +807,23 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         </Label>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {xpIntoLevel?.toLocaleString()} /{" "}
-                        {xpNeededForLevel?.toLocaleString()} XP
+                        {/* {xpIntoLevel?.toLocaleString()} /{" "}
+                        {xpNeededForLevel?.toLocaleString()} XP */}
+                        {predictionIntoLevel.toLocaleString()} / {" "}
+                        {predictionNeededForLevel.toLocaleString()} Prediction
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Total XP</p>
-                    <p className="text-xl">{user.xp?.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">Total predictions</p>
+                    <p className="text-xl">{user.totalPredictions?.toLocaleString()}</p>
                   </div>
                 </div>
 
-                <Progress value={xpProgress} className="h-2 mb-3" />
+                <Progress value={[predictionProgress]} className="h-2 mb-3" />
 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{xpProgress}% to next level</span>
+                  <span>{predictionProgress}% to next level</span>
                   {subscriptionMult > 1 && (
                     <Badge
                       variant="outline"
@@ -834,12 +843,12 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
         <ReferralCard user={user} />
 
         {/* Save Button */}
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
           <Button onClick={onBack} className="bg-blue-600 hover:bg-blue-700">
             <Save className="w-4 h-4 mr-2" />
             Save Changes
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Subscription Management Dialog */}

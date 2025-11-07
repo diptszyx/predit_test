@@ -134,9 +134,24 @@ type ChatMessage = {
   createdAt: string;
 };
 
+type XpMilestone = {
+  type: "prediction" | string;
+  xp: number;
+};
+
+type XpReward = {
+  xpGained: number;
+  totalXp: number;
+  level: number;
+  levelUp: boolean;
+  dailyLimitReached: boolean;
+  milestone?: XpMilestone;
+};
+
 type SendChatResponse = {
   userMessage: ChatMessage;
   assistantMessage: ChatMessage;
+  xpReward: XpReward;
 };
 
 export function ChatPage({
@@ -1487,6 +1502,9 @@ export function ChatPage({
       });
       setMessages((prev) => [...prev, data.assistantMessage]);
       fetchUser()
+      if (data.xpReward.milestone) {
+        toast.success(`🎯 Prediction Milestone Reached! +${data.xpReward.milestone?.xp} XP earned.`)
+      }
 
       // If this was a prediction, store it and flash the share button and rating section
       if (isPrediction) {

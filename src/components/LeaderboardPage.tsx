@@ -1,8 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Trophy, Medal, Crown, Star } from "lucide-react";
-import { Button } from "./ui/button";
-import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { useEffect, useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -10,131 +9,106 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./ui/table";
+} from './ui/table';
+import {
+  LeaderboardEntry,
+  leaderboardService,
+  LeaderboardType,
+} from '../services/leaderboard.service';
+import { User } from '../lib/types';
+import { shortenAddress } from '../lib/address';
 
-interface LeaderboardPageProps {
-  user?: any;
+interface RankedLeaderboardEntry extends LeaderboardEntry {
+  rank: number;
+  isCurrentUser: boolean;
 }
 
-// Generate mock leaderboard data
-const generateLeaderboard = (currentUser: any) => {
-  const leaderboard = [];
-  
-  // Generate top 100 users
-  for (let i = 0; i < 100; i++) {
-    const rank = i + 1;
-    // Generate decreasing XP values from 50,000 down
-    const baseXP = 50000 - (i * 350);
-    const xp = baseXP + Math.floor(Math.random() * 200);
-    
-    // Generate mock crypto addresses
-    const address = `0x${Math.random().toString(16).substr(2, 4)}...${Math.random().toString(16).substr(2, 4)}`;
-    
-    // Calculate level based on XP (simplified)
-    const level = Math.floor(xp / 1000) + 1;
-    
-    leaderboard.push({
-      rank,
-      address,
-      xp,
-      level,
-      isCurrentUser: false,
-    });
-  }
-  
-  return leaderboard;
-};
+interface LeaderboardPageProps {
+  user?: User;
+}
 
 export function LeaderboardPage({ user }: LeaderboardPageProps) {
-  const [sortBy, setSortBy] = useState<"xp" | "level">("xp");
-  const leaderboard = generateLeaderboard(user);
-  
-  // Determine user's rank based on their XP
-  const userXP = user?.xp || 0;
-  const userLevel = user?.level || 1;
-  
-  // Generate user identifier (wallet address or social login)
-  let userAddress = "Guest";
-  if (user?.walletAddress) {
-    userAddress = user.walletAddress.length > 20 
-      ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`
-      : user.walletAddress;
-  } else if (user?.socialProvider) {
-    userAddress = `${user.socialProvider} User`;
-  } else {
-    userAddress = `0x${Math.random().toString(16).substr(2, 4)}...${Math.random().toString(16).substr(2, 4)}`;
-  }
-  
-  // Find where user would rank
-  let userRank = leaderboard.findIndex(entry => userXP >= entry.xp) + 1;
-  if (userRank === 0) userRank = 101; // User is below top 100
-  
-  const isUserInTop100 = userRank <= 100;
-  
-  // If user is in top 100, update that entry
-  if (isUserInTop100) {
-    leaderboard[userRank - 1] = {
-      rank: userRank,
-      address: userAddress,
-      xp: userXP,
-      level: userLevel,
-      isCurrentUser: true,
-    };
-  }
-  
-  // Sort leaderboard based on selected option
-  const sortedLeaderboard = [...leaderboard].sort((a, b) => {
-    if (sortBy === "xp") {
-      return b.xp - a.xp;
-    } else {
-      // Sort by level (descending), then by XP if levels are equal
-      if (b.level !== a.level) {
-        return b.level - a.level;
+  const [sortBy, setSortBy] = useState<LeaderboardType>('xp');
+  const [leaderboard, setLeaderBoard] = useState<LeaderboardEntry[]>([]);
+  const [userLeaderBoardData, setUserLeaderBoardData] = useState<
+    LeaderboardEntry | undefined
+  >();
+
+  const userAddress =
+    user?.appWallet ?? userLeaderBoardData?.appWalletAddress ?? '';
+  const userXP = user?.xp ?? userLeaderBoardData?.xp ?? 0;
+  const userLevel = user?.level ?? userLeaderBoardData?.level ?? 1;
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await leaderboardService.getLeaderboard(sortBy);
+        setLeaderBoard(data.leaderboard);
+        if (data?.userData) setUserLeaderBoardData(data.userData);
+      } catch (err) {
+        console.error('Failed to fetch leaderboard', err);
       }
-      return b.xp - a.xp;
-    }
-  });
-  
-  // Re-assign ranks based on sort
-  sortedLeaderboard.forEach((entry, index) => {
-    entry.rank = index + 1;
-  });
-  
+    })();
+  }, [sortBy, user]);
+
+  const sortedLeaderboard = useMemo<RankedLeaderboardEntry[]>(() => {
+    return leaderboard.map((entry, index) => ({
+      ...entry,
+      rank: index + 1,
+      isCurrentUser:
+        entry?.appWalletAddress?.toLowerCase() === userAddress.toLowerCase(),
+    }));
+  }, [leaderboard, userAddress]);
+
+  const isUserInTop100 = sortedLeaderboard.some(
+    (e: RankedLeaderboardEntry) => e.isCurrentUser
+  );
+  const currentUserRank =
+    sortedLeaderboard.find((e: RankedLeaderboardEntry) => e.isCurrentUser)
+      ?.rank ?? 101;
+
   const getRankBadge = (rank: number) => {
-    if (rank === 1) return "bg-primary text-primary-foreground border-primary";
-    if (rank === 2) return "bg-muted-foreground/20 border-muted-foreground/30";
-    if (rank === 3) return "bg-muted-foreground/10 border-muted-foreground/20";
-    if (rank <= 10) return "bg-primary/10 border-primary/30";
-    return "";
+    if (rank === 1) return 'bg-primary text-primary-foreground border-primary';
+    if (rank === 2) return 'bg-muted-foreground/20 border-muted-foreground/30';
+    if (rank === 3) return 'bg-muted-foreground/10 border-muted-foreground/20';
+    if (rank <= 10) return 'bg-primary/10 border-primary/30';
+    return '';
   };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* User's Current Standing */}
-      <Card className="border-border">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Your Current Rank</p>
-              <h3 className="text-2xl">
-                {userRank <= 100 ? `#${userRank}` : `#${userRank}+`}
-              </h3>
-            </div>
-            <div className="flex items-center gap-6">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Your XP</p>
-                <p className="text-lg">{userXP.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Your Level</p>
-                <p className="text-lg">Level {userLevel}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Leaderboard Table */}
+      {user?.id && (
+        <Card className="border-border">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Your Current Rank
+                </p>
+                <h3 className="text-2xl">
+                  {currentUserRank <= 100
+                    ? `#${currentUserRank}`
+                    : `#${currentUserRank}+`}
+                </h3>
+              </div>
+              <div className="flex items-center gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Your XP</p>
+                  <p className="text-lg">{userXP.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Your Level
+                  </p>
+                  <p className="text-lg">Level {userLevel}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-border">
         <CardHeader className="border-b border-border">
           <div className="flex items-center justify-between">
@@ -143,16 +117,16 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
               <span className="text-sm text-muted-foreground">Sort by:</span>
               <div className="flex gap-1">
                 <Button
-                  variant={sortBy === "xp" ? "default" : "outline"}
+                  variant={sortBy === 'xp' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setSortBy("xp")}
+                  onClick={() => setSortBy('xp')}
                 >
                   XP Earned
                 </Button>
                 <Button
-                  variant={sortBy === "level" ? "default" : "outline"}
+                  variant={sortBy === 'level' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setSortBy("level")}
+                  onClick={() => setSortBy('level')}
                 >
                   Level
                 </Button>
@@ -172,14 +146,18 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedLeaderboard.map((entry, index) => (
-                  <TableRow 
-                    key={`${entry.address}-${index}`}
-                    className={entry.isCurrentUser ? "bg-primary/5 border-primary/20" : ""}
+                {sortedLeaderboard.map((entry: RankedLeaderboardEntry) => (
+                  <TableRow
+                    key={entry.appWalletAddress}
+                    className={
+                      entry.isCurrentUser
+                        ? 'bg-primary/5 border-primary/20'
+                        : ''
+                    }
                   >
                     <TableCell>
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={getRankBadge(entry.rank)}
                       >
                         #{entry.rank}
@@ -187,9 +165,16 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <code className="text-sm">{entry.address}</code>
+                        <code className="text-sm">
+                          {shortenAddress(entry.appWalletAddress)}
+                        </code>
                         {entry.isCurrentUser && (
-                          <Badge variant="secondary" className="text-xs">You</Badge>
+                          <Badge
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            You
+                          </Badge>
                         )}
                       </div>
                     </TableCell>
@@ -201,25 +186,33 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
                     </TableCell>
                   </TableRow>
                 ))}
-                
+
                 {/* Show user at bottom if not in top 100 */}
-                {!isUserInTop100 && (
+                {!isUserInTop100 && userAddress && (
                   <>
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-2">
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-2"
+                      >
                         <div className="border-t border-dashed border-border"></div>
                       </TableCell>
                     </TableRow>
                     <TableRow className="bg-blue-500/10 border-blue-500/30">
                       <TableCell>
-                        <Badge variant="outline">
-                          #{userRank}+
-                        </Badge>
+                        <Badge variant="outline">#{currentUserRank}+</Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <code className="text-sm">{userAddress}</code>
-                          <Badge variant="secondary" className="text-xs">You</Badge>
+                          <code className="text-sm">
+                            {shortenAddress(userAddress)}
+                          </code>
+                          <Badge
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            You
+                          </Badge>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">

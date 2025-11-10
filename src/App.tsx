@@ -616,7 +616,7 @@ export default function App() {
         <Sidebar {...commonSidebarProps} />
         <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-4 py-6">
-            <LeaderboardPage user={user} />
+            <LeaderboardPage user={user !== null ? user : undefined} />
           </div>
         </div>
         {commonDialogProps}

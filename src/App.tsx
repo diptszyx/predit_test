@@ -34,6 +34,7 @@ import { shortenAddress } from './lib/address';
 import { HomePage } from './components/HomePage';
 import { BottomNav } from './components/BottomNav';
 import apiClient from './lib/axios';
+import { SubscriptionPage } from './components/SubscriptionPage';
 
 // Constants
 const AI_AGENT_IMAGES = {
@@ -619,6 +620,48 @@ export default function App() {
             <LeaderboardPage user={user} />
           </div>
         </div>
+        {commonDialogProps}
+      </div>
+    );
+  }
+
+  if (currentPage === "subscription") {
+    return (
+      <div className="flex h-screen bg-background overflow-hidden">
+        {/* Sidebar - Desktop only */}
+        {/* <div className="hidden md:block"> */}
+        <Sidebar {...commonSidebarProps} />
+        {/* </div> */}
+
+        {/* Main content */}
+        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+          <div className="container mx-auto px-4 py-6">
+            <SubscriptionPage
+              user={user}
+              onOpenWalletDialog={() => setWalletDialogOpen(true)}
+              onSubscriptionSuccess={() => {
+                if (user) {
+                  // setUser({
+                  //   ...user,
+                  //   subscriptionTier: 'master',
+                  // });
+                  awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
+                  toast.success("🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!");
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Bottom Navigation - Mobile only */}
+        {/* <BottomNav
+          currentPage={currentPage}
+          onNavigate={setCurrentPage}
+          user={user}
+          onOpenWalletDialog={() => setWalletDialogOpen(true)}
+          onOpenSettings={() => setCurrentPage("settings")}
+        /> */}
+
         {commonDialogProps}
       </div>
     );

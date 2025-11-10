@@ -163,11 +163,10 @@ export function Sidebar({
             <Button
               key={item.id}
               variant="ghost"
-              className={`w-full justify-start ${
-                isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              }`}
+              className={`w-full justify-start ${isActive
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                }`}
               onClick={() => handleNavigation(item.id, item.requiresAuth)}
             >
               <Icon className="w-4 h-4 mr-3" />
@@ -326,9 +325,10 @@ export function Sidebar({
         <button
           className="fixed p-3 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors"
           style={{
-            top: "1rem",
-            left: "0.5rem",
+            top: "1.7rem",
+            left: "1rem",
             zIndex: 9999,
+            opacity: 0.9
           }}
           onClick={() => setIsMobileMenuOpen(true)}
           aria-label="Open menu"
@@ -383,11 +383,10 @@ export function Sidebar({
                 <Button
                   key={item.id}
                   variant="ghost"
-                  className={`w-full justify-start ${
-                    isActive
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
+                  className={`w-full justify-start ${isActive
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    }`}
                   onClick={() => handleNavigation(item.id, item.requiresAuth)}
                 >
                   <Icon className="w-4 h-4 mr-3" />

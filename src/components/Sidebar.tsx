@@ -98,7 +98,7 @@ export function Sidebar({
 }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile(1024); // Use custom hook with 1024px breakpoint
-  const userLevel = user ? getUserLevel(user.totalPredictions) : 1;
+  const userLevel = user ? user.level : 1;
 
   // Close mobile menu when page changes
   useEffect(() => {
@@ -265,7 +265,7 @@ export function Sidebar({
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-primary" />
                   <span className="font-medium">
-                    {user?.xp?.toLocaleString() || 1}
+                    {user?.xp?.toLocaleString() || 0}
                   </span>
                   <span className="text-muted-foreground">XP</span>
                 </div>
@@ -275,7 +275,7 @@ export function Sidebar({
                     Lv {!Number.isNaN(userLevel) ? userLevel : 0}
                   </span>
                 </div>
-                {user.subscriptionTier === "master" && (
+                {user.isPro && (
                   <Badge
                     variant="outline"
                     className="bg-primary/10 text-primary border-primary/20 text-xs px-1.5 py-0"
@@ -283,6 +283,7 @@ export function Sidebar({
                     Pro
                   </Badge>
                 )}
+
               </div>
             </div>
 

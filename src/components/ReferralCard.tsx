@@ -14,12 +14,16 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '../lib/clipboardUtils';
+import { shortenAddress } from '../lib/address';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 interface ReferralCardProps {
   user: {
     id: string;
     username: string;
     referralCode?: string;
+    friendsReferred?: number;
+    xpFromReferrals?: number;
     referredFriends?: Array<{
       username: string;
       joinedAt: string;
@@ -27,17 +31,25 @@ interface ReferralCardProps {
       avatar?: string;
     }>;
   };
+  refList: {
+    id: string;
+    appWallet: string;
+    photo: {
+      path: string;
+    };
+  }[];
   onGenerateCode?: () => string;
   onAwardXP?: (amount: number, description: string) => void;
 }
 
 export function ReferralCard({
   user,
+  refList,
   onGenerateCode,
   onAwardXP,
 }: ReferralCardProps) {
   const [copied, setCopied] = useState(false);
-
+  console.log(refList);
   // Generate referral code if not exists (format: USERNAME-XXXX)
   const referralCode =
     user.referralCode ||
@@ -53,11 +65,8 @@ export function ReferralCard({
         }-${Math.random().toString(36).slice(2, 6)?.toUpperCase()} `);
 
   const referralLink = `${window.location.origin}?ref=${referralCode}`;
-  const referredCount = user.referredFriends?.length || 0;
-  const totalXPFromReferrals = (user.referredFriends || []).reduce(
-    (sum, friend) => sum + 500,
-    0
-  ); // 200 invite + 300 join = 500 per friend
+  const referredCount = user.friendsReferred || 0;
+  const totalXPFromReferrals = user.xpFromReferrals || 0;
 
   const handleCopyToClipboard = async (text?: string) => {
     const textToCopy = text || referralLink;
@@ -112,7 +121,7 @@ export function ReferralCard({
             <p className="text-xs text-muted-foreground">XP from Referrals</p>
           </div>
           <div className="p-4 rounded-lg bg-accent text-center">
-            <div className="text-2xl mb-1 text-blue-400">500</div>
+            <div className="text-2xl mb-1 text-blue-400">200</div>
             <p className="text-xs text-muted-foreground">XP per Referral</p>
           </div>
         </div>
@@ -277,7 +286,7 @@ export function ReferralCard({
         )}
 
         {/* No Referrals Yet */}
-        {referredCount === 0 && (
+        {referredCount === 0 && refList?.length > 0 ? (
           <div className="border-t border-border pt-4 text-center">
             <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center opacity-20">
               <Users className="w-8 h-8 text-white" />
@@ -288,6 +297,26 @@ export function ReferralCard({
             <p className="text-xs text-muted-foreground">
               Share your code with friends and start earning XP together!
             </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {refList?.map((ref) => (
+              <div className="flex items-center gap-3">
+                <Avatar className="w-6 h-6">
+                  <AvatarImage
+                    src={
+                      ref.photo?.path ||
+                      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80'
+                    }
+                    alt={user.username}
+                  />
+                  <AvatarFallback>
+                    {shortenAddress(ref.appWallet)}
+                  </AvatarFallback>
+                </Avatar>
+                <p>{shortenAddress(ref.appWallet)}</p>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>

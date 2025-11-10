@@ -1,52 +1,55 @@
-import { useState, useRef } from "react";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import { Progress } from "./ui/progress";
 import {
-  ArrowLeft,
-  Save,
-  User,
   Camera,
+  Check,
+  Crown,
+  Edit2,
+  Flame,
+  Infinity,
+  Loader2,
   Mail,
   Phone,
-  Edit2,
-  Check,
-  Flame,
+  Save,
+  Sparkles,
   Star,
   TrendingUp,
-  Crown,
-  Sparkles,
-  Infinity,
-  Lock,
+  User,
   Zap,
-  Loader2,
-} from "lucide-react";
-import { Separator } from "./ui/separator";
-import { toast } from "sonner";
-import { ReferralCard } from "./ReferralCard";
-import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
-import { mockUser } from "../lib/mockData";
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { mockUser } from '../lib/mockData';
 import {
-  getXPForNextLevel,
-  getXPForCurrentLevel,
   getLevelProgress,
-  getSubscriptionMultiplier,
   getStreakMultiplier,
-} from "../lib/xpSystem";
-import { uploadFile, updateUserPhoto } from "../services/file.service";
-import { useAuthStore } from "../store/auth.store";
+  getSubscriptionMultiplier,
+  getXPForCurrentLevel,
+  getXPForNextLevel,
+} from '../lib/xpSystem';
+import { updateUserPhoto, uploadFile } from '../services/file.service';
+import { useAuthStore } from '../store/auth.store';
+import { ReferralCard } from './ReferralCard';
+import { SubscriptionManagementDialog } from './SubscriptionManagementDialog';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Progress } from './ui/progress';
+import { Separator } from './ui/separator';
+import { MAX_PREDICTIONS_PER_DAY } from '../constants/prediction';
+import {
+  getCurrentProgress,
+  getPredictionsForCurrentLevel,
+  getPredictionsForNextLevel,
+} from '../lib/prediction';
+import { refListService } from '../services/ref.service';
 
 interface SettingsPageProps {
   onBack: () => void;
-  user?: typeof mockUser;
+  user: typeof mockUser;
 }
 
 export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
-  console.log("user--", user);
-
   // Auth store
   const { updateProfile, fetchCurrentUser } = useAuthStore();
 
@@ -54,12 +57,12 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   const [avatar, setAvatar] = useState(
     user.photo?.path ||
       user.avatar ||
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80'
   );
-  const [nickname, setNickname] = useState(user.username || "Oracle Seeker");
-  const [email, setEmail] = useState(user.email || "oracle.seeker@example.com");
+  const [nickname, setNickname] = useState(user.username || 'Oracle Seeker');
+  const [email, setEmail] = useState(user.email || 'oracle.seeker@example.com');
   const [phone, setPhone] = useState(
-    user.phone || user.phoneNumber || "+1 (555) 123-4567"
+    user.phone || user.phoneNumber || '+1 (555) 123-4567'
   );
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -69,18 +72,29 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   const [isSavingEmail, setIsSavingEmail] = useState(false);
   const [isSavingPhone, setIsSavingPhone] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [refList, setRefList] = useState([]);
 
   // XP and Level calculations
-  const xpForCurrentLevel = getXPForCurrentLevel(user.level);
-  const xpForNextLevel = getXPForNextLevel(user.level);
-  const xpProgress = getLevelProgress(user.xp, user.level);
-  const xpIntoLevel = user.xp - xpForCurrentLevel;
-  const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
+  // const xpForCurrentLevel = getXPForCurrentLevel(user.level);
+  // const xpForNextLevel = getXPForNextLevel(user.level);
+  // const xpProgress = getLevelProgress(user.xp, user.level);
+  // const xpIntoLevel = user.xp - xpForCurrentLevel;
+  // const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
   const subscriptionMult = getSubscriptionMultiplier(
-    user.subscriptionTier || "free"
+    user.subscriptionTier || 'free'
   );
-  const streakMult = getStreakMultiplier(user.streak);
+  const streakMult = getStreakMultiplier(user.streakDays);
   const totalMult = subscriptionMult * streakMult;
+
+  const predictionForCurrentLevel = getPredictionsForCurrentLevel(user.level);
+  const predictionForNextLevel = getPredictionsForNextLevel(user.level);
+  const predictionProgress = getCurrentProgress(
+    user.totalPredictions,
+    user.level
+  );
+  const predictionIntoLevel = user.totalPredictions - predictionForCurrentLevel;
+  const predictionNeededForLevel =
+    predictionForNextLevel - predictionForCurrentLevel;
 
   // Subscription Dialog
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
@@ -91,13 +105,13 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
 
     // Validate file size
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
+      toast.error('File size must be less than 5MB');
       return;
     }
 
     // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file (JPG, PNG, GIF)");
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file (JPG, PNG, GIF)');
       return;
     }
 
@@ -125,29 +139,29 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
         reader.readAsDataURL(file);
       }
 
-      toast.success("Avatar updated successfully");
+      toast.success('Avatar updated successfully');
     } catch (error: any) {
-      console.error("Error uploading photo:", error);
+      console.error('Error uploading photo:', error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to upload photo. Please try again."
+          'Failed to upload photo. Please try again.'
       );
     } finally {
       setIsUploadingPhoto(false);
       // Reset file input
       if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+        fileInputRef.current.value = '';
       }
     }
   };
 
   const handleSaveNickname = async () => {
     if (!nickname || nickname.trim().length === 0) {
-      toast.error("Please enter a nickname");
+      toast.error('Please enter a nickname');
       return;
     }
     if (nickname.length > 30) {
-      toast.error("Nickname must be less than 30 characters");
+      toast.error('Nickname must be less than 30 characters');
       return;
     }
 
@@ -155,12 +169,12 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
     try {
       await updateProfile({ username: nickname.trim() });
       setIsEditingNickname(false);
-      toast.success("Nickname updated successfully");
+      toast.success('Nickname updated successfully');
     } catch (error: any) {
-      console.error("Error updating nickname:", error);
+      console.error('Error updating nickname:', error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update nickname. Please try again."
+          'Failed to update nickname. Please try again.'
       );
     } finally {
       setIsSavingNickname(false);
@@ -169,7 +183,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
 
   const handleSaveEmail = async () => {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("Please enter a valid email address");
+      toast.error('Please enter a valid email address');
       return;
     }
 
@@ -177,12 +191,12 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
     try {
       await updateProfile({ email: email.trim() });
       setIsEditingEmail(false);
-      toast.success("Email updated successfully");
+      toast.success('Email updated successfully');
     } catch (error: any) {
-      console.error("Error updating email:", error);
+      console.error('Error updating email:', error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update email. Please try again."
+          'Failed to update email. Please try again.'
       );
     } finally {
       setIsSavingEmail(false);
@@ -191,7 +205,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
 
   const handleSavePhone = async () => {
     if (phone && !/^\+?[\d\s-()]+$/.test(phone)) {
-      toast.error("Please enter a valid phone number");
+      toast.error('Please enter a valid phone number');
       return;
     }
 
@@ -199,17 +213,26 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
     try {
       await updateProfile({ phoneNumber: phone.trim() });
       setIsEditingPhone(false);
-      toast.success("Phone number updated successfully");
+      toast.success('Phone number updated successfully');
     } catch (error: any) {
-      console.error("Error updating phone:", error);
+      console.error('Error updating phone:', error);
       toast.error(
         error?.response?.data?.message ||
-          "Failed to update phone number. Please try again."
+          'Failed to update phone number. Please try again.'
       );
     } finally {
       setIsSavingPhone(false);
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+
+    (async () => {
+      const list = await refListService.getRefList();
+      setRefList(list);
+    })();
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -260,12 +283,12 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                       <Badge
                         variant="outline"
                         className={
-                          user.subscriptionTier === "master"
-                            ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50"
-                            : "bg-muted border-border"
+                          user.subscriptionTier === 'master'
+                            ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50'
+                            : 'bg-muted border-border'
                         }
                       >
-                        {user.subscriptionTier === "master" ? (
+                        {user.subscriptionTier === 'master' ? (
                           <>
                             <Crown className="w-3 h-3 mr-1" />
                             Pro
@@ -399,7 +422,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={!isEditingEmail}
-                    className={`flex-1 ${!isEditingEmail ? "bg-accent" : ""}`}
+                    className={`flex-1 ${!isEditingEmail ? 'bg-accent' : ''}`}
                   />
                   {!isEditingEmail ? (
                     <Button
@@ -416,7 +439,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         variant="outline"
                         onClick={() => {
                           setIsEditingEmail(false);
-                          setEmail(user.email || "oracle.seeker@example.com");
+                          setEmail(user.email || 'oracle.seeker@example.com');
                         }}
                         disabled={isSavingEmail}
                       >
@@ -464,7 +487,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={!isEditingPhone}
-                    className={`flex-1 ${!isEditingPhone ? "bg-accent" : ""}`}
+                    className={`flex-1 ${!isEditingPhone ? 'bg-accent' : ''}`}
                   />
                   {!isEditingPhone ? (
                     <Button
@@ -484,7 +507,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                           setPhone(
                             user.phone ||
                               user.phoneNumber ||
-                              "+1 (555) 123-4567"
+                              '+1 (555) 123-4567'
                           );
                         }}
                         disabled={isSavingPhone}
@@ -539,7 +562,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
               Manage your subscription and unlock premium features
             </p>
 
-            {user.subscriptionTier === "master" ? (
+            {user.isPro ? (
               /* Pro User View */
               <div className="space-y-4">
                 <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
@@ -607,7 +630,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     <div>
                       <h4>Basic (Free)</h4>
                       <p className="text-sm text-muted-foreground">
-                        5 total predictions
+                        {MAX_PREDICTIONS_PER_DAY} total predictions
                       </p>
                     </div>
                   </div>
@@ -618,74 +641,83 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         Predictions Used
                       </span>
                       <span className="text-sm">
-                        {user.totalPredictions || 0}/5
+                        {MAX_PREDICTIONS_PER_DAY -
+                          user.restTodayPredictionCount || 0}
+                        /{MAX_PREDICTIONS_PER_DAY}
                       </span>
                     </div>
                     <Progress
-                      value={((user.totalPredictions || 0) / 5) * 100}
+                      value={
+                        ((MAX_PREDICTIONS_PER_DAY -
+                          user.restTodayPredictionCount || 0) /
+                          MAX_PREDICTIONS_PER_DAY) *
+                        100
+                      }
                       className="h-2"
                     />
                   </div>
                 </div>
 
-                <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Crown className="w-5 h-5 text-blue-400" />
-                    <h4>Upgrade to Pro</h4>
-                  </div>
+                {!user.isPro && (
+                  <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Crown className="w-5 h-5 text-blue-400" />
+                      <h4>Upgrade to Pro</h4>
+                    </div>
 
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Unlimited predictions</span>
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>Unlimited predictions</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>2x XP multiplier on all actions</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>
+                          <strong>1,500 XP bonus</strong> when you subscribe
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <span>Priority AI responses</span>
+                      </div>
                     </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>2x XP multiplier on all actions</span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>
-                        <strong>1,500 XP bonus</strong> when you subscribe
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Check className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                      <span>Priority AI responses</span>
-                    </div>
-                  </div>
 
-                  <div className="pt-4 border-t border-blue-500/20 mb-4">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <span className="text-lg text-muted-foreground line-through">
-                        $19.99/mo
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="bg-blue-500/10 border-blue-500/30"
-                      >
-                        75% OFF
-                      </Badge>
+                    <div className="pt-4 border-t border-blue-500/20 mb-4">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <span className="text-lg text-muted-foreground line-through">
+                          $19.99/mo
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-500/10 border-blue-500/30"
+                        >
+                          75% OFF
+                        </Badge>
+                      </div>
+                      <p className="text-center text-3xl mb-1">
+                        $4.99
+                        <span className="text-sm text-muted-foreground">
+                          /month
+                        </span>
+                      </p>
                     </div>
-                    <p className="text-center text-3xl mb-1">
-                      $4.99
-                      <span className="text-sm text-muted-foreground">
-                        /month
-                      </span>
+
+                    <Button
+                      className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90"
+                      onClick={() => setSubscriptionDialogOpen(true)}
+                    >
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade to Pro
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                      Cancel anytime • Full access immediately
                     </p>
                   </div>
-
-                  <Button
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90"
-                    onClick={() => setSubscriptionDialogOpen(true)}
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Upgrade to Pro
-                  </Button>
-                  <p className="text-xs text-center text-muted-foreground mt-2">
-                    Cancel anytime • Full access immediately
-                  </p>
-                </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -701,7 +733,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
               </div>
               <p className="text-sm text-muted-foreground mb-6">
                 Your last {user.predictionHistory.length} prediction
-                {user.predictionHistory.length !== 1 ? "s" : ""}
+                {user.predictionHistory.length !== 1 ? 's' : ''}
               </p>
 
               <div className="space-y-3">
@@ -727,12 +759,12 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         <span>•</span>
                         <span>
                           {new Date(prediction.timestamp).toLocaleDateString(
-                            "en-US",
+                            'en-US',
                             {
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
                             }
                           )}
                         </span>
@@ -766,7 +798,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                     </div>
                     <div>
                       <Label className="text-sm">Current Streak</Label>
-                      <p className="text-2xl mt-1">{user.streak} days</p>
+                      <p className="text-2xl mt-1">{user.streakDays} days</p>
                     </div>
                   </div>
                   {streakMult > 1 && (
@@ -799,21 +831,30 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                         </Label>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {xpIntoLevel?.toLocaleString()} /{" "}
-                        {xpNeededForLevel?.toLocaleString()} XP
+                        {/* {xpIntoLevel?.toLocaleString()} /{" "}
+                        {xpNeededForLevel?.toLocaleString()} XP */}
+                        {predictionIntoLevel.toLocaleString()} /{' '}
+                        {predictionNeededForLevel.toLocaleString()} Prediction
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Total XP</p>
-                    <p className="text-xl">{user.xp?.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total predictions
+                    </p>
+                    <p className="text-xl">
+                      {user.totalPredictions?.toLocaleString()}
+                    </p>
                   </div>
                 </div>
 
-                <Progress value={xpProgress} className="h-2 mb-3" />
+                <Progress
+                  value={[predictionProgress]}
+                  className="h-2 mb-3"
+                />
 
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{xpProgress}% to next level</span>
+                  <span>{predictionProgress}% to next level</span>
                   {subscriptionMult > 1 && (
                     <Badge
                       variant="outline"
@@ -830,24 +871,27 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
         </Card>
 
         {/* Referral System */}
-        <ReferralCard user={user} />
+        <ReferralCard
+          user={user}
+          refList={refList}
+        />
 
         {/* Save Button */}
-        <div className="flex justify-end">
+        {/* <div className="flex justify-end">
           <Button onClick={onBack} className="bg-blue-600 hover:bg-blue-700">
             <Save className="w-4 h-4 mr-2" />
             Save Changes
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Subscription Management Dialog */}
       <SubscriptionManagementDialog
         open={subscriptionDialogOpen}
         onOpenChange={setSubscriptionDialogOpen}
-        currentTier={user.subscriptionTier || "free"}
+        currentTier={user.subscriptionTier || 'free'}
         onSubscriptionSuccess={() => {
-          toast.success("Subscription updated successfully!");
+          toast.success('Subscription updated successfully!');
         }}
       />
     </div>

@@ -261,7 +261,7 @@ export function ChatPage({
       }
     };
     fetchMessages();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (initialPrompt && !isLoading) {

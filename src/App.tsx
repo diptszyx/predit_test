@@ -1,39 +1,35 @@
-import { useState, useEffect } from 'react';
-import { Toaster } from './components/ui/sonner';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useXP } from './lib/useXP';
-import { mockUser } from './lib/mockData';
-import type { AIAgent, User } from './lib/types';
+import { Toaster } from './components/ui/sonner';
 import type {
-  WalletType,
-  SocialProvider,
+  WalletType
 } from './components/WalletConnectDialog';
 import { useUserPhotoRefresh } from './hooks';
+import type { AIAgent, User } from './lib/types';
+import { useXP } from './lib/useXP';
 
 // Components
-import { ChatPage } from './components/ChatPage';
-import { LeaderboardPage } from './components/LeaderboardPage';
-import { SettingsPage } from './components/SettingsPage';
-import { HotTakesPage } from './components/HotTakesPage';
-import { SharedPredictionPage } from './components/SharedPredictionPage';
+import { AIAgentCard } from './components/AIAgentCard';
 import {
   ArticleDetailPage,
   type HotTakeArticle,
 } from './components/ArticleDetailPage';
+import { ChatPage } from './components/ChatPage';
+import { HomePage } from './components/HomePage';
+import { HotTakesPage } from './components/HotTakesPage';
+import { LeaderboardPage } from './components/LeaderboardPage';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { SettingsPage } from './components/SettingsPage';
+import { SharedPredictionPage } from './components/SharedPredictionPage';
 import { Sidebar } from './components/Sidebar';
+import { SubscriptionPage } from './components/SubscriptionPage';
+import { TermsOfUse } from './components/TermsOfUse';
+import UserProfileDialog from './components/UserProfileDialog';
 import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
-import { PrivacyPolicy } from './components/PrivacyPolicy';
-import { TermsOfUse } from './components/TermsOfUse';
-import { AIAgentCard } from './components/AIAgentCard';
-import { LoginForm } from './components/LoginForm';
-import { Button } from './components/ui/button';
-import UserProfileDialog from './components/UserProfileDialog';
-import useAuthStore from './store/auth.store';
 import { shortenAddress } from './lib/address';
-import { HomePage } from './components/HomePage';
-import { BottomNav } from './components/BottomNav';
 import apiClient from './lib/axios';
+import useAuthStore from './store/auth.store';
 
 // Constants
 const AI_AGENT_IMAGES = {
@@ -365,7 +361,7 @@ export default function App() {
   const handleWalletDisconnect = () => {
     logout();
     closeProfileDialog();
-    setCurrentPage('chat');
+    setCurrentPage('home');
     toast.info('Wallet disconnected');
   };
 
@@ -619,6 +615,48 @@ export default function App() {
             <LeaderboardPage user={user !== null ? user : undefined} />
           </div>
         </div>
+        {commonDialogProps}
+      </div>
+    );
+  }
+
+  if (currentPage === "subscription") {
+    return (
+      <div className="flex h-screen bg-background overflow-hidden">
+        {/* Sidebar - Desktop only */}
+        {/* <div className="hidden md:block"> */}
+        <Sidebar {...commonSidebarProps} />
+        {/* </div> */}
+
+        {/* Main content */}
+        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+          <div className="container mx-auto px-4 py-6">
+            <SubscriptionPage
+              user={user}
+              onOpenWalletDialog={() => setWalletDialogOpen(true)}
+              onSubscriptionSuccess={() => {
+                if (user) {
+                  // setUser({
+                  //   ...user,
+                  //   subscriptionTier: 'master',
+                  // });
+                  awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
+                  toast.success("🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!");
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Bottom Navigation - Mobile only */}
+        {/* <BottomNav
+          currentPage={currentPage}
+          onNavigate={setCurrentPage}
+          user={user}
+          onOpenWalletDialog={() => setWalletDialogOpen(true)}
+          onOpenSettings={() => setCurrentPage("settings")}
+        /> */}
+
         {commonDialogProps}
       </div>
     );

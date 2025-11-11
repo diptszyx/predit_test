@@ -326,9 +326,10 @@ export function Sidebar({
         <button
           className="fixed p-3 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors"
           style={{
-            top: "1rem",
-            left: "0.5rem",
+            top: "1.7rem",
+            left: "1rem",
             zIndex: 9999,
+            opacity: 0.9
           }}
           onClick={() => setIsMobileMenuOpen(true)}
           aria-label="Open menu"

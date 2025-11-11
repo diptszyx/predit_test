@@ -17,6 +17,7 @@ import {
 import { subscriptionTiers } from "../lib/mockData";
 import type { User } from "../lib/types";
 import { toast } from "sonner@2.0.3";
+import apiClient from "../lib/axios";
 
 interface SubscriptionPageProps {
   user?: User | null;
@@ -71,27 +72,39 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
     setIsProcessing(true);
 
     // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2500));
+    // await new Promise((resolve) => setTimeout(resolve, 2500));
 
-    setIsProcessing(false);
-    setPaymentSuccess(true);
+    // setIsProcessing(false);
+    // setPaymentSuccess(true);
 
-    // Wait a moment to show success state
-    setTimeout(() => {
-      setPaymentDialogOpen(false);
+    // // Wait a moment to show success state
+    // setTimeout(() => {
+    //   setPaymentDialogOpen(false);
 
-      // Call the success callback
-      if (onSubscriptionSuccess) {
-        onSubscriptionSuccess();
-      }
+    //   // Call the success callback
+    //   if (onSubscriptionSuccess) {
+    //     onSubscriptionSuccess();
+    //   }
 
-      // Reset form
-      setCardNumber("");
-      setCardExpiry("");
-      setCardCvc("");
-      setCardName("");
-      setPaymentSuccess(false);
-    }, 1500);
+    //   // Reset form
+    //   setCardNumber("");
+    //   setCardExpiry("");
+    //   setCardCvc("");
+    //   setCardName("");
+    //   setPaymentSuccess(false);
+    // }, 1500);
+
+    try {
+      const { data } = await apiClient.post('/subscriptions', {
+        plan: "pro"
+      })
+      console.log(data)
+      window.location.href = data.paymentUrl
+    } catch (error) {
+      console.error('Failed to handle payment', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const formatCardNumber = (value: string) => {

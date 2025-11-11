@@ -5088,6 +5088,16 @@
     padding-right: calc(var(--spacing) * 0);
   }
 
+  .peer[data-state="checked"] ~ .peer-data-\[state\=checked\]\:border-blue-500 {
+    border-color: #3b82f6;
+  }
+
+  .\[\&\:has\(\[data-state\=checked\]\)\]\:border-blue-500:has(
+      [data-state="checked"]
+    ) {
+    border-color: #3b82f6;
+  }
+
   .\[\.border-b\]\:pb-6.border-b {
     padding-bottom: calc(var(--spacing) * 6);
   }

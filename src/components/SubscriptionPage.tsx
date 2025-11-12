@@ -1,9 +1,9 @@
-import { Bitcoin, Check, CheckCircle2, CreditCard, Crown, Loader2, Lock, Sparkles, Trophy, Wallet, X, Zap } from "lucide-react";
+import { Bitcoin, Check, CheckCircle2, Crown, Loader2, Lock, Sparkles, Trophy, X, Zap } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner@2.0.3";
-import apiClient from "../lib/axios";
 import { subscriptionTiers } from "../lib/mockData";
 import type { User } from "../lib/types";
+import { subscriptionService } from "../services/subscription.service";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -95,10 +95,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
     // }, 1500);
 
     try {
-      const { data } = await apiClient.post('/subscriptions', {
-        plan: "pro"
-      })
-      window.open(data.paymentUrl, '_blank')
+      await subscriptionService.upgradeToPro()
     } catch (error) {
       console.error('Failed to handle payment', error);
     } finally {

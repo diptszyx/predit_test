@@ -30,7 +30,7 @@ type PaymentMethod = "card" | "crypto" | "wallet";
 export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSuccess }: SubscriptionPageProps) {
   const isUserPro = user?.isPro;
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("wallet");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("crypto");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
@@ -146,7 +146,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                     onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}
                     className="grid grid-cols-3 gap-3"
                   >
-                    <div>
+                    {/* <div>
                       <RadioGroupItem
                         value="card"
                         id="card"
@@ -159,7 +159,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                         <CreditCard className="w-6 h-6 mb-2" />
                         <span className="text-sm">Card</span>
                       </Label>
-                    </div>
+                    </div> */}
 
                     <div>
                       <RadioGroupItem
@@ -169,14 +169,14 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                       />
                       <Label
                         htmlFor="crypto"
-                        className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-blue-500 [&:has([data-state=checked])]:border-blue-500 cursor-pointer"
+                        className="flex flex-col items-center justify-between rounded-lg border-2 bg-blue-500/10 p-4 border border-blue-500/30"
                       >
                         <Bitcoin className="w-6 h-6 mb-2" />
                         <span className="text-sm">Crypto</span>
                       </Label>
                     </div>
 
-                    <div>
+                    {/* <div>
                       <RadioGroupItem
                         value="wallet"
                         id="wallet"
@@ -189,7 +189,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                         <Wallet className="w-6 h-6 mb-2" />
                         <span className="text-sm">Wallet</span>
                       </Label>
-                    </div>
+                    </div> */}
                   </RadioGroup>
                 </div>
 

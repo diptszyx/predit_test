@@ -276,7 +276,7 @@ export function ChatPage({
         if (onInitialPromptUsed) {
           onInitialPromptUsed();
         }
-      }, 500);
+      }, 2500);
     }
   }, [initialPrompt]);
 

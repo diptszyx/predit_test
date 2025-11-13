@@ -62,7 +62,7 @@ export function SubscriptionManagementDialog({
 
   const handleClose = () => {
     setView('overview');
-    setPaymentMethod('stripe');
+    // setPaymentMethod('stripe');
     setIsProcessing(false);
     onOpenChange(false);
   };
@@ -78,12 +78,12 @@ export function SubscriptionManagementDialog({
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     setIsProcessing(false);
-    setView('success');
+    // setView('success');
 
     // Show success toast
-    toast.success("Successfully upgraded to Pro!", {
-      description: "You now have unlimited predictions and 2x XP multiplier!"
-    });
+    // toast.success("Successfully upgraded to Pro!", {
+    //   description: "You now have unlimited predictions and 2x XP multiplier!"
+    // });
 
     // Wait a bit then close and trigger callback
     setTimeout(() => {
@@ -95,15 +95,15 @@ export function SubscriptionManagementDialog({
   };
 
   const handleCancelSubscription = async () => {
-    setIsProcessing(true);
+    // setIsProcessing(true);
 
-    // Simulate cancellation
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // // Simulate cancellation
+    // await new Promise(resolve => setTimeout(resolve, 1500));
 
-    setIsProcessing(false);
-    toast.success("Subscription cancelled", {
-      description: "You'll retain Pro access until the end of your billing period."
-    });
+    // setIsProcessing(false);
+    // toast.success("Subscription cancelled", {
+    //   description: "You'll retain Pro access until the end of your billing period."
+    // });
     handleClose();
   };
 
@@ -226,14 +226,14 @@ export function SubscriptionManagementDialog({
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Payment Method</span>
                         <span className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4" />
-                          •••• 4242
+                          <Wallet className="w-5 h-5" />
+                          Cryptocurrency
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      {/* <div className="flex justify-between">
                         <span className="text-muted-foreground">Next Billing Date</span>
                         <span>November 28, 2025</span>
-                      </div>
+                      </div> */}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Status</span>
                         <span className="text-green-400">Auto-renew enabled</span>
@@ -267,7 +267,7 @@ export function SubscriptionManagementDialog({
                   <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30 flex gap-3">
                     <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-muted-foreground">
-                      If you cancel, you'll retain Pro access until the end of your current billing period (Nov 28, 2025).
+                      If you cancel, you'll retain Pro access until the end of your current billing period.
                     </p>
                   </div>
                 </>
@@ -344,7 +344,7 @@ export function SubscriptionManagementDialog({
               <Separator />
 
               {/* Stripe Payment Form */}
-              {paymentMethod === 'stripe' && (
+              {/* {paymentMethod === 'stripe' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="cardholderName">Cardholder Name</Label>
@@ -396,7 +396,7 @@ export function SubscriptionManagementDialog({
                     <p>Your payment is secured by Stripe. We never store your card details.</p>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Crypto Payment Form */}
               {paymentMethod === 'crypto' && (

@@ -1,5 +1,6 @@
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { OracleEntity } from "../services/oracles.service";
 
 interface AIAgent {
   id: string;
@@ -21,7 +22,7 @@ interface AIAgent {
 }
 
 interface AIAgentCardProps {
-  aiAgent: AIAgent;
+  aiAgent: OracleEntity;
   onClick: () => void;
 }
 
@@ -37,18 +38,18 @@ export function AIAgentCard({ aiAgent, onClick }: AIAgentCardProps) {
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
               <img
-                src={aiAgent.avatar}
+                src={aiAgent.image}
                 alt={aiAgent.name}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="line-clamp-1 mb-0.5 text-foreground">{aiAgent.name}</h3>
-              <p className="text-xs text-muted-foreground line-clamp-1">{aiAgent.title}</p>
+              <p className="text-xs text-muted-foreground line-clamp-1">{aiAgent.type}</p>
             </div>
           </div>
           <Badge variant="outline" className="text-xs shrink-0">
-            {aiAgent.category}
+            {aiAgent.type.split(" ")[0]}
           </Badge>
         </div>
 
@@ -67,9 +68,9 @@ export function AIAgentCard({ aiAgent, onClick }: AIAgentCardProps) {
             <span className="text-foreground">{aiAgent.likes}</span>
             <span>likes</span>
           </div>
-          {aiAgent.consultSessions && (
+          {aiAgent.predictions && (
             <div className="flex items-center gap-1.5">
-              <span className="text-foreground">{aiAgent.consultSessions}</span>
+              <span className="text-foreground">{aiAgent.predictions}</span>
               <span>sessions</span>
             </div>
           )}

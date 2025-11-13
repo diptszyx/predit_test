@@ -1,18 +1,23 @@
-import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
-import { ThumbsUp, MessageSquare, Share2, ArrowLeft } from "lucide-react";
-import { Badge } from "./ui/badge";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
-import type { HotTakeArticle } from "./ArticleDetailPage";
+import { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { ThumbsUp, MessageSquare, Share2, ArrowLeft } from 'lucide-react';
+import { Badge } from './ui/badge';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { News } from '../services/news.service';
+import { timeAgo } from '../lib/date';
 
 interface HotTakesPageProps {
-  articles: HotTakeArticle[];
-  onArticleClick: (article: HotTakeArticle) => void;
+  articles: News[];
+  onArticleClick: (article: News) => void;
   onBack: () => void;
 }
 
-export function HotTakesPage({ articles, onArticleClick, onBack }: HotTakesPageProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+export function HotTakesPage({
+  articles,
+  onArticleClick,
+  onBack,
+}: HotTakesPageProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -21,29 +26,35 @@ export function HotTakesPage({ articles, onArticleClick, onBack }: HotTakesPageP
 
   // Map oracle IDs to categories
   const oracleCategoryMap: Record<string, string> = {
-    "crypto": "Cryptocurrency",
-    "economics": "Economics",
-    "financial-markets": "Financial Markets",
-    "fortune": "Fortune & Mysticism",
-    "fundamental-analysis": "Fundamental Analysis",
-    "meme-coins": "Meme Coins",
-    "politics": "Politics",
-    "technical-analysis": "Technical Analysis",
+    crypto: 'Cryptocurrency',
+    economics: 'Economics',
+    'financial-markets': 'Financial Markets',
+    fortune: 'Fortune & Mysticism',
+    'fundamental-analysis': 'Fundamental Analysis',
+    'meme-coins': 'Meme Coins',
+    politics: 'Politics',
+    'technical-analysis': 'Technical Analysis',
   };
 
   // Get unique categories from articles
-  const availableCategories = ["all", ...new Set(
-    articles.map(article => oracleCategoryMap[article.oracleId] || "Other")
-  )].sort((a, b) => {
-    if (a === "all") return -1;
-    if (b === "all") return 1;
+  const availableCategories = [
+    'all',
+    ...new Set(
+      articles.map((article) => oracleCategoryMap[article.oracle.id] || 'Other')
+    ),
+  ].sort((a, b) => {
+    if (a === 'all') return -1;
+    if (b === 'all') return 1;
     return a.localeCompare(b);
   });
 
   // Filter articles by category
-  const filteredArticles = selectedCategory === "all" 
-    ? articles 
-    : articles.filter(article => oracleCategoryMap[article.oracleId] === selectedCategory);
+  const filteredArticles =
+    selectedCategory === 'all'
+      ? articles
+      : articles.filter(
+          (article) => oracleCategoryMap[article.oracle.id] === selectedCategory
+        );
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,16 +85,16 @@ export function HotTakesPage({ articles, onArticleClick, onBack }: HotTakesPageP
             {availableCategories.map((category) => (
               <Button
                 key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
+                variant={selectedCategory === category ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(category)}
                 className={
                   selectedCategory === category
-                    ? "whitespace-nowrap bg-[rgb(152,16,250)] hover:bg-[rgb(152,16,250)]/90"
-                    : "whitespace-nowrap border-blue-500/50 hover:border-blue-500 hover:bg-blue-500/10"
+                    ? 'whitespace-nowrap bg-[rgb(152,16,250)] hover:bg-[rgb(152,16,250)]/90'
+                    : 'whitespace-nowrap border-blue-500/50 hover:border-blue-500 hover:bg-blue-500/10'
                 }
               >
-                {category === "all" ? "All Categories" : category}
+                {category === 'all' ? 'All Categories' : category}
               </Button>
             ))}
           </div>
@@ -109,18 +120,21 @@ export function HotTakesPage({ articles, onArticleClick, onBack }: HotTakesPageP
               {/* Article Content */}
               <div className="p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <Badge variant="secondary" className="text-xs">
-                    {article.source}
+                  <Badge
+                    variant="secondary"
+                    className="text-xs"
+                  >
+                    {article.oracle.name}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">{article.publishedAt}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {timeAgo(article.createdAt)}
+                  </span>
                 </div>
                 <h3 className="mb-2 line-clamp-2 group-hover:text-blue-500 transition-colors">
                   {article.title}
                 </h3>
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                  Dive into the latest analysis and predictions from our expert oracles...
-                </p>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground pt-3 border-t border-border">
+                <div className="text-sm text-muted-foreground line-clamp-2 mb-3" dangerouslySetInnerHTML={{__html: article.content}}/>
+                {/* <div className="flex items-center gap-4 text-sm text-muted-foreground pt-3 border-t border-border">
                   <span className="flex items-center gap-1.5">
                     <ThumbsUp className="w-4 h-4" />
                     {article.likes || 0}
@@ -133,7 +147,7 @@ export function HotTakesPage({ articles, onArticleClick, onBack }: HotTakesPageP
                     <Share2 className="w-4 h-4" />
                     {article.shares || 0}
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
           ))}

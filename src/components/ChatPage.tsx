@@ -1549,7 +1549,7 @@ export function ChatPage({
       const data = await oraclesServices.handleRating(aiAgent.id, rating)
       if (data) {
         setUserRating(rating);
-        onReload?.(aiAgent.id);
+        onReloadAiAgent?.(aiAgent.id);
       }
       console.log('data rating', data)
     } catch (error) {

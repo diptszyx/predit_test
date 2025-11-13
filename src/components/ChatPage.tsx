@@ -261,7 +261,7 @@ export function ChatPage({
       }
     };
     fetchMessages();
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (initialPrompt && !isLoading) {
@@ -276,7 +276,7 @@ export function ChatPage({
         if (onInitialPromptUsed) {
           onInitialPromptUsed();
         }
-      }, 500);
+      }, 2500);
     }
   }, [initialPrompt]);
 
@@ -1957,7 +1957,7 @@ export function ChatPage({
                                 <Button
                                   size="sm"
                                   onClick={() => setSubscriptionDialogOpen(true)}
-                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0"
+                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0 cursor-pointer"
                                 >
                                   <Crown className="w-3 h-3 mr-1" />
                                   Upgrade
@@ -2420,14 +2420,15 @@ export function ChatPage({
         <SubscriptionManagementDialog
           open={subscriptionDialogOpen}
           onOpenChange={setSubscriptionDialogOpen}
-          currentTier={user?.subscriptionTier || "free"}
+          // currentTier={user?.subscriptionTier || "free"}
+          isUserPro={user?.isPro}
           onSubscriptionSuccess={() => {
-            if (updateUser) {
-              updateUser({ subscriptionTier: "master" });
-            }
-            if (awardXPToUser) {
-              awardXPToUser("SUBSCRIBE_MASTER", { showToast: false });
-            }
+            // if (updateUser) {
+            //   updateUser({ subscriptionTier: "master" });
+            // }
+            // if (awardXPToUser) {
+            //   awardXPToUser("SUBSCRIBE_MASTER", { showToast: false });
+            // }
             toast.success("Welcome to Pro! 🎉");
           }}
         />

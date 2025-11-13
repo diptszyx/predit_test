@@ -108,6 +108,7 @@ export interface SubscriptionTier {
   features: string[];
   color: string;
   popular?: boolean;
+  isPro?: boolean;
 }
 
 export interface PredictionMarket {

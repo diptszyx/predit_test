@@ -1,22 +1,23 @@
+import { Bitcoin, Check, CheckCircle2, Crown, Loader2, Lock, Sparkles, Trophy, X, Zap } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner@2.0.3";
+import { subscriptionTiers } from "../lib/mockData";
+import type { User } from "../lib/types";
+import { subscriptionService } from "../services/subscription.service";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { Check, X, Crown, Zap, Sparkles, Trophy, CreditCard, Wallet, Bitcoin, Lock, Loader2, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "./ui/dialog";
-import { subscriptionTiers } from "../lib/mockData";
-import type { User } from "../lib/types";
-import { toast } from "sonner@2.0.3";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
 interface SubscriptionPageProps {
   user?: User | null;
@@ -27,9 +28,9 @@ interface SubscriptionPageProps {
 type PaymentMethod = "card" | "crypto" | "wallet";
 
 export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSuccess }: SubscriptionPageProps) {
-  const currentTier = user?.subscriptionTier || "free";
+  const isUserPro = user?.isPro;
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("crypto");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
@@ -71,27 +72,35 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
     setIsProcessing(true);
 
     // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2500));
+    // await new Promise((resolve) => setTimeout(resolve, 2500));
 
-    setIsProcessing(false);
-    setPaymentSuccess(true);
+    // setIsProcessing(false);
+    // setPaymentSuccess(true);
 
-    // Wait a moment to show success state
-    setTimeout(() => {
-      setPaymentDialogOpen(false);
+    // // Wait a moment to show success state
+    // setTimeout(() => {
+    //   setPaymentDialogOpen(false);
 
-      // Call the success callback
-      if (onSubscriptionSuccess) {
-        onSubscriptionSuccess();
-      }
+    //   // Call the success callback
+    //   if (onSubscriptionSuccess) {
+    //     onSubscriptionSuccess();
+    //   }
 
-      // Reset form
-      setCardNumber("");
-      setCardExpiry("");
-      setCardCvc("");
-      setCardName("");
-      setPaymentSuccess(false);
-    }, 1500);
+    //   // Reset form
+    //   setCardNumber("");
+    //   setCardExpiry("");
+    //   setCardCvc("");
+    //   setCardName("");
+    //   setPaymentSuccess(false);
+    // }, 1500);
+
+    try {
+      await subscriptionService.upgradeToPro()
+    } catch (error) {
+      console.error('Failed to handle payment', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const formatCardNumber = (value: string) => {
@@ -134,7 +143,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                     onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}
                     className="grid grid-cols-3 gap-3"
                   >
-                    <div>
+                    {/* <div>
                       <RadioGroupItem
                         value="card"
                         id="card"
@@ -147,7 +156,8 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                         <CreditCard className="w-6 h-6 mb-2" />
                         <span className="text-sm">Card</span>
                       </Label>
-                    </div>
+                    </div> */}
+
                     <div>
                       <RadioGroupItem
                         value="crypto"
@@ -156,13 +166,14 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                       />
                       <Label
                         htmlFor="crypto"
-                        className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-blue-500 [&:has([data-state=checked])]:border-blue-500 cursor-pointer"
+                        className="flex flex-col items-center justify-between rounded-lg border-2 bg-blue-500/10 p-4 border border-blue-500/30"
                       >
                         <Bitcoin className="w-6 h-6 mb-2" />
                         <span className="text-sm">Crypto</span>
                       </Label>
                     </div>
-                    <div>
+
+                    {/* <div>
                       <RadioGroupItem
                         value="wallet"
                         id="wallet"
@@ -175,7 +186,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                         <Wallet className="w-6 h-6 mb-2" />
                         <span className="text-sm">Wallet</span>
                       </Label>
-                    </div>
+                    </div> */}
                   </RadioGroup>
                 </div>
 
@@ -303,13 +314,14 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                     variant="outline"
                     onClick={() => setPaymentDialogOpen(false)}
                     disabled={isProcessing}
+                    className="cursor-pointer"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
                     disabled={isProcessing}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 cursor-pointer"
                   >
                     {isProcessing ? (
                       <>
@@ -380,7 +392,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
-                    {currentTier === "master" ? (
+                    {isUserPro ? (
                       <Crown className="w-6 h-6 text-white" />
                     ) : (
                       <Sparkles className="w-6 h-6 text-white" />
@@ -389,14 +401,14 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                   <div>
                     <p className="text-sm text-muted-foreground">Current Plan</p>
                     <h3 className="text-xl">
-                      {currentTier === "master" ? "Pro" : "Basic"}
+                      {isUserPro ? "Pro" : "Basic"}
                     </h3>
                   </div>
                 </div>
-                {currentTier === "free" && (
+                {!isUserPro && (
                   <Button
                     onClick={handleUpgrade}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                    className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 cursor-pointer"
                   >
                     <Zap className="w-4 h-4 mr-2" />
                     Upgrade to Pro
@@ -410,7 +422,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 gap-6 mt-8">
           {subscriptionTiers.map((tier) => {
-            const isCurrentTier = tier.id === currentTier;
+            const isCurrentTier = tier.isPro === isUserPro;
             const isPro = tier.id === "master";
 
             return (
@@ -522,7 +534,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                     ) : isPro ? (
                       <Button
                         onClick={handleUpgrade}
-                        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 cursor-pointer"
                       >
                         <Zap className="w-4 h-4 mr-2" />
                         Upgrade to Pro
@@ -668,7 +680,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
               <Button
                 onClick={onOpenWalletDialog}
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 cursor-pointer"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
                 Get Started Free

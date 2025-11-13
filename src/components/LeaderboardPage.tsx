@@ -19,6 +19,7 @@ import { User } from '../lib/types';
 import { shortenAddress } from '../lib/address';
 
 interface RankedLeaderboardEntry extends LeaderboardEntry {
+  id: string;
   rank: number;
   isCurrentUser: boolean;
 }
@@ -147,7 +148,7 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
               <TableBody>
                 {sortedLeaderboard.map((entry: RankedLeaderboardEntry) => (
                   <TableRow
-                    key={entry.appWalletAddress}
+                    key={entry.appWalletAddress || entry.id}
                     className={
                       entry.isCurrentUser
                         ? 'bg-primary/5 border-primary/20'

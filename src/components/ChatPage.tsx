@@ -38,6 +38,7 @@ import { Skeleton } from "./ui/skeleton";
 import { toast } from "sonner";
 import apiClient from "../lib/axios";
 import type { User } from "../lib/types";
+import { OracleEntity, oraclesServices } from "../services/oracles.service";
 import useAuthStore from "../store/auth.store";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import {
@@ -91,7 +92,7 @@ interface NewsArticle {
 }
 
 interface ChatPageProps {
-  aiAgent: AIAgent;
+  aiAgent: OracleEntity;
   onBack: () => void;
   darkMode: boolean;
   setDarkMode: (value: boolean) => void;
@@ -123,6 +124,7 @@ interface ChatPageProps {
   onOpenXPInfo?: () => void;
   initialPrompt?: string | null;
   onInitialPromptUsed?: () => void;
+  onReload: (id: string) => void
 }
 
 type ChatMessage = {
@@ -180,7 +182,8 @@ export function ChatPage({
   onArticleContextUsed,
   onOpenXPInfo,
   initialPrompt,
-  onInitialPromptUsed
+  onInitialPromptUsed,
+  onReload
 }: ChatPageProps) {
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -196,13 +199,9 @@ export function ChatPage({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationContextRef = useRef<string[]>([]);
   // Rating and Like states
-  const [userRating, setUserRating] = useState<number>(0);
+  const [userRating, setUserRating] = useState<number | null>(0);
   const [hasLiked, setHasLiked] = useState(false);
-  const [localLikes, setLocalLikes] = useState(() => {
-    const likesStr = aiAgent.likes || "0";
-    if (likesStr === "∞") return 999999;
-    return parseInt(likesStr.replace("K", "000").replace("M", "000000"));
-  });
+  const [localLikes, setLocalLikes] = useState(aiAgent.likes);
   const [localRating, setLocalRating] = useState(aiAgent.rating);
 
   // Sign-in and subscription tracking
@@ -246,6 +245,7 @@ export function ChatPage({
     }
   }, [user]);
 
+  // Load messages
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -260,9 +260,13 @@ export function ChatPage({
         console.error("Error fetching messages:", error);
       }
     };
-    fetchMessages();
+
+    if (user?.id) {
+      fetchMessages();
+    }
   }, [user]);
 
+  // Send message from homepage
   useEffect(() => {
     if (initialPrompt && !isLoading) {
       // Set the input field with the prompt
@@ -285,6 +289,23 @@ export function ChatPage({
     const defaultHotTakes = generateDefaultHotTakes(aiAgent);
     setNewsArticles(defaultHotTakes);
   }, [aiAgent.id]);
+
+  // Load user status to oracle
+  useEffect(() => {
+    if (user?.id) {
+      (async () => {
+        try {
+          const data = await oraclesServices.getOracleUserStatus(aiAgent.id)
+          if (data) {
+            setHasLiked(data.hasLiked)
+            setUserRating(data?.userRating || 0)
+          }
+        } catch (error) {
+          console.log("Failed to fetch oracles user status: ", error);
+        }
+      })()
+    }
+  }, [user])
 
   // Auto-send pending message after user signs in or upgrades subscription
   // useEffect(() => {
@@ -777,7 +798,7 @@ export function ChatPage({
 
   // Generate suggested follow-up questions based on AI agent specialty
   function generateSuggestedQuestions(
-    aiAgentData: AIAgent,
+    aiAgentData: OracleEntity,
     userMessage: string
   ): string[] {
     const questionsByAIAgent: Record<string, string[][]> = {
@@ -919,12 +940,15 @@ export function ChatPage({
       ],
     };
 
+    const agentKeys = [aiAgentData.id, "crypto-crystal", "crypto"]
+    const selectedAgentKey = agentKeys[Math.floor(Math.random() * agentKeys.length)];
+
     // Get questions for this AI agent or use defaults
-    const aiAgentQuestions = questionsByAIAgent[aiAgentData.id] || [
+    const aiAgentQuestions = questionsByAIAgent[selectedAgentKey] || [
       [
-        `What's your prediction for ${aiAgentData.category}?`,
-        `What trends do you see in ${aiAgentData.category}?`,
-        `What should I know about ${aiAgentData.category}?`,
+        `What's your prediction for ${aiAgentData.type.split(" ")[0]}?`,
+        `What trends do you see in ${aiAgentData.type.split(" ")[0]}?`,
+        `What should I know about ${aiAgentData.type.split(" ")[0]}?`,
       ],
       [
         `Any bold predictions for this year?`,
@@ -944,7 +968,7 @@ export function ChatPage({
     return randomSet;
   }
 
-  function generateDefaultHotTakes(aiAgentData: AIAgent): NewsArticle[] {
+  function generateDefaultHotTakes(aiAgentData: OracleEntity): NewsArticle[] {
     // Generate AI agent-specific hot takes based on their specialty
     const hotTakesByAIAgent: Record<string, NewsArticle[]> = {
       crypto: [
@@ -1210,7 +1234,7 @@ export function ChatPage({
       hotTakesByAIAgent[aiAgentData.id] || [
         {
           id: "default-1",
-          title: `${aiAgentData.category}: My Bold Predictions for 2026`,
+          title: `${aiAgentData.type.split(" ")[0]}: My Bold Predictions for 2026`,
           source: aiAgentData.name,
           url: "#",
           publishedAt: "3 hours ago",
@@ -1220,7 +1244,7 @@ export function ChatPage({
         },
         {
           id: "default-2",
-          title: `Why Everyone Is Wrong About ${aiAgentData.category}`,
+          title: `Why Everyone Is Wrong About ${aiAgentData.type.split(" ")[0]}`,
           source: aiAgentData.name,
           url: "#",
           publishedAt: "7 hours ago",
@@ -1230,7 +1254,7 @@ export function ChatPage({
         },
         {
           id: "default-3",
-          title: `The ${aiAgentData.category} Trends You Can't Ignore`,
+          title: `The ${aiAgentData.type.split(" ")[0]} Trends You Can't Ignore`,
           source: aiAgentData.name,
           url: "#",
           publishedAt: "1 day ago",
@@ -1495,7 +1519,7 @@ export function ChatPage({
     setSuggestedQuestions(generateSuggestedQuestions(aiAgent, trimmedInput))
 
     try {
-      const response = await sendToGrokAPI(trimmedInput, aiAgent);
+      // const response = await sendToGrokAPI(trimmedInput, aiAgent);
       const { data } = await apiClient.post<SendChatResponse>("/messages", {
         content: trimmedInput,
         oracleId: "1e557572-aaa8-4cab-8af6-d86f65613f19",
@@ -1542,6 +1566,7 @@ export function ChatPage({
       handleSend(input);
     }
   };
+
   function formatTime(isoString: string) {
     return new Date(isoString).toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -1550,25 +1575,51 @@ export function ChatPage({
       timeZone: "Asia/Ho_Chi_Minh",
     });
   }
-  const handleLike = () => {
+
+  const handleLike = async () => {
     if (!hasLiked) {
-      setHasLiked(true);
-      setLocalLikes((prev) => prev + 1);
+      try {
+        const data = await oraclesServices.handleLike(aiAgent.id)
+        if (data) {
+          setHasLiked(true);
+          setLocalLikes(data.likes);
+          onReload?.(aiAgent.id);
+        }
+      } catch (error) {
+        console.log("Failed to like oracle: ", error);
+      }
     } else {
-      setHasLiked(false);
-      setLocalLikes((prev) => prev - 1);
+      try {
+        const data = await oraclesServices.handleDislike(aiAgent.id)
+        if (data) {
+          setHasLiked(false);
+          setLocalLikes(data.likes);
+          onReload?.(aiAgent.id);
+        }
+      } catch (error) {
+        console.log("Failed to dislike oracle: ", error);
+      }
     }
   };
 
-  const handleRating = (rating: number) => {
-    setUserRating(rating);
+  const handleRating = async (rating: number) => {
     // In a real app, this would update the oracle's rating based on user feedback
+    try {
+      const data = await oraclesServices.handleRating(aiAgent.id, rating)
+      if (data) {
+        setUserRating(rating);
+        onReload?.(aiAgent.id);
+      }
+      console.log('data rating', data)
+    } catch (error) {
+      console.log("Failed to rate oracle: ", error);
+    }
   };
 
   const formatLikes = (likes: number): string => {
-    if (likes >= 1000) {
-      return `${(likes / 1000).toFixed(1)}K`;
-    }
+    // if (likes >= 1000) {
+    //   return `${(likes / 1000).toFixed(1)}K`;
+    // }
     return likes.toString();
   };
 
@@ -1645,7 +1696,7 @@ export function ChatPage({
                   </Button>
                   <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
                     <img
-                      src={aiAgent.avatar}
+                      src={aiAgent.image}
                       alt={aiAgent.name}
                       className="w-full h-full object-cover"
                     />
@@ -1655,7 +1706,7 @@ export function ChatPage({
                       {aiAgent.name}
                     </h1>
                     <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                      {aiAgent.title}
+                      {aiAgent.type}
                     </p>
                   </div>
                 </div>
@@ -1764,7 +1815,7 @@ export function ChatPage({
                     </Button>
                     <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
                       <ImageWithFallback
-                        src={aiAgent.avatar}
+                        src={aiAgent.image}
                         alt={aiAgent.name}
                         className="w-full h-full object-cover"
                       />
@@ -1774,13 +1825,13 @@ export function ChatPage({
                         {aiAgent.name}
                       </CardTitle>
                       <CardDescription className="text-xs">
-                        {aiAgent.title}
+                        {aiAgent.type}
                       </CardDescription>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setShareOracleDialogOpen(true)}
+                      // onClick={() => setShareOracleDialogOpen(true)}
                       className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
                     >
                       <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -1812,7 +1863,7 @@ export function ChatPage({
                           </h3>
                           <p className="text-sm text-muted-foreground max-w-md">
                             Ask {aiAgent.name} anything. Get predictions,
-                            insights, and expert analysis on {aiAgent.category}.
+                            insights, and expert analysis on {aiAgent.type.split(" ")[0]}.
                           </p>
                         </div>
                       )}
@@ -1905,7 +1956,7 @@ export function ChatPage({
                               <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                                 <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
                                   <ImageWithFallback
-                                    src={aiAgent.avatar}
+                                    src={aiAgent.image}
                                     alt={aiAgent.name}
                                     className="w-full h-full object-cover"
                                   />
@@ -2084,16 +2135,15 @@ export function ChatPage({
                 </div>
               </div>
             </div>
-
             {/* News Feed - Right - Hidden on mobile */}
-            <div className="hidden lg:block w-full h-full lg:w-80 space-y-4 pt-2">
+            <div className="hidden lg:block w-full h-full lg:w-80 space-y-3 pt-2">
               {/* AI Agent Profile Card */}
               <Card className="border-border overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="relative flex-shrink-0">
                       <ImageWithFallback
-                        src={aiAgent.avatar}
+                        src={aiAgent.image}
                         alt={aiAgent.name}
                         className="w-16 h-16 rounded-full object-cover ring-2 ring-blue-500/20"
                       />
@@ -2104,7 +2154,7 @@ export function ChatPage({
                     <div className="flex-1 min-w-0">
                       <h3 className="truncate mb-0.5">{aiAgent.name}</h3>
                       <p className="text-xs text-blue-400 mb-2">
-                        {aiAgent.title}
+                        {aiAgent.type}
                       </p>
                       <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
                         {aiAgent.description}
@@ -2112,11 +2162,11 @@ export function ChatPage({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mt-4 py-4 border-t border-b border-border">
+                  <div className="grid grid-cols-2 gap-3 mt-3 py-3 border-t border-b border-border">
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 mb-1">
                         <Star className="w-3.5 h-3.5 text-yellow-500" />
-                        <span className="text-sm">{aiAgent.rating}</span>
+                        <span className="text-sm">{Number(aiAgent.rating).toFixed(1)}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">Rating</p>
                     </div>
@@ -2124,7 +2174,7 @@ export function ChatPage({
                       <div className="flex items-center justify-center gap-1 mb-1">
                         <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
                         <span className="text-sm">
-                          {aiAgent.consultSessions}
+                          {aiAgent.predictions}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -2149,7 +2199,7 @@ export function ChatPage({
                           className="transition-opacity hover:opacity-70"
                         >
                           <Star
-                            className={`w-4 h-4 sm:w-5 sm:h-5 ${star <= userRating
+                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${star <= userRating!
                               ? "fill-primary text-primary"
                               : "text-muted-foreground"
                               }`}
@@ -2157,9 +2207,9 @@ export function ChatPage({
                         </button>
                       ))}
                     </div>
-                    {userRating > 0 && (
+                    {userRating! > 0 && (
                       <p className="text-xs text-muted-foreground mt-2">
-                        You rated {userRating}/5
+                        You rated {Math.round(userRating!)}/5
                       </p>
                     )}
                   </div>
@@ -2167,7 +2217,7 @@ export function ChatPage({
                   {/* Like Button */}
                   <Button
                     variant="outline"
-                    className={`w-full mt-3 h-9 transition-all ${hasLiked
+                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${hasLiked
                       ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
                       : "border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50"
                       }`}
@@ -2331,7 +2381,7 @@ export function ChatPage({
                           <span className="truncate text-xs flex items-center gap-1">
                             <div className="w-4 h-4 rounded-full overflow-hidden border border-blue-500/30 flex-shrink-0">
                               <ImageWithFallback
-                                src={aiAgent.avatar}
+                                src={aiAgent.image}
                                 alt={aiAgent.name}
                                 className="w-full h-full object-cover"
                               />

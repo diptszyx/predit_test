@@ -5,7 +5,7 @@ import type {
   WalletType
 } from './components/WalletConnectDialog';
 import { useUserPhotoRefresh } from './hooks';
-import type { AIAgent, User } from './lib/types';
+import type { User } from './lib/types';
 import { useXP } from './lib/useXP';
 
 // Components
@@ -29,6 +29,7 @@ import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import apiClient from './lib/axios';
+import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
 
 // Constants
@@ -115,23 +116,20 @@ const HOT_TAKE_ARTICLES: HotTakeArticle[] = [
 ];
 
 // AI Agents Data
-const AI_AGENTS: AIAgent[] = [
+const AI_AGENTS: OracleEntity[] = [
   {
-    id: 'crypto-crystal',
-    name: 'Crypto Crystal Czar',
-    emoji: '💎',
-    title: 'Cryptocurrency Expert',
+    id: "crypto-crystal",
+    name: "Crypto Crystal Czar",
+    type: "Cryptocurrency Expert",
     description:
-      'Master of blockchain technology and cryptocurrency markets. Analyzes market trends, tokenomics, DeFi protocols, and on-chain data to provide insights on Bitcoin, Ethereum, altcoins, and emerging crypto projects.',
-    gradient: 'from-cyan-500 via-blue-600 to-blue-700',
-    category: 'Cryptocurrency',
-    rating: '91%',
-    likes: '12.3K',
-    consultSessions: '58.2K',
-    specialty: 'Crypto Analysis',
-    tags: ['Bitcoin', 'DeFi', 'Altcoins', 'Blockchain'],
-    avatar: AI_AGENT_IMAGES.fortune,
-    bgColor: 'bg-cyan-500/10',
+      "Master of blockchain technology and cryptocurrency markets. Analyzes market trends, tokenomics, DeFi protocols, and on-chain data to provide insights on Bitcoin, Ethereum, altcoins, and emerging crypto projects.",
+    image: AI_AGENT_IMAGES.fortune,
+    rating: "91%",
+    predictions: 58200,
+    likes: 12300,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    __entity: "OracleEntity",
   },
 ];
 
@@ -156,7 +154,8 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<string>(() => {
     return localStorage.getItem('deorCurrentPage') || 'chat';
   });
-  const [selectedAIAgent, setSelectedAIAgent] = useState<AIAgent | null>(null);
+  const [listOracles, setListOracles] = useState<OracleEntity[]>([])
+  const [selectedAIAgent, setSelectedAIAgent] = useState<OracleEntity | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<HotTakeArticle | null>(
     null
   );
@@ -227,6 +226,19 @@ export default function App() {
   // Auto-refresh user profile to prevent presigned URL expiration
   useUserPhotoRefresh();
 
+  // Get all AI oracles
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await oraclesServices.getAllOracles()
+
+        if (data?.data) setListOracles(data.data)
+      } catch (error) {
+        console.log("Failed to fetch all oracles", error);
+      }
+    })()
+  }, [user])
+
   // Apply dark mode
   useEffect(() => {
     if (darkMode) {
@@ -244,10 +256,10 @@ export default function App() {
 
   // Set default AI agent
   useEffect(() => {
-    if (AI_AGENTS.length > 0 && !selectedAIAgent) {
-      setSelectedAIAgent(AI_AGENTS[0]);
+    if (listOracles.length > 0 && !selectedAIAgent) {
+      setSelectedAIAgent(listOracles[0] || AI_AGENTS[0]);
     }
-  }, [selectedAIAgent]);
+  }, [selectedAIAgent, listOracles, user]);
 
   // Check for shared prediction, referral code, or OAuth token in URL
   useEffect(() => {
@@ -365,6 +377,21 @@ export default function App() {
     toast.info('Wallet disconnected');
   };
 
+  const handleReloadOracle = async (oracleId: string) => {
+    try {
+      const res = await oraclesServices.getOracleById(oracleId);
+      if (res) {
+        setSelectedAIAgent(res);
+
+        setListOracles((prev) =>
+          prev.map((item) => (item.id === oracleId ? res : item))
+        );
+      }
+    } catch (e) {
+      console.log("Failed to reload oracle", e);
+    }
+  };
+
   // Common sidebar and dialog props
   const commonSidebarProps = {
     currentPage,
@@ -464,8 +491,9 @@ export default function App() {
                 setInitialPrompt(prompt);
               }
               // Set the first AI agent as selected if none is selected
-              if (!selectedAIAgent && AI_AGENTS.length > 0) {
-                setSelectedAIAgent(AI_AGENTS[0]);
+              if (!selectedAIAgent && listOracles.length > 0) {
+                // setSelectedAIAgent(listOracles[0] || AI_AGENTS[0]);
+                setSelectedAIAgent(listOracles[0]);
               }
               setCurrentPage('chat');
             }}
@@ -513,7 +541,7 @@ export default function App() {
           }
         }}
         aiAgentName={selectedAIAgent?.name}
-        aiAgentSpecialty={selectedAIAgent?.specialty}
+        aiAgentSpecialty={selectedAIAgent?.type}
         user={user}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
@@ -581,6 +609,7 @@ export default function App() {
           onOpenXPInfo={() => setXPInfoDialogOpen(true)}
           initialPrompt={initialPrompt}
           onInitialPromptUsed={() => setInitialPrompt(null)}
+          onReload={handleReloadOracle}
         />
         {commonDialogProps}
       </>
@@ -675,7 +704,7 @@ export default function App() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {AI_AGENTS.map((aiAgent) => (
+            {listOracles.map((aiAgent) => (
               <AIAgentCard
                 key={aiAgent.id}
                 aiAgent={aiAgent}

@@ -43,8 +43,8 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
     (async () => {
       try {
         const data = await leaderboardService.getLeaderboard(sortBy);
-        setLeaderBoard(data.leaderboard);
-        if (data?.userData) setUserLeaderBoardData(data.userData);
+        setLeaderBoard([...data.leaderboard]);
+        if (data?.userData) setUserLeaderBoardData({ ...data.userData });
       } catch (err) {
         console.error('Failed to fetch leaderboard', err);
       }
@@ -77,7 +77,6 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-
       {user?.id && (
         <Card className="border-border">
           <CardContent className="p-6">

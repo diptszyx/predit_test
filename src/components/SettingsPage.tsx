@@ -56,8 +56,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   // Profile Settings
   const [avatar, setAvatar] = useState(
     user.photo?.path ||
-      user.avatar ||
-      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80'
+    user.avatar ||
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80'
   );
   const [nickname, setNickname] = useState(user.username || 'Oracle Seeker');
   const [email, setEmail] = useState(user.email || 'oracle.seeker@example.com');
@@ -144,7 +144,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error uploading photo:', error);
       toast.error(
         error?.response?.data?.message ||
-          'Failed to upload photo. Please try again.'
+        'Failed to upload photo. Please try again.'
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -174,7 +174,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error updating nickname:', error);
       toast.error(
         error?.response?.data?.message ||
-          'Failed to update nickname. Please try again.'
+        'Failed to update nickname. Please try again.'
       );
     } finally {
       setIsSavingNickname(false);
@@ -196,7 +196,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error updating email:', error);
       toast.error(
         error?.response?.data?.message ||
-          'Failed to update email. Please try again.'
+        'Failed to update email. Please try again.'
       );
     } finally {
       setIsSavingEmail(false);
@@ -218,7 +218,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error updating phone:', error);
       toast.error(
         error?.response?.data?.message ||
-          'Failed to update phone number. Please try again.'
+        'Failed to update phone number. Please try again.'
       );
     } finally {
       setIsSavingPhone(false);
@@ -506,8 +506,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                           setIsEditingPhone(false);
                           setPhone(
                             user.phone ||
-                              user.phoneNumber ||
-                              '+1 (555) 123-4567'
+                            user.phoneNumber ||
+                            '+1 (555) 123-4567'
                           );
                         }}
                         disabled={isSavingPhone}
@@ -604,10 +604,10 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                   </div>
 
                   <div className="pt-4 border-t border-blue-500/20">
-                    <p className="text-xs text-muted-foreground mb-2">
+                    {/* <p className="text-xs text-muted-foreground mb-2">
                       Next billing date
                     </p>
-                    <p className="text-sm mb-3">November 28, 2025</p>
+                    <p className="text-sm mb-3">November 28, 2025</p> */}
                     <Button
                       variant="outline"
                       size="sm"
@@ -875,23 +875,16 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
           user={user}
           refList={refList}
         />
-
-        {/* Save Button */}
-        {/* <div className="flex justify-end">
-          <Button onClick={onBack} className="bg-blue-600 hover:bg-blue-700">
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
-          </Button>
-        </div> */}
       </div>
 
       {/* Subscription Management Dialog */}
       <SubscriptionManagementDialog
         open={subscriptionDialogOpen}
         onOpenChange={setSubscriptionDialogOpen}
-        currentTier={user.subscriptionTier || 'free'}
+        // currentTier={user.subscriptionTier || 'free'}
+        isUserPro={user?.isPro}
         onSubscriptionSuccess={() => {
-          toast.success('Subscription updated successfully!');
+          // toast.success('Subscription updated successfully!');
         }}
       />
     </div>

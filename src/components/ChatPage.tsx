@@ -38,6 +38,7 @@ import { Skeleton } from "./ui/skeleton";
 import { toast } from "sonner";
 import apiClient from "../lib/axios";
 import type { User } from "../lib/types";
+import { ChatMessage, messageService } from "../services/message.service";
 import { OracleEntity, oraclesServices } from "../services/oracles.service";
 import useAuthStore from "../store/auth.store";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
@@ -124,37 +125,8 @@ interface ChatPageProps {
   onOpenXPInfo?: () => void;
   initialPrompt?: string | null;
   onInitialPromptUsed?: () => void;
-  onReload: (id: string) => void
+  onReloadAiAgent: (id: string) => void
 }
-
-type ChatMessage = {
-  id: string;
-  content: string;
-  sender: "user" | "assistant";
-  userId?: string;
-  oracleId?: string;
-  createdAt: string;
-};
-
-type XpMilestone = {
-  type: "prediction" | string;
-  xp: number;
-};
-
-type XpReward = {
-  xpGained: number;
-  totalXp: number;
-  level: number;
-  levelUp: boolean;
-  dailyLimitReached: boolean;
-  milestone?: XpMilestone;
-};
-
-type SendChatResponse = {
-  userMessage: ChatMessage;
-  assistantMessage: ChatMessage;
-  xpReward: XpReward;
-};
 
 export function ChatPage({
   aiAgent,
@@ -183,7 +155,7 @@ export function ChatPage({
   onOpenXPInfo,
   initialPrompt,
   onInitialPromptUsed,
-  onReload
+  onReloadAiAgent
 }: ChatPageProps) {
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -249,13 +221,8 @@ export function ChatPage({
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const oracleId = "1e557572-aaa8-4cab-8af6-d86f65613f19";
-
-        const { data } = await apiClient.get<ChatMessage[]>("/messages", {
-          params: { oracleId },
-        });
-
-        setMessages(data.reverse());
+        const data = await messageService.loadMessages(aiAgent.id)
+        if (data) setMessages(data.reverse());
       } catch (error) {
         console.error("Error fetching messages:", error);
       }
@@ -264,7 +231,7 @@ export function ChatPage({
     if (user?.id) {
       fetchMessages();
     }
-  }, [user]);
+  }, [user?.id]);
 
   // Send message from homepage
   useEffect(() => {
@@ -280,7 +247,7 @@ export function ChatPage({
         if (onInitialPromptUsed) {
           onInitialPromptUsed();
         }
-      }, 500);
+      }, 2500);
     }
   }, [initialPrompt]);
 
@@ -1462,8 +1429,8 @@ export function ChatPage({
 
     // Check if user is signed in - required to send any message
     if (!user) {
-      setPendingMessage(trimmedInput); // Store the message to send after sign-in
-      setInput(""); // Clear input field
+      setPendingMessage(trimmedInput);
+      setInput("");
       setSignInDialogOpen(true);
       return;
     }
@@ -1475,7 +1442,7 @@ export function ChatPage({
     if (user?.id && !user?.isPro && (user?.restTodayPredictionCount || 0) <= 0) {
       setLimitReachedType('total-predictions');
       setLimitReachedDialogOpen(true);
-      setInput(""); // Clear input
+      setInput("");
       return;
     }
 
@@ -1485,21 +1452,19 @@ export function ChatPage({
     }
 
     // Increment daily prediction count if this is a prediction
-    if (user?.id) {
+    if (!user.isPro) {
       incrementDailyPredictions();
 
       // Increment total predictions and award XP with exponential curve
-      if (updateUser) {
-        const restTodayPredictionCount = (user.restTodayPredictionCount || 0) - 1;
+      const restTodayPredictionCount = (user.restTodayPredictionCount || 0) - 1;
 
-        // Show subscription popup after 5th prediction
-        if (restTodayPredictionCount === 0 && !user.isPro) {
-          // Delay showing the dialog to allow the prediction to complete
-          setTimeout(() => {
-            setLimitReachedType('total-predictions');
-            setLimitReachedDialogOpen(true);
-          }, 2000); // Show after 2 seconds
-        }
+      // Show subscription popup after 5th prediction
+      if (restTodayPredictionCount === 0 && !user.isPro) {
+        // Delay showing the dialog to allow the prediction to complete
+        setTimeout(() => {
+          setLimitReachedType('total-predictions');
+          setLimitReachedDialogOpen(true);
+        }, 2000); // Show after 2 seconds
       }
     }
 
@@ -1520,38 +1485,14 @@ export function ChatPage({
 
     try {
       // const response = await sendToGrokAPI(trimmedInput, aiAgent);
-      const { data } = await apiClient.post<SendChatResponse>("/messages", {
-        content: trimmedInput,
-        oracleId: "1e557572-aaa8-4cab-8af6-d86f65613f19",
-      });
-      setMessages((prev) => [...prev, data.assistantMessage]);
-      fetchUser()
-      if (data.xpReward.milestone) {
-        toast.success(`🎯 Prediction Milestone Reached! +${data.xpReward.milestone?.xp} XP earned.`)
-      }
-
-      // If this was a prediction, store it and flash the share button and rating section
-      if (isPrediction) {
-        console.log("✓ PREDICTION DETECTED!");
-        console.log("Question:", trimmedInput);
-        console.log("Answer:", response);
-        const predictionData = {
-          question: trimmedInput,
-          answer: response,
-        };
-        console.log("Storing prediction data:", predictionData);
-        setLastPrediction(predictionData);
-        setShareFlashing(true);
-        setRatingFlashing(true);
-
-        // Stop flashing after 3 seconds
-        setTimeout(() => {
-          setShareFlashing(false);
-          setRatingFlashing(false);
-        }, 3000);
-      } else {
-        console.log("✗ Not a prediction question");
-        console.log("Message was:", trimmedInput);
+      const data = await messageService.sendMessage(trimmedInput, aiAgent.id)
+      if (data) {
+        setMessages((prev) => [...prev, data.assistantMessage]);
+        fetchUser()
+        onReloadAiAgent?.(aiAgent.id);
+        if (data.xpReward.milestone) {
+          toast.success(`🎯 Prediction Milestone Reached! +${data.xpReward.milestone?.xp} XP earned.`)
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -1583,7 +1524,7 @@ export function ChatPage({
         if (data) {
           setHasLiked(true);
           setLocalLikes(data.likes);
-          onReload?.(aiAgent.id);
+          onReloadAiAgent?.(aiAgent.id);
         }
       } catch (error) {
         console.log("Failed to like oracle: ", error);
@@ -1594,7 +1535,7 @@ export function ChatPage({
         if (data) {
           setHasLiked(false);
           setLocalLikes(data.likes);
-          onReload?.(aiAgent.id);
+          onReloadAiAgent?.(aiAgent.id);
         }
       } catch (error) {
         console.log("Failed to dislike oracle: ", error);
@@ -2008,7 +1949,7 @@ export function ChatPage({
                                 <Button
                                   size="sm"
                                   onClick={() => setSubscriptionDialogOpen(true)}
-                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0"
+                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0 cursor-pointer"
                                 >
                                   <Crown className="w-3 h-3 mr-1" />
                                   Upgrade
@@ -2470,15 +2411,16 @@ export function ChatPage({
         <SubscriptionManagementDialog
           open={subscriptionDialogOpen}
           onOpenChange={setSubscriptionDialogOpen}
-          currentTier={user?.subscriptionTier || "free"}
+          // currentTier={user?.subscriptionTier || "free"}
+          isUserPro={user?.isPro}
           onSubscriptionSuccess={() => {
-            if (updateUser) {
-              updateUser({ subscriptionTier: "master" });
-            }
-            if (awardXPToUser) {
-              awardXPToUser("SUBSCRIBE_MASTER", { showToast: false });
-            }
-            toast.success("Welcome to Pro! 🎉");
+            // if (updateUser) {
+            //   updateUser({ subscriptionTier: "master" });
+            // }
+            // if (awardXPToUser) {
+            //   awardXPToUser("SUBSCRIBE_MASTER", { showToast: false });
+            // }
+            // toast.success("Welcome to Pro! 🎉");
           }}
         />
 
@@ -2656,7 +2598,7 @@ export function ChatPage({
             question={lastPrediction.question}
             answer={lastPrediction.answer}
             aiAgentName={aiAgent.name}
-            aiAgentAvatar={aiAgent.avatar}
+            aiAgentAvatar={aiAgent.image}
             aiAgentEmoji={aiAgent.emoji}
           />
         )}

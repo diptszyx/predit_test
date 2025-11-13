@@ -1,4 +1,4 @@
-import type { User, Quest, SubscriptionTier, PredictionMarket } from "./types";
+import type { PredictionMarket, Quest, SubscriptionTier, User } from "./types";
 
 export const mockUser: User = {
   id: "user-1",
@@ -115,6 +115,7 @@ export const subscriptionTiers: SubscriptionTier[] = [
       "Community access",
     ],
     color: "from-gray-600 to-slate-600",
+    isPro: false,
   },
   {
     id: "master",
@@ -131,6 +132,7 @@ export const subscriptionTiers: SubscriptionTier[] = [
     ],
     color: "from-blue-600 to-cyan-600",
     popular: true,
+    isPro: true,
   },
 ];
 

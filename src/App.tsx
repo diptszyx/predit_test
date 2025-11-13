@@ -609,7 +609,7 @@ export default function App() {
           onOpenXPInfo={() => setXPInfoDialogOpen(true)}
           initialPrompt={initialPrompt}
           onInitialPromptUsed={() => setInitialPrompt(null)}
-          onReload={handleReloadOracle}
+          onReloadAiAgent={handleReloadOracle}
         />
         {commonDialogProps}
       </>

@@ -13,12 +13,12 @@ import { Separator } from "./ui/separator";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { 
-  Crown, 
-  CreditCard, 
-  Wallet, 
-  Check, 
-  ArrowLeft, 
+import {
+  Crown,
+  CreditCard,
+  Wallet,
+  Check,
+  ArrowLeft,
   Loader2,
   Sparkles,
   Info,
@@ -29,7 +29,8 @@ import { toast } from "sonner@2.0.3";
 interface SubscriptionManagementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentTier: 'free' | 'master';
+  // currentTier: 'free' | 'master';
+  isUserPro?: boolean
   onSubscriptionSuccess?: () => void;
 }
 
@@ -39,28 +40,29 @@ type SubscriptionView = 'overview' | 'payment' | 'manage' | 'processing' | 'succ
 export function SubscriptionManagementDialog({
   open,
   onOpenChange,
-  currentTier,
+  // currentTier,
+  isUserPro,
   onSubscriptionSuccess
 }: SubscriptionManagementDialogProps) {
   const [view, setView] = useState<SubscriptionView>('overview');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('crypto');
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   // Stripe form state
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [cardholderName, setCardholderName] = useState('');
-  
+
   // Crypto payment state
   const [cryptoAddress] = useState('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb4');
   const [selectedCrypto, setSelectedCrypto] = useState<'usdc' | 'eth' | 'sol'>('usdc');
 
-  const isPro = currentTier === 'master';
+  const isPro = isUserPro
 
   const handleClose = () => {
     setView('overview');
-    setPaymentMethod('stripe');
+    // setPaymentMethod('stripe');
     setIsProcessing(false);
     onOpenChange(false);
   };
@@ -71,18 +73,18 @@ export function SubscriptionManagementDialog({
 
   const handlePaymentSubmit = async () => {
     setIsProcessing(true);
-    
+
     // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     setIsProcessing(false);
-    setView('success');
-    
+    // setView('success');
+
     // Show success toast
-    toast.success("Successfully upgraded to Pro!", {
-      description: "You now have unlimited predictions and 2x XP multiplier!"
-    });
-    
+    // toast.success("Successfully upgraded to Pro!", {
+    //   description: "You now have unlimited predictions and 2x XP multiplier!"
+    // });
+
     // Wait a bit then close and trigger callback
     setTimeout(() => {
       handleClose();
@@ -93,15 +95,15 @@ export function SubscriptionManagementDialog({
   };
 
   const handleCancelSubscription = async () => {
-    setIsProcessing(true);
-    
-    // Simulate cancellation
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsProcessing(false);
-    toast.success("Subscription cancelled", {
-      description: "You'll retain Pro access until the end of your billing period."
-    });
+    // setIsProcessing(true);
+
+    // // Simulate cancellation
+    // await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // setIsProcessing(false);
+    // toast.success("Subscription cancelled", {
+    //   description: "You'll retain Pro access until the end of your billing period."
+    // });
     handleClose();
   };
 
@@ -130,7 +132,7 @@ export function SubscriptionManagementDialog({
                 {isPro ? 'Manage Subscription' : 'Upgrade to Pro'}
               </DialogTitle>
               <DialogDescription>
-                {isPro 
+                {isPro
                   ? 'Manage your Pro subscription and billing information'
                   : 'Unlock unlimited predictions and premium features'
                 }
@@ -188,9 +190,9 @@ export function SubscriptionManagementDialog({
                     </div>
                   </div>
 
-                  <Button 
-                    onClick={handleSubscribe} 
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90"
+                  <Button
+                    onClick={handleSubscribe}
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90 cursor-pointer"
                     size="lg"
                   >
                     <Crown className="w-4 h-4 mr-2" />
@@ -224,14 +226,14 @@ export function SubscriptionManagementDialog({
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Payment Method</span>
                         <span className="flex items-center gap-2">
-                          <CreditCard className="w-4 h-4" />
-                          •••• 4242
+                          <Wallet className="w-5 h-5" />
+                          Cryptocurrency
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      {/* <div className="flex justify-between">
                         <span className="text-muted-foreground">Next Billing Date</span>
                         <span>November 28, 2025</span>
-                      </div>
+                      </div> */}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Status</span>
                         <span className="text-green-400">Auto-renew enabled</span>
@@ -245,8 +247,8 @@ export function SubscriptionManagementDialog({
                       <CreditCard className="w-4 h-4 mr-2" />
                       Update Payment Method
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
                       onClick={handleCancelSubscription}
                       disabled={isProcessing}
@@ -265,7 +267,7 @@ export function SubscriptionManagementDialog({
                   <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30 flex gap-3">
                     <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-muted-foreground">
-                      If you cancel, you'll retain Pro access until the end of your current billing period (Nov 28, 2025).
+                      If you cancel, you'll retain Pro access until the end of your current billing period.
                     </p>
                   </div>
                 </>
@@ -277,9 +279,9 @@ export function SubscriptionManagementDialog({
         {view === 'payment' && (
           <>
             <DialogHeader>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setView('overview')}
                 className="w-fit mb-2"
               >
@@ -292,16 +294,15 @@ export function SubscriptionManagementDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6 py-4">
+            <div className="space-y-4 py-1">
               {/* Payment Method Selection */}
-              <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                <div className="space-y-3">
-                  <div 
-                    className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      paymentMethod === 'stripe' 
-                        ? 'border-blue-500 bg-blue-500/10' 
-                        : 'border-border bg-muted/30 hover:border-blue-500/50'
-                    }`}
+              {/* <RadioGroup value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}> */}
+              <div className="space-y-2">
+                {/* <div
+                    className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${paymentMethod === 'stripe'
+                      ? 'border-blue-500 bg-blue-500/10'
+                      : 'border-border bg-muted/30 hover:border-blue-500/50'
+                      }`}
                     onClick={() => setPaymentMethod('stripe')}
                   >
                     <div className="flex items-center gap-3">
@@ -317,34 +318,33 @@ export function SubscriptionManagementDialog({
                     <Badge variant="outline" className="bg-blue-500/10 border-blue-500/30 text-blue-400">
                       Recommended
                     </Badge>
-                  </div>
+                  </div> */}
 
-                  <div 
-                    className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      paymentMethod === 'crypto' 
-                        ? 'border-blue-500 bg-blue-500/10' 
-                        : 'border-border bg-muted/30 hover:border-blue-500/50'
+                <div
+                  className={`flex items-center justify-between p-4 rounded-lg border transition-all ${paymentMethod === 'crypto'
+                    ? 'border-blue-500 bg-blue-500/10'
+                    : 'border-border bg-muted/30 hover:border-blue-500/50'
                     }`}
-                    onClick={() => setPaymentMethod('crypto')}
-                  >
-                    <div className="flex items-center gap-3">
-                      <RadioGroupItem value="crypto" id="crypto" />
-                      <Label htmlFor="crypto" className="cursor-pointer flex items-center gap-2">
-                        <Wallet className="w-5 h-5" />
-                        <div>
-                          <p>Cryptocurrency</p>
-                          <p className="text-xs text-muted-foreground">USDC, ETH, SOL</p>
-                        </div>
-                      </Label>
-                    </div>
+                  onClick={() => setPaymentMethod('crypto')}
+                >
+                  <div className="flex items-center gap-3">
+                    {/* <RadioGroupItem value="crypto" id="crypto" /> */}
+                    <Label htmlFor="crypto" className="cursor-pointer flex items-center gap-2">
+                      <Wallet className="w-5 h-5" />
+                      <div>
+                        <p>Cryptocurrency</p>
+                        <p className="text-xs text-muted-foreground">USDC, ETH, SOL</p>
+                      </div>
+                    </Label>
                   </div>
                 </div>
-              </RadioGroup>
+              </div>
+              {/* </RadioGroup> */}
 
               <Separator />
 
               {/* Stripe Payment Form */}
-              {paymentMethod === 'stripe' && (
+              {/* {paymentMethod === 'stripe' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="cardholderName">Cardholder Name</Label>
@@ -396,7 +396,7 @@ export function SubscriptionManagementDialog({
                     <p>Your payment is secured by Stripe. We never store your card details.</p>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Crypto Payment Form */}
               {paymentMethod === 'crypto' && (
@@ -404,10 +404,9 @@ export function SubscriptionManagementDialog({
                   <div className="space-y-3">
                     <Label>Select Cryptocurrency</Label>
                     <RadioGroup value={selectedCrypto} onValueChange={(v) => setSelectedCrypto(v as any)}>
-                      <div 
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${
-                          selectedCrypto === 'usdc' ? 'border-blue-500 bg-blue-500/10' : 'border-border'
-                        }`}
+                      <div
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${selectedCrypto === 'usdc' ? 'border-blue-500 bg-blue-500/10' : 'border-border'
+                          }`}
                         onClick={() => setSelectedCrypto('usdc')}
                       >
                         <div className="flex items-center gap-3">
@@ -420,10 +419,9 @@ export function SubscriptionManagementDialog({
                         <Badge variant="outline">Stablecoin</Badge>
                       </div>
 
-                      <div 
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${
-                          selectedCrypto === 'eth' ? 'border-blue-500 bg-blue-500/10' : 'border-border'
-                        }`}
+                      <div
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${selectedCrypto === 'eth' ? 'border-blue-500 bg-blue-500/10' : 'border-border'
+                          }`}
                         onClick={() => setSelectedCrypto('eth')}
                       >
                         <div className="flex items-center gap-3">
@@ -435,10 +433,9 @@ export function SubscriptionManagementDialog({
                         </div>
                       </div>
 
-                      <div 
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${
-                          selectedCrypto === 'sol' ? 'border-blue-500 bg-blue-500/10' : 'border-border'
-                        }`}
+                      <div
+                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer ${selectedCrypto === 'sol' ? 'border-blue-500 bg-blue-500/10' : 'border-border'
+                          }`}
                         onClick={() => setSelectedCrypto('sol')}
                       >
                         <div className="flex items-center gap-3">
@@ -489,8 +486,8 @@ export function SubscriptionManagementDialog({
               )}
 
               {/* Submit Button */}
-              <Button 
-                onClick={handlePaymentSubmit} 
+              <Button
+                onClick={handlePaymentSubmit}
                 className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90"
                 size="lg"
                 disabled={isProcessing || (paymentMethod === 'stripe' && (!cardNumber || !expiryDate || !cvv || !cardholderName))}

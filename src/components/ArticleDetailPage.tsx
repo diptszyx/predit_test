@@ -25,6 +25,7 @@ import {
 import { News, newsService } from '../services/news.service';
 import { timeAgo } from '../lib/date';
 import { Skeleton } from './ui/skeleton';
+import { OracleEntity } from '../services/oracles.service';
 
 // Hot Takes article interface
 export interface HotTakeArticle {
@@ -70,7 +71,7 @@ interface ArticleDetailPageProps {
   onSetPendingNavigation?: (page: string | null) => void;
   onOpenSettings?: () => void;
   currentPage?: string;
-  onAIAgentClick?: (aiAgentId: string) => void;
+  onAIAgentClick?: Dispatch<SetStateAction<OracleEntity | null>>;
   onWalletConnect?: (walletType: WalletType) => void;
   onSocialConnect?: (provider: SocialProvider) => void;
   onOpenPrivacy?: () => void;
@@ -81,8 +82,6 @@ interface ArticleDetailPageProps {
 export function ArticleDetailPage({
   hotTake,
   onBack,
-  oracleName,
-  oracleSpecialty,
   user,
   darkMode = true,
   onToggleDarkMode = () => {},
@@ -93,12 +92,12 @@ export function ArticleDetailPage({
   onSetPendingNavigation = () => {},
   onOpenSettings = () => {},
   currentPage = 'articleDetail',
-  onOracleClick = () => {},
   onWalletConnect = () => {},
   onSocialConnect = () => {},
   onOpenPrivacy = () => {},
   onOpenTerms = () => {},
   onSelectRelated,
+  onAIAgentClick,
 }: ArticleDetailPageProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
@@ -229,7 +228,9 @@ export function ArticleDetailPage({
     }
 
     // Navigate to oracle chat with article as context
-    onOracleClick(hotTake.oracle.id);
+    if (onAIAgentClick) {
+      onAIAgentClick(hotTake.oracle);
+    }
 
     // Note: The article content will need to be passed to the chat page
     // This could be done via state management or URL params
@@ -239,7 +240,7 @@ export function ArticleDetailPage({
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar - Fixed positioning for article detail page */}
-      <div className="fixed left-0 top-0 h-screen w-64 z-50">
+      <div className="hidden md:fixed left-0 top-0 h-screen md:w-64 z-50">
         <Sidebar
           currentPage={currentPage}
           onNavigate={onNavigate}
@@ -251,10 +252,8 @@ export function ArticleDetailPage({
           onOpenSettings={onOpenSettings}
         />
       </div>
-      <div className="ml-64">
-        <div
-          className="h-screen"
-        >
+      <div className="md:ml-64">
+        <div className="h-screen">
           {/* Article Content */}
           <div className="mx-auto max-w-4xl bg-background">
             <div className="px-6 pt-4 pb-8 md:px-12 md:pt-6 md:pb-10 space-y-6">
@@ -329,7 +328,7 @@ export function ArticleDetailPage({
                 <ImageWithFallback
                   src={hotTake.image}
                   alt={hotTake.title}
-                  className="w-full h-full object-cover object-center mx-[0px] my-[10px] px-[40px] py-[16px]"
+                  className="w-full h-full object-cover object-center md:mx-0 md:my-2.5 md:px-10 py-4"
                 />
               </div>
             )}
@@ -341,10 +340,8 @@ export function ArticleDetailPage({
                 dangerouslySetInnerHTML={{ __html: hotTake.content }}
               />
 
-              <Separator className="my-8" />
-
               {/* Engagement Section */}
-              <div className="flex items-center justify-between py-4 border-y border-border">
+              {/* <div className="flex items-center justify-between py-4 border-y border-border">
                 <div className="flex items-center gap-6">
                   <Button
                     variant="ghost"
@@ -371,7 +368,9 @@ export function ArticleDetailPage({
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </Button>
-              </div>
+              </div> */}
+
+              <Separator className="my-8" />
 
               {/* Oracle Signature */}
               <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-lg p-6 mt-8">
@@ -398,11 +397,12 @@ export function ArticleDetailPage({
                       {hotTake.oracle.name}
                     </h4>
                     <p className="text-sm text-muted-foreground mb-4">
-                      {oracleSpecialty || 'Expert oracle'} providing insights
+                      {'Expert oracle'} providing insights
                       and predictions on{' '}
-                      {oracleName?.toLowerCase() || 'various topics'}.
+                      {hotTake.oracle.name?.toLowerCase() || 'various topics'}.
                     </p>
                     <Button
+                      className={'hidden md:block'}
                       variant="outline"
                       size="sm"
                       onClick={() =>
@@ -414,6 +414,17 @@ export function ArticleDetailPage({
                     </Button>
                   </div>
                 </div>
+                <Button
+                  className={'md:hidden'}
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    hotTake.oracle.id && onOracleClick(hotTake.oracle.id)
+                  }
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Get Predictions from {hotTake.oracle.name}
+                </Button>
               </div>
 
               {/* Related Articles */}
@@ -440,7 +451,7 @@ export function ArticleDetailPage({
                         className="border-border hover:border-blue-500/50 transition-all cursor-pointer group overflow-hidden"
                         onClick={() => {
                           onSelectRelated(article);
-                          window.scrollTo(0,0)
+                          window.scrollTo(0, 0);
                         }}
                       >
                         <CardContent className="p-0">
@@ -491,16 +502,16 @@ export function ArticleDetailPage({
                 </div>
               </div>
 
-              <Separator className="my-12" />
+              {/* <Separator className="my-12" /> */}
               {/* TODO: Add comment section */}
-              <div className="h-20"></div>
+              <div className="h-10"></div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Sticky Action Bar */}
-      <div className="fixed bottom-0 left-64 right-0 bg-background/95 backdrop-blur-lg border-t border-border z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border z-40">
         <div className="container mx-auto max-w-4xl px-6 py-3">
           <div className="flex items-center justify-between gap-4">
             {/* Left side: Like, Comment, Share */}

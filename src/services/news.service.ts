@@ -14,7 +14,6 @@ export interface News {
 const mockImage = [
   'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400&q=80',
   'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80',
-  'https://images.unsplash.com/photo-1640826514546-7d2d97887e67?w=400&q=80',
   'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80',
   'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=400&q=80',
   'https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&q=80',

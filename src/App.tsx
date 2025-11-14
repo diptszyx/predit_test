@@ -504,15 +504,7 @@ export default function App() {
         onSocialConnect={handleSocialConnect}
         onOpenPrivacy={() => setPrivacyDialogOpen(true)}
         onOpenTerms={() => setTermsDialogOpen(true)}
-        onAIAgentClick={(aiAgentId) => {
-          const aiAgent = AI_AGENTS.find((a) => a.id === aiAgentId);
-          if (aiAgent) {
-            setSelectedAIAgent(aiAgent);
-            setArticleContext(selectedArticle);
-            setPreviousPage('articleDetail');
-            setCurrentPage('chat');
-          }
-        }}
+        onAIAgentClick={selectedAIAgent}
       />
     );
   }

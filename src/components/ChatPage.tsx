@@ -1794,7 +1794,7 @@ export function ChatPage({
           </div>
 
           {/* Mobile Hot Takes Section - Visible only on mobile */}
-          <div className="lg:hidden mt-4 px-2 sm:px-4 pb-4">
+          <div className="lg:hidden mt-4 sm:px-4 pb-4">
             <Card className="border-border overflow-hidden">
               <CardHeader className="border-b border-border pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -1805,7 +1805,7 @@ export function ChatPage({
                   Latest insights from {aiAgent.name}
                 </p>
               </CardHeader>
-              <div className="p-3 space-y-3 max-h-96 overflow-y-auto">
+              <div className="p-3 space-y-3">
                 {isLoadingNews ? (
                   <>
                     {[1, 2].map((i) => (
@@ -1826,7 +1826,7 @@ export function ChatPage({
                       className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
                       onClick={() => handleArticleClick(article.id)}
                     >
-                      <div className="relative h-20 overflow-hidden">
+                      <div className="relative h-40 overflow-hidden">
                         <ImageWithFallback
                           src={article.image}
                           alt={article.title}

@@ -148,7 +148,7 @@ export function HomePage({
 
       {/* Hero Section with Futuristic Gradient */}
       <section
-        className="relative overflow-hidden mt-14 md:mt-0"
+        className="relative overflow-hidden md:mt-14 md:mt-0"
         style={{
           minHeight: '600px',
           height: '100vh',

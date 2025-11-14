@@ -1,5 +1,6 @@
 import {
   Crown,
+  FileText,
   Home,
   LogOut,
   Menu,
@@ -38,7 +39,16 @@ interface SidebarProps {
   onToggleDarkMode?: () => void;
 }
 
-const NAVIGATION_ITEMS = [
+interface NavigationItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  requiresAuth: boolean;
+  isExternalLink?: boolean;
+  href?: string;
+}
+
+const NAVIGATION_ITEMS: NavigationItem[] = [
   {
     id: "home",
     label: "Home",
@@ -62,6 +72,14 @@ const NAVIGATION_ITEMS = [
     label: "Subscription",
     icon: Crown,
     requiresAuth: false,
+  },
+  {
+    id: "docs",
+    label: "Docs",
+    icon: FileText,
+    requiresAuth: false,
+    isExternalLink: true,
+    href: "/DeHouseWhitepaper.pdf",
   },
 ];
 
@@ -163,11 +181,19 @@ export function Sidebar({
             <Button
               key={item.id}
               variant="ghost"
-              className={`w-full justify-start ${isActive
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                }`}
-              onClick={() => handleNavigation(item.id, item.requiresAuth)}
+              className={`w-full justify-start ${
+                isActive
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              }`}
+              onClick={() => {
+                if (item.isExternalLink && item.href) {
+                  window.open(item.href, "_blank");
+                  setIsMobileMenuOpen(false);
+                } else {
+                  handleNavigation(item.id, item.requiresAuth);
+                }
+              }}
             >
               <Icon className="w-4 h-4 mr-3" />
               {item.label}
@@ -283,7 +309,6 @@ export function Sidebar({
                     Pro
                   </Badge>
                 )}
-
               </div>
             </div>
 
@@ -329,7 +354,7 @@ export function Sidebar({
             top: "1.7rem",
             left: "1rem",
             zIndex: 9999,
-            opacity: 0.9
+            opacity: 0.9,
           }}
           onClick={() => setIsMobileMenuOpen(true)}
           aria-label="Open menu"
@@ -384,11 +409,18 @@ export function Sidebar({
                 <Button
                   key={item.id}
                   variant="ghost"
-                  className={`w-full justify-start ${isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                    }`}
-                  onClick={() => handleNavigation(item.id, item.requiresAuth)}
+                  className={`w-full justify-start ${
+                    isActive
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  }`}
+                  onClick={() => {
+                    if (item.isExternalLink && item.href) {
+                      window.open(item.href, "_blank");
+                    } else {
+                      handleNavigation(item.id, item.requiresAuth);
+                    }
+                  }}
                 >
                   <Icon className="w-4 h-4 mr-3" />
                   {item.label}

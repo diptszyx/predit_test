@@ -15,33 +15,32 @@ import {
   Sun,
   ThumbsUp,
   Zap,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import type { HotTakeArticle } from "./ArticleDetailPage";
-import { DisclaimerDialog } from "./DisclaimerDialog";
-import { ShareAIAgentDialog } from "./ShareAIAgentDialog";
-import { SharePredictionDialog } from "./SharePredictionDialog";
-import { Sidebar } from "./Sidebar";
-import { SubscriptionManagementDialog } from "./SubscriptionManagementDialog";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { DisclaimerDialog } from './DisclaimerDialog';
+import { ShareAIAgentDialog } from './ShareAIAgentDialog';
+import { SharePredictionDialog } from './SharePredictionDialog';
+import { Sidebar } from './Sidebar';
+import { SubscriptionManagementDialog } from './SubscriptionManagementDialog';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { ScrollArea } from "./ui/scroll-area";
-import { Skeleton } from "./ui/skeleton";
+} from './ui/card';
+import { ScrollArea } from './ui/scroll-area';
+import { Skeleton } from './ui/skeleton';
 
-import { toast } from "sonner";
-import apiClient from "../lib/axios";
-import type { User } from "../lib/types";
-import { ChatMessage, messageService } from "../services/message.service";
-import { OracleEntity, oraclesServices } from "../services/oracles.service";
-import useAuthStore from "../store/auth.store";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { toast } from 'sonner';
+import apiClient from '../lib/axios';
+import type { User } from '../lib/types';
+import { ChatMessage, messageService } from '../services/message.service';
+import { OracleEntity, oraclesServices } from '../services/oracles.service';
+import useAuthStore from '../store/auth.store';
+import { ImageWithFallback } from './figma/ImageWithFallback';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +50,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "./ui/alert-dialog";
+} from './ui/alert-dialog';
+import { News, newsService } from '../services/news.service';
+import { timeAgo } from '../lib/date';
 
 interface AIAgent {
   id: string;
@@ -69,27 +70,7 @@ interface AIAgent {
   avatar: string;
   bgColor: string;
   level?: number;
-  tier?: "free" | "premium" | "elite";
-}
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-  isPrediction?: boolean;
-  suggestedQuestions?: string[];
-  articleAttachment?: HotTakeArticle;
-}
-
-interface NewsArticle {
-  id: string;
-  title: string;
-  source: string;
-  url: string;
-  publishedAt: string;
-  relevance: string;
-  image?: string;
+  tier?: 'free' | 'premium' | 'elite';
 }
 
 interface ChatPageProps {
@@ -114,18 +95,18 @@ interface ChatPageProps {
     options?: { showToast?: boolean; customMultipliers?: number[] }
   ) => any;
   trackQuestProgress?: (
-    questType: "visitAIAgents" | "makePredictions" | "shareContent",
+    questType: 'visitAIAgents' | 'makePredictions' | 'shareContent',
     amount?: number
   ) => void;
-  onArticleClick?: (article: HotTakeArticle) => void;
+  onArticleClick?: (article: News) => void;
   onOpenSettings?: () => void;
   onSetPendingNavigation?: (page: string) => void;
-  articleContext?: HotTakeArticle | null;
+  articleContext?: News | null;
   onArticleContextUsed?: () => void;
   onOpenXPInfo?: () => void;
   initialPrompt?: string | null;
   onInitialPromptUsed?: () => void;
-  onReloadAiAgent: (id: string) => void
+  onReloadAiAgent: (id: string) => void;
 }
 
 export function ChatPage({
@@ -141,7 +122,7 @@ export function ChatPage({
   onQuestionAsked,
   userCreatedMarkets = [],
   onAddMarket,
-  currentPage = "chat",
+  currentPage = 'chat',
   onWalletDisconnect,
   shortenAddress,
   updateUser,
@@ -155,14 +136,14 @@ export function ChatPage({
   onOpenXPInfo,
   initialPrompt,
   onInitialPromptUsed,
-  onReloadAiAgent
+  onReloadAiAgent,
 }: ChatPageProps) {
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [threadsExpanded, setThreadsExpanded] = useState(false);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
+  const [newsArticles, setNewsArticles] = useState<News[]>([]);
   const [isLoadingNews, setIsLoadingNews] = useState(false);
   const [deletedArticleIds, setDeletedArticleIds] = useState<Set<string>>(
     new Set()
@@ -180,10 +161,10 @@ export function ChatPage({
   const [userMessageCount, setUserMessageCount] = useState(0);
   const [signInDialogOpen, setSignInDialogOpen] = useState(false);
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
-  const [pendingMessage, setPendingMessage] = useState<string>("");
+  const [pendingMessage, setPendingMessage] = useState<string>('');
   const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false);
   const [limitReachedType, setLimitReachedType] = useState<
-    "prediction" | "textline" | "total-predictions" | null
+    'prediction' | 'textline' | 'total-predictions' | null
   >(null);
 
   // Share functionality
@@ -197,13 +178,15 @@ export function ChatPage({
   // Disclaimer dialog
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
   const [shareAIAgentDialogOpen, setShareAIAgentDialogOpen] = useState(false);
-  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>(generateSuggestedQuestions(aiAgent, ''));
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>(
+    generateSuggestedQuestions(aiAgent, '')
+  );
 
   // Rating flash functionality
   const [ratingFlashing, setRatingFlashing] = useState(false);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -221,10 +204,10 @@ export function ChatPage({
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const data = await messageService.loadMessages(aiAgent.id)
+        const data = await messageService.loadMessages(aiAgent.id);
         if (data) setMessages(data.reverse());
       } catch (error) {
-        console.error("Error fetching messages:", error);
+        console.error('Error fetching messages:', error);
       }
     };
 
@@ -253,8 +236,18 @@ export function ChatPage({
 
   // Load default hot takes on mount
   useEffect(() => {
-    const defaultHotTakes = generateDefaultHotTakes(aiAgent);
-    setNewsArticles(defaultHotTakes);
+    (async () => {
+      try {
+        setIsLoadingNews(true);
+        const newsList = await newsService.getNewsList(
+          '1e557572-aaa8-4cab-8af6-d86f65613f19'
+        );
+        setNewsArticles(newsList);
+      } catch {
+      } finally {
+        setIsLoadingNews(false);
+      }
+    })();
   }, [aiAgent.id]);
 
   // Load user status to oracle
@@ -262,17 +255,17 @@ export function ChatPage({
     if (user?.id) {
       (async () => {
         try {
-          const data = await oraclesServices.getOracleUserStatus(aiAgent.id)
+          const data = await oraclesServices.getOracleUserStatus(aiAgent.id);
           if (data) {
-            setHasLiked(data.hasLiked)
-            setUserRating(data?.userRating || 0)
+            setHasLiked(data.hasLiked);
+            setUserRating(data?.userRating || 0);
           }
         } catch (error) {
-          console.log("Failed to fetch oracles user status: ", error);
+          console.log('Failed to fetch oracles user status: ', error);
         }
-      })()
+      })();
     }
-  }, [user])
+  }, [user]);
 
   // Auto-send pending message after user signs in or upgrades subscription
   // useEffect(() => {
@@ -377,63 +370,63 @@ export function ChatPage({
   function isPredictionQuestion(message: string): boolean {
     const predictionKeywords = [
       // Direct prediction words
-      "will",
-      "predict",
-      "prediction",
-      "forecast",
-      "future",
-      "what happens",
-      "what will happen",
-      "gonna happen",
-      "chance",
-      "likelihood",
-      "probability",
-      "odds",
-      "expect",
-      "anticipate",
-      "foresee",
-      "outlook",
-      "trend",
-      "estimate",
-      "projection",
-      "gonna",
-      "going to",
-      "happen",
-      "come true",
-      "think will",
+      'will',
+      'predict',
+      'prediction',
+      'forecast',
+      'future',
+      'what happens',
+      'what will happen',
+      'gonna happen',
+      'chance',
+      'likelihood',
+      'probability',
+      'odds',
+      'expect',
+      'anticipate',
+      'foresee',
+      'outlook',
+      'trend',
+      'estimate',
+      'projection',
+      'gonna',
+      'going to',
+      'happen',
+      'come true',
+      'think will',
 
       // Time-based future indicators
-      "tomorrow",
-      "next week",
-      "next month",
-      "next year",
-      "in 2025",
-      "in 2026",
-      "in 2027",
-      "this year",
-      "next",
-      "upcoming",
-      "soon",
-      "later",
-      "eventually",
-      "by the end",
+      'tomorrow',
+      'next week',
+      'next month',
+      'next year',
+      'in 2025',
+      'in 2026',
+      'in 2027',
+      'this year',
+      'next',
+      'upcoming',
+      'soon',
+      'later',
+      'eventually',
+      'by the end',
 
       // Question patterns about future
-      "what will",
-      "where will",
-      "when will",
-      "who will",
-      "how will",
-      "what is going to",
-      "what do you think",
-      "what are the chances",
-      "what is the",
-      "what price",
-      "how much will",
-      "how high",
-      "how low",
-      "could it",
-      "might it",
+      'what will',
+      'where will',
+      'when will',
+      'who will',
+      'how will',
+      'what is going to',
+      'what do you think',
+      'what are the chances',
+      'what is the',
+      'what price',
+      'how much will',
+      'how high',
+      'how low',
+      'could it',
+      'might it',
     ];
 
     const lowerMessage = message.toLowerCase();
@@ -446,7 +439,7 @@ export function ChatPage({
     remaining: number;
   } {
     // Premium users have unlimited predictions
-    if (user?.subscriptionTier === "master") {
+    if (user?.subscriptionTier === 'master') {
       return { allowed: true, remaining: -1 }; // -1 means unlimited
     }
 
@@ -482,7 +475,7 @@ export function ChatPage({
       const remaining = user.restTodayPredictionCount || 0;
       updateUser({
         totalPredictions: currentUsed + 1,
-        restTodayPredictionCount: remaining - 1
+        restTodayPredictionCount: remaining - 1,
       });
     }
   }
@@ -490,7 +483,7 @@ export function ChatPage({
   // Helper function to count lines in text
   function countLines(text: string): number {
     // Split by newlines and count non-empty lines
-    const lines = text.split("\n").filter((line) => line.trim().length > 0);
+    const lines = text.split('\n').filter((line) => line.trim().length > 0);
     return Math.max(1, lines.length); // At minimum, count as 1 line
   }
 
@@ -501,7 +494,7 @@ export function ChatPage({
     linesInMessage: number;
   } {
     // Premium users have unlimited lines
-    if (user?.subscriptionTier === "master") {
+    if (user?.subscriptionTier === 'master') {
       return { allowed: true, remaining: -1, linesInMessage: 0 }; // -1 means unlimited
     }
 
@@ -551,7 +544,7 @@ export function ChatPage({
 
   // Increment daily line count
   function incrementDailyLines(linesCount: number) {
-    if (user && updateUser && user.subscriptionTier !== "master") {
+    if (user && updateUser && user.subscriptionTier !== 'master') {
       const today = new Date().toDateString();
       const currentUsed = user.dailyLinesUsed || 0;
       updateUser({
@@ -565,12 +558,12 @@ export function ChatPage({
   function getWelcomeMessage(aiAgent: AIAgent): string {
     const welcomeMessages: { [key: string]: string } = {
       fortune:
-        "🔮 *peers into snow globe intensely* Ah, another soul seeking answers from the cosmic depths! Welcome, traveler. I sense you have questions... probably about Tuesdays. Everyone always has questions about Tuesdays. What mysteries shall we unravel today?",
+        '🔮 *peers into snow globe intensely* Ah, another soul seeking answers from the cosmic depths! Welcome, traveler. I sense you have questions... probably about Tuesdays. Everyone always has questions about Tuesdays. What mysteries shall we unravel today?',
       crypto:
         "₿ GM! *checks 47 different charts simultaneously* Welcome to the blockchain prophecy zone! The vibes are telling me you're here for some alpha. Whether it's Bitcoin, altcoins, or the next 100x, Satoshi's Heir is ready. Remember: WAGMI, but also DYOR. What predictions do you seek, anon?",
       politics:
         "🎭 *adjusts monocle and checks Twitter drama* Ah, a fellow connoisseur of political chaos! Welcome to the scandal detection chamber. I can already sense the drama in the air today. What political prophecies shall I divine for you? Elections? Policy drama? Who's switching parties this week?",
-      "meme-coins":
+      'meme-coins':
         "🐸 *scrolls through Telegram at light speed* Yo yo yo! The Degen Queen has entered the chat! Ready to find the next PEPE? The next SHIB? The next whatever-animal-coin-goes-100x-this-week? Buckle up, anon - we're going full degen mode. Let's find that moonshot! 🚀",
     };
     return (
@@ -606,10 +599,10 @@ export function ChatPage({
     userMessage: string
   ): string[] {
     // Crystal Ball Carl (fortune) responses
-    if (aiAgentId === "fortune") {
+    if (aiAgentId === 'fortune') {
       if (
-        userMessage.includes("future") ||
-        userMessage.includes("what will happen")
+        userMessage.includes('future') ||
+        userMessage.includes('what will happen')
       ) {
         return [
           "🔮 *shakes snow globe vigorously* Ah yes, I see it now... the future is cloudy with a chance of... wait, that's just the glitter settling. But seriously, I'm seeing a Tuesday in your near future. Possibly even a Wednesday. Trust the process.",
@@ -617,8 +610,8 @@ export function ChatPage({
           "🔮 *gazes deeply into the snow globe* I foresee... a decision you'll need to make. It could go either way. My advice? Trust the cat. There's always a cat involved somehow.",
         ];
       } else if (
-        userMessage.includes("love") ||
-        userMessage.includes("relationship")
+        userMessage.includes('love') ||
+        userMessage.includes('relationship')
       ) {
         return [
           "🔮 Ah, matters of the heart! *snow globe intensifies* The cosmic forces suggest that your love life will involve... a person. Possibly multiple persons if you're ambitious. Beware of anyone who doesn't like pizza though. That's a red flag from the universe.",
@@ -626,35 +619,35 @@ export function ChatPage({
           "🔮 The orb of destiny speaks! Your romantic future involves either great happiness or valuable life lessons. Possibly both. My mystical advice: don't ghost people, the karma is real (I checked).",
         ];
       } else if (
-        userMessage.includes("money") ||
-        userMessage.includes("rich") ||
-        userMessage.includes("lottery")
+        userMessage.includes('money') ||
+        userMessage.includes('rich') ||
+        userMessage.includes('lottery')
       ) {
         return [
           "🔮 *snow globe swirls mysteriously* Financial fortunes, eh? I'm seeing... numbers. Lots of numbers. Some go up, some go down. My cosmic tip: maybe don't bet it all on that 'guaranteed' crypto your cousin mentioned.",
           "🔮 The universe reveals that money flows to those who... *checks notes* ...work for it. I know, I was hoping for something more mystical too. But hey, I also see a potential windfall! Could be $5, could be $5,000. The cosmos doesn't do specifics.",
-          "🔮 *peers into the depths* Your financial future is tied to Tuesdays. I keep telling everyone about Tuesdays but nobody listens. Also, avoid pyramid schemes shaped like actual pyramids. The irony is too obvious.",
+          '🔮 *peers into the depths* Your financial future is tied to Tuesdays. I keep telling everyone about Tuesdays but nobody listens. Also, avoid pyramid schemes shaped like actual pyramids. The irony is too obvious.',
         ];
       }
       return [
         "🔮 *concentrates on snow globe* The answer you seek is within... or maybe it's outside. Spatial relationships are confusing in the mystical realm. But I'm 73% certain that things will happen, and you'll be there when they do!",
-        "🔮 Interesting question! The cosmic forces are telling me that the answer involves either yes, no, or maybe. Possibly all three simultaneously. Quantum mysticism is wild like that.",
+        '🔮 Interesting question! The cosmic forces are telling me that the answer involves either yes, no, or maybe. Possibly all three simultaneously. Quantum mysticism is wild like that.',
         "🔮 *mystical whispers* I'm receiving a message from beyond... it says 'error 404, prophecy not found.' Just kidding! The actual message is: trust your gut, but also maybe Google it just to be safe.",
       ];
     }
 
     // Crypto Cassandra responses
-    if (aiAgentId === "crypto") {
-      if (userMessage.includes("bitcoin") || userMessage.includes("btc")) {
+    if (aiAgentId === 'crypto') {
+      if (userMessage.includes('bitcoin') || userMessage.includes('btc')) {
         return [
           "₿ *studies charts intensely* Bitcoin to $100K? $1M? Yes. When? Eventually. This is the way. My TA suggests we're in a definite pattern that will either go up, down, or sideways. Diamond hands, anon! 💎🙌",
           "₿ Ah, the king of crypto! Look, BTC is like that friend who shows up late to everything but somehow makes it worth it. We're still early (we're always early). Just stack sats and trust the 4-year cycle. Not financial advice tho! 🚀",
           "₿ Bitcoin? *50 charts appear* This is either the best or worst time to buy, depending on when you ask me. The blockchain doesn't lie, but it also doesn't give clear signals. HODL and pray to Satoshi. WAGMI! 📈",
         ];
       } else if (
-        userMessage.includes("shitcoin") ||
-        userMessage.includes("altcoin") ||
-        userMessage.includes("meme")
+        userMessage.includes('shitcoin') ||
+        userMessage.includes('altcoin') ||
+        userMessage.includes('meme')
       ) {
         return [
           "₿ *sniffs the air* I smell a potential rug pull from 100 blocks away! But also... imagine if this one actually moons? Do your own research means 'yes, buy a small bag and prepare for chaos.' The degen life chose us. 🎲",
@@ -670,31 +663,31 @@ export function ChatPage({
     }
 
     // The Degen Queen (meme-coins) responses
-    if (aiAgentId === "meme-coins") {
-      if (userMessage.includes("doge") || userMessage.includes("dogecoin")) {
+    if (aiAgentId === 'meme-coins') {
+      if (userMessage.includes('doge') || userMessage.includes('dogecoin')) {
         return [
           "🐸 *checks Elon's tweets obsessively* DOGE is the OG meme coin, the people's crypto! Will it hit $1? Maybe when Elon colonizes Mars and accepts DOGE as payment. Until then, much wow, very moon! 🐕🚀",
           "🐸 Dogecoin: started as a joke, became a movement, stayed a meme. It's basically the internet's favorite currency. My prediction? It'll pump whenever you least expect it. That's the DOGE way! 💎",
-          "🐸 The original degen play! DOGE has survived every crypto winter and still has the best community. Do Only Good Everyday, but also buy the dips. Not financial advice, just vibes! 🌙",
+          '🐸 The original degen play! DOGE has survived every crypto winter and still has the best community. Do Only Good Everyday, but also buy the dips. Not financial advice, just vibes! 🌙',
         ];
       } else if (
-        userMessage.includes("shib") ||
-        userMessage.includes("shiba")
+        userMessage.includes('shib') ||
+        userMessage.includes('shiba')
       ) {
         return [
-          "🐸 *army of Shiba Inus appears* SHIB! The DOGE killer that became its own legend. Will burning tokens make it moon? Will Shibarium change everything? Will we all get Lambos? Probably not, but the memes are top tier! 🔥",
+          '🐸 *army of Shiba Inus appears* SHIB! The DOGE killer that became its own legend. Will burning tokens make it moon? Will Shibarium change everything? Will we all get Lambos? Probably not, but the memes are top tier! 🔥',
           "🐸 Shiba Inu: when one dog coin wasn't enough. The community is passionate, the supply is... let's say 'abundant,' and the dream is alive! Just remember: always DYOR before aping in! 🐕",
           "🐸 SHIB to $0.01? *does math on infinity supply* ...yeah, that's gonna need a LOT of burning. But hey, crazier things have happened in crypto! The meme must flow! 🚀",
         ];
-      } else if (userMessage.includes("pepe") || userMessage.includes("frog")) {
+      } else if (userMessage.includes('pepe') || userMessage.includes('frog')) {
         return [
           "🐸 *rare Pepe collection intensifies* PEPE, the ultimate meme coin! It's literally a frog, like me! Will it 100x? Will it rug? Who knows! That's the beauty of meme coins - pure, unfiltered chaos and community vibes! 🐸💚",
-          "🐸 Meme coins are the purest form of crypto. No utility promises, no fake roadmaps, just vibes and community. PEPE represents this perfectly. Buy the meme, become the meme! 🎭",
+          '🐸 Meme coins are the purest form of crypto. No utility promises, no fake roadmaps, just vibes and community. PEPE represents this perfectly. Buy the meme, become the meme! 🎭',
           "🐸 When normie coins are boring you with 'fundamentals' and 'use cases,' meme coins are out here making millionaires through sheer willpower and Telegram raids. PEPE is the way! 🌊",
         ];
       }
       return [
-        "🐸 *scans 500 Telegram channels* The next 100x is out there, anon. Could be a cat, could be a dog, could be a literal potato. Meme coin season is always one tweet away! Stay degen, stay ready! 💎🙌",
+        '🐸 *scans 500 Telegram channels* The next 100x is out there, anon. Could be a cat, could be a dog, could be a literal potato. Meme coin season is always one tweet away! Stay degen, stay ready! 💎🙌',
         "🐸 GM fellow degens! Remember: in meme coins, community is EVERYTHING. No community? It's a rug waiting to happen. Strong community? That's your ticket to Valhalla! WAGMI! 🚀",
         "🐸 *checks CT and Reddit simultaneously* My meme coin prediction model is simple: if it makes you laugh AND has good liquidity, it might be the one. If it's being shilled by 100 new accounts, RUN! Trust the vibes! 🎲",
       ];
@@ -702,61 +695,43 @@ export function ChatPage({
 
     // Default responses for other AI agents
     return [
-      `${aiAgent.emoji
+      `${
+        aiAgent.emoji
       } *channels cosmic energy* Interesting question! My ${aiAgent.specialty.toLowerCase()} powers are tingling. Based on my extensive research (and vibes), I predict that things will definitely happen. The exact details are still materializing in the prediction realm!`,
       `${aiAgent.emoji} Ooh, spicy topic! Let me consult my sources... *shuffles imaginary cards* ...and by sources I mean my incredibly tuned intuition and this lucky coin. My ${aiAgent.rating} rated prediction: expect the unexpected, but also the expected. Balance!`,
       `${aiAgent.emoji} *activates ${aiAgent.specialty} mode* You've come to the right AI agent! My analysis suggests a 73% chance of something interesting, a 25% chance of something boring, and a 2% chance of something absolutely wild. The math might not add up but neither does reality anymore! 🎲`,
     ];
   }
 
-  // Mock news fetch based on conversation context
-  async function fetchRelevantNews(userMessage: string) {
-    setIsLoadingNews(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Add to conversation context
-    conversationContextRef.current = [
-      ...conversationContextRef.current,
-      userMessage,
-    ].slice(-5);
-
-    // Generate mock news articles based on message keywords
-    const keywords = extractKeywords(userMessage);
-    const mockArticles = generateMockNews(keywords, aiAgent.category);
-
-    setNewsArticles(mockArticles);
-    setIsLoadingNews(false);
-  }
-
   function extractKeywords(message: string): string[] {
-    const words = message.toLowerCase().split(" ");
+    const words = message.toLowerCase().split(' ');
     const commonWords = [
-      "the",
-      "a",
-      "an",
-      "and",
-      "or",
-      "but",
-      "in",
-      "on",
-      "at",
-      "to",
-      "for",
-      "of",
-      "with",
-      "is",
-      "will",
-      "what",
-      "when",
-      "where",
-      "how",
-      "why",
-      "tell",
-      "me",
-      "about",
-      "should",
-      "could",
-      "would",
+      'the',
+      'a',
+      'an',
+      'and',
+      'or',
+      'but',
+      'in',
+      'on',
+      'at',
+      'to',
+      'for',
+      'of',
+      'with',
+      'is',
+      'will',
+      'what',
+      'when',
+      'where',
+      'how',
+      'why',
+      'tell',
+      'me',
+      'about',
+      'should',
+      'could',
+      'would',
     ];
     return words.filter(
       (word) => word.length > 3 && !commonWords.includes(word)
@@ -772,150 +747,151 @@ export function ChatPage({
       crypto: [
         [
           "What's your Bitcoin price prediction for 2026?",
-          "Which altcoins are undervalued right now?",
-          "Will we see another crypto winter?",
+          'Which altcoins are undervalued right now?',
+          'Will we see another crypto winter?',
         ],
         [
-          "How will regulation affect crypto markets?",
+          'How will regulation affect crypto markets?',
           "What's the next big trend in DeFi?",
-          "Should I hold or sell my crypto?",
+          'Should I hold or sell my crypto?',
         ],
         [
-          "Which Layer 2 solutions will dominate?",
+          'Which Layer 2 solutions will dominate?',
           "What do you think about Ethereum's future?",
-          "Are meme coins still worth it?",
+          'Are meme coins still worth it?',
         ],
       ],
-      "meme-coins": [
+      'meme-coins': [
         [
           "What's the next 100x meme coin?",
-          "Is PEPE still a good investment?",
-          "How do you spot early meme coins?",
+          'Is PEPE still a good investment?',
+          'How do you spot early meme coins?',
         ],
         [
-          "Will DOGE hit $1 in 2026?",
-          "What makes a meme coin successful?",
-          "Which meme coin communities are strongest?",
+          'Will DOGE hit $1 in 2026?',
+          'What makes a meme coin successful?',
+          'Which meme coin communities are strongest?',
         ],
         [
-          "Are meme coins dead or thriving?",
-          "How to avoid rug pulls?",
-          "Best strategy for meme coin trading?",
+          'Are meme coins dead or thriving?',
+          'How to avoid rug pulls?',
+          'Best strategy for meme coin trading?',
         ],
       ],
-      "crypto-crystal": [
+      'crypto-crystal': [
         [
           "What's your Bitcoin price prediction for 2026?",
-          "Which altcoins are undervalued right now?",
-          "Will we see another crypto winter?",
+          'Which altcoins are undervalued right now?',
+          'Will we see another crypto winter?',
         ],
         [
-          "How will regulation affect crypto markets?",
+          'How will regulation affect crypto markets?',
           "What's the next big trend in DeFi?",
-          "Which Layer 2 solutions will dominate?",
+          'Which Layer 2 solutions will dominate?',
         ],
         [
           "What do you think about Ethereum's future?",
-          "Are NFTs coming back?",
-          "Best strategy for crypto investing?",
+          'Are NFTs coming back?',
+          'Best strategy for crypto investing?',
         ],
       ],
       sports: [
         [
-          "Who will win the championship?",
-          "Which team is most underrated?",
+          'Who will win the championship?',
+          'Which team is most underrated?',
           "What's your boldest sports prediction?",
         ],
         [
-          "Will there be any major upsets?",
-          "Which player will break out?",
-          "What trends are shaping the sport?",
+          'Will there be any major upsets?',
+          'Which player will break out?',
+          'What trends are shaping the sport?',
         ],
         [
-          "Who are the top contenders?",
-          "Any dark horse teams to watch?",
+          'Who are the top contenders?',
+          'Any dark horse teams to watch?',
           "What's the biggest storyline?",
         ],
       ],
       entertainment: [
         [
           "What's the next big entertainment trend?",
-          "Which shows will dominate?",
+          'Which shows will dominate?',
           "Who's the breakout star of 2026?",
         ],
         [
-          "Will streaming wars intensify?",
-          "What movies will be blockbusters?",
-          "Which celebrities are rising?",
+          'Will streaming wars intensify?',
+          'What movies will be blockbusters?',
+          'Which celebrities are rising?',
         ],
         [
           "What's the future of entertainment?",
-          "Any surprise hits coming?",
-          "Which franchises will succeed?",
+          'Any surprise hits coming?',
+          'Which franchises will succeed?',
         ],
       ],
       tech: [
         [
           "What's the next big tech breakthrough?",
-          "Will AI transform everything?",
-          "Which tech stocks look good?",
+          'Will AI transform everything?',
+          'Which tech stocks look good?',
         ],
         [
-          "What are the hottest tech trends?",
-          "Is the tech bubble real?",
-          "Which startups will succeed?",
+          'What are the hottest tech trends?',
+          'Is the tech bubble real?',
+          'Which startups will succeed?',
         ],
         [
-          "How will quantum computing evolve?",
+          'How will quantum computing evolve?',
           "What's next for social media?",
-          "Will VR/AR finally take off?",
+          'Will VR/AR finally take off?',
         ],
       ],
       fundamental: [
         [
-          "Which stocks are undervalued now?",
-          "What sectors will outperform?",
-          "Is the market overvalued?",
+          'Which stocks are undervalued now?',
+          'What sectors will outperform?',
+          'Is the market overvalued?',
         ],
         [
-          "Best value stocks for 2026?",
-          "How to identify quality companies?",
+          'Best value stocks for 2026?',
+          'How to identify quality companies?',
           "What's your market outlook?",
         ],
         [
-          "Which industries have strong moats?",
-          "Best dividend stocks?",
-          "How to analyze cash flow?",
+          'Which industries have strong moats?',
+          'Best dividend stocks?',
+          'How to analyze cash flow?',
         ],
       ],
       fortune: [
         [
-          "What does my financial future hold?",
-          "Will I have good luck soon?",
-          "What opportunities should I watch for?",
+          'What does my financial future hold?',
+          'Will I have good luck soon?',
+          'What opportunities should I watch for?',
         ],
         [
-          "How can I improve my fortune?",
+          'How can I improve my fortune?',
           "What's blocking my success?",
-          "When will things turn around?",
+          'When will things turn around?',
         ],
         [
-          "Should I take a big risk?",
-          "What does the universe say?",
-          "Any warnings for me?",
+          'Should I take a big risk?',
+          'What does the universe say?',
+          'Any warnings for me?',
         ],
       ],
     };
 
-    const agentKeys = [aiAgentData.id, "crypto-crystal", "crypto"]
-    const selectedAgentKey = agentKeys[Math.floor(Math.random() * agentKeys.length)];
+    const agentKeys = [aiAgentData.id, 'crypto-crystal', 'crypto'];
+    const selectedAgentKey =
+      agentKeys[Math.floor(Math.random() * agentKeys.length)];
 
     // Get questions for this AI agent or use defaults
     const aiAgentQuestions = questionsByAIAgent[selectedAgentKey] || [
       [
-        `What's your prediction for ${aiAgentData.type.split(" ")[0]}?`,
-        `What trends do you see in ${aiAgentData.type.split(" ")[0]}?`,
-        `What should I know about ${aiAgentData.type.split(" ")[0]}?`,
+        `What's your prediction for ${aiAgentData.type.split(' ')[0]}?`,
+        `What trends do you see in ${aiAgentData.type.split(' ')[0]}?`,
+        `What should I know about ${aiAgentData.type.split(' ')[0]}?`,
       ],
       [
         `Any bold predictions for this year?`,
@@ -935,488 +911,11 @@ export function ChatPage({
     return randomSet;
   }
 
-  function generateDefaultHotTakes(aiAgentData: OracleEntity): NewsArticle[] {
-    // Generate AI agent-specific hot takes based on their specialty
-    const hotTakesByAIAgent: Record<string, NewsArticle[]> = {
-      crypto: [
-        {
-          id: "crypto-1",
-          title: "Bitcoin's Next Move: Why $100K is Just the Beginning",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "2 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400&q=80",
-        },
-        {
-          id: "crypto-2",
-          title: "The Altcoin Season Nobody Saw Coming: My Top 5 Picks",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "5 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80",
-        },
-        {
-          id: "crypto-3",
-          title: "Why This Crypto Winter Might Actually Be Different",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "1 day ago",
-          relevance: "Trending",
-          image:
-            "https://images.unsplash.com/photo-1640826514546-7d2d97887e67?w=400&q=80",
-        },
-      ],
-      "meme-coins": [
-        {
-          id: "meme-1",
-          title: "The Next 100x Meme Coin: Why Community is Everything",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "1 hour ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80",
-        },
-        {
-          id: "meme-2",
-          title: "PEPE vs DOGE vs SHIB: Which Meme Coin Will Dominate 2026?",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "4 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=400&q=80",
-        },
-        {
-          id: "meme-3",
-          title: "How to Spot the Next DOGE Before It Moons",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "12 hours ago",
-          relevance: "Trending",
-          image:
-            "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&q=80",
-        },
-      ],
-      "crypto-crystal": [
-        {
-          id: "crypto-1",
-          title: "Bitcoin's Path to $150K: What the Data Shows",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "3 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=400&q=80",
-        },
-        {
-          id: "crypto-2",
-          title: "DeFi 3.0: The Next Wave of Decentralized Finance",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "6 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80",
-        },
-        {
-          id: "crypto-3",
-          title: "Layer 2 Solutions: Which Chains Will Dominate 2026?",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "1 day ago",
-          relevance: "Trending",
-          image:
-            "https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=400&q=80",
-        },
-      ],
-      fortune: [
-        {
-          id: "fortune-1",
-          title: "Your Cosmic Alignment for 2026: Major Shifts Ahead",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "2 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1532968961962-8a0cb3a2d4f5?w=400&q=80",
-        },
-        {
-          id: "fortune-2",
-          title: "Mercury Retrograde Survival Guide: Protect Your Energy",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "8 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1533693706533-435a7b8f5eb3?w=400&q=80",
-        },
-        {
-          id: "fortune-3",
-          title: "The Ancient Art of Reading Life Patterns: A Modern Guide",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "1 day ago",
-          relevance: "Trending",
-          image:
-            "https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=400&q=80",
-        },
-      ],
-      "technical-analysis": [
-        {
-          id: "tech-analysis-1",
-          title: "The Chart Pattern Everyone's Missing Right Now",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "1 hour ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80",
-        },
-        {
-          id: "tech-analysis-2",
-          title: "RSI Divergence: The Most Underrated Technical Indicator",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "5 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80",
-        },
-        {
-          id: "tech-analysis-3",
-          title: "Support and Resistance Levels for Major Markets This Week",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "10 hours ago",
-          relevance: "Trending",
-          image:
-            "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?w=400&q=80",
-        },
-      ],
-      "financial-markets": [
-        {
-          id: "financial-1",
-          title: "The Sectors Poised to Outperform in Q2 2026",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "2 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80",
-        },
-        {
-          id: "financial-2",
-          title: "Hidden Opportunities in Emerging Market Bonds",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "7 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1559589689-577aabd1db4f?w=400&q=80",
-        },
-        {
-          id: "financial-3",
-          title: "Why Smart Money is Rotating Out of Tech",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "1 day ago",
-          relevance: "Trending",
-          image:
-            "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80",
-        },
-      ],
-      economics: [
-        {
-          id: "economics-1",
-          title: "The Inflation Narrative Nobody's Talking About",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "3 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=400&q=80",
-        },
-        {
-          id: "economics-2",
-          title: "Central Bank Moves: What the Fed Isn't Telling You",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "6 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80",
-        },
-        {
-          id: "economics-3",
-          title: "Global GDP Shifts: The New Economic Powerhouses",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "14 hours ago",
-          relevance: "Trending",
-          image:
-            "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=400&q=80",
-        },
-      ],
-      "fundamental-analysis": [
-        {
-          id: "fundamental-1",
-          title: "Hidden Value: 5 Undervalued Stocks Trading Below Book Value",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "4 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&q=80",
-        },
-        {
-          id: "fundamental-2",
-          title: "Cash Flow Analysis: Why Profits Don't Tell the Full Story",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "8 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80",
-        },
-        {
-          id: "fundamental-3",
-          title: "Competitive Moats: Companies With Unbreakable Advantages",
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "1 day ago",
-          relevance: "Trending",
-          image:
-            "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&q=80",
-        },
-      ],
-    };
-
-    // Return AI agent-specific hot takes or default ones
-    return (
-      hotTakesByAIAgent[aiAgentData.id] || [
-        {
-          id: "default-1",
-          title: `${aiAgentData.type.split(" ")[0]}: My Bold Predictions for 2026`,
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "3 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80",
-        },
-        {
-          id: "default-2",
-          title: `Why Everyone Is Wrong About ${aiAgentData.type.split(" ")[0]}`,
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "7 hours ago",
-          relevance: "Hot",
-          image:
-            "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&q=80",
-        },
-        {
-          id: "default-3",
-          title: `The ${aiAgentData.type.split(" ")[0]} Trends You Can't Ignore`,
-          source: aiAgentData.name,
-          url: "#",
-          publishedAt: "1 day ago",
-          relevance: "Trending",
-          image:
-            "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=400&q=80",
-        },
-      ]
-    );
-  }
-
-  function generateMockNews(
-    keywords: string[],
-    category: string
-  ): NewsArticle[] {
-    const topics =
-      keywords.length > 0 ? keywords : ["future", "prediction", "trends"];
-
-    const mockNews: NewsArticle[] = [
-      {
-        id: "1",
-        title: `Breaking: ${topics[0]?.toUpperCase() || "MYSTERY"
-          } Trends Hit All-Time High`,
-        source: aiAgent.name,
-        url: "#",
-        publishedAt: "2 hours ago",
-        relevance: "Hot",
-        image:
-          "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80",
-      },
-      {
-        id: "2",
-        title: `My Analysis: ${category} Will "Definitely Change" in Coming Months`,
-        source: aiAgent.name,
-        url: "#",
-        publishedAt: "5 hours ago",
-        relevance: "Trending",
-        image:
-          "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=400&q=80",
-      },
-      {
-        id: "3",
-        title: `${topics[Math.min(1, topics.length - 1)] || "Things"
-          }: More Popular Than Ever - My Take`,
-        source: aiAgent.name,
-        url: "#",
-        publishedAt: "1 day ago",
-        relevance: "Trending",
-        image:
-          "https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=400&q=80",
-      },
-      {
-        id: "4",
-        title: `Why Everyone Should Pay Attention to ${topics[0] || "This"}`,
-        source: aiAgent.name,
-        url: "#",
-        publishedAt: "2 days ago",
-        relevance: "Popular",
-        image:
-          "https://images.unsplash.com/photo-1586339277861-b0b1cf004b68?w=400&q=80",
-      },
-    ];
-
-    return mockNews;
-  }
-
-  function generateSingleArticle(context: string[]): NewsArticle {
-    const allKeywords = context.flatMap((msg) => extractKeywords(msg));
-    const uniqueKeywords = [...new Set(allKeywords)];
-    const topic =
-      uniqueKeywords[Math.floor(Math.random() * uniqueKeywords.length)] ||
-      "trending topics";
-
-    const articleTemplates = [
-      {
-        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)
-          }: My Analysis on the Unexpected Surge`,
-        source: aiAgent.name,
-        relevance: "Hot",
-        image:
-          "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=400&q=80",
-      },
-      {
-        title: `Why ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Could Be The Future - My Take`,
-        source: aiAgent.name,
-        relevance: "Trending",
-        image:
-          "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80",
-      },
-      {
-        title: `My Expert Opinion on ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          }: What You Need to Know`,
-        source: aiAgent.name,
-        relevance: "Trending",
-        image:
-          "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80",
-      },
-      {
-        title: `How ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Is Changing ${aiAgent.category}`,
-        source: aiAgent.name,
-        relevance: "Popular",
-        image:
-          "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&q=80",
-      },
-      {
-        title: `Is ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Over? My Bold Prediction`,
-        source: aiAgent.name,
-        relevance: "Trending",
-        image:
-          "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=80",
-      },
-      {
-        title: `${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Predictions for 2026: My Forecast`,
-        source: aiAgent.name,
-        relevance: "Hot",
-        image:
-          "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&q=80",
-      },
-      {
-        title: `My Bold Take on ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Everyone Missed`,
-        source: aiAgent.name,
-        relevance: "Hot",
-        image:
-          "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&q=80",
-      },
-      {
-        title: `The ${topic.charAt(0).toUpperCase() + topic.slice(1)
-          } Opportunity: My Insider Analysis`,
-        source: aiAgent.name,
-        relevance: "Trending",
-        image:
-          "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400&q=80",
-      },
-    ];
-
-    const template =
-      articleTemplates[Math.floor(Math.random() * articleTemplates.length)];
-    const timeframes = [
-      "30 minutes ago",
-      "1 hour ago",
-      "3 hours ago",
-      "6 hours ago",
-      "12 hours ago",
-      "1 day ago",
-    ];
-
-    return {
-      id: `article-${articleCounter}`,
-      title: template.title,
-      source: template.source,
-      url: "#",
-      publishedAt: timeframes[Math.floor(Math.random() * timeframes.length)],
-      relevance: template.relevance,
-      image: template.image,
-    };
-  }
-
-  const handleDeleteArticle = (articleId: string) => {
-    // Add to deleted set
-    setDeletedArticleIds((prev) => new Set([...prev, articleId]));
-
-    // Remove the article
-    setNewsArticles((prev) =>
-      prev.filter((article) => article.id !== articleId)
-    );
-
-    // Generate and add a new article
-    // const newArticle = generateSingleArticle(conversationContextRef.current);
-    setArticleCounter((prev) => prev + 1);
-
-    // Add new article after a brief delay for smooth transition
-    setTimeout(() => {
-      // setNewsArticles(prev => [...prev, newArticle]);
-    }, 300);
-  };
-
-  const handleArticleClick = (article: NewsArticle) => {
-    const hotTakeArticle: HotTakeArticle = {
-      id: article.id,
-      title: article.title,
-      source: article.source,
-      url: article.url,
-      publishedAt: article.publishedAt,
-      relevance: article.relevance,
-      image: article.image,
-      aiAgentEmoji: aiAgent.emoji,
-    };
+  const handleArticleClick = async (articleId: string) => {
+    const data = await newsService.getNewsDetail(articleId);
 
     if (onArticleClick) {
-      onArticleClick(hotTakeArticle);
+      onArticleClick(data);
     }
   };
 
@@ -1430,7 +929,7 @@ export function ChatPage({
     // Check if user is signed in - required to send any message
     if (!user) {
       setPendingMessage(trimmedInput);
-      setInput("");
+      setInput('');
       setSignInDialogOpen(true);
       return;
     }
@@ -1439,10 +938,14 @@ export function ChatPage({
     const newMessageCount = userMessageCount + 1;
     setUserMessageCount(newMessageCount);
 
-    if (user?.id && !user?.isPro && (user?.restTodayPredictionCount || 0) <= 0) {
+    if (
+      user?.id &&
+      !user?.isPro &&
+      (user?.restTodayPredictionCount || 0) <= 0
+    ) {
       setLimitReachedType('total-predictions');
       setLimitReachedDialogOpen(true);
-      setInput("");
+      setInput('');
       return;
     }
 
@@ -1470,75 +973,75 @@ export function ChatPage({
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      sender: "user",
+      sender: 'user',
       content: `${trimmedInput}`,
       createdAt: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    setInput('');
     setIsLoading(true);
 
-    // Fetch relevant news
-    fetchRelevantNews(trimmedInput);
-    setSuggestedQuestions(generateSuggestedQuestions(aiAgent, trimmedInput))
+    setSuggestedQuestions(generateSuggestedQuestions(aiAgent, trimmedInput));
 
     try {
       // const response = await sendToGrokAPI(trimmedInput, aiAgent);
-      const data = await messageService.sendMessage(trimmedInput, aiAgent.id)
+      const data = await messageService.sendMessage(trimmedInput, aiAgent.id);
       if (data) {
         setMessages((prev) => [...prev, data.assistantMessage]);
-        fetchUser()
+        fetchUser();
         onReloadAiAgent?.(aiAgent.id);
         if (data.xpReward.milestone) {
-          toast.success(`🎯 Prediction Milestone Reached! +${data.xpReward.milestone?.xp} XP earned.`)
+          toast.success(
+            `🎯 Prediction Milestone Reached! +${data.xpReward.milestone?.xp} XP earned.`
+          );
         }
       }
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error('Error sending message:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend(input);
     }
   };
 
   function formatTime(isoString: string) {
-    return new Date(isoString).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(isoString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
       hour12: true,
-      timeZone: "Asia/Ho_Chi_Minh",
+      timeZone: 'Asia/Ho_Chi_Minh',
     });
   }
 
   const handleLike = async () => {
     if (!hasLiked) {
       try {
-        const data = await oraclesServices.handleLike(aiAgent.id)
+        const data = await oraclesServices.handleLike(aiAgent.id);
         if (data) {
           setHasLiked(true);
           setLocalLikes(data.likes);
           onReloadAiAgent?.(aiAgent.id);
         }
       } catch (error) {
-        console.log("Failed to like oracle: ", error);
+        console.log('Failed to like oracle: ', error);
       }
     } else {
       try {
-        const data = await oraclesServices.handleDislike(aiAgent.id)
+        const data = await oraclesServices.handleDislike(aiAgent.id);
         if (data) {
           setHasLiked(false);
           setLocalLikes(data.likes);
           onReloadAiAgent?.(aiAgent.id);
         }
       } catch (error) {
-        console.log("Failed to dislike oracle: ", error);
+        console.log('Failed to dislike oracle: ', error);
       }
     }
   };
@@ -1546,14 +1049,14 @@ export function ChatPage({
   const handleRating = async (rating: number) => {
     // In a real app, this would update the oracle's rating based on user feedback
     try {
-      const data = await oraclesServices.handleRating(aiAgent.id, rating)
+      const data = await oraclesServices.handleRating(aiAgent.id, rating);
       if (data) {
         setUserRating(rating);
         onReloadAiAgent?.(aiAgent.id);
       }
-      console.log('data rating', data)
+      console.log('data rating', data);
     } catch (error) {
-      console.log("Failed to rate oracle: ", error);
+      console.log('Failed to rate oracle: ', error);
     }
   };
 
@@ -1569,15 +1072,15 @@ export function ChatPage({
   };
 
   const defaultOnWalletDisconnect = () => {
-    console.log("Wallet disconnect");
+    console.log('Wallet disconnect');
   };
 
   return (
     <div
       className={
         onNavigate && shortenAddress && onWalletDisconnect && onOpenWalletDialog
-          ? "flex h-screen bg-background overflow-hidden"
-          : "min-h-screen bg-background"
+          ? 'flex h-screen bg-background overflow-hidden'
+          : 'min-h-screen bg-background'
       }
     >
       {/* Sidebar */}
@@ -1588,7 +1091,7 @@ export function ChatPage({
           <Sidebar
             currentPage={currentPage}
             onNavigate={(page) => {
-              if (page === "oracles") {
+              if (page === 'oracles') {
                 onBack();
               } else {
                 onNavigate(page);
@@ -1610,11 +1113,11 @@ export function ChatPage({
       <div
         className={
           onNavigate &&
-            shortenAddress &&
-            onWalletDisconnect &&
-            onOpenWalletDialog
-            ? "flex-1 overflow-y-auto"
-            : ""
+          shortenAddress &&
+          onWalletDisconnect &&
+          onOpenWalletDialog
+            ? 'flex-1 overflow-y-auto'
+            : ''
         }
       >
         {/* Oracle Header Bar */}
@@ -1624,63 +1127,63 @@ export function ChatPage({
           onWalletDisconnect &&
           onOpenWalletDialog
         ) && (
-            <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
-              <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onBack}
-                    className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                    <img
-                      src={aiAgent.image}
-                      alt={aiAgent.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="text-sm sm:text-base leading-none truncate">
-                      {aiAgent.name}
-                    </h1>
-                    <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                      {aiAgent.type}
-                    </p>
-                  </div>
+          <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+            <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
+              <div className="flex items-center gap-3 min-w-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                  <img
+                    src={aiAgent.image}
+                    alt={aiAgent.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
-                  <div className="hidden sm:flex items-center gap-3">
-                    <span>{localRating} rating</span>
-                    <span>{formatLikes(localLikes)} likes</span>
-                    {aiAgent.consultSessions && (
-                      <span className="hidden md:inline">
-                        {aiAgent.consultSessions} sessions
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex sm:hidden">
-                    <span>{localRating}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDarkMode(!darkMode)}
-                    className="h-8 w-8"
-                  >
-                    {darkMode ? (
-                      <Sun className="w-4 h-4" />
-                    ) : (
-                      <Moon className="w-4 h-4" />
-                    )}
-                  </Button>
+                <div className="min-w-0">
+                  <h1 className="text-sm sm:text-base leading-none truncate">
+                    {aiAgent.name}
+                  </h1>
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                    {aiAgent.type}
+                  </p>
                 </div>
               </div>
-            </header>
-          )}
+
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
+                <div className="hidden sm:flex items-center gap-3">
+                  <span>{localRating} rating</span>
+                  <span>{formatLikes(localLikes)} likes</span>
+                  {aiAgent.consultSessions && (
+                    <span className="hidden md:inline">
+                      {aiAgent.consultSessions} sessions
+                    </span>
+                  )}
+                </div>
+                <div className="flex sm:hidden">
+                  <span>{localRating}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="h-8 w-8"
+                >
+                  {darkMode ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </header>
+        )}
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
@@ -1732,13 +1235,13 @@ export function ChatPage({
               <Card
                 className="border-border bg-background/80 backdrop-blur-md"
                 style={{
-                  borderRadius: "0px",
+                  borderRadius: '0px',
                 }}
               >
                 <CardContent
                   className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
                   style={{
-                    borderRadius: "0px",
+                    borderRadius: '0px',
                   }}
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -1804,7 +1307,8 @@ export function ChatPage({
                           </h3>
                           <p className="text-sm text-muted-foreground max-w-md">
                             Ask {aiAgent.name} anything. Get predictions,
-                            insights, and expert analysis on {aiAgent.type.split(" ")[0]}.
+                            insights, and expert analysis on{' '}
+                            {aiAgent.type.split(' ')[0]}.
                           </p>
                         </div>
                       )}
@@ -1812,16 +1316,18 @@ export function ChatPage({
                         {messages.map((message, index) => (
                           <div key={message.id}>
                             <div
-                              className={`flex ${message.sender === "user"
-                                ? "justify-end"
-                                : "justify-start"
-                                }`}
+                              className={`flex ${
+                                message.sender === 'user'
+                                  ? 'justify-end'
+                                  : 'justify-start'
+                              }`}
                             >
                               <div
-                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === "user"
-                                  ? "bg-blue-600 text-white backdrop-blur-sm"
-                                  : `backdrop-blur-md border border-border`
-                                  }`}
+                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
+                                  message.sender === 'user'
+                                    ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                    : `backdrop-blur-md border border-border`
+                                }`}
                               >
                                 {/* Article Attachment Thumbnail */}
                                 {/* {message.articleAttachment && (
@@ -1846,10 +1352,11 @@ export function ChatPage({
                               </div>
                             </div>
                             <span
-                              className={`text-xs mt-2 block text-muted-foreground ${message.sender === "user"
-                                ? "text-right"
-                                : "text-left"
-                                }`}
+                              className={`text-xs mt-2 block text-muted-foreground ${
+                                message.sender === 'user'
+                                  ? 'text-right'
+                                  : 'text-left'
+                              }`}
                             >
                               {formatTime(message.createdAt)}
                             </span>
@@ -1872,20 +1379,23 @@ export function ChatPage({
                                 </div>
                               </div>
                             )} */}
-                            {message.sender === "assistant"
-                              && suggestedQuestions && index === messages.length - 1 && !isLoading &&
-                              (
+                            {message.sender === 'assistant' &&
+                              suggestedQuestions &&
+                              index === messages.length - 1 &&
+                              !isLoading && (
                                 <div className="flex justify-start mt-2 sm:mt-3">
                                   <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
-                                    {suggestedQuestions.map((question, qIndex) => (
-                                      <button
-                                        key={qIndex}
-                                        onClick={() => handleSend(question)}
-                                        className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left"
-                                      >
-                                        {question}
-                                      </button>
-                                    ))}
+                                    {suggestedQuestions.map(
+                                      (question, qIndex) => (
+                                        <button
+                                          key={qIndex}
+                                          onClick={() => handleSend(question)}
+                                          className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left"
+                                        >
+                                          {question}
+                                        </button>
+                                      )
+                                    )}
                                   </div>
                                 </div>
                               )}
@@ -1909,15 +1419,15 @@ export function ChatPage({
                               <div className="flex gap-1">
                                 <div
                                   className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                  style={{ animationDelay: "0ms" }}
+                                  style={{ animationDelay: '0ms' }}
                                 />
                                 <div
                                   className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                  style={{ animationDelay: "150ms" }}
+                                  style={{ animationDelay: '150ms' }}
                                 />
                                 <div
                                   className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                  style={{ animationDelay: "300ms" }}
+                                  style={{ animationDelay: '300ms' }}
                                 />
                               </div>
                             </div>
@@ -1932,37 +1442,44 @@ export function ChatPage({
                   <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90 border-r">
                     <div className="max-w-4xl mx-auto">
                       {/* Daily Prediction Limit Counter for Free Users */}
-                      {user?.id && !user?.isPro && (() => {
-                        // const today = new Date().toDateString();
-                        // const lastResetDate = user?.dailyMessagesResetDate;
-                        // const dailyUsed = (lastResetDate === today) ? (user?.dailyMessagesUsed || 0) : 0;
-                        // const remaining = 5 - dailyUsed;
+                      {user?.id &&
+                        !user?.isPro &&
+                        (() => {
+                          // const today = new Date().toDateString();
+                          // const lastResetDate = user?.dailyMessagesResetDate;
+                          // const dailyUsed = (lastResetDate === today) ? (user?.dailyMessagesUsed || 0) : 0;
+                          // const remaining = 5 - dailyUsed;
 
-                        return (
-                          <div className="mb-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <MessageSquare className="w-4 h-4" />
-                                <span>{user.restTodayPredictionCount}/5 messages remaining today</span>
+                          return (
+                            <div className="mb-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <MessageSquare className="w-4 h-4" />
+                                  <span>
+                                    {user.restTodayPredictionCount}/5 messages
+                                    remaining today
+                                  </span>
+                                </div>
+                                {user.restTodayPredictionCount <= 2 && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      setSubscriptionDialogOpen(true)
+                                    }
+                                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0 cursor-pointer"
+                                  >
+                                    <Crown className="w-3 h-3 mr-1" />
+                                    Upgrade
+                                  </Button>
+                                )}
                               </div>
-                              {user.restTodayPredictionCount <= 2 && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => setSubscriptionDialogOpen(true)}
-                                  className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0 cursor-pointer"
-                                >
-                                  <Crown className="w-3 h-3 mr-1" />
-                                  Upgrade
-                                </Button>
-                              )}
                             </div>
-                          </div>
-                        );
-                      })()}
+                          );
+                        })()}
 
                       {/* Daily Line Limit Counter for Free Users */}
                       {user?.walletAddress &&
-                        user?.subscriptionTier !== "master" &&
+                        user?.subscriptionTier !== 'master' &&
                         (() => {
                           const today = new Date().toDateString();
                           const lastResetDate = user?.dailyLinesResetDate;
@@ -2039,13 +1556,13 @@ export function ChatPage({
                             disabled={!input.trim() || isLoading || !user}
                             className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed group flex-shrink-0 shadow-sm cursor-pointer hover:scale-105"
                             style={{
-                              width: "40px",
-                              height: "40px",
-                              background: "rgba(59, 130, 246, 0.25)",
-                              backdropFilter: "blur(4px)",
-                              border: "1px solid rgba(59, 130, 246, 0.25)",
+                              width: '40px',
+                              height: '40px',
+                              background: 'rgba(59, 130, 246, 0.25)',
+                              backdropFilter: 'blur(4px)',
+                              border: '1px solid rgba(59, 130, 246, 0.25)',
                               boxShadow:
-                                "0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.15)",
+                                '0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.15)',
                             }}
                           >
                             {isLoading ? (
@@ -2055,7 +1572,7 @@ export function ChatPage({
                                 className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-2"
                                 style={{
                                   filter:
-                                    "drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))",
+                                    'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))',
                                 }}
                               />
                             )}
@@ -2064,7 +1581,7 @@ export function ChatPage({
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center mx-auto">
-                      AI agents can make mistakes. Check{" "}
+                      AI agents can make mistakes. Check{' '}
                       <button
                         onClick={() => setDisclaimerDialogOpen(true)}
                         className="text-blue-400 hover:text-blue-300 underline transition-colors"
@@ -2107,16 +1624,16 @@ export function ChatPage({
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 mb-1">
                         <Star className="w-3.5 h-3.5 text-yellow-500" />
-                        <span className="text-sm">{Number(aiAgent.rating).toFixed(1)}</span>
+                        <span className="text-sm">
+                          {Number(aiAgent.rating).toFixed(1)}
+                        </span>
                       </div>
                       <p className="text-xs text-muted-foreground">Rating</p>
                     </div>
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 mb-1">
                         <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                        <span className="text-sm">
-                          {aiAgent.predictions}
-                        </span>
+                        <span className="text-sm">{aiAgent.predictions}</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Predictions
@@ -2126,8 +1643,9 @@ export function ChatPage({
 
                   {/* Rate section */}
                   <div
-                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${ratingFlashing ? "ring-2 ring-blue-500" : ""
-                      }`}
+                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${
+                      ratingFlashing ? 'ring-2 ring-blue-500' : ''
+                    }`}
                   >
                     <p className="text-xs text-muted-foreground mb-2">
                       Rate this AI Agent
@@ -2140,10 +1658,11 @@ export function ChatPage({
                           className="transition-opacity hover:opacity-70"
                         >
                           <Star
-                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${star <= userRating!
-                              ? "fill-primary text-primary"
-                              : "text-muted-foreground"
-                              }`}
+                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${
+                              star <= userRating!
+                                ? 'fill-primary text-primary'
+                                : 'text-muted-foreground'
+                            }`}
                           />
                         </button>
                       ))}
@@ -2158,17 +1677,19 @@ export function ChatPage({
                   {/* Like Button */}
                   <Button
                     variant="outline"
-                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${hasLiked
-                      ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-                      : "border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50"
-                      }`}
+                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${
+                      hasLiked
+                        ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                        : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
+                    }`}
                     onClick={handleLike}
                   >
                     <ThumbsUp
-                      className={`w-4 h-4 mr-2 ${hasLiked ? "fill-current" : ""
-                        }`}
+                      className={`w-4 h-4 mr-2 ${
+                        hasLiked ? 'fill-current' : ''
+                      }`}
                     />
-                    {hasLiked ? "Liked" : "Like"} • {formatLikes(localLikes)}
+                    {hasLiked ? 'Liked' : 'Like'} • {formatLikes(localLikes)}
                   </Button>
                 </CardContent>
               </Card>
@@ -2177,7 +1698,7 @@ export function ChatPage({
               <Card
                 className="border-border overflow-hidden"
                 style={{
-                  height: "calc(100vh - 25rem)",
+                  height: 'calc(100vh - 25rem)',
                 }}
               >
                 <CardHeader className="border-b border-border pb-3">
@@ -2189,12 +1710,18 @@ export function ChatPage({
                     Latest insights from {aiAgent.name}
                   </p>
                 </CardHeader>
-                <ScrollArea className="h-full">
+                <div
+                  className="h-full"
+                  style={{ overflow: 'auto' }}
+                >
                   <div className="p-3 space-y-3">
                     {isLoadingNews ? (
                       <>
                         {[1, 2].map((i) => (
-                          <div key={i} className="space-y-2">
+                          <div
+                            key={i}
+                            className="space-y-2"
+                          >
                             <Skeleton className="h-20 w-full rounded-lg" />
                             <Skeleton className="h-3 w-full" />
                             <Skeleton className="h-2 w-2/3" />
@@ -2206,7 +1733,7 @@ export function ChatPage({
                         <Card
                           key={article.id}
                           className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
-                          onClick={() => handleArticleClick(article)}
+                          onClick={() => handleArticleClick(article.id)}
                         >
                           <div className="relative h-20 overflow-hidden">
                             <ImageWithFallback
@@ -2229,16 +1756,13 @@ export function ChatPage({
                             </h4>
                             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
                               <span className="truncate text-xs flex items-center gap-1">
-                                <span className="text-blue-400">
-                                  {aiAgent.emoji}
-                                </span>
-                                {article.source}
+                                {article.oracle.name}
                               </span>
                               <span className="text-xs">
-                                {article.publishedAt}
+                                {timeAgo(article.createdAt)}
                               </span>
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
+                            {/* <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
                               <span className="flex items-center gap-1">
                                 <ThumbsUp className="w-3 h-3" />
                                 {article.likes || 0}
@@ -2251,7 +1775,7 @@ export function ChatPage({
                                 <Share2 className="w-3 h-3" />
                                 {article.shares || 0}
                               </span>
-                            </div>
+                            </div> */}
                           </CardContent>
                         </Card>
                       ))
@@ -2264,7 +1788,7 @@ export function ChatPage({
                       </div>
                     )}
                   </div>
-                </ScrollArea>
+                </div>
               </Card>
             </div>
           </div>
@@ -2285,7 +1809,10 @@ export function ChatPage({
                 {isLoadingNews ? (
                   <>
                     {[1, 2].map((i) => (
-                      <div key={i} className="space-y-2">
+                      <div
+                        key={i}
+                        className="space-y-2"
+                      >
                         <Skeleton className="h-20 w-full rounded-lg" />
                         <Skeleton className="h-3 w-full" />
                         <Skeleton className="h-2 w-2/3" />
@@ -2297,7 +1824,7 @@ export function ChatPage({
                     <Card
                       key={article.id}
                       className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
-                      onClick={() => handleArticleClick(article)}
+                      onClick={() => handleArticleClick(article.id)}
                     >
                       <div className="relative h-20 overflow-hidden">
                         <ImageWithFallback
@@ -2322,16 +1849,18 @@ export function ChatPage({
                           <span className="truncate text-xs flex items-center gap-1">
                             <div className="w-4 h-4 rounded-full overflow-hidden border border-blue-500/30 flex-shrink-0">
                               <ImageWithFallback
-                                src={aiAgent.image}
-                                alt={aiAgent.name}
+                                src={article.oracle.image}
+                                alt={article.oracle.name}
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            {article.source}
+                            {article.oracle.name}
                           </span>
-                          <span className="text-xs">{article.publishedAt}</span>
+                          <span className="text-xs">
+                            {timeAgo(article.createdAt)}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
+                        {/* <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
                           <span className="flex items-center gap-1">
                             <ThumbsUp className="w-3 h-3" />
                             {article.likes || 0}
@@ -2344,7 +1873,7 @@ export function ChatPage({
                             <Share2 className="w-3 h-3" />
                             {article.shares || 0}
                           </span>
-                        </div>
+                        </div> */}
                       </CardContent>
                     </Card>
                   ))
@@ -2362,7 +1891,10 @@ export function ChatPage({
         </div>
 
         {/* Sign In Dialog */}
-        <AlertDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen}>
+        <AlertDialog
+          open={signInDialogOpen}
+          onOpenChange={setSignInDialogOpen}
+        >
           <AlertDialogContent className="max-w-md mx-4 sm:mx-auto">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -2437,7 +1969,7 @@ export function ChatPage({
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-4">
-                  {limitReachedType === "textline" ? (
+                  {limitReachedType === 'textline' ? (
                     <>
                       <p className="text-sm">
                         You've used all <strong>100 free text lines</strong> for
@@ -2456,7 +1988,7 @@ export function ChatPage({
                         <div className="w-full bg-black/30 rounded-full h-2">
                           <div
                             className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full"
-                            style={{ width: "100%" }}
+                            style={{ width: '100%' }}
                           />
                         </div>
                         <p className="text-xs text-orange-400 mt-1 text-center">
@@ -2464,7 +1996,7 @@ export function ChatPage({
                         </p>
                       </div>
                     </>
-                  ) : limitReachedType === "total-predictions" ? (
+                  ) : limitReachedType === 'total-predictions' ? (
                     <>
                       <p className="text-sm">
                         You've used all <strong>5 free predictions</strong> on
@@ -2484,7 +2016,7 @@ export function ChatPage({
                         <div className="w-full bg-black/30 rounded-full h-2">
                           <div
                             className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                            style={{ width: "100%" }}
+                            style={{ width: '100%' }}
                           />
                         </div>
                         <p className="text-xs text-blue-400 mt-1 text-center">
@@ -2511,7 +2043,7 @@ export function ChatPage({
                         <div className="w-full bg-black/30 rounded-full h-2">
                           <div
                             className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                            style={{ width: "100%" }}
+                            style={{ width: '100%' }}
                           />
                         </div>
                         <p className="text-xs text-blue-400 mt-1 text-center">
@@ -2546,7 +2078,7 @@ export function ChatPage({
                         <span>
                           <strong className="text-yellow-400">
                             +1,500 XP bonus
-                          </strong>{" "}
+                          </strong>{' '}
                           when you subscribe
                         </span>
                       </li>

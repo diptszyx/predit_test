@@ -1,19 +1,14 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
-import type {
-  WalletType
-} from './components/WalletConnectDialog';
+import type { WalletType } from './components/WalletConnectDialog';
 import { useUserPhotoRefresh } from './hooks';
 import type { User } from './lib/types';
 import { useXP } from './lib/useXP';
 
 // Components
 import { AIAgentCard } from './components/AIAgentCard';
-import {
-  ArticleDetailPage,
-  type HotTakeArticle,
-} from './components/ArticleDetailPage';
+import { ArticleDetailPage } from './components/ArticleDetailPage';
 import { ChatPage } from './components/ChatPage';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
@@ -31,6 +26,7 @@ import { shortenAddress } from './lib/address';
 import apiClient from './lib/axios';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
+import { News, newsService } from './services/news.service';
 
 // Constants
 const AI_AGENT_IMAGES = {
@@ -51,85 +47,21 @@ const AI_AGENT_IMAGES = {
     'https://images.unsplash.com/photo-1676410205325-5d01d0107039?w=800&q=80',
 };
 
-// Hot Takes Articles Data
-const HOT_TAKE_ARTICLES: HotTakeArticle[] = [
-  {
-    id: 'art-1',
-    title: "Bitcoin's Next Move: Why $100K Is Just The Beginning",
-    source: 'Crypto AI Agent',
-    url: '#',
-    publishedAt: '2 hours ago',
-    relevance: 'High',
-    image:
-      'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800&q=80',
-    aiAgentAvatar: AI_AGENT_IMAGES.crypto,
-    likes: 342,
-    comments: 87,
-    shares: 156,
-    aiAgentId: 'crypto',
-  },
-  {
-    id: 'art-2',
-    title: 'The AI Revolution: What Most Investors Are Missing',
-    source: 'Tech Prophet',
-    url: '#',
-    publishedAt: '5 hours ago',
-    relevance: 'High',
-    image:
-      'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80',
-    aiAgentAvatar: AI_AGENT_IMAGES.tech,
-    likes: 521,
-    comments: 143,
-    shares: 234,
-    aiAgentId: 'technical-analysis',
-  },
-  {
-    id: 'art-3',
-    title: 'Election 2024: The Prediction Markets Were Right All Along',
-    source: 'Political Sage',
-    url: '#',
-    publishedAt: '1 day ago',
-    relevance: 'Medium',
-    image:
-      'https://images.unsplash.com/photo-1569690784119-2bcf528a2663?w=800&q=80',
-    aiAgentAvatar: AI_AGENT_IMAGES.fortune,
-    likes: 289,
-    comments: 92,
-    shares: 178,
-    aiAgentId: 'crypto-crystal',
-  },
-  {
-    id: 'art-4',
-    title: "Ethereum's Layer 2 Explosion: The Silent Revolution",
-    source: 'Crypto AI Agent',
-    url: '#',
-    publishedAt: '1 day ago',
-    relevance: 'High',
-    image:
-      'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80',
-    aiAgentAvatar: AI_AGENT_IMAGES.crypto,
-    likes: 467,
-    comments: 124,
-    shares: 201,
-    aiAgentId: 'crypto',
-  },
-];
-
 // AI Agents Data
 const AI_AGENTS: OracleEntity[] = [
   {
-    id: "crypto-crystal",
-    name: "Crypto Crystal Czar",
-    type: "Cryptocurrency Expert",
+    id: 'crypto-crystal',
+    name: 'Crypto Crystal Czar',
+    type: 'Cryptocurrency Expert',
     description:
-      "Master of blockchain technology and cryptocurrency markets. Analyzes market trends, tokenomics, DeFi protocols, and on-chain data to provide insights on Bitcoin, Ethereum, altcoins, and emerging crypto projects.",
+      'Master of blockchain technology and cryptocurrency markets. Analyzes market trends, tokenomics, DeFi protocols, and on-chain data to provide insights on Bitcoin, Ethereum, altcoins, and emerging crypto projects.',
     image: AI_AGENT_IMAGES.fortune,
-    rating: "91%",
+    rating: '91%',
     predictions: 58200,
     likes: 12300,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    __entity: "OracleEntity",
+    __entity: 'OracleEntity',
   },
 ];
 
@@ -154,14 +86,12 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<string>(() => {
     return localStorage.getItem('deorCurrentPage') || 'chat';
   });
-  const [listOracles, setListOracles] = useState<OracleEntity[]>([])
-  const [selectedAIAgent, setSelectedAIAgent] = useState<OracleEntity | null>(null);
-  const [selectedArticle, setSelectedArticle] = useState<HotTakeArticle | null>(
+  const [listOracles, setListOracles] = useState<OracleEntity[]>([]);
+  const [selectedAIAgent, setSelectedAIAgent] = useState<OracleEntity | null>(
     null
   );
-  const [articleContext, setArticleContext] = useState<HotTakeArticle | null>(
-    null
-  );
+  const [selectedArticle, setSelectedArticle] = useState<News | null>(null);
+  const [articleContext, setArticleContext] = useState<News | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
   const [sharedPredictionId, setSharedPredictionId] = useState<string | null>(
     null
@@ -180,6 +110,23 @@ export default function App() {
   const [xpInfoDialogOpen, setXPInfoDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
+
+  // news
+  const [news, setNews] = useState<News[]>();
+  const [isNewsLoading, setIsNewsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setIsNewsLoading(true);
+        const data = await newsService.getAll();
+        setNews(data);
+      } catch {
+      } finally {
+        setIsNewsLoading(false);
+      }
+    })();
+  }, []);
 
   const openProfileDialog = (options?: {
     user?: User | null;
@@ -230,14 +177,14 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await oraclesServices.getAllOracles()
+        const data = await oraclesServices.getAllOracles();
 
-        if (data?.data) setListOracles(data.data)
+        if (data?.data) setListOracles(data.data);
       } catch (error) {
-        console.log("Failed to fetch all oracles", error);
+        console.log('Failed to fetch all oracles', error);
       }
-    })()
-  }, [user])
+    })();
+  }, [user]);
 
   // Apply dark mode
   useEffect(() => {
@@ -388,7 +335,7 @@ export default function App() {
         );
       }
     } catch (e) {
-      console.log("Failed to reload oracle", e);
+      console.log('Failed to reload oracle', e);
     }
   };
 
@@ -460,7 +407,7 @@ export default function App() {
         <Sidebar {...commonSidebarProps} />
         <div className="flex-1 overflow-y-auto">
           <HotTakesPage
-            articles={HOT_TAKE_ARTICLES}
+            articles={news}
             onArticleClick={(article) => {
               setSelectedArticle(article);
               setPreviousPage('hotTakes');
@@ -503,7 +450,7 @@ export default function App() {
               setPreviousPage('home');
               setCurrentPage('articleDetail');
             }}
-            articles={HOT_TAKE_ARTICLES}
+            articles={news}
             user={user}
           />
         </div>
@@ -527,6 +474,7 @@ export default function App() {
     return (
       <ArticleDetailPage
         hotTake={selectedArticle}
+        onSelectRelated={setSelectedArticle}
         onBack={() => {
           setSelectedArticle(null);
           if (previousPage === 'chat' && selectedAIAgent) {
@@ -649,7 +597,7 @@ export default function App() {
     );
   }
 
-  if (currentPage === "subscription") {
+  if (currentPage === 'subscription') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
         {/* Sidebar - Desktop only */}
@@ -670,7 +618,9 @@ export default function App() {
                   //   subscriptionTier: 'master',
                   // });
                   awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
-                  toast.success("🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!");
+                  toast.success(
+                    '🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!'
+                  );
                 }
               }}
             />

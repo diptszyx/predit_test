@@ -58,17 +58,17 @@ export function HotTakesPage({
     selectedCategory === 'all'
       ? articles
       : articles?.filter(
-          (article) => oracleCategoryMap[article.oracle.id] === selectedCategory
-        );
+        (article) => oracleCategoryMap[article.oracle.id] === selectedCategory
+      );
 
   return (
-    <div className="min-h-screen bg-background mt-16">
+    <div className="min-h-screen bg-background mt-16 md:mt-0">
       <div className="container mx-auto px-4 py-6">
         {/* Back Button */}
         <Button
           variant="ghost"
           onClick={onBack}
-          className="mb-6 -ml-2 hover:bg-blue-500/10"
+          className="flex lg:hidden mb-6 -ml-2 hover:bg-blue-500/10"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home

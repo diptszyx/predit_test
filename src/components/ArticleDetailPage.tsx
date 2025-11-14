@@ -71,7 +71,7 @@ interface ArticleDetailPageProps {
   onSetPendingNavigation?: (page: string | null) => void;
   onOpenSettings?: () => void;
   currentPage?: string;
-  onAIAgentClick?: Dispatch<SetStateAction<OracleEntity | null>>;
+  onAIAgentClick?: (aiAgentId: string) => void;
   onWalletConnect?: (walletType: WalletType) => void;
   onSocialConnect?: (provider: SocialProvider) => void;
   onOpenPrivacy?: () => void;
@@ -84,18 +84,18 @@ export function ArticleDetailPage({
   onBack,
   user,
   darkMode = true,
-  onToggleDarkMode = () => {},
-  onNavigate = () => {},
-  onOpenWalletDialog = () => {},
-  onWalletDisconnect = () => {},
+  onToggleDarkMode = () => { },
+  onNavigate = () => { },
+  onOpenWalletDialog = () => { },
+  onWalletDisconnect = () => { },
   shortenAddress = (addr) => addr,
-  onSetPendingNavigation = () => {},
-  onOpenSettings = () => {},
+  onSetPendingNavigation = () => { },
+  onOpenSettings = () => { },
   currentPage = 'articleDetail',
-  onWalletConnect = () => {},
-  onSocialConnect = () => {},
-  onOpenPrivacy = () => {},
-  onOpenTerms = () => {},
+  onWalletConnect = () => { },
+  onSocialConnect = () => { },
+  onOpenPrivacy = () => { },
+  onOpenTerms = () => { },
   onSelectRelated,
   onAIAgentClick,
 }: ArticleDetailPageProps) {
@@ -201,25 +201,25 @@ export function ArticleDetailPage({
     toast.success('Comment posted!');
   };
 
-  const scrollToComments = () => {
-    commentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  // const scrollToComments = () => {
+  //   commentsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // };
 
-  const handleLike = () => {
-    if (liked) {
-      setLikesCount((prev) => prev - 1);
-      setLiked(false);
-    } else {
-      setLikesCount((prev) => prev + 1);
-      setLiked(true);
-      toast.success('Liked!');
-    }
-  };
+  // const handleLike = () => {
+  //   if (liked) {
+  //     setLikesCount((prev) => prev - 1);
+  //     setLiked(false);
+  //   } else {
+  //     setLikesCount((prev) => prev + 1);
+  //     setLiked(true);
+  //     toast.success('Liked!');
+  //   }
+  // };
 
-  const handleShare = () => {
-    setSharesCount((prev) => prev + 1);
-    toast.success('Article shared!');
-  };
+  // const handleShare = () => {
+  //   setSharesCount((prev) => prev + 1);
+  //   toast.success('Article shared!');
+  // };
 
   const handleAskOracle = () => {
     if (!hotTake.oracle.id) {
@@ -229,7 +229,7 @@ export function ArticleDetailPage({
 
     // Navigate to oracle chat with article as context
     if (onAIAgentClick) {
-      onAIAgentClick(hotTake.oracle);
+      onAIAgentClick(hotTake.oracle.id);
     }
 
     // Note: The article content will need to be passed to the chat page
@@ -238,9 +238,9 @@ export function ArticleDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mt-16 md:mt-0">
       {/* Sidebar - Fixed positioning for article detail page */}
-      <div className="hidden md:fixed left-0 top-0 h-screen md:w-64 z-50">
+      <div className="fixed left-0 top-0 h-screen md:w-64 z-50">
         <Sidebar
           currentPage={currentPage}
           onNavigate={onNavigate}
@@ -377,9 +377,7 @@ export function ArticleDetailPage({
                 <div className="flex items-start gap-4">
                   <div
                     className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
-                    onClick={() =>
-                      hotTake.oracle.id && onOracleClick(hotTake.oracle.id)
-                    }
+                    onClick={() => hotTake.oracle.id && onAIAgentClick && onAIAgentClick(hotTake.oracle.id)}
                   >
                     <ImageWithFallback
                       src={hotTake.oracle.image || ''}
@@ -390,9 +388,7 @@ export function ArticleDetailPage({
                   <div className="flex-1">
                     <h4
                       className="mb-2 cursor-pointer hover:text-blue-400 transition-colors"
-                      onClick={() =>
-                        hotTake.oracle.id && onOracleClick(hotTake.oracle.id)
-                      }
+                      onClick={() => hotTake.oracle.id && onAIAgentClick && onAIAgentClick(hotTake.oracle.id)}
                     >
                       {hotTake.oracle.name}
                     </h4>
@@ -401,30 +397,18 @@ export function ArticleDetailPage({
                       and predictions on{' '}
                       {hotTake.oracle.name?.toLowerCase() || 'various topics'}.
                     </p>
-                    <Button
-                      className={'hidden md:block'}
+                    {/* <Button
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        hotTake.oracle.id && onOracleClick(hotTake.oracle.id)
-                      }
+                      className="text-xs md:text-sm h-8 md:h-9"
+                      onClick={() => hotTake.oracle.id && onAIAgentClick && onAIAgentClick(hotTake.oracle.id)}
                     >
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Get Predictions from {hotTake.oracle.name}
-                    </Button>
+                      <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" />
+                      <span className="hidden sm:inline ">Get Predictions from {hotTake.oracle.name}</span>
+                      <span className="sm:hidden">Get Predictions</span>
+                    </Button> */}
                   </div>
                 </div>
-                <Button
-                  className={'md:hidden'}
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    hotTake.oracle.id && onOracleClick(hotTake.oracle.id)
-                  }
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Get Predictions from {hotTake.oracle.name}
-                </Button>
               </div>
 
               {/* Related Articles */}

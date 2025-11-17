@@ -23,8 +23,7 @@ export default function WalletAdapter(props: WalletAdapterProps) {
   return (
     <ConnectionProvider endpoint={'https://api.devnet.solana.com'}>
       <WalletProvider
-        wallets={wallets}
-        autoConnect
+        wallets={wallets}s
       >
         <WalletModalProvider>{props.children}</WalletModalProvider>
       </WalletProvider>

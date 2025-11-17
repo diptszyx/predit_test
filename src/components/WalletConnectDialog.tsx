@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,13 +10,12 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Loader2, Wallet, CheckCircle2 } from 'lucide-react';
 import apiClient from '../lib/axios';
-import { useWallet } from '@solana/wallet-adapter-react';
-import bs58 from 'bs58';
 import useAuthStore from '../store/auth.store';
 import { User } from '../lib/types';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 import { ethers } from 'ethers';
+import { getPhantomProvider, usePhantomDirectConnect } from '../hooks/usePhantomConnect';
 
 export type WalletType = 'metamask' | 'phantom' | 'backpack';
 export type SocialProvider = 'google' | 'x';
@@ -46,37 +45,7 @@ interface SocialOption {
   color: string;
 }
 
-const waitFor = (getter: () => any, timeout = 2000): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
-
-    const check = () => {
-      const value = getter();
-      if (value) return resolve(value);
-
-      if (Date.now() - start > timeout) {
-        return reject(new Error('Timeout waiting for wallet'));
-      }
-
-      requestAnimationFrame(check);
-    };
-
-    check();
-  });
-};
-
 const hasMeta = typeof window !== 'undefined' && (window as any).ethereum;
-
-export function getPhantomProvider() {
-  if (typeof window === 'undefined') return null;
-
-  const anyWin = window as any;
-
-  const provider = anyWin.phantom?.solana;
-  if (provider?.isPhantom) return provider;
-
-  return null;
-}
 
 const wallets: WalletOption[] = [
   {
@@ -314,8 +283,6 @@ const WalletConnectButton = ({
   onConnect: (wallet: WalletType, user: User) => void;
   setConnectingWallet: (walletType: WalletType | null) => void;
 }) => {
-  const { select, connect, wallets, publicKey, signMessage } = useWallet();
-
   const [pendingWalletType, setPendingWalletType] = useState<WalletType | null>(
     null
   );
@@ -324,54 +291,10 @@ const WalletConnectButton = ({
     (state) => state.authenticateWithToken
   );
 
-  const handlePhantom = async () => {
-    const provider = getPhantomProvider();
-
-    if (!provider) {
-      toast.error('Phantom not installed');
-      return;
-    }
-
-    try {
-      await select('Phantom');
-
-      await connect();
-
-      await waitFor(() => publicKey, 3000);
-
-      const pubkey = publicKey?.toBase58();
-      if (!pubkey) throw new Error('Phantom public key missing');
-
-      const { data: nonceResp } = await apiClient.post('/auth/nonce', {
-        publicKey: pubkey,
-        walletType: 'phantom',
-      });
-
-      const message = `Login to Deor\nNonce=${nonceResp.nonce}`;
-      const encoded = new TextEncoder().encode(message);
-
-      if (!signMessage) {
-        throw new Error('signMessage not supported by Phantom');
-      }
-
-      const signatureBytes = await signMessage(encoded);
-      const signature = bs58.encode(signatureBytes);
-
-      const { data: verifyResp } = await apiClient.post('/auth/verify', {
-        message,
-        signature,
-        publicKey: pubkey,
-      });
-
-      await authenticateWithToken(verifyResp.token);
-      onConnect('phantom', verifyResp.user);
-    } catch (err: any) {
-      console.error('Phantom connect error:', err);
-      toast.error(err.message || 'Failed to connect Phantom');
-    } finally {
-      setConnectingWallet(null);
-    }
-  };
+  const { handlePhantomDirectConnect } = usePhantomDirectConnect({
+    onConnect,
+    setConnectingWallet,
+  });
 
   const handleConnect = async (walletType: WalletType) => {
     setConnectingWallet(walletType);
@@ -379,27 +302,17 @@ const WalletConnectButton = ({
 
     switch (walletType) {
       case 'phantom':
-        if (!wallets.find((w) => w.adapter.name === 'Phantom')) {
+        if (!getPhantomProvider()) {
           toast.error('Phantom not installed');
           setConnectingWallet(null);
           setPendingWalletType(null);
           return;
         } else {
-          handlePhantom();
+          handlePhantomDirectConnect();
         }
 
         break;
       case 'backpack':
-        if (
-          wallets.find((w) => w.adapter.name.toLowerCase().includes(walletType))
-        ) {
-          toast.error('Backpack not installed');
-
-          setConnectingWallet(null);
-          setPendingWalletType(null);
-          return;
-        }
-        await select('Backpack');
         break;
       case 'metamask':
         try {

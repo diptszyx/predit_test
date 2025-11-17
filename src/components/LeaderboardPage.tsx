@@ -111,7 +111,7 @@ export function LeaderboardPage({ user }: LeaderboardPageProps) {
 
       <Card className="border-border">
         <CardHeader className="border-b border-border">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 items-end md:justify-between md:flex-row! md:gap-0 md:items-center">
             <CardTitle>Top 100 Players</CardTitle>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Sort by:</span>

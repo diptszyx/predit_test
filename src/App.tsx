@@ -413,7 +413,7 @@ export default function App() {
               setPreviousPage('hotTakes');
               setCurrentPage('articleDetail');
             }}
-            onBack={() => setCurrentPage('chat')}
+            onBack={() => setCurrentPage('home')}
           />
         </div>
         {commonDialogProps}
@@ -483,6 +483,9 @@ export default function App() {
           } else if (previousPage === 'hotTakes') {
             setPreviousPage(null);
             setCurrentPage('hotTakes');
+          } else if (previousPage === 'home') {
+            setPreviousPage(null)
+            setCurrentPage('home')
           } else {
             setPreviousPage(null);
             setCurrentPage('chat');
@@ -504,8 +507,8 @@ export default function App() {
         onSocialConnect={handleSocialConnect}
         onOpenPrivacy={() => setPrivacyDialogOpen(true)}
         onOpenTerms={() => setTermsDialogOpen(true)}
-        onAIAgentClick={(aiAgentId) => {
-          const aiAgent = AI_AGENTS.find((a) => a.id === aiAgentId);
+        onAIAgentClick={(aiAgentId: string) => {
+          const aiAgent = listOracles.find((a) => a.id === aiAgentId);
           if (aiAgent) {
             setSelectedAIAgent(aiAgent);
             setArticleContext(selectedArticle);

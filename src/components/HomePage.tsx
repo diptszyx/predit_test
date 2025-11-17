@@ -148,7 +148,7 @@ export function HomePage({
 
       {/* Hero Section with Futuristic Gradient */}
       <section
-        className="relative overflow-hidden mt-14 md:mt-0"
+        className="relative overflow-hidden md:mt-0"
         style={{
           minHeight: '600px',
           height: '100vh',
@@ -214,9 +214,8 @@ export function HomePage({
                 }}
               >
                 <div
-                  className={`relative transition-all duration-150 ease-out ${
-                    isFocused ? 'scale-[1.01]' : ''
-                  }`}
+                  className={`relative transition-all duration-150 ease-out ${isFocused ? 'scale-[1.01]' : ''
+                    }`}
                   style={{
                     height: 'clamp(56px, 8vw, 72px)',
                     borderRadius: '9999px',
@@ -237,11 +236,9 @@ export function HomePage({
                     placeholder="Ask a question to get started…"
                     disabled={isLoading}
                     aria-label="Ask a market question"
-                    className="w-full h-full bg-transparent border-0 outline-none pr-16"
+                    className="w-full h-full bg-transparent border-0 outline-none pr-16 text-[16px]"
                     style={{
-                      color: '#FFFFFF',
-                      fontSize: 'clamp(14px, 2vw, 18px)',
-                      fontWeight: 400,
+                      color: '#ccc',
                       caretColor: '#3b82f6',
                     }}
                   />
@@ -287,7 +284,7 @@ export function HomePage({
                     <button
                       key={index}
                       onClick={() => handlePromptClick(prompt.text)}
-                      className="group text-left transition-all duration-150 ease-out"
+                      className="group text-left transition-all duration-150 ease-out cursor-pointer"
                       style={{
                         borderRadius: '14px',
                         padding: '20px',

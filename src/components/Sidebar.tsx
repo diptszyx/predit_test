@@ -149,7 +149,7 @@ export function Sidebar({
   const MobileSidebarContent = () => (
     <>
       {/* Logo Section */}
-      <div className="p-6 border-b border-border">
+      <div className="px-6 py-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -203,9 +203,12 @@ export function Sidebar({
       </nav>
 
       {/* Bottom Section */}
-      <div className="p-4 border-t border-border space-y-3">
+      <div
+        className="p-4 border-t border-border space-y-3
+      "
+      >
         {/* Social Links */}
-        <div className="flex items-center justify-center gap-4 pb-2">
+        <div className="flex items-center justify-center gap-4 pb-1">
           {SOCIAL_LINKS.map((social) => {
             const Icon = social.icon;
             return (
@@ -229,7 +232,10 @@ export function Sidebar({
             variant="ghost"
             size="sm"
             className="w-full justify-start text-muted-foreground hover:text-foreground"
-            onClick={onOpenXPInfo}
+            onClick={() => {
+              onOpenXPInfo();
+              setIsMobileMenuOpen(false);
+            }}
           >
             <Sparkles className="w-4 h-4 mr-3" />
             How XP Works
@@ -349,17 +355,17 @@ export function Sidebar({
       {/* Mobile Menu Button - Only visible on mobile screens */}
       {isMobile && (
         <button
-          className="fixed p-3 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors"
+          className="fixed p-3 bg-sidebar border border-border rounded-full shadow-lg hover:bg-accent transition-colors translate-x-[-50%]"
           style={{
             top: "1.7rem",
-            left: "1rem",
+            left: "0",
             zIndex: 9999,
             opacity: 0.9,
           }}
           onClick={() => setIsMobileMenuOpen(true)}
           aria-label="Open menu"
         >
-          <Menu className="w-6 h-6" />
+          <div className="w-6 h-6" />
         </button>
       )}
 
@@ -376,8 +382,8 @@ export function Sidebar({
       {/* Mobile Sidebar - Slides in from left when open */}
       {isMobile && isMobileMenuOpen && (
         <aside
-          className="fixed top-0 left-0 w-64 h-screen border-r border-border bg-sidebar flex flex-col animate-slide-in"
-          style={{ zIndex: 9999 }}
+          className="fixed top-0 left-0 w-64 border-r border-border bg-sidebar flex flex-col animate-slide-in"
+          style={{ zIndex: 9999, height: "100dvh" }}
         >
           <MobileSidebarContent />
         </aside>

@@ -22,6 +22,9 @@ export function HotTakesPage({
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (articles?.length === 0) {
+      onBack();
+    }
   }, []);
 
   // Map oracle IDs to categories
@@ -40,7 +43,9 @@ export function HotTakesPage({
   const availableCategories = [
     'all',
     ...new Set(
-      articles.map((article) => oracleCategoryMap[article.oracle.id] || 'Other')
+      articles?.map(
+        (article) => oracleCategoryMap[article.oracle.id] || 'Other'
+      )
     ),
   ].sort((a, b) => {
     if (a === 'all') return -1;
@@ -52,18 +57,18 @@ export function HotTakesPage({
   const filteredArticles =
     selectedCategory === 'all'
       ? articles
-      : articles.filter(
-          (article) => oracleCategoryMap[article.oracle.id] === selectedCategory
-        );
+      : articles?.filter(
+        (article) => oracleCategoryMap[article.oracle.id] === selectedCategory
+      );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mt-16 md:mt-0">
       <div className="container mx-auto px-4 py-6">
         {/* Back Button */}
         <Button
           variant="ghost"
           onClick={onBack}
-          className="mb-6 -ml-2 hover:bg-blue-500/10"
+          className="flex lg:hidden mb-6 -ml-2 hover:bg-blue-500/10"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
@@ -71,7 +76,7 @@ export function HotTakesPage({
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-left mb-2 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-[rgb(255,255,255)] text-[40px]">
+          <h1 className="text-left mb-2 dark:bg-gradient-to-r dark:from-blue-600 dark:to-cyan-600 bg-clip-text dark:text-[rgb(255,255,255)] text-[40px] light:text-black">
             Hot Takes
           </h1>
           <p className="text-left text-muted-foreground mb-8">
@@ -102,7 +107,7 @@ export function HotTakesPage({
 
         {/* Articles Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredArticles.map((article) => (
+          {filteredArticles?.map((article) => (
             <div
               key={article.id}
               onClick={() => onArticleClick(article)}
@@ -133,7 +138,10 @@ export function HotTakesPage({
                 <h3 className="mb-2 line-clamp-2 group-hover:text-blue-500 transition-colors">
                   {article.title}
                 </h3>
-                <div className="text-sm text-muted-foreground line-clamp-2 mb-3" dangerouslySetInnerHTML={{__html: article.content}}/>
+                <div
+                  className="text-sm text-muted-foreground line-clamp-2 mb-3"
+                  dangerouslySetInnerHTML={{ __html: article.content }}
+                />
                 {/* <div className="flex items-center gap-4 text-sm text-muted-foreground pt-3 border-t border-border">
                   <span className="flex items-center gap-1.5">
                     <ThumbsUp className="w-4 h-4" />
@@ -154,7 +162,7 @@ export function HotTakesPage({
         </div>
 
         {/* Empty State */}
-        {filteredArticles.length === 0 && (
+        {filteredArticles?.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="text-6xl mb-4">📰</div>
             <h3 className="mb-2">No articles found</h3>

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AxiosError } from 'axios';
-import { toast } from 'sonner';
-import { User as UserIcon } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+import { User as UserIcon } from "lucide-react";
 
 import {
   Dialog,
@@ -9,19 +9,19 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from './ui/dialog';
+} from "./ui/dialog";
 import {
   UserProfileForm,
   type UserProfileForm as UserProfileFormData,
-} from './UserProfileForm';
-import apiClient from '../lib/axios';
-import type { User } from '../lib/types';
+} from "./UserProfileForm";
+import apiClient from "../lib/axios";
+import type { User } from "../lib/types";
 
 const buildFormData = (user: User | null): UserProfileFormData => ({
-  avatar: user?.avatar ?? '',
-  email: user?.email ?? '',
-  phoneNumber: user?.phoneNumber ?? '',
-  referralCode: '',
+  avatar: user?.avatar ?? "",
+  email: user?.email ?? "",
+  phoneNumber: user?.phoneNumber ?? "",
+  referralCode: "",
 });
 
 const resolveProvider = (user: User | null): string | null => {
@@ -64,20 +64,20 @@ export function UserProfileDialog({
     setInitialFormData(nextData);
 
     const provider = resolveProvider(user);
-    setEmailLocked(provider === 'google' || provider === 'email');
+    setEmailLocked(provider === "google" || provider === "email");
     setEmailProvider(provider);
   }, [open, user]);
 
   const emailProviderLabel = useMemo(() => {
-    if (!emailProvider) return 'your login provider';
-    if (emailProvider === 'google') return 'Google';
-    if (emailProvider === 'email') return 'your email login';
+    if (!emailProvider) return "your login provider";
+    if (emailProvider === "google") return "Google";
+    if (emailProvider === "email") return "your email login";
     return emailProvider;
   }, [emailProvider]);
 
-  const handleChange = useCallback((updates: Partial<UserProfileFormData>) => {
+  const handleChange = (updates: Partial<UserProfileFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
-  }, []);
+  };
 
   const handleSkip = () => {
     onOpenChange(false);
@@ -89,12 +89,12 @@ export function UserProfileDialog({
     const { email, phoneNumber, avatar, referralCode } = formData;
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error('Please enter a valid email address');
+      toast.error("Please enter a valid email address");
       return;
     }
 
     if (phoneNumber && !/^\+?[\d\s-()]+$/.test(phoneNumber)) {
-      toast.error('Please enter a valid phone number');
+      toast.error("Please enter a valid phone number");
       return;
     }
 
@@ -119,17 +119,17 @@ export function UserProfileDialog({
     setSubmitting(true);
     try {
       if (Object.keys(updates).length > 0) {
-        await apiClient.patch('/auth/me', updates);
-        toast.success('Profile updated successfully.');
+        await apiClient.patch("/auth/me", updates);
+        toast.success("Profile updated successfully.");
         onProfileUpdated?.(updates);
       } else {
-        toast.success('Profile saved.');
+        toast.success("Profile saved.");
         onProfileUpdated?.({});
       }
 
       onOpenChange(false);
     } catch (error: unknown) {
-      let message = 'Unable to update your profile. Please try again.';
+      let message = "Unable to update your profile. Please try again.";
       if (error instanceof AxiosError) {
         const apiMessage = (
           error.response?.data as { message?: string } | undefined
@@ -156,8 +156,8 @@ export function UserProfileDialog({
     submitting,
   ]);
 
-  const title = 'Complete Your Profile';
-  const description = 'Add your profile details (optional)';
+  const title = "Complete Your Profile";
+  const description = "Add your profile details (optional)";
 
   return (
     <Dialog
@@ -183,7 +183,7 @@ export function UserProfileDialog({
           emailLocked={emailLocked}
           emailProvider={emailProviderLabel}
           isSubmitting={submitting}
-          completeLabel={'Complete Setup'}
+          completeLabel={"Complete Setup"}
           skipLabel="Skip for Now"
         />
       </DialogContent>

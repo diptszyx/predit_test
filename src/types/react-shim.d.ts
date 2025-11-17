@@ -20,6 +20,12 @@ declare module "react" {
   export function useRef<T = any>(
     initialValue?: T | null
   ): { current: T | null };
+  export function useCallback(callback: () => void, deps?: any[]): () => void;
+  export function useMemo(callback: () => any, deps?: any[]): any;
+  export function useEffect(
+    effect: () => void | (() => void),
+    deps?: any[]
+  ): void;
   const React: any;
   export default React;
 }

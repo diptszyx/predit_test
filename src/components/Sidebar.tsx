@@ -1,6 +1,7 @@
 import {
   Crown,
   FileText,
+  Flame,
   Home,
   LogOut,
   ChevronsLeftRight,
@@ -59,6 +60,12 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     id: "chat",
     label: "Predictions",
     icon: MessageSquare,
+    requiresAuth: false,
+  },
+  {
+    id: "hotTakes",
+    label: "Hot Takes",
+    icon: Flame,
     requiresAuth: false,
   },
   {

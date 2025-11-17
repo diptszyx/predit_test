@@ -1953,7 +1953,7 @@ export function ChatPage({
           open={limitReachedDialogOpen}
           onOpenChange={setLimitReachedDialogOpen}
         >
-          <AlertDialogContent className="max-w-md mx-4 sm:mx-auto">
+          <AlertDialogContent className="max-w-md sm:mx-auto">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />

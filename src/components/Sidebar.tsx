@@ -181,10 +181,11 @@ export function Sidebar({
             <Button
               key={item.id}
               variant="ghost"
-              className={`w-full justify-start ${isActive
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                }`}
+              className={`w-full justify-start ${
+                isActive
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              }`}
               onClick={() => {
                 if (item.isExternalLink && item.href) {
                   window.open(item.href, "_blank");
@@ -202,8 +203,10 @@ export function Sidebar({
       </nav>
 
       {/* Bottom Section */}
-      <div className="p-4 border-t border-border space-y-3
-      ">
+      <div
+        className="p-4 border-t border-border space-y-3
+      "
+      >
         {/* Social Links */}
         <div className="flex items-center justify-center gap-4 pb-1">
           {SOCIAL_LINKS.map((social) => {
@@ -230,8 +233,8 @@ export function Sidebar({
             size="sm"
             className="w-full justify-start text-muted-foreground hover:text-foreground"
             onClick={() => {
-              onOpenXPInfo()
-              setIsMobileMenuOpen(false)
+              onOpenXPInfo();
+              setIsMobileMenuOpen(false);
             }}
           >
             <Sparkles className="w-4 h-4 mr-3" />
@@ -352,17 +355,17 @@ export function Sidebar({
       {/* Mobile Menu Button - Only visible on mobile screens */}
       {isMobile && (
         <button
-          className="fixed p-3 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors"
+          className="fixed p-3 bg-sidebar border border-border rounded-full shadow-lg hover:bg-accent transition-colors translate-x-[-50%]"
           style={{
             top: "1.7rem",
-            left: "1rem",
+            left: "0",
             zIndex: 9999,
             opacity: 0.9,
           }}
           onClick={() => setIsMobileMenuOpen(true)}
           aria-label="Open menu"
         >
-          <Menu className="w-6 h-6" />
+          <div className="w-6 h-6" />
         </button>
       )}
 
@@ -412,10 +415,11 @@ export function Sidebar({
                 <Button
                   key={item.id}
                   variant="ghost"
-                  className={`w-full justify-start ${isActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                    }`}
+                  className={`w-full justify-start ${
+                    isActive
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  }`}
                   onClick={() => {
                     if (item.isExternalLink && item.href) {
                       window.open(item.href, "_blank");

@@ -3,7 +3,7 @@ import {
   FileText,
   Home,
   LogOut,
-  Menu,
+  ChevronsLeftRight,
   MessageCircle,
   MessageSquare,
   Moon,
@@ -73,14 +73,6 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     icon: Crown,
     requiresAuth: false,
   },
-  {
-    id: "docs",
-    label: "Docs",
-    icon: FileText,
-    requiresAuth: false,
-    isExternalLink: true,
-    href: "/DeHouseWhitepaper.pdf",
-  },
 ];
 
 const SOCIAL_LINKS = [
@@ -149,7 +141,7 @@ export function Sidebar({
   const MobileSidebarContent = () => (
     <>
       {/* Logo Section */}
-      <div className="px-6 py-4 border-b border-border">
+      <div className="relative px-6 py-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -160,15 +152,15 @@ export function Sidebar({
               <p className="text-xs text-muted-foreground">AI Predictions</p>
             </div>
           </div>
-          {/* Close button for mobile */}
-          <button
-            className="lg:hidden p-2 hover:bg-accent rounded-lg transition-colors"
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-label="Close menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
+        {/* Close button for mobile */}
+        <button
+          className="absolute -bottom-4 -right-4 lg:hidden p-2 hover:bg-accent rounded-lg transition-colors cursor-pointer border border-border bg-background"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-label="Close menu"
+        >
+          <ChevronsLeftRight className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Navigation Section */}
@@ -355,9 +347,9 @@ export function Sidebar({
       {/* Mobile Menu Button - Only visible on mobile screens */}
       {isMobile && (
         <button
-          className="fixed p-3 bg-sidebar border border-border rounded-full shadow-lg hover:bg-accent transition-colors translate-x-[-50%]"
+          className="fixed p-2 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors translate-x-[-50%]"
           style={{
-            top: "1.7rem",
+            top: "3.2rem",
             left: "0",
             zIndex: 9999,
             opacity: 0.9,
@@ -365,7 +357,7 @@ export function Sidebar({
           onClick={() => setIsMobileMenuOpen(true)}
           aria-label="Open menu"
         >
-          <div className="w-6 h-6" />
+          <ChevronsLeftRight className="w-4 h-4" />
         </button>
       )}
 

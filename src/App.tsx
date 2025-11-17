@@ -447,13 +447,6 @@ export default function App() {
               }
               setCurrentPage('chat');
             }}
-            onViewHotTakes={() => setCurrentPage('hotTakes')}
-            onArticleClick={(article) => {
-              setSelectedArticle(article);
-              setPreviousPage('home');
-              setCurrentPage('articleDetail');
-            }}
-            articles={news}
             user={user}
           />
         </div>

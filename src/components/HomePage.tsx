@@ -5,29 +5,20 @@ import {
   CheckCircle2,
   ChevronRight,
   Loader2,
-  MessageSquare,
-  Share2,
   Sparkles,
   Target,
-  ThumbsUp,
   TrendingUp,
   Users,
   Zap,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import { News } from '../services/news.service';
-import { timeAgo } from '../lib/date';
 
 interface HomePageProps {
   onGetStarted: () => void;
   onExplorePredictions: (prompt?: string) => void;
-  onViewHotTakes: () => void;
-  onArticleClick?: (article: News) => void;
-  articles?: News[];
   user: any;
 }
 
@@ -99,9 +90,6 @@ const SUGGESTED_PROMPTS = [
 export function HomePage({
   onGetStarted,
   onExplorePredictions,
-  onViewHotTakes,
-  onArticleClick,
-  articles,
   user,
 }: HomePageProps) {
   const [query, setQuery] = useState('');
@@ -435,95 +423,6 @@ export function HomePage({
         </div>
       </section>
 
-      {/* Hot Takes Section */}
-      {articles && articles.length > 0 && (
-        <section className="container mx-auto px-4 py-16 md:py-24">
-          <div className="flex items-center justify-between mb-12">
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl">Hot Takes</h2>
-              <p className="text-xl text-muted-foreground">
-                Latest insights and analyses from our AI agents
-              </p>
-            </div>
-            <Button
-              onClick={onViewHotTakes}
-              variant="outline"
-              className="hidden md:flex items-center gap-2 border-blue-500/20 hover:bg-blue-500/10 hover:border-blue-500/40"
-            >
-              View All
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Articles Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {articles.slice(0, 3).map((article) => (
-              <Card
-                key={article.id}
-                className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
-                onClick={() => onArticleClick?.(article)}
-              >
-                {/* Article Image */}
-                <div className="relative h-48 overflow-hidden">
-                  <ImageWithFallback
-                    src={article.image}
-                    alt={article.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 backdrop-blur-sm">
-                      {article.relevance} Relevance
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Article Content */}
-                <div className="p-5 space-y-3">
-                  {/* Source and Time */}
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{article.oracle.name}</span>
-                    <span>•</span>
-                    <span>{timeAgo(article.createdAt)}</span>
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="line-clamp-2 group-hover:text-blue-400 transition-colors">
-                    {article.title}
-                  </h3>
-
-                  {/* Engagement Stats */}
-                  {/* <div className="flex items-center gap-4 pt-3 border-t border-border text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <ThumbsUp className="w-4 h-4" />
-                      <span>{article.likes}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <MessageSquare className="w-4 h-4" />
-                      <span>{article.comments}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Share2 className="w-4 h-4" />
-                      <span>{article.shares}</span>
-                    </div>
-                  </div> */}
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          {/* Mobile View All Button */}
-          <div className="flex justify-center md:hidden">
-            <Button
-              onClick={onViewHotTakes}
-              variant="outline"
-              className="w-full sm:w-auto border-blue-500/20 hover:bg-blue-500/10 hover:border-blue-500/40"
-            >
-              View All Hot Takes
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        </section>
-      )}
 
       {/* Benefits Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">

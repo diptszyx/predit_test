@@ -128,6 +128,11 @@ export default function App() {
     })();
   }, []);
 
+  useEffect(() => {
+    console.log(currentPage);
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
   const openProfileDialog = (options?: {
     user?: User | null;
     require?: boolean;
@@ -405,17 +410,15 @@ export default function App() {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
         <Sidebar {...commonSidebarProps} />
-        <div className="flex-1 overflow-y-auto">
-          <HotTakesPage
-            articles={news}
-            onArticleClick={(article) => {
-              setSelectedArticle(article);
-              setPreviousPage('hotTakes');
-              setCurrentPage('articleDetail');
-            }}
-            onBack={() => setCurrentPage('home')}
-          />
-        </div>
+        <HotTakesPage
+          articles={news}
+          onArticleClick={(article) => {
+            setSelectedArticle(article);
+            setPreviousPage('hotTakes');
+            setCurrentPage('articleDetail');
+          }}
+          onBack={() => setCurrentPage('home')}
+        />
         {commonDialogProps}
       </div>
     );
@@ -484,8 +487,8 @@ export default function App() {
             setPreviousPage(null);
             setCurrentPage('hotTakes');
           } else if (previousPage === 'home') {
-            setPreviousPage(null)
-            setCurrentPage('home')
+            setPreviousPage(null);
+            setCurrentPage('home');
           } else {
             setPreviousPage(null);
             setCurrentPage('chat');

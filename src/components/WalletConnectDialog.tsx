@@ -46,9 +46,37 @@ interface SocialOption {
   color: string;
 }
 
+const waitFor = (getter: () => any, timeout = 2000): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+
+    const check = () => {
+      const value = getter();
+      if (value) return resolve(value);
+
+      if (Date.now() - start > timeout) {
+        return reject(new Error('Timeout waiting for wallet'));
+      }
+
+      requestAnimationFrame(check);
+    };
+
+    check();
+  });
+};
+
 const hasMeta = typeof window !== 'undefined' && (window as any).ethereum;
-const hasPhantom =
-  typeof window !== 'undefined' && (window as any).phantom?.solana;
+
+export function getPhantomProvider() {
+  if (typeof window === 'undefined') return null;
+
+  const anyWin = window as any;
+
+  const provider = anyWin.phantom?.solana;
+  if (provider?.isPhantom) return provider;
+
+  return null;
+}
 
 const wallets: WalletOption[] = [
   {
@@ -65,7 +93,7 @@ const wallets: WalletOption[] = [
     description: 'Connect with Phantom wallet',
     icon: 'https://mintcdn.com/phantom-e50e2e68/fkWrmnMWhjoXSGZ9/resources/images/Phantom_SVG_Icon.svg?w=840&fit=max&auto=format&n=fkWrmnMWhjoXSGZ9&q=85&s=7311f84864aeebc085a674acff85ff99',
     color: 'from-blue-600 to-cyan-600',
-    supported: hasPhantom,
+    supported: getPhantomProvider(),
   },
   {
     id: 'backpack',
@@ -286,15 +314,7 @@ const WalletConnectButton = ({
   onConnect: (wallet: WalletType, user: User) => void;
   setConnectingWallet: (walletType: WalletType | null) => void;
 }) => {
-  const {
-    select,
-    connect,
-    wallets,
-    wallet: currentWallet,
-    publicKey,
-    signMessage,
-    disconnect,
-  } = useWallet();
+  const { select, connect, wallets, publicKey, signMessage } = useWallet();
 
   const [pendingWalletType, setPendingWalletType] = useState<WalletType | null>(
     null
@@ -304,65 +324,54 @@ const WalletConnectButton = ({
     (state) => state.authenticateWithToken
   );
 
-  useEffect(() => {
-    const connectAndSign = async () => {
-      if (!pendingWalletType || !currentWallet?.adapter?.name) return;
+  const handlePhantom = async () => {
+    const provider = getPhantomProvider();
 
-      const expectedAdapter =
-        pendingWalletType === 'phantom'
-          ? 'Phantom'
-          : pendingWalletType === 'backpack'
-          ? 'Backpack'
-          : null;
+    if (!provider) {
+      toast.error('Phantom not installed');
+      return;
+    }
 
-      if (currentWallet.adapter.name !== expectedAdapter) return;
+    try {
+      await select('Phantom');
 
-      try {
-        await connect();
+      await connect();
 
-        const pubkey = currentWallet?.adapter?.publicKey?.toBase58();
-        if (!pubkey) throw new Error('Public key not available after connect');
+      await waitFor(() => publicKey, 3000);
 
-        const { data: nonceResp } = await apiClient.post('/auth/nonce', {
-          publicKey: pubkey,
-          walletType: pendingWalletType,
-        });
+      const pubkey = publicKey?.toBase58();
+      if (!pubkey) throw new Error('Phantom public key missing');
 
-        const nonce = nonceResp.nonce;
-        const message = `Login to Deor\nNonce=${nonce}`;
-        let retries = 0;
-        while (!signMessage && retries < 10) {
-          await new Promise((r) => setTimeout(r, 200));
-          retries++;
-        }
+      const { data: nonceResp } = await apiClient.post('/auth/nonce', {
+        publicKey: pubkey,
+        walletType: 'phantom',
+      });
 
-        if (!signMessage) throw new Error('signMessage not available');
+      const message = `Login to Deor\nNonce=${nonceResp.nonce}`;
+      const encoded = new TextEncoder().encode(message);
 
-        const signatureBytes = await signMessage(
-          new TextEncoder().encode(message)
-        );
-
-        const signature = bs58.encode(signatureBytes);
-
-        const { data: verifyResp } = await apiClient.post('/auth/verify', {
-          message,
-          signature,
-          publicKey: pubkey,
-        });
-
-        await authenticateWithToken(verifyResp.token);
-
-        onConnect(pendingWalletType, verifyResp.user);
-      } catch (err) {
-        console.error('Wallet connect error:', err);
-      } finally {
-        setConnectingWallet(null);
-        setPendingWalletType(null);
+      if (!signMessage) {
+        throw new Error('signMessage not supported by Phantom');
       }
-    };
 
-    connectAndSign();
-  }, [currentWallet?.adapter?.name, pendingWalletType, signMessage]);
+      const signatureBytes = await signMessage(encoded);
+      const signature = bs58.encode(signatureBytes);
+
+      const { data: verifyResp } = await apiClient.post('/auth/verify', {
+        message,
+        signature,
+        publicKey: pubkey,
+      });
+
+      await authenticateWithToken(verifyResp.token);
+      onConnect('phantom', verifyResp.user);
+    } catch (err: any) {
+      console.error('Phantom connect error:', err);
+      toast.error(err.message || 'Failed to connect Phantom');
+    } finally {
+      setConnectingWallet(null);
+    }
+  };
 
   const handleConnect = async (walletType: WalletType) => {
     setConnectingWallet(walletType);
@@ -375,9 +384,10 @@ const WalletConnectButton = ({
           setConnectingWallet(null);
           setPendingWalletType(null);
           return;
+        } else {
+          handlePhantom();
         }
 
-        await select('Phantom');
         break;
       case 'backpack':
         if (

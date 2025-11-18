@@ -1193,8 +1193,7 @@ export function ChatPage({
               {/* Oracle mobile header tab */}
               <Card
                 className={clsx(
-                  'border-border bg-background/80 backdrop-blur-md md:hidden',
-                  { 'fixed top-0 left-0 right-0': currentTab === 'info' }
+                  'border-border bg-background/80 backdrop-blur-md md:hidden fixed top-0 left-0 right-0 z-[9999]!'
                 )}
                 style={{
                   borderRadius: '0px',
@@ -1243,7 +1242,7 @@ export function ChatPage({
                 <>
                   {/* Oracle Header - Above conversation box */}
                   <Card
-                    className="border-border bg-background/80 backdrop-blur-md"
+                    className="border-border bg-background/80 backdrop-blur-md mt-[56px] pt-2 md:mt-0! md:pt-0!"
                     style={{
                       borderRadius: '0px',
                     }}
@@ -1607,7 +1606,7 @@ export function ChatPage({
                 </>
               )}
               {currentTab === 'info' && (
-                <div className="md:hidden w-full space-y-3 pt-2 mt-[56px]">
+                <div className="md:hidden w-full space-y-3 pt-2 mt-[56px] mx-auto">
                   {/* AI Agent Profile Card */}
                   <Card className="border-border">
                     <CardContent className="p-4">

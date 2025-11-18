@@ -21,7 +21,6 @@ const mockImage = [
   'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&q=80',
   'https://images.unsplash.com/photo-1621504450181-5d356f61d307?w=400&q=80',
   'https://images.unsplash.com/photo-1532968961962-8a0cb3a2d4f5?w=400&q=80',
-  'https://images.unsplash.com/photo-1533693706533-435a7b8f5eb3?w=400&q=80',
   'https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=400&q=80',
   'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80',
   'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80',

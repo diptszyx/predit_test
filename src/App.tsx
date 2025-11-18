@@ -471,8 +471,8 @@ export default function App() {
       <ArticleDetailPage
         hotTake={selectedArticle}
         onSelectRelated={setSelectedArticle}
+        previousPage={previousPage}
         onBack={() => {
-          setSelectedArticle(null);
           if (previousPage === 'chat' && selectedAIAgent) {
             setPreviousPage(null);
             setCurrentPage('chat');
@@ -486,6 +486,7 @@ export default function App() {
             setPreviousPage(null);
             setCurrentPage('chat');
           }
+          setSelectedArticle(null);
         }}
         aiAgentName={selectedAIAgent?.name}
         aiAgentSpecialty={selectedAIAgent?.type}

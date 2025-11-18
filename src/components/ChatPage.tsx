@@ -57,6 +57,7 @@ import { timeAgo } from '../lib/date';
 import clsx from 'clsx';
 import { Dialog } from './ui/dialog';
 import { InfoAgentDialog } from './InfoAgentDialog';
+import { motion } from 'motion/react';
 
 interface AIAgent {
   id: string;
@@ -112,6 +113,11 @@ interface ChatPageProps {
   onInitialPromptUsed?: () => void;
   onReloadAiAgent: (id: string) => void;
 }
+
+const tabs = [
+  { id: 'chat', label: 'Chat' },
+  { id: 'hotTakes', label: 'Hot Takes' },
+];
 
 export function ChatPage({
   aiAgent,
@@ -188,7 +194,7 @@ export function ChatPage({
 
   // Rating flash functionality
   const [ratingFlashing, setRatingFlashing] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'chat' | 'hotTakes'>('chat');
+  const [currentTab, setCurrentTab] = useState<string>('chat');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -700,7 +706,8 @@ export function ChatPage({
 
     // Default responses for other AI agents
     return [
-      `${aiAgent.emoji
+      `${
+        aiAgent.emoji
       } *channels cosmic energy* Interesting question! My ${aiAgent.specialty.toLowerCase()} powers are tingling. Based on my extensive research (and vibes), I predict that things will definitely happen. The exact details are still materializing in the prediction realm!`,
       `${aiAgent.emoji} Ooh, spicy topic! Let me consult my sources... *shuffles imaginary cards* ...and by sources I mean my incredibly tuned intuition and this lucky coin. My ${aiAgent.rating} rated prediction: expect the unexpected, but also the expected. Balance!`,
       `${aiAgent.emoji} *activates ${aiAgent.specialty} mode* You've come to the right AI agent! My analysis suggests a 73% chance of something interesting, a 25% chance of something boring, and a 2% chance of something absolutely wild. The math might not add up but neither does reality anymore! 🎲`,
@@ -1074,9 +1081,9 @@ export function ChatPage({
       <div
         className={
           onNavigate &&
-            shortenAddress &&
-            onWalletDisconnect &&
-            onOpenWalletDialog
+          shortenAddress &&
+          onWalletDisconnect &&
+          onOpenWalletDialog
             ? 'flex-1 overflow-y-auto'
             : ''
         }
@@ -1088,63 +1095,63 @@ export function ChatPage({
           onWalletDisconnect &&
           onOpenWalletDialog
         ) && (
-            <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
-              <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onBack}
-                    className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                    <img
-                      src={aiAgent.image}
-                      alt={aiAgent.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="text-sm sm:text-base leading-none truncate">
-                      {aiAgent.name}
-                    </h1>
-                    <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                      {aiAgent.type}
-                    </p>
-                  </div>
+          <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+            <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
+              <div className="flex items-center gap-3 min-w-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                  <img
+                    src={aiAgent.image}
+                    alt={aiAgent.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
-                  <div className="hidden sm:flex items-center gap-3">
-                    <span>{localRating} rating</span>
-                    <span>{formatLikes(localLikes)} likes</span>
-                    {aiAgent.consultSessions && (
-                      <span className="hidden md:inline">
-                        {aiAgent.consultSessions} sessions
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex sm:hidden">
-                    <span>{localRating}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDarkMode(!darkMode)}
-                    className="h-8 w-8"
-                  >
-                    {darkMode ? (
-                      <Sun className="w-4 h-4" />
-                    ) : (
-                      <Moon className="w-4 h-4" />
-                    )}
-                  </Button>
+                <div className="min-w-0">
+                  <h1 className="text-sm sm:text-base leading-none truncate">
+                    {aiAgent.name}
+                  </h1>
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                    {aiAgent.type}
+                  </p>
                 </div>
               </div>
-            </header>
-          )}
+
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
+                <div className="hidden sm:flex items-center gap-3">
+                  <span>{localRating} rating</span>
+                  <span>{formatLikes(localLikes)} likes</span>
+                  {aiAgent.consultSessions && (
+                    <span className="hidden md:inline">
+                      {aiAgent.consultSessions} sessions
+                    </span>
+                  )}
+                </div>
+                <div className="flex sm:hidden">
+                  <span>{localRating}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="h-8 w-8"
+                >
+                  {darkMode ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </header>
+        )}
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
@@ -1193,58 +1200,110 @@ export function ChatPage({
                 </div>
               )} */}
               {/* Oracle mobile header tab */}
-              <Card
-                className={clsx(
-                  'border-border bg-background/80 backdrop-blur-md md:hidden fixed bottom-0 left-0 right-0 z-[49]!'
-                )}
-                style={{
-                  borderRadius: '0px',
-                }}
-              >
-                <CardContent
-                  className="border-b border-border bg-card/80 backdrop-blur-md rounded-xl flex items-center"
+              <div className="md:hidden fixed top-0 left-0 right-0 z-[10]">
+                <Card
+                  className="border-border bg-background/80 backdrop-blur-md"
                   style={{
                     borderRadius: '0px',
-                    padding: 0,
                   }}
                 >
-                  <div
-                    className={clsx(
-                      'flex-1 p-2 py-4 sm:p-3 flex items-center justify-center border-r text-base font-medium',
-                      {
-                        '': currentTab === 'chat',
-                        'opacity-50 cursor-pointer hover:opacity-80':
-                          currentTab !== 'chat',
-                      }
-                    )}
-                    onClick={() => {
-                      setCurrentTab('chat');
+                  <CardContent
+                    className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
+                    style={{
+                      borderRadius: '0px',
+                      padding: '16px 8px',
                     }}
                   >
-                    <p>Chat</p>
-                  </div>
-                  <div
-                    className={clsx(
-                      'flex-1 p-2 py-4 sm:p-3 flex items-center justify-center text-base font-medium',
-                      {
-                        '': currentTab === 'hotTakes',
-                        'opacity-50 cursor-pointer hover:opacity-80':
-                          currentTab !== 'hotTakes',
-                      }
-                    )}
-                    onClick={() => {
-                      setCurrentTab('hotTakes');
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
+                        <ImageWithFallback
+                          src={aiAgent.image}
+                          alt={aiAgent.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-sm sm:text-base md:text-lg truncate">
+                          {aiAgent.name}
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          {aiAgent.type}
+                        </CardDescription>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setInfoDialogOpen(true)}
+                        className="md:hidden text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
+                      >
+                        <Info className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
+                          Info
+                        </span>
+                      </Button>
+                      {/* <Button
+                        variant="ghost"
+                        size="sm"
+                        // onClick={() => setShareOracleDialogOpen(true)}
+                        className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
+                      >
+                        <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
+                          Share
+                        </span>
+                      </Button> */}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={clsx(
+                    'border-border bg-background/80 backdrop-blur-md'
+                  )}
+                  style={{
+                    borderRadius: '0px',
+                  }}
+                >
+                  <CardContent
+                    className="border-b border-border bg-card/80 backdrop-blur-md rounded-xl flex items-center"
+                    style={{
+                      borderRadius: '0px',
+                      padding: 0,
                     }}
                   >
-                    <p>Hot Takes</p>
-                  </div>
-                </CardContent>
-              </Card>
+                    {tabs.map((tab) => (
+                      <div
+                        key={tab.id}
+                        className={clsx(
+                          'relative flex-1 p-2 py-4 sm:p-3 flex items-center justify-center text-base font-medium cursor-pointer transition-opacity',
+                          currentTab === tab.id
+                            ? 'opacity-100'
+                            : 'opacity-50 hover:opacity-80'
+                        )}
+                        onClick={() => setCurrentTab(tab.id)}
+                      >
+                        {tab.label}
+
+                        {currentTab === tab.id && (
+                          <motion.div
+                            layoutId="underline"
+                            className="absolute bottom-0 h-[2px] dark:bg-white bg-black w-full"
+                            transition={{
+                              type: 'spring',
+                              stiffness: 300,
+                              damping: 30,
+                            }}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
               {currentTab === 'chat' && (
                 <>
                   {/* Oracle Header - Above conversation box */}
                   <Card
-                    className="border-border bg-background/80 backdrop-blur-md"
+                    className="border-border bg-background/80 backdrop-blur-md hidden md:block!"
                     style={{
                       borderRadius: '0px',
                     }}
@@ -1253,7 +1312,7 @@ export function ChatPage({
                       className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
                       style={{
                         borderRadius: '0px',
-                        padding: '16px 8px'
+                        padding: '16px 8px',
                       }}
                     >
                       <div className="flex items-center gap-2 sm:gap-3">
@@ -1283,7 +1342,7 @@ export function ChatPage({
                             Info
                           </span>
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           // onClick={() => setShareOracleDialogOpen(true)}
@@ -1293,13 +1352,13 @@ export function ChatPage({
                           <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
                             Share
                           </span>
-                        </Button>
+                        </Button> */}
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* Chat Container with Background */}
-                  <div className="relative sm:h-[calc(100vh-16rem)] flex-1 overflow-hidden mb-14 md:mb-0!">
+                  <div className="relative sm:h-[calc(100vh-16rem)] flex-1 overflow-hidden mt-[130px] md:mt-0!">
                     {/* Background Color */}
                     <div className="absolute inset-0 bg-card/50" />
 
@@ -1327,16 +1386,18 @@ export function ChatPage({
                             {messages.map((message, index) => (
                               <div key={message.id}>
                                 <div
-                                  className={`flex ${message.sender === 'user'
-                                    ? 'justify-end'
-                                    : 'justify-start'
-                                    }`}
+                                  className={`flex ${
+                                    message.sender === 'user'
+                                      ? 'justify-end'
+                                      : 'justify-start'
+                                  }`}
                                 >
                                   <div
-                                    className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
-                                      ? 'bg-blue-600 text-white backdrop-blur-sm'
-                                      : `backdrop-blur-md border border-border`
-                                      }`}
+                                    className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
+                                      message.sender === 'user'
+                                        ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                        : `backdrop-blur-md border border-border`
+                                    }`}
                                   >
                                     {/* Article Attachment Thumbnail */}
                                     {/* {message.articleAttachment && (
@@ -1361,10 +1422,11 @@ export function ChatPage({
                                   </div>
                                 </div>
                                 <span
-                                  className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
-                                    ? 'text-right'
-                                    : 'text-left'
-                                    }`}
+                                  className={`text-xs mt-2 block text-muted-foreground ${
+                                    message.sender === 'user'
+                                      ? 'text-right'
+                                      : 'text-left'
+                                  }`}
                                 >
                                   {formatTime(message.createdAt)}
                                 </span>
@@ -1605,8 +1667,7 @@ export function ChatPage({
                 </>
               )}
               {currentTab === 'hotTakes' && (
-                <div className="md:hidden w-full space-y-3 pb-14">
-
+                <div className="md:hidden w-full space-y-3 pt-[130px]">
                   {/* Hot Takes Section */}
                   <Card className="border-border">
                     <CardHeader className="border-b border-border pb-3">
@@ -1751,8 +1812,9 @@ export function ChatPage({
 
                   {/* Rate section */}
                   <div
-                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${ratingFlashing ? 'ring-2 ring-blue-500' : ''
-                      }`}
+                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${
+                      ratingFlashing ? 'ring-2 ring-blue-500' : ''
+                    }`}
                   >
                     <p className="text-xs text-muted-foreground mb-2">
                       Rate this AI Agent
@@ -1765,10 +1827,11 @@ export function ChatPage({
                           className="transition-opacity hover:opacity-70"
                         >
                           <Star
-                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${star <= userRating!
-                              ? 'fill-primary text-primary'
-                              : 'text-muted-foreground'
-                              }`}
+                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${
+                              star <= userRating!
+                                ? 'fill-primary text-primary'
+                                : 'text-muted-foreground'
+                            }`}
                           />
                         </button>
                       ))}
@@ -1783,15 +1846,17 @@ export function ChatPage({
                   {/* Like Button */}
                   <Button
                     variant="outline"
-                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${hasLiked
-                      ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                      : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
-                      }`}
+                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${
+                      hasLiked
+                        ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                        : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
+                    }`}
                     onClick={handleLike}
                   >
                     <ThumbsUp
-                      className={`w-4 h-4 mr-2 ${hasLiked ? 'fill-current' : ''
-                        }`}
+                      className={`w-4 h-4 mr-2 ${
+                        hasLiked ? 'fill-current' : ''
+                      }`}
                     />
                     {hasLiked ? 'Liked' : 'Like'} • {formatLikes(localLikes)}
                   </Button>

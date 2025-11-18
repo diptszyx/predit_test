@@ -185,7 +185,7 @@ export function ChatPage({
 
   // Rating flash functionality
   const [ratingFlashing, setRatingFlashing] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'chat' | 'info'>('chat');
+  const [currentTab, setCurrentTab] = useState<'chat' | 'hotTakes'>('chat');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1193,7 +1193,7 @@ export function ChatPage({
               {/* Oracle mobile header tab */}
               <Card
                 className={clsx(
-                  'border-border bg-background/80 backdrop-blur-md md:hidden fixed top-0 left-0 right-0 z-[9999]!'
+                  'border-border bg-background/80 backdrop-blur-md md:hidden fixed bottom-0 left-0 right-0 z-[9999]!'
                 )}
                 style={{
                   borderRadius: '0px',
@@ -1225,16 +1225,16 @@ export function ChatPage({
                     className={clsx(
                       'flex-1 p-2 py-4 sm:p-3 flex items-center justify-center text-base font-medium',
                       {
-                        '': currentTab === 'info',
+                        '': currentTab === 'hotTakes',
                         'opacity-50 cursor-pointer hover:opacity-80':
-                          currentTab !== 'info',
+                          currentTab !== 'hotTakes',
                       }
                     )}
                     onClick={() => {
-                      setCurrentTab('info');
+                      setCurrentTab('hotTakes');
                     }}
                   >
-                    <p>Info</p>
+                    <p>Hot Takes</p>
                   </div>
                 </CardContent>
               </Card>
@@ -1242,7 +1242,7 @@ export function ChatPage({
                 <>
                   {/* Oracle Header - Above conversation box */}
                   <Card
-                    className="border-border bg-background/80 backdrop-blur-md mt-[56px] pt-2 md:mt-0! md:pt-0!"
+                    className="border-border bg-background/80 backdrop-blur-md"
                     style={{
                       borderRadius: '0px',
                     }}
@@ -1251,21 +1251,10 @@ export function ChatPage({
                       className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
                       style={{
                         borderRadius: '0px',
+                        padding: '16px 8px'
                       }}
                     >
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          // onClick={() => setThreadsExpanded(!threadsExpanded)}
-                          className="flex-shrink-0 hover:bg-muted/50 h-9 px-2 lg:flex"
-                        >
-                          {threadsExpanded ? (
-                            <PanelLeftClose className="w-5 h-5" />
-                          ) : (
-                            <PanelLeft className="w-5 h-5" />
-                          )}
-                        </Button>
                         <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
                           <ImageWithFallback
                             src={aiAgent.image}
@@ -1297,7 +1286,7 @@ export function ChatPage({
                   </Card>
 
                   {/* Chat Container with Background */}
-                  <div className="relative sm:h-[calc(100vh-16rem)] flex-1 overflow-hidden">
+                  <div className="relative sm:h-[calc(100vh-16rem)] flex-1 overflow-hidden mb-14 md:mb-0!">
                     {/* Background Color */}
                     <div className="absolute inset-0 bg-card/50" />
 
@@ -1605,111 +1594,8 @@ export function ChatPage({
                   </div>
                 </>
               )}
-              {currentTab === 'info' && (
-                <div className="md:hidden w-full space-y-3 pt-2 mt-[56px] mx-auto">
-                  {/* AI Agent Profile Card */}
-                  <Card className="border-border">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="relative">
-                          <ImageWithFallback
-                            src={aiAgent.image}
-                            alt={aiAgent.name}
-                            className="w-16 h-16 rounded-full object-cover ring-2 ring-blue-500/20"
-                          />
-                          <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-1">
-                            <Sparkles className="w-3 h-3 text-white" />
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="truncate mb-0.5">{aiAgent.name}</h3>
-                          <p className="text-xs text-blue-400 mb-2">
-                            {aiAgent.type}
-                          </p>
-                          <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
-                            {aiAgent.description}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 mt-3 py-3 border-t border-b border-border">
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            <Star className="w-3.5 h-3.5 text-yellow-500" />
-                            <span className="text-sm">
-                              {Number(aiAgent.rating).toFixed(1)}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Rating
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                            <span className="text-sm">
-                              {aiAgent.predictions}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Predictions
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Rate section */}
-                      <div
-                        className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${
-                          ratingFlashing ? 'ring-2 ring-blue-500' : ''
-                        }`}
-                      >
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Rate this AI Agent
-                        </p>
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              onClick={() => handleRating(star)}
-                              className="transition-opacity hover:opacity-70"
-                            >
-                              <Star
-                                className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${
-                                  star <= userRating!
-                                    ? 'fill-primary text-primary'
-                                    : 'text-muted-foreground'
-                                }`}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                        {userRating! > 0 && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            You rated {Math.round(userRating!)}/5
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Like Button */}
-                      <Button
-                        variant="outline"
-                        className={`w-full mt-3 h-9 transition-all cursor-pointer ${
-                          hasLiked
-                            ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                            : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
-                        }`}
-                        onClick={handleLike}
-                      >
-                        <ThumbsUp
-                          className={`w-4 h-4 mr-2 ${
-                            hasLiked ? 'fill-current' : ''
-                          }`}
-                        />
-                        {hasLiked ? 'Liked' : 'Like'} •{' '}
-                        {formatLikes(localLikes)}
-                      </Button>
-                    </CardContent>
-                  </Card>
+              {currentTab === 'hotTakes' && (
+                <div className="md:hidden w-full space-y-3 pb-14">
 
                   {/* Hot Takes Section */}
                   <Card className="border-border">

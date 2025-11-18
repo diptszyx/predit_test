@@ -382,7 +382,7 @@ export function Sidebar({
       {isMobile && isMobileMenuOpen && (
         <aside
           className="fixed top-0 left-0 w-64 border-r border-border bg-sidebar flex flex-col animate-slide-in"
-          style={{ zIndex: 9999, height: "100dvh" }}
+          style={{ zIndex: 99999, height: "100dvh" }}
         >
           <MobileSidebarContent />
         </aside>

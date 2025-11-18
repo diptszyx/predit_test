@@ -53,6 +53,7 @@ import {
 } from './ui/alert-dialog';
 import { News, newsService } from '../services/news.service';
 import { timeAgo } from '../lib/date';
+import clsx from 'clsx';
 
 interface AIAgent {
   id: string;
@@ -184,6 +185,7 @@ export function ChatPage({
 
   // Rating flash functionality
   const [ratingFlashing, setRatingFlashing] = useState(false);
+  const [currentTab, setCurrentTab] = useState<'chat' | 'info'>('chat');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -695,46 +697,12 @@ export function ChatPage({
 
     // Default responses for other AI agents
     return [
-      `${aiAgent.emoji
+      `${
+        aiAgent.emoji
       } *channels cosmic energy* Interesting question! My ${aiAgent.specialty.toLowerCase()} powers are tingling. Based on my extensive research (and vibes), I predict that things will definitely happen. The exact details are still materializing in the prediction realm!`,
       `${aiAgent.emoji} Ooh, spicy topic! Let me consult my sources... *shuffles imaginary cards* ...and by sources I mean my incredibly tuned intuition and this lucky coin. My ${aiAgent.rating} rated prediction: expect the unexpected, but also the expected. Balance!`,
       `${aiAgent.emoji} *activates ${aiAgent.specialty} mode* You've come to the right AI agent! My analysis suggests a 73% chance of something interesting, a 25% chance of something boring, and a 2% chance of something absolutely wild. The math might not add up but neither does reality anymore! 🎲`,
     ];
-  }
-
-  function extractKeywords(message: string): string[] {
-    const words = message.toLowerCase().split(' ');
-    const commonWords = [
-      'the',
-      'a',
-      'an',
-      'and',
-      'or',
-      'but',
-      'in',
-      'on',
-      'at',
-      'to',
-      'for',
-      'of',
-      'with',
-      'is',
-      'will',
-      'what',
-      'when',
-      'where',
-      'how',
-      'why',
-      'tell',
-      'me',
-      'about',
-      'should',
-      'could',
-      'would',
-    ];
-    return words.filter(
-      (word) => word.length > 3 && !commonWords.includes(word)
-    );
   }
 
   // Generate suggested follow-up questions based on AI agent specialty
@@ -1066,14 +1034,6 @@ export function ChatPage({
     return likes.toString();
   };
 
-  const defaultShortenAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
-  const defaultOnWalletDisconnect = () => {
-    console.log('Wallet disconnect');
-  };
-
   return (
     <div
       className={
@@ -1112,9 +1072,9 @@ export function ChatPage({
       <div
         className={
           onNavigate &&
-            shortenAddress &&
-            onWalletDisconnect &&
-            onOpenWalletDialog
+          shortenAddress &&
+          onWalletDisconnect &&
+          onOpenWalletDialog
             ? 'flex-1 overflow-y-auto'
             : ''
         }
@@ -1126,63 +1086,63 @@ export function ChatPage({
           onWalletDisconnect &&
           onOpenWalletDialog
         ) && (
-            <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
-              <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onBack}
-                    className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                    <img
-                      src={aiAgent.image}
-                      alt={aiAgent.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="text-sm sm:text-base leading-none truncate">
-                      {aiAgent.name}
-                    </h1>
-                    <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                      {aiAgent.type}
-                    </p>
-                  </div>
+          <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+            <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
+              <div className="flex items-center gap-3 min-w-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                  <img
+                    src={aiAgent.image}
+                    alt={aiAgent.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
-                  <div className="hidden sm:flex items-center gap-3">
-                    <span>{localRating} rating</span>
-                    <span>{formatLikes(localLikes)} likes</span>
-                    {aiAgent.consultSessions && (
-                      <span className="hidden md:inline">
-                        {aiAgent.consultSessions} sessions
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex sm:hidden">
-                    <span>{localRating}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDarkMode(!darkMode)}
-                    className="h-8 w-8"
-                  >
-                    {darkMode ? (
-                      <Sun className="w-4 h-4" />
-                    ) : (
-                      <Moon className="w-4 h-4" />
-                    )}
-                  </Button>
+                <div className="min-w-0">
+                  <h1 className="text-sm sm:text-base leading-none truncate">
+                    {aiAgent.name}
+                  </h1>
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                    {aiAgent.type}
+                  </p>
                 </div>
               </div>
-            </header>
-          )}
+
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
+                <div className="hidden sm:flex items-center gap-3">
+                  <span>{localRating} rating</span>
+                  <span>{formatLikes(localLikes)} likes</span>
+                  {aiAgent.consultSessions && (
+                    <span className="hidden md:inline">
+                      {aiAgent.consultSessions} sessions
+                    </span>
+                  )}
+                </div>
+                <div className="flex sm:hidden">
+                  <span>{localRating}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="h-8 w-8"
+                >
+                  {darkMode ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </header>
+        )}
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
@@ -1230,104 +1190,156 @@ export function ChatPage({
                   </div>
                 </div>
               )} */}
-              {/* Oracle Header - Above conversation box */}
+              {/* Oracle mobile header tab */}
               <Card
-                className="border-border bg-background/80 backdrop-blur-md"
+                className={clsx(
+                  'border-border bg-background/80 backdrop-blur-md md:hidden fixed top-0 left-0 right-0 z-[9999]!'
+                )}
                 style={{
                   borderRadius: '0px',
                 }}
               >
                 <CardContent
-                  className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
+                  className="border-b border-border bg-card/80 backdrop-blur-md rounded-xl flex items-center"
                   style={{
                     borderRadius: '0px',
+                    padding: 0,
                   }}
                 >
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      // onClick={() => setThreadsExpanded(!threadsExpanded)}
-                      className="flex-shrink-0 hover:bg-muted/50 h-9 px-2 lg:flex"
-                    >
-                      {threadsExpanded ? (
-                        <PanelLeftClose className="w-5 h-5" />
-                      ) : (
-                        <PanelLeft className="w-5 h-5" />
-                      )}
-                    </Button>
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
-                      <ImageWithFallback
-                        src={aiAgent.image}
-                        alt={aiAgent.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-sm sm:text-base md:text-lg truncate">
-                        {aiAgent.name}
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        {aiAgent.type}
-                      </CardDescription>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      // onClick={() => setShareOracleDialogOpen(true)}
-                      className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                    >
-                      <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
-                        Share
-                      </span>
-                    </Button>
+                  <div
+                    className={clsx(
+                      'flex-1 p-2 py-4 sm:p-3 flex items-center justify-center border-r text-base font-medium',
+                      {
+                        '': currentTab === 'chat',
+                        'opacity-50 cursor-pointer hover:opacity-80':
+                          currentTab !== 'chat',
+                      }
+                    )}
+                    onClick={() => {
+                      setCurrentTab('chat');
+                    }}
+                  >
+                    <p>Chat</p>
+                  </div>
+                  <div
+                    className={clsx(
+                      'flex-1 p-2 py-4 sm:p-3 flex items-center justify-center text-base font-medium',
+                      {
+                        '': currentTab === 'info',
+                        'opacity-50 cursor-pointer hover:opacity-80':
+                          currentTab !== 'info',
+                      }
+                    )}
+                    onClick={() => {
+                      setCurrentTab('info');
+                    }}
+                  >
+                    <p>Info</p>
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Chat Container with Background */}
-              <div className="relative sm:h-[calc(100vh-16rem)] flex-1 overflow-hidden">
-                {/* Background Color */}
-                <div className="absolute inset-0 bg-card/50" />
-
-                {/* Chat Interface - Full Height */}
-                <div className="absolute inset-0 flex flex-col pointer-events-none">
-                  {/* Messages Area - Scrollable with transparent background */}
-                  <div className="flex-1 overflow-hidden pointer-events-auto rounded-none border-r">
-                    <ScrollArea className="h-full p-2 sm:p-3 md:p-4 bg-muted/80">
-                      {(!user || messages.length === 0) && (
-                        <div className="flex flex-col items-center justify-center my-12 px-4 text-center">
-                          <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mb-4">
-                            <MessageSquare className="w-8 h-8 text-blue-600" />
-                          </div>
-                          <h3 className="text-lg font-semibold mb-2">
-                            Start a New Conversation
-                          </h3>
-                          <p className="text-sm text-muted-foreground max-w-md">
-                            Ask {aiAgent.name} anything. Get predictions,
-                            insights, and expert analysis on{' '}
-                            {aiAgent.type.split(' ')[0]}.
-                          </p>
+              {currentTab === 'chat' && (
+                <>
+                  {/* Oracle Header - Above conversation box */}
+                  <Card
+                    className="border-border bg-background/80 backdrop-blur-md mt-[56px] pt-2 md:mt-0! md:pt-0!"
+                    style={{
+                      borderRadius: '0px',
+                    }}
+                  >
+                    <CardContent
+                      className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
+                      style={{
+                        borderRadius: '0px',
+                      }}
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          // onClick={() => setThreadsExpanded(!threadsExpanded)}
+                          className="flex-shrink-0 hover:bg-muted/50 h-9 px-2 lg:flex"
+                        >
+                          {threadsExpanded ? (
+                            <PanelLeftClose className="w-5 h-5" />
+                          ) : (
+                            <PanelLeft className="w-5 h-5" />
+                          )}
+                        </Button>
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
+                          <ImageWithFallback
+                            src={aiAgent.image}
+                            alt={aiAgent.name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                      )}
-                      <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
-                        {messages.map((message, index) => (
-                          <div key={message.id}>
-                            <div
-                              className={`flex ${message.sender === 'user'
-                                ? 'justify-end'
-                                : 'justify-start'
-                                }`}
-                            >
-                              <div
-                                className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
-                                  ? 'bg-blue-600 text-white backdrop-blur-sm'
-                                  : `backdrop-blur-md border border-border`
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-sm sm:text-base md:text-lg truncate">
+                            {aiAgent.name}
+                          </CardTitle>
+                          <CardDescription className="text-xs">
+                            {aiAgent.type}
+                          </CardDescription>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          // onClick={() => setShareOracleDialogOpen(true)}
+                          className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
+                        >
+                          <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
+                            Share
+                          </span>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Chat Container with Background */}
+                  <div className="relative sm:h-[calc(100vh-16rem)] flex-1 overflow-hidden">
+                    {/* Background Color */}
+                    <div className="absolute inset-0 bg-card/50" />
+
+                    {/* Chat Interface - Full Height */}
+                    <div className="absolute inset-0 flex flex-col pointer-events-none">
+                      {/* Messages Area - Scrollable with transparent background */}
+                      <div className="flex-1 overflow-hidden pointer-events-auto rounded-none border-r">
+                        <ScrollArea className="h-full p-2 sm:p-3 md:p-4 bg-muted/80">
+                          {(!user || messages.length === 0) && (
+                            <div className="flex flex-col items-center justify-center my-12 px-4 text-center">
+                              <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mb-4">
+                                <MessageSquare className="w-8 h-8 text-blue-600" />
+                              </div>
+                              <h3 className="text-lg font-semibold mb-2">
+                                Start a New Conversation
+                              </h3>
+                              <p className="text-sm text-muted-foreground max-w-md">
+                                Ask {aiAgent.name} anything. Get predictions,
+                                insights, and expert analysis on{' '}
+                                {aiAgent.type.split(' ')[0]}.
+                              </p>
+                            </div>
+                          )}
+                          <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
+                            {messages.map((message, index) => (
+                              <div key={message.id}>
+                                <div
+                                  className={`flex ${
+                                    message.sender === 'user'
+                                      ? 'justify-end'
+                                      : 'justify-start'
                                   }`}
-                              >
-                                {/* Article Attachment Thumbnail */}
-                                {/* {message.articleAttachment && (
+                                >
+                                  <div
+                                    className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
+                                      message.sender === 'user'
+                                        ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                        : `backdrop-blur-md border border-border`
+                                    }`}
+                                  >
+                                    {/* Article Attachment Thumbnail */}
+                                    {/* {message.articleAttachment && (
                                   <div className="mb-2 rounded-lg overflow-hidden border border-border">
                                     <div className="aspect-video relative bg-muted/20">
                                       <ImageWithFallback
@@ -1343,22 +1355,23 @@ export function ChatPage({
                                   </div>
                                 )} */}
 
-                                <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
-                                  {message.content}
-                                </p>
-                              </div>
-                            </div>
-                            <span
-                              className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
-                                ? 'text-right'
-                                : 'text-left'
-                                }`}
-                            >
-                              {formatTime(message.createdAt)}
-                            </span>
+                                    <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                                      {message.content}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span
+                                  className={`text-xs mt-2 block text-muted-foreground ${
+                                    message.sender === 'user'
+                                      ? 'text-right'
+                                      : 'text-left'
+                                  }`}
+                                >
+                                  {formatTime(message.createdAt)}
+                                </span>
 
-                            {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
-                            {/* {message.sender === "assistant"
+                                {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
+                                {/* {message.sender === "assistant"
                               && message.suggestedQuestions && index === messages.length - 1 && !isLoading &&
                               (
                               <div className="flex justify-start mt-2 sm:mt-3">
@@ -1375,219 +1388,422 @@ export function ChatPage({
                                 </div>
                               </div>
                             )} */}
-                            {message.sender === 'assistant' &&
-                              suggestedQuestions &&
-                              index === messages.length - 1 &&
-                              !isLoading && (
-                                <div className="flex justify-start mt-2 sm:mt-3">
-                                  <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
-                                    {suggestedQuestions.map(
-                                      (question, qIndex) => (
-                                        <button
-                                          key={qIndex}
-                                          onClick={() => handleSend(question)}
-                                          className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left cursor-pointer"
-                                        >
-                                          {question}
-                                        </button>
-                                      )
+                                {message.sender === 'assistant' &&
+                                  suggestedQuestions &&
+                                  index === messages.length - 1 &&
+                                  !isLoading && (
+                                    <div className="flex justify-start mt-2 sm:mt-3">
+                                      <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
+                                        {suggestedQuestions.map(
+                                          (question, qIndex) => (
+                                            <button
+                                              key={qIndex}
+                                              onClick={() =>
+                                                handleSend(question)
+                                              }
+                                              className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left cursor-pointer"
+                                            >
+                                              {question}
+                                            </button>
+                                          )
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                              </div>
+                            ))}
+                            {isLoading && (
+                              <div className="flex justify-start">
+                                <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
+                                      <ImageWithFallback
+                                        src={aiAgent.image}
+                                        alt={aiAgent.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <span className="text-xs text-foreground">
+                                      {aiAgent.name} is typing...
+                                    </span>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <div
+                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                      style={{ animationDelay: '0ms' }}
+                                    />
+                                    <div
+                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                      style={{ animationDelay: '150ms' }}
+                                    />
+                                    <div
+                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                      style={{ animationDelay: '300ms' }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            <div ref={messagesEndRef} />
+                          </div>
+                        </ScrollArea>
+                      </div>
+
+                      {/* Input Section - Fixed at top with semi-transparent background */}
+                      <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90 border-r">
+                        <div className="max-w-4xl mx-auto">
+                          {/* Daily Prediction Limit Counter for Free Users */}
+                          {user?.id &&
+                            !user?.isPro &&
+                            (() => {
+                              // const today = new Date().toDateString();
+                              // const lastResetDate = user?.dailyMessagesResetDate;
+                              // const dailyUsed = (lastResetDate === today) ? (user?.dailyMessagesUsed || 0) : 0;
+                              // const remaining = 5 - dailyUsed;
+
+                              return (
+                                <div className="mb-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <MessageSquare className="w-4 h-4" />
+                                      <span>
+                                        {user.restTodayPredictionCount}/5
+                                        messages remaining today
+                                      </span>
+                                    </div>
+                                    {user.restTodayPredictionCount <= 2 && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() =>
+                                          setSubscriptionDialogOpen(true)
+                                        }
+                                        className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0 cursor-pointer"
+                                      >
+                                        <Crown className="w-3 h-3 mr-1" />
+                                        Upgrade
+                                      </Button>
                                     )}
                                   </div>
                                 </div>
-                              )}
-                          </div>
-                        ))}
-                        {isLoading && (
-                          <div className="flex justify-start">
-                            <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
-                              <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                                <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
-                                  <ImageWithFallback
-                                    src={aiAgent.image}
-                                    alt={aiAgent.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <span className="text-xs text-foreground">
-                                  {aiAgent.name} is typing...
+                              );
+                            })()}
+
+                          {/* Daily Line Limit Counter for Free Users */}
+                          {user?.walletAddress &&
+                            user?.subscriptionTier !== 'master' &&
+                            (() => {
+                              const today = new Date().toDateString();
+                              const lastResetDate = user?.dailyLinesResetDate;
+                              const dailyUsed =
+                                lastResetDate === today
+                                  ? user?.dailyLinesUsed || 0
+                                  : 0;
+                              const remaining = 100 - dailyUsed;
+                              const percentage = (dailyUsed / 100) * 100;
+
+                              if (remaining <= 30) {
+                                return (
+                                  <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
+                                    <div className="flex items-center justify-between mb-2 gap-2">
+                                      <p className="text-xs sm:text-sm text-foreground truncate">
+                                        <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
+                                        {remaining} lines left
+                                      </p>
+                                      <Button
+                                        size="sm"
+                                        onClick={() =>
+                                          setSubscriptionDialogOpen(true)
+                                        }
+                                        className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
+                                      >
+                                        <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
+                                        <span className="text-xs">Upgrade</span>
+                                      </Button>
+                                    </div>
+                                    <div className="w-full bg-black/30 rounded-full h-1.5">
+                                      <div
+                                        className="bg-gradient-to-r from-orange-500 to-red-500 h-1.5 rounded-full transition-all"
+                                        style={{ width: `${percentage}%` }}
+                                      />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {dailyUsed}/100 lines used
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
+
+                          <div className="flex gap-1.5 sm:gap-2">
+                            <div
+                              className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-11 cursor-pointer relative"
+                              onClick={() => {
+                                if (!user) {
+                                  setSignInDialogOpen(true);
+                                }
+                              }}
+                            >
+                              {/* Input Field */}
+                              {!user ? (
+                                <span className="flex-1 text-muted-foreground text-sm">
+                                  Sign in to chat
                                 </span>
-                              </div>
-                              <div className="flex gap-1">
-                                <div
-                                  className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                  style={{ animationDelay: '0ms' }}
+                              ) : (
+                                <input
+                                  type="text"
+                                  value={input}
+                                  onChange={(e) => setInput(e.target.value)}
+                                  onKeyPress={handleKeyPress}
+                                  className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm"
+                                  placeholder="I want a prediction on..."
+                                  disabled={isLoading}
                                 />
-                                <div
-                                  className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                  style={{ animationDelay: '150ms' }}
-                                />
-                                <div
-                                  className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                  style={{ animationDelay: '300ms' }}
-                                />
-                              </div>
+                              )}
+
+                              {/* Circular Submit Button - Matching Home Page */}
+                              <button
+                                onClick={() => handleSend(input)}
+                                disabled={!input.trim() || isLoading || !user}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed group flex-shrink-0 shadow-sm cursor-pointer hover:scale-105"
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  background: 'rgba(59, 130, 246, 0.25)',
+                                  backdropFilter: 'blur(4px)',
+                                  border: '1px solid rgba(59, 130, 246, 0.25)',
+                                  boxShadow:
+                                    '0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.15)',
+                                }}
+                              >
+                                {isLoading ? (
+                                  <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
+                                ) : (
+                                  <ArrowRight
+                                    className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-2"
+                                    style={{
+                                      filter:
+                                        'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))',
+                                    }}
+                                  />
+                                )}
+                              </button>
                             </div>
                           </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                      </div>
-                    </ScrollArea>
-                  </div>
-
-                  {/* Input Section - Fixed at top with semi-transparent background */}
-                  <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90 border-r">
-                    <div className="max-w-4xl mx-auto">
-                      {/* Daily Prediction Limit Counter for Free Users */}
-                      {user?.id &&
-                        !user?.isPro &&
-                        (() => {
-                          // const today = new Date().toDateString();
-                          // const lastResetDate = user?.dailyMessagesResetDate;
-                          // const dailyUsed = (lastResetDate === today) ? (user?.dailyMessagesUsed || 0) : 0;
-                          // const remaining = 5 - dailyUsed;
-
-                          return (
-                            <div className="mb-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <MessageSquare className="w-4 h-4" />
-                                  <span>
-                                    {user.restTodayPredictionCount}/5 messages
-                                    remaining today
-                                  </span>
-                                </div>
-                                {user.restTodayPredictionCount <= 2 && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() =>
-                                      setSubscriptionDialogOpen(true)
-                                    }
-                                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0 cursor-pointer"
-                                  >
-                                    <Crown className="w-3 h-3 mr-1" />
-                                    Upgrade
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })()}
-
-                      {/* Daily Line Limit Counter for Free Users */}
-                      {user?.walletAddress &&
-                        user?.subscriptionTier !== 'master' &&
-                        (() => {
-                          const today = new Date().toDateString();
-                          const lastResetDate = user?.dailyLinesResetDate;
-                          const dailyUsed =
-                            lastResetDate === today
-                              ? user?.dailyLinesUsed || 0
-                              : 0;
-                          const remaining = 100 - dailyUsed;
-                          const percentage = (dailyUsed / 100) * 100;
-
-                          if (remaining <= 30) {
-                            return (
-                              <div className="mb-2 sm:mb-3 p-2 sm:p-3 bg-orange-500/20 border border-orange-500/40 rounded-lg backdrop-blur-sm">
-                                <div className="flex items-center justify-between mb-2 gap-2">
-                                  <p className="text-xs sm:text-sm text-foreground truncate">
-                                    <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                                    {remaining} lines left
-                                  </p>
-                                  <Button
-                                    size="sm"
-                                    onClick={() =>
-                                      setSubscriptionDialogOpen(true)
-                                    }
-                                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
-                                  >
-                                    <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
-                                    <span className="text-xs">Upgrade</span>
-                                  </Button>
-                                </div>
-                                <div className="w-full bg-black/30 rounded-full h-1.5">
-                                  <div
-                                    className="bg-gradient-to-r from-orange-500 to-red-500 h-1.5 rounded-full transition-all"
-                                    style={{ width: `${percentage}%` }}
-                                  />
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {dailyUsed}/100 lines used
-                                </p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-
-                      <div className="flex gap-1.5 sm:gap-2">
-                        <div
-                          className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-11 cursor-pointer relative"
-                          onClick={() => {
-                            if (!user) {
-                              setSignInDialogOpen(true);
-                            }
-                          }}
-                        >
-                          {/* Input Field */}
-                          {!user ? (
-                            <span className="flex-1 text-muted-foreground text-sm">
-                              Sign in to chat
-                            </span>
-                          ) : (
-                            <input
-                              type="text"
-                              value={input}
-                              onChange={(e) => setInput(e.target.value)}
-                              onKeyPress={handleKeyPress}
-                              className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm"
-                              placeholder="I want a prediction on..."
-                              disabled={isLoading}
-                            />
-                          )}
-
-                          {/* Circular Submit Button - Matching Home Page */}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center mx-auto">
+                          AI agents can make mistakes. Check{' '}
                           <button
-                            onClick={() => handleSend(input)}
-                            disabled={!input.trim() || isLoading || !user}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed group flex-shrink-0 shadow-sm cursor-pointer hover:scale-105"
-                            style={{
-                              width: '40px',
-                              height: '40px',
-                              background: 'rgba(59, 130, 246, 0.25)',
-                              backdropFilter: 'blur(4px)',
-                              border: '1px solid rgba(59, 130, 246, 0.25)',
-                              boxShadow:
-                                '0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.15)',
-                            }}
+                            onClick={() => setDisclaimerDialogOpen(true)}
+                            className="text-blue-400 hover:text-blue-300 underline transition-colors"
                           >
-                            {isLoading ? (
-                              <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
-                            ) : (
-                              <ArrowRight
-                                className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-2"
-                                style={{
-                                  filter:
-                                    'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))',
-                                }}
-                              />
-                            )}
+                            Disclaimer
                           </button>
                         </div>
                       </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center mx-auto">
-                      AI agents can make mistakes. Check{' '}
-                      <button
-                        onClick={() => setDisclaimerDialogOpen(true)}
-                        className="text-blue-400 hover:text-blue-300 underline transition-colors"
-                      >
-                        Disclaimer
-                      </button>
-                    </div>
                   </div>
+                </>
+              )}
+              {currentTab === 'info' && (
+                <div className="md:hidden w-full space-y-3 pt-2 mt-[56px] mx-auto">
+                  {/* AI Agent Profile Card */}
+                  <Card className="border-border">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="relative">
+                          <ImageWithFallback
+                            src={aiAgent.image}
+                            alt={aiAgent.name}
+                            className="w-16 h-16 rounded-full object-cover ring-2 ring-blue-500/20"
+                          />
+                          <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-1">
+                            <Sparkles className="w-3 h-3 text-white" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="truncate mb-0.5">{aiAgent.name}</h3>
+                          <p className="text-xs text-blue-400 mb-2">
+                            {aiAgent.type}
+                          </p>
+                          <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
+                            {aiAgent.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 mt-3 py-3 border-t border-b border-border">
+                        <div className="text-center">
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <Star className="w-3.5 h-3.5 text-yellow-500" />
+                            <span className="text-sm">
+                              {Number(aiAgent.rating).toFixed(1)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Rating
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+                            <span className="text-sm">
+                              {aiAgent.predictions}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Predictions
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Rate section */}
+                      <div
+                        className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${
+                          ratingFlashing ? 'ring-2 ring-blue-500' : ''
+                        }`}
+                      >
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Rate this AI Agent
+                        </p>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => handleRating(star)}
+                              className="transition-opacity hover:opacity-70"
+                            >
+                              <Star
+                                className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${
+                                  star <= userRating!
+                                    ? 'fill-primary text-primary'
+                                    : 'text-muted-foreground'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                        {userRating! > 0 && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            You rated {Math.round(userRating!)}/5
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Like Button */}
+                      <Button
+                        variant="outline"
+                        className={`w-full mt-3 h-9 transition-all cursor-pointer ${
+                          hasLiked
+                            ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                            : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
+                        }`}
+                        onClick={handleLike}
+                      >
+                        <ThumbsUp
+                          className={`w-4 h-4 mr-2 ${
+                            hasLiked ? 'fill-current' : ''
+                          }`}
+                        />
+                        {hasLiked ? 'Liked' : 'Like'} •{' '}
+                        {formatLikes(localLikes)}
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Hot Takes Section */}
+                  <Card className="border-border">
+                    <CardHeader className="border-b border-border pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Zap className="w-4 h-4" />
+                        <span>Hot Takes</span>
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Latest insights from {aiAgent.name}
+                      </p>
+                    </CardHeader>
+                    <div
+                      className="h-full"
+                      style={{ overflow: 'auto' }}
+                    >
+                      <div className="p-3 space-y-3">
+                        {isLoadingNews ? (
+                          <>
+                            {[1, 2].map((i) => (
+                              <div
+                                key={i}
+                                className="space-y-2"
+                              >
+                                <Skeleton className="h-20 w-full rounded-lg" />
+                                <Skeleton className="h-3 w-full" />
+                                <Skeleton className="h-2 w-2/3" />
+                              </div>
+                            ))}
+                          </>
+                        ) : newsArticles.length > 0 ? (
+                          newsArticles.map((article) => (
+                            <Card
+                              key={article.id}
+                              className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
+                              onClick={() => handleArticleClick(article.id)}
+                            >
+                              <div className="relative h-32 overflow-hidden">
+                                <ImageWithFallback
+                                  src={article.image}
+                                  alt={article.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                                <div className="absolute top-1 right-1">
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs h-4 px-1.5"
+                                  >
+                                    {article.relevance}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <CardContent className="p-2">
+                                <h4 className="text-xs mb-1 line-clamp-2 group-hover:text-blue-400 transition-colors leading-tight">
+                                  {article.title}
+                                </h4>
+                                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+                                  <span className="truncate text-xs flex items-center gap-1">
+                                    {article.oracle.name}
+                                  </span>
+                                  <span className="text-xs">
+                                    {timeAgo(article.createdAt)}
+                                  </span>
+                                </div>
+                                {/* <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border">
+                              <span className="flex items-center gap-1">
+                                <ThumbsUp className="w-3 h-3" />
+                                {article.likes || 0}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MessageSquare className="w-3 h-3" />
+                                {article.comments || 0}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Share2 className="w-3 h-3" />
+                                {article.shares || 0}
+                              </span>
+                            </div> */}
+                              </CardContent>
+                            </Card>
+                          ))
+                        ) : (
+                          <div className="text-center py-8">
+                            <Zap className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                            <p className="text-xs text-muted-foreground">
+                              No hot takes available
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
                 </div>
-              </div>
+              )}
             </div>
             {/* News Feed - Right - Hidden on mobile */}
             <div className="hidden lg:block w-full h-full lg:w-80 space-y-3 pt-2">
@@ -1639,8 +1855,9 @@ export function ChatPage({
 
                   {/* Rate section */}
                   <div
-                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${ratingFlashing ? 'ring-2 ring-blue-500' : ''
-                      }`}
+                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${
+                      ratingFlashing ? 'ring-2 ring-blue-500' : ''
+                    }`}
                   >
                     <p className="text-xs text-muted-foreground mb-2">
                       Rate this AI Agent
@@ -1653,10 +1870,11 @@ export function ChatPage({
                           className="transition-opacity hover:opacity-70"
                         >
                           <Star
-                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${star <= userRating!
-                              ? 'fill-primary text-primary'
-                              : 'text-muted-foreground'
-                              }`}
+                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${
+                              star <= userRating!
+                                ? 'fill-primary text-primary'
+                                : 'text-muted-foreground'
+                            }`}
                           />
                         </button>
                       ))}
@@ -1671,15 +1889,17 @@ export function ChatPage({
                   {/* Like Button */}
                   <Button
                     variant="outline"
-                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${hasLiked
-                      ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                      : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
-                      }`}
+                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${
+                      hasLiked
+                        ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                        : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
+                    }`}
                     onClick={handleLike}
                   >
                     <ThumbsUp
-                      className={`w-4 h-4 mr-2 ${hasLiked ? 'fill-current' : ''
-                        }`}
+                      className={`w-4 h-4 mr-2 ${
+                        hasLiked ? 'fill-current' : ''
+                      }`}
                     />
                     {hasLiked ? 'Liked' : 'Like'} • {formatLikes(localLikes)}
                   </Button>
@@ -1784,7 +2004,6 @@ export function ChatPage({
               </Card>
             </div>
           </div>
-
         </div>
 
         {/* Sign In Dialog */}

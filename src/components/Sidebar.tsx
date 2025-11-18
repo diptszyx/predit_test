@@ -354,7 +354,7 @@ export function Sidebar({
       {/* Mobile Menu Button - Only visible on mobile screens */}
       {isMobile && (
         <button
-          className="fixed p-2 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors translate-x-[-50%]"
+          className="fixed p-2 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors translate-x-[-50%] z-[99999]"
           style={{
             top: "3.2rem",
             left: "0",

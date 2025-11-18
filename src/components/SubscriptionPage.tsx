@@ -265,7 +265,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                       </p>
                       <div className="bg-background p-3 rounded border border-border">
                         <code className="text-xs break-all">
-                          0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+                          mn7U5A7qmB42JiuJ3MNJpiDvRQK9zQc4Tu
                         </code>
                       </div>
                       <p className="text-xs text-muted-foreground mt-3">

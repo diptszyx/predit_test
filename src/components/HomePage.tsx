@@ -249,7 +249,7 @@ export function HomePage({
                       <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
                     ) : (
                       <ArrowRight
-                        className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-2"
+                        className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-0.5"
                         style={{
                           filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))',
                         }}

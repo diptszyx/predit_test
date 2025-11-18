@@ -180,11 +180,10 @@ export function Sidebar({
             <Button
               key={item.id}
               variant="ghost"
-              className={`w-full justify-start ${
-                isActive
+              className={`w-full justify-start ${isActive
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              }`}
+                }`}
               onClick={() => {
                 if (item.isExternalLink && item.href) {
                   window.open(item.href, "_blank");
@@ -354,7 +353,7 @@ export function Sidebar({
       {/* Mobile Menu Button - Only visible on mobile screens */}
       {isMobile && (
         <button
-          className="fixed p-2 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors translate-x-[-50%] z-[99999]"
+          className="fixed p-2 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors translate-x-[-50%] z-[49]!"
           style={{
             top: "3.2rem",
             left: "0",
@@ -414,11 +413,10 @@ export function Sidebar({
                 <Button
                   key={item.id}
                   variant="ghost"
-                  className={`w-full justify-start ${
-                    isActive
+                  className={`w-full justify-start ${isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
+                    }`}
                   onClick={() => {
                     if (item.isExternalLink && item.href) {
                       window.open(item.href, "_blank");

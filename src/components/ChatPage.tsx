@@ -1195,7 +1195,7 @@ export function ChatPage({
               {/* Oracle mobile header tab */}
               <Card
                 className={clsx(
-                  'border-border bg-background/80 backdrop-blur-md md:hidden fixed bottom-0 left-0 right-0 z-[9999]!'
+                  'border-border bg-background/80 backdrop-blur-md md:hidden fixed bottom-0 left-0 right-0 z-[49]!'
                 )}
                 style={{
                   borderRadius: '0px',
@@ -1579,7 +1579,7 @@ export function ChatPage({
                                   <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
                                 ) : (
                                   <ArrowRight
-                                    className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-2"
+                                    className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-0.5"
                                     style={{
                                       filter:
                                         'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))',
@@ -1704,7 +1704,6 @@ export function ChatPage({
             {/* News Feed - Right - Hidden on mobile */}
             <div className="hidden lg:block w-full h-full lg:w-80 space-y-3 pt-2">
               {/* AI Agent Profile Card */}
-              {/* ABCABC */}
               <Card className="border-border overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">

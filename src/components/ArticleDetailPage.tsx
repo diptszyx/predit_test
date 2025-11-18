@@ -26,6 +26,7 @@ import { News, newsService } from '../services/news.service';
 import { timeAgo } from '../lib/date';
 import { Skeleton } from './ui/skeleton';
 import { OracleEntity } from '../services/oracles.service';
+import { removeBrokenImages } from '../lib/htmlUtil';
 
 // Hot Takes article interface
 export interface HotTakeArticle {
@@ -77,6 +78,7 @@ interface ArticleDetailPageProps {
   onOpenPrivacy?: () => void;
   onOpenTerms?: () => void;
   onSelectRelated: Dispatch<SetStateAction<News | null>>;
+  previousPage: string | null;
 }
 
 export function ArticleDetailPage({
@@ -84,18 +86,19 @@ export function ArticleDetailPage({
   onBack,
   user,
   darkMode = true,
-  onToggleDarkMode = () => { },
-  onNavigate = () => { },
-  onOpenWalletDialog = () => { },
-  onWalletDisconnect = () => { },
+  onToggleDarkMode = () => {},
+  onNavigate = () => {},
+  onOpenWalletDialog = () => {},
+  onWalletDisconnect = () => {},
   shortenAddress = (addr) => addr,
-  onSetPendingNavigation = () => { },
-  onOpenSettings = () => { },
+  onSetPendingNavigation = () => {},
+  onOpenSettings = () => {},
   currentPage = 'articleDetail',
-  onWalletConnect = () => { },
-  onSocialConnect = () => { },
-  onOpenPrivacy = () => { },
-  onOpenTerms = () => { },
+  previousPage,
+  onWalletConnect = () => {},
+  onSocialConnect = () => {},
+  onOpenPrivacy = () => {},
+  onOpenTerms = () => {},
   onSelectRelated,
   onAIAgentClick,
 }: ArticleDetailPageProps) {
@@ -238,7 +241,7 @@ export function ArticleDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-background mt-16 md:mt-0">
+    <div className="min-h-screen bg-background">
       {/* Sidebar - Fixed positioning for article detail page */}
       <div className="fixed left-0 top-0 h-screen md:w-64 z-50">
         <Sidebar
@@ -259,15 +262,15 @@ export function ArticleDetailPage({
             <div className="px-6 pt-4 pb-8 md:px-12 md:pt-6 md:pb-10 space-y-6">
               {/* Title */}
               <div className="space-y-4">
+                <Button
+                  variant="ghost"
+                  onClick={onBack}
+                  className="flex lg:hidden mb-6 -ml-2 hover:bg-blue-500/10"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to {previousPage === 'chat' ? 'chat' : 'hot takes'}
+                </Button>
                 <div className="flex items-start gap-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onBack}
-                    className="flex-shrink-0 mt-1"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </Button>
                   <h1 className="text-4xl leading-tight tracking-tight flex-1">
                     {hotTake.title}
                   </h1>
@@ -337,7 +340,9 @@ export function ArticleDetailPage({
               {/* Article Body */}
               <div
                 className="prose prose-lg max-w-none space-y-6"
-                dangerouslySetInnerHTML={{ __html: hotTake.content }}
+                dangerouslySetInnerHTML={{
+                  __html: removeBrokenImages(hotTake.content),
+                }}
               />
 
               {/* Engagement Section */}
@@ -377,7 +382,11 @@ export function ArticleDetailPage({
                 <div className="flex items-start gap-4">
                   <div
                     className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
-                    onClick={() => hotTake.oracle.id && onAIAgentClick && onAIAgentClick(hotTake.oracle.id)}
+                    onClick={() =>
+                      hotTake.oracle.id &&
+                      onAIAgentClick &&
+                      onAIAgentClick(hotTake.oracle.id)
+                    }
                   >
                     <ImageWithFallback
                       src={hotTake.oracle.image || ''}
@@ -388,13 +397,16 @@ export function ArticleDetailPage({
                   <div className="flex-1">
                     <h4
                       className="mb-2 cursor-pointer hover:text-blue-400 transition-colors"
-                      onClick={() => hotTake.oracle.id && onAIAgentClick && onAIAgentClick(hotTake.oracle.id)}
+                      onClick={() =>
+                        hotTake.oracle.id &&
+                        onAIAgentClick &&
+                        onAIAgentClick(hotTake.oracle.id)
+                      }
                     >
                       {hotTake.oracle.name}
                     </h4>
                     <p className="text-sm text-muted-foreground mb-4">
-                      {'Expert oracle'} providing insights
-                      and predictions on{' '}
+                      {'Expert oracle'} providing insights and predictions on{' '}
                       {hotTake.oracle.name?.toLowerCase() || 'various topics'}.
                     </p>
                     {/* <Button

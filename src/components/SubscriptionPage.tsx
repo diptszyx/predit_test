@@ -265,7 +265,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                       </p>
                       <div className="bg-background p-3 rounded border border-border">
                         <code className="text-xs break-all">
-                          0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+                          mn7U5A7qmB42JiuJ3MNJpiDvRQK9zQc4Tu
                         </code>
                       </div>
                       <p className="text-xs text-muted-foreground mt-3">
@@ -354,7 +354,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
 
       <div className="space-y-6 max-w-6xl mx-auto">
         {/* Header Bar - Mobile only */}
-        <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="md:hidden fixed top-0 left-0 right-0 z-48 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="container mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Crown className="w-5 h-5 text-primary" />

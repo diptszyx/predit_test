@@ -55,7 +55,7 @@ export function SubscriptionManagementDialog({
   const [cardholderName, setCardholderName] = useState('');
 
   // Crypto payment state
-  const [cryptoAddress] = useState('0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb4');
+  const [cryptoAddress] = useState('mn7U5A7qmB42JiuJ3MNJpiDvRQK9zQc4Tu');
   const [selectedCrypto, setSelectedCrypto] = useState<'usdc' | 'eth' | 'sol'>('usdc');
 
   const isPro = isUserPro

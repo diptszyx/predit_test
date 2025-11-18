@@ -308,7 +308,7 @@ export function ArticleDetailPage({
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2">
-                    <Button
+                    {/* <Button
                       variant="ghost"
                       size="sm"
                     >
@@ -319,7 +319,7 @@ export function ArticleDetailPage({
                       size="sm"
                     >
                       <Share2 className="w-4 h-4" />
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               </div>

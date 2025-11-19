@@ -1,10 +1,11 @@
 import {
+  ChevronDown,
+  ChevronsLeftRight,
+  ChevronUp,
   Crown,
-  FileText,
   Flame,
   Home,
   LogOut,
-  ChevronsLeftRight,
   MessageCircle,
   MessageSquare,
   Moon,
@@ -15,13 +16,13 @@ import {
   Trophy,
   Twitter,
   User,
-  X,
-  Zap,
+  Zap
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { User as UserType } from "../lib/types";
-import { getUserLevel } from "../lib/xpSystem";
+import { OracleEntity, oraclesServices } from "../services/oracles.service";
+import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -38,6 +39,8 @@ interface SidebarProps {
   onOpenXPInfo?: () => void;
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
+  selectedAIAgent: OracleEntity | null;
+  setSelectedAIAgent: Dispatch<SetStateAction<OracleEntity | null>>
 }
 
 interface NavigationItem {
@@ -47,6 +50,7 @@ interface NavigationItem {
   requiresAuth: boolean;
   isExternalLink?: boolean;
   href?: string;
+  children?: OracleEntity[];
 }
 
 const NAVIGATION_ITEMS: NavigationItem[] = [
@@ -61,6 +65,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
     label: "Predictions",
     icon: MessageSquare,
     requiresAuth: false,
+    children: []
   },
   {
     id: "hotTakes",
@@ -112,10 +117,34 @@ export function Sidebar({
   onOpenXPInfo,
   darkMode = true,
   onToggleDarkMode,
+  selectedAIAgent,
+  setSelectedAIAgent,
 }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(
+    currentPage === 'chat' ? 'chat' : null
+  );
   const isMobile = useIsMobile(1024); // Use custom hook with 1024px breakpoint
   const userLevel = user ? user.level : 1;
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await oraclesServices.getAllOracles();
+
+        if (data?.data) {
+          NAVIGATION_ITEMS.map(item => {
+            if (item.children && item.id === 'chat') {
+              item.children.push(...data.data)
+            }
+          })
+        }
+
+      } catch (error) {
+        console.log('Failed to fetch all oracles', error);
+      }
+    })();
+  }, [])
 
   // Close mobile menu when page changes
   useEffect(() => {
@@ -171,31 +200,83 @@ export function Sidebar({
       </div>
 
       {/* Navigation Section */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 min-h-[200px] overflow-y-auto scrollbar-hide">
         {NAVIGATION_ITEMS.map((item) => {
           const Icon = item.icon;
-          const isActive = currentPage === item.id;
+          const hasChildren = !!item.children?.length;
+          const isActiveParent = currentPage === item.id && !hasChildren
+
+
+          const handleItemClick = () => {
+            if (hasChildren) {
+              setOpenSubmenu((prev) => (prev === item.id ? null : item.id));
+              return;
+            }
+
+            if (item.isExternalLink && item.href) {
+              window.open(item.href, "_blank");
+            } else {
+              handleNavigation(item.id, item.requiresAuth);
+            }
+          };
 
           return (
-            <Button
-              key={item.id}
-              variant="ghost"
-              className={`w-full justify-start ${isActive
+            <div key={item.id} className="w-full">
+              <Button
+                variant="ghost"
+                className={`w-full justify-start ${isActiveParent
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                }`}
-              onClick={() => {
-                if (item.isExternalLink && item.href) {
-                  window.open(item.href, "_blank");
-                  setIsMobileMenuOpen(false);
-                } else {
-                  handleNavigation(item.id, item.requiresAuth);
-                }
-              }}
-            >
-              <Icon className="w-4 h-4 mr-3" />
-              {item.label}
-            </Button>
+                  }`}
+                onClick={handleItemClick}
+              >
+                <Icon className="w-4 h-4 mr-3" />
+                <span className="flex-1 text-left">{item.label}</span>
+
+                {hasChildren && (
+                  <span className="ml-auto text-xs">
+                    {openSubmenu === item.id ? <ChevronUp /> : <ChevronDown />}
+                  </span>
+                )}
+              </Button>
+
+              {/* submenu */}
+              {hasChildren && openSubmenu === item.id && (
+                <div className="mt-1 ml-3 flex flex-col gap-2">
+                  {item.children!.map((child) => {
+                    const isActiveChild = currentPage === item.id && selectedAIAgent?.name === child.name;
+
+                    return (
+                      <Button
+                        key={child.name}
+                        variant="ghost"
+                        size="sm"
+                        className={`w-full justify-start text-[12.5px] ${isActiveChild
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                          }`}
+                        onClick={() => {
+                          setSelectedAIAgent(child);
+                          localStorage.setItem('deor-currentOracle', child.id)
+                          onNavigate('chat');
+                        }}
+                      >
+                        {child.image ? <>
+                          <div className="w-5 h-5 md:w-6 md:h-6 rounded-full overflow-hidden border border-blue-500/30 mr-2">
+                            <ImageWithFallback
+                              src={child.image}
+                              alt={child.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </> : <></>}
+                        {child.name}
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>
@@ -391,7 +472,7 @@ export function Sidebar({
       {!isMobile && (
         <aside className="w-64 border-r border-border bg-sidebar flex flex-col h-screen">
           {/* Logo Section */}
-          <div className="p-6 border-b border-border">
+          <div className="py-4 px-6 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
@@ -404,36 +485,88 @@ export function Sidebar({
           </div>
 
           {/* Navigation Section */}
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-4 space-y-1 min-h-[200px] overflow-y-auto scrollbar-hide">
             {NAVIGATION_ITEMS.map((item) => {
               const Icon = item.icon;
-              const isActive = currentPage === item.id;
+              const hasChildren = !!item.children?.length;
+              const isActiveParent = currentPage === item.id && !hasChildren
+
+              const handleItemClick = () => {
+                if (hasChildren) {
+                  setOpenSubmenu((prev) => (prev === item.id ? null : item.id));
+                  return;
+                }
+
+                if (item.isExternalLink && item.href) {
+                  window.open(item.href, "_blank");
+                } else {
+                  handleNavigation(item.id, item.requiresAuth);
+                }
+              };
 
               return (
-                <Button
-                  key={item.id}
-                  variant="ghost"
-                  className={`w-full justify-start ${isActive
+                <div key={item.id} className="w-full">
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start ${isActiveParent
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                    }`}
-                  onClick={() => {
-                    if (item.isExternalLink && item.href) {
-                      window.open(item.href, "_blank");
-                    } else {
-                      handleNavigation(item.id, item.requiresAuth);
-                    }
-                  }}
-                >
-                  <Icon className="w-4 h-4 mr-3" />
-                  {item.label}
-                </Button>
+                      }`}
+                    onClick={handleItemClick}
+                  >
+                    <Icon className="w-4 h-4 mr-3" />
+                    <span className="flex-1 text-left">{item.label}</span>
+
+                    {hasChildren && (
+                      <span className="ml-auto text-xs">
+                        {openSubmenu === item.id ? <ChevronUp /> : <ChevronDown />}
+                      </span>
+                    )}
+                  </Button>
+
+                  {/* submenu */}
+                  {hasChildren && openSubmenu === item.id && (
+                    <div className="mt-1 ml-3 flex flex-col gap-2">
+                      {item.children!.map((child) => {
+                        const isActiveChild = currentPage === item.id && selectedAIAgent?.name === child.name;
+
+                        return (
+                          <Button
+                            key={child.name}
+                            variant="ghost"
+                            size="sm"
+                            className={`w-full justify-start text-[12.5px] ${isActiveChild
+                              ? "bg-accent text-accent-foreground"
+                              : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                              }`}
+                            onClick={() => {
+                              setSelectedAIAgent(child);
+                              localStorage.setItem('deor-currentOracle', child.id)
+                              onNavigate('chat');
+                            }}
+                          >
+                            {child.image ? <>
+                              <div className="w-3 h-3 md:w-6 md:h-6 rounded-full overflow-hidden border border-blue-500/30 mr-2">
+                                <ImageWithFallback
+                                  src={child.image}
+                                  alt={child.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            </> : <></>}
+                            {child.name}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
 
           {/* Bottom Section */}
-          <div className="p-4 border-t border-border space-y-3">
+          <div className="p-4 border-t border-border space-y-1.5">
             {/* Social Links */}
             <div className="flex items-center justify-center gap-4 pb-2">
               {SOCIAL_LINKS.map((social) => {

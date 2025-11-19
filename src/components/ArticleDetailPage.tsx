@@ -86,19 +86,19 @@ export function ArticleDetailPage({
   onBack,
   user,
   darkMode = true,
-  onToggleDarkMode = () => {},
-  onNavigate = () => {},
-  onOpenWalletDialog = () => {},
-  onWalletDisconnect = () => {},
+  onToggleDarkMode = () => { },
+  onNavigate = () => { },
+  onOpenWalletDialog = () => { },
+  onWalletDisconnect = () => { },
   shortenAddress = (addr) => addr,
-  onSetPendingNavigation = () => {},
-  onOpenSettings = () => {},
+  onSetPendingNavigation = () => { },
+  onOpenSettings = () => { },
   currentPage = 'articleDetail',
   previousPage,
-  onWalletConnect = () => {},
-  onSocialConnect = () => {},
-  onOpenPrivacy = () => {},
-  onOpenTerms = () => {},
+  onWalletConnect = () => { },
+  onSocialConnect = () => { },
+  onOpenPrivacy = () => { },
+  onOpenTerms = () => { },
   onSelectRelated,
   onAIAgentClick,
 }: ArticleDetailPageProps) {
@@ -241,9 +241,9 @@ export function ArticleDetailPage({
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       {/* Sidebar - Fixed positioning for article detail page */}
-      <div className="fixed left-0 top-0 h-screen md:w-64 z-50">
+      {/* <div className="fixed left-0 top-0 h-screen md:w-64 z-50">
         <Sidebar
           currentPage={currentPage}
           onNavigate={onNavigate}
@@ -254,8 +254,8 @@ export function ArticleDetailPage({
           onSetPendingNavigation={onSetPendingNavigation}
           onOpenSettings={onOpenSettings}
         />
-      </div>
-      <div className="md:ml-64">
+      </div> */}
+      <div className="">
         <div className="h-screen">
           {/* Article Content */}
           <div className="mx-auto max-w-4xl bg-background">
@@ -507,7 +507,7 @@ export function ArticleDetailPage({
       </div>
 
       {/* Sticky Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border z-40">
+      <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-background/95 backdrop-blur-lg border-t border-border z-40">
         <div className="container mx-auto max-w-4xl px-6 py-3">
           <div className="flex items-center justify-between gap-4">
             {/* Left side: Like, Comment, Share */}

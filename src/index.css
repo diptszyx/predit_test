@@ -674,6 +674,12 @@
     left: 50%;
   }
 
+  @media (width >=48rem) {
+    .md\:left-64 {
+      left: calc(var(--spacing) * 64);
+    }
+  }
+
   .z-0 {
     z-index: 0;
   }
@@ -4841,12 +4847,19 @@
   }
 
   @media (width >=48rem) {
+    .md\:h-6 {
+      height: calc(var(--spacing) * 6);
+    }
     .md\:h-12 {
       height: calc(var(--spacing) * 12);
     }
   }
 
   @media (width >=48rem) {
+    .md\:w-6 {
+      width: calc(var(--spacing) * 6);
+    }
+
     .md\:w-12 {
       width: calc(var(--spacing) * 12);
     }

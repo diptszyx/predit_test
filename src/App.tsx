@@ -24,9 +24,9 @@ import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import apiClient from './lib/axios';
+import { News, newsService } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
-import { News, newsService } from './services/news.service';
 
 // Constants
 const AI_AGENT_IMAGES = {
@@ -84,7 +84,7 @@ export default function App() {
 
   // App state
   const [currentPage, setCurrentPage] = useState<string>(() => {
-    return localStorage.getItem('deorCurrentPage') || 'chat';
+    return localStorage.getItem('deorCurrentPage') || 'home';
   });
   const [listOracles, setListOracles] = useState<OracleEntity[]>([]);
   const [selectedAIAgent, setSelectedAIAgent] = useState<OracleEntity | null>(
@@ -129,7 +129,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    console.log(currentPage);
     window.scrollTo(0, 0);
   }, [currentPage]);
 
@@ -185,6 +184,13 @@ export default function App() {
         const data = await oraclesServices.getAllOracles();
 
         if (data?.data) setListOracles(data.data);
+
+        if (currentPage === 'chat') {
+          const currentOracleId = localStorage.getItem('deor-currentOracle')
+          const oracle = data?.data.find(o => o.id === currentOracleId)
+          if (!oracle) return
+          setSelectedAIAgent(oracle)
+        }
       } catch (error) {
         console.log('Failed to fetch all oracles', error);
       }
@@ -205,13 +211,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('deorCurrentPage', currentPage);
   }, [currentPage]);
-
-  // Set default AI agent
-  useEffect(() => {
-    if (listOracles.length > 0 && !selectedAIAgent) {
-      setSelectedAIAgent(listOracles[0] || AI_AGENTS[0]);
-    }
-  }, [selectedAIAgent, listOracles, user]);
 
   // Check for shared prediction, referral code, or OAuth token in URL
   useEffect(() => {
@@ -357,6 +356,8 @@ export default function App() {
     onOpenXPInfo: () => setXPInfoDialogOpen(true),
     darkMode,
     onToggleDarkMode: () => setDarkMode(!darkMode),
+    selectedAIAgent: selectedAIAgent,
+    setSelectedAIAgent: setSelectedAIAgent,
   };
 
   const commonDialogProps = (
@@ -442,7 +443,7 @@ export default function App() {
               }
               // Set the first AI agent as selected if none is selected
               if (!selectedAIAgent && listOracles.length > 0) {
-                // setSelectedAIAgent(listOracles[0] || AI_AGENTS[0]);
+                localStorage.setItem('deor-currentOracle', listOracles[0].id)
                 setSelectedAIAgent(listOracles[0]);
               }
               setCurrentPage('chat');
@@ -468,99 +469,112 @@ export default function App() {
   // Render article detail page
   if (currentPage === 'articleDetail' && selectedArticle) {
     return (
-      <ArticleDetailPage
-        hotTake={selectedArticle}
-        onSelectRelated={setSelectedArticle}
-        previousPage={previousPage}
-        onBack={() => {
-          if (previousPage === 'chat' && selectedAIAgent) {
-            setPreviousPage(null);
-            setCurrentPage('chat');
-          } else if (previousPage === 'hotTakes') {
-            setPreviousPage(null);
-            setCurrentPage('hotTakes');
-          } else if (previousPage === 'home') {
-            setPreviousPage(null);
-            setCurrentPage('home');
-          } else {
-            setPreviousPage(null);
-            setCurrentPage('chat');
-          }
-          setSelectedArticle(null);
-        }}
-        aiAgentName={selectedAIAgent?.name}
-        aiAgentSpecialty={selectedAIAgent?.type}
-        user={user}
-        darkMode={darkMode}
-        onToggleDarkMode={() => setDarkMode(!darkMode)}
-        onNavigate={setCurrentPage}
-        onOpenWalletDialog={() => setWalletDialogOpen(true)}
-        onWalletDisconnect={handleWalletDisconnect}
-        shortenAddress={shortenAddress}
-        onSetPendingNavigation={setPendingNavigation}
-        onOpenSettings={() => setCurrentPage('settings')}
-        currentPage={currentPage}
-        onWalletConnect={handleWalletConnect}
-        onSocialConnect={handleSocialConnect}
-        onOpenPrivacy={() => setPrivacyDialogOpen(true)}
-        onOpenTerms={() => setTermsDialogOpen(true)}
-        onAIAgentClick={(aiAgentId: string) => {
-          const aiAgent = listOracles.find((a) => a.id === aiAgentId);
-          if (aiAgent) {
-            setSelectedAIAgent(aiAgent);
-            setArticleContext(selectedArticle);
-            setPreviousPage('articleDetail');
-            setCurrentPage('chat');
-          }
-        }}
-      />
+      <div className="flex h-screen bg-background overflow-hidden">
+        <Sidebar {...commonSidebarProps} />
+        <div className="flex-1 overflow-y-auto">
+
+          <ArticleDetailPage
+            hotTake={selectedArticle}
+            onSelectRelated={setSelectedArticle}
+            previousPage={previousPage}
+            onBack={() => {
+              if (previousPage === 'chat' && selectedAIAgent) {
+                setPreviousPage(null);
+                setCurrentPage('chat');
+              } else if (previousPage === 'hotTakes') {
+                setPreviousPage(null);
+                setCurrentPage('hotTakes');
+              } else if (previousPage === 'home') {
+                setPreviousPage(null);
+                setCurrentPage('home');
+              } else {
+                setPreviousPage(null);
+                setCurrentPage('chat');
+              }
+              setSelectedArticle(null);
+            }}
+            aiAgentName={selectedAIAgent?.name}
+            aiAgentSpecialty={selectedAIAgent?.type}
+            user={user}
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+            onNavigate={setCurrentPage}
+            onOpenWalletDialog={() => setWalletDialogOpen(true)}
+            onWalletDisconnect={handleWalletDisconnect}
+            shortenAddress={shortenAddress}
+            onSetPendingNavigation={setPendingNavigation}
+            onOpenSettings={() => setCurrentPage('settings')}
+            currentPage={currentPage}
+            onWalletConnect={handleWalletConnect}
+            onSocialConnect={handleSocialConnect}
+            onOpenPrivacy={() => setPrivacyDialogOpen(true)}
+            onOpenTerms={() => setTermsDialogOpen(true)}
+            onAIAgentClick={(aiAgentId: string) => {
+              const aiAgent = listOracles.find((a) => a.id === aiAgentId);
+              if (aiAgent) {
+                setSelectedAIAgent(aiAgent);
+                localStorage.setItem('deor-currentOracle', aiAgent.id)
+                setArticleContext(selectedArticle);
+                setPreviousPage('articleDetail');
+                setCurrentPage('chat');
+              }
+            }}
+          />
+        </div>
+      </div>
     );
   }
 
   // Render chat page
   if (currentPage === 'chat' && selectedAIAgent) {
     return (
-      <>
-        <ChatPage
-          aiAgent={selectedAIAgent}
-          onBack={() => {
-            if (previousPage === 'articleDetail' && selectedArticle) {
-              setPreviousPage(null);
+      <div className="flex h-screen bg-background overflow-hidden">
+        <Sidebar {...commonSidebarProps} />
+        <div className="flex-1 overflow-y-auto">
+
+
+          <ChatPage
+            aiAgent={selectedAIAgent}
+            onBack={() => {
+              if (previousPage === 'articleDetail' && selectedArticle) {
+                setPreviousPage(null);
+                setCurrentPage('articleDetail');
+              } else {
+                setSelectedAIAgent(null);
+                setArticleContext(null);
+                setPreviousPage(null);
+                setCurrentPage('chat');
+              }
+            }}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            user={user}
+            onOpenWalletDialog={() => setWalletDialogOpen(true)}
+            onNavigate={setCurrentPage}
+            currentPage={currentPage}
+            onWalletDisconnect={handleWalletDisconnect}
+            shortenAddress={shortenAddress}
+            updateUser={updateUser}
+            awardXPToUser={awardXPToUser}
+            trackQuestProgress={trackQuestProgress}
+            onArticleClick={(article) => {
+              setSelectedArticle(article);
+              setPreviousPage('chat');
               setCurrentPage('articleDetail');
-            } else {
-              setSelectedAIAgent(null);
-              setArticleContext(null);
-              setPreviousPage(null);
-              setCurrentPage('chat');
-            }
-          }}
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
-          user={user}
-          onOpenWalletDialog={() => setWalletDialogOpen(true)}
-          onNavigate={setCurrentPage}
-          currentPage={currentPage}
-          onWalletDisconnect={handleWalletDisconnect}
-          shortenAddress={shortenAddress}
-          updateUser={updateUser}
-          awardXPToUser={awardXPToUser}
-          trackQuestProgress={trackQuestProgress}
-          onArticleClick={(article) => {
-            setSelectedArticle(article);
-            setPreviousPage('chat');
-            setCurrentPage('articleDetail');
-          }}
-          onOpenSettings={() => setCurrentPage('settings')}
-          onSetPendingNavigation={setPendingNavigation}
-          articleContext={articleContext}
-          onArticleContextUsed={() => setArticleContext(null)}
-          onOpenXPInfo={() => setXPInfoDialogOpen(true)}
-          initialPrompt={initialPrompt}
-          onInitialPromptUsed={() => setInitialPrompt(null)}
-          onReloadAiAgent={handleReloadOracle}
-        />
+            }}
+            onOpenSettings={() => setCurrentPage('settings')}
+            onSetPendingNavigation={setPendingNavigation}
+            articleContext={articleContext}
+            onArticleContextUsed={() => setArticleContext(null)}
+            onOpenXPInfo={() => setXPInfoDialogOpen(true)}
+            initialPrompt={initialPrompt}
+            onInitialPromptUsed={() => setInitialPrompt(null)}
+            onReloadAiAgent={handleReloadOracle}
+          />
+        </div>
+
         {commonDialogProps}
-      </>
+      </div>
     );
   }
 

@@ -1047,8 +1047,8 @@ export function ChatPage({
     <div
       className={
         onNavigate && shortenAddress && onWalletDisconnect && onOpenWalletDialog
-          ? 'flex h-screen bg-background overflow-hidden'
-          : 'min-h-screen bg-background'
+          ? 'flex h-dvh bg-background overflow-hidden'
+          : 'min-h-dvh bg-background'
       }
     >
       {/* Sidebar */}
@@ -1155,7 +1155,7 @@ export function ChatPage({
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
-          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4">
+          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4 justify-center">
             {/* Chat Section - Center with max width */}
             <div className="w-full h-full lg:max-w-3xl space-y-0 flex flex-col">
               {/* Welcome Intro Section - Only show on first load */}
@@ -1200,7 +1200,7 @@ export function ChatPage({
                 </div>
               )} */}
               {/* Oracle mobile header tab */}
-              <div className="md:hidden fixed top-0 left-0 right-0 z-[10]">
+              <div className="lg:hidden fixed top-0 left-0 right-0 z-[10]">
                 <Card
                   className="border-border bg-background/80 backdrop-blur-md"
                   style={{
@@ -1234,7 +1234,7 @@ export function ChatPage({
                         variant="ghost"
                         size="sm"
                         onClick={() => setInfoDialogOpen(true)}
-                        className="md:hidden text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
+                        className="lg:hidden text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
                       >
                         <Info className="w-4 h-4 sm:w-5 sm:h-5" />
                         <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
@@ -1335,7 +1335,7 @@ export function ChatPage({
                           variant="ghost"
                           size="sm"
                           onClick={() => setInfoDialogOpen(true)}
-                          className="md:hidden text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
+                          className="lg:hidden text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
                         >
                           <Info className="w-4 h-4 sm:w-5 sm:h-5" />
                           <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
@@ -1667,7 +1667,7 @@ export function ChatPage({
                 </>
               )}
               {currentTab === 'hotTakes' && (
-                <div className="md:hidden w-full space-y-3 pt-[130px]">
+                <div className="lg:hidden w-full space-y-3 pt-[130px]">
                   {/* Hot Takes Section */}
                   <Card className="border-border">
                     <CardHeader className="border-b border-border pb-3">
@@ -1704,7 +1704,7 @@ export function ChatPage({
                               className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
                               onClick={() => handleArticleClick(article.id)}
                             >
-                              <div className="relative h-32 overflow-hidden">
+                              <div className="relative h-32 md:h-[200px]! overflow-hidden">
                                 <ImageWithFallback
                                   src={article.image}
                                   alt={article.title}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 import type { WalletType } from './components/WalletConnectDialog';
@@ -66,6 +67,14 @@ const AI_AGENTS: OracleEntity[] = [
 ];
 
 export default function App() {
+  return (
+    <HelmetProvider>
+      <AppContent />
+    </HelmetProvider>
+  );
+}
+
+function AppContent() {
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
     const stored = localStorage.getItem('theme');
@@ -186,10 +195,10 @@ export default function App() {
         if (data?.data) setListOracles(data.data);
 
         if (currentPage === 'chat') {
-          const currentOracleId = localStorage.getItem('deor-currentOracle')
-          const oracle = data?.data.find(o => o.id === currentOracleId)
-          if (!oracle) return
-          setSelectedAIAgent(oracle)
+          const currentOracleId = localStorage.getItem('deor-currentOracle');
+          const oracle = data?.data.find((o) => o.id === currentOracleId);
+          if (!oracle) return;
+          setSelectedAIAgent(oracle);
         }
       } catch (error) {
         console.log('Failed to fetch all oracles', error);
@@ -378,10 +387,7 @@ export default function App() {
         open={privacyDialogOpen}
         onOpenChange={setPrivacyDialogOpen}
       />
-      <TermsOfUse
-        open={termsDialogOpen}
-        onOpenChange={setTermsDialogOpen}
-      />
+      <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
       <UserProfileDialog
         open={profileDialogOpen}
         onOpenChange={handleProfileDialogOpenChange}
@@ -392,17 +398,86 @@ export default function App() {
     </>
   );
 
+  // SEO metadata based on current page
+  const getPageMetadata = () => {
+    switch (currentPage) {
+      case 'home':
+        return {
+          title: 'Dehouse AI Oracles - AI-Powered Predictions',
+          description:
+            'Get expert predictions and insights from specialized AI agents. Chat with AI oracles for crypto, tech, politics, sports, and more.',
+        };
+      case 'chat':
+        return {
+          title: selectedAIAgent
+            ? `Chat with ${selectedAIAgent.name} - Dehouse AI`
+            : 'Chat - Dehouse AI',
+          description: selectedAIAgent
+            ? `Get expert predictions from ${selectedAIAgent.name}, a ${selectedAIAgent.type}`
+            : 'Chat with AI oracles to get expert predictions',
+        };
+      case 'hotTakes':
+        return {
+          title: 'Hot Takes - Dehouse AI Oracles',
+          description:
+            'Explore trending news and articles analyzed by our AI oracles',
+        };
+      case 'articleDetail':
+        return {
+          title: selectedArticle
+            ? `${selectedArticle.title} - Dehouse AI`
+            : 'Article - Dehouse AI',
+          description:
+            'Read detailed analysis and predictions from our AI oracles',
+        };
+      case 'leaderboard':
+        return {
+          title: 'Leaderboard - Dehouse AI Oracles',
+          description:
+            'View top predictors and compete with other users on the Dehouse leaderboard',
+        };
+      case 'subscription':
+        return {
+          title: 'Subscription Plans - Dehouse AI Oracles',
+          description:
+            'Upgrade to Pro for unlimited predictions and exclusive features',
+        };
+      case 'settings':
+        return {
+          title: 'Settings - Dehouse AI Oracles',
+          description: 'Manage your account settings and preferences',
+        };
+      default:
+        return {
+          title: 'Dehouse AI Oracles - AI-Powered Predictions',
+          description:
+            'Get expert predictions and insights from specialized AI agents',
+        };
+    }
+  };
+
+  const pageMetadata = getPageMetadata();
+
   // Render shared prediction page
   if (currentPage === 'shared-prediction' && sharedPredictionId) {
     return (
-      <SharedPredictionPage
-        predictionId={sharedPredictionId}
-        onBack={() => {
-          setSharedPredictionId(null);
-          setCurrentPage('chat');
-          window.history.pushState({}, '', '/');
-        }}
-      />
+      <>
+        <Helmet>
+          <title>Shared Prediction - Dehouse AI Oracles</title>
+          <meta
+            name="description"
+            content="View shared prediction from Dehouse AI Oracles"
+          />
+        </Helmet>
+        <SharedPredictionPage
+          predictionId={sharedPredictionId}
+          onBack={() => {
+            setSharedPredictionId(null);
+            setCurrentPage('chat');
+            window.history.pushState({}, '', '/');
+          }}
+        />
+      </>
     );
   }
 
@@ -410,6 +485,10 @@ export default function App() {
   if (currentPage === 'hotTakes') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
+        <Helmet>
+          <title>{pageMetadata.title}</title>
+          <meta name="description" content={pageMetadata.description} />
+        </Helmet>
         <Sidebar {...commonSidebarProps} />
         <HotTakesPage
           articles={news}
@@ -428,6 +507,20 @@ export default function App() {
   if (currentPage === 'home') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
+        <Helmet>
+          <title>{pageMetadata.title}</title>
+          <meta name="description" content={pageMetadata.description} />
+          <meta
+            name="keywords"
+            content="AI predictions, AI oracles, cryptocurrency predictions, tech predictions, sports predictions, AI agents"
+          />
+          <meta property="og:title" content={pageMetadata.title} />
+          <meta property="og:description" content={pageMetadata.description} />
+          <meta property="og:type" content="website" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={pageMetadata.title} />
+          <meta name="twitter:description" content={pageMetadata.description} />
+        </Helmet>
         {/* Sidebar - Desktop only */}
         {/* <div className="hidden md:block"> */}
         <Sidebar {...commonSidebarProps} />
@@ -443,7 +536,7 @@ export default function App() {
               }
               // Set the first AI agent as selected if none is selected
               if (!selectedAIAgent && listOracles.length > 0) {
-                localStorage.setItem('deor-currentOracle', listOracles[0].id)
+                localStorage.setItem('deor-currentOracle', listOracles[0].id);
                 setSelectedAIAgent(listOracles[0]);
               }
               setCurrentPage('chat');
@@ -470,9 +563,14 @@ export default function App() {
   if (currentPage === 'articleDetail' && selectedArticle) {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
+        <Helmet>
+          <title>{pageMetadata.title}</title>
+          <meta name="description" content={pageMetadata.description} />
+          <meta property="og:title" content={pageMetadata.title} />
+          <meta property="og:description" content={pageMetadata.description} />
+        </Helmet>
         <Sidebar {...commonSidebarProps} />
         <div className="flex-1 overflow-y-auto">
-
           <ArticleDetailPage
             hotTake={selectedArticle}
             onSelectRelated={setSelectedArticle}
@@ -513,7 +611,7 @@ export default function App() {
               const aiAgent = listOracles.find((a) => a.id === aiAgentId);
               if (aiAgent) {
                 setSelectedAIAgent(aiAgent);
-                localStorage.setItem('deor-currentOracle', aiAgent.id)
+                localStorage.setItem('deor-currentOracle', aiAgent.id);
                 setArticleContext(selectedArticle);
                 setPreviousPage('articleDetail');
                 setCurrentPage('chat');
@@ -529,10 +627,12 @@ export default function App() {
   if (currentPage === 'chat' && selectedAIAgent) {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
+        <Helmet>
+          <title>{pageMetadata.title}</title>
+          <meta name="description" content={pageMetadata.description} />
+        </Helmet>
         <Sidebar {...commonSidebarProps} />
         <div className="flex-1 overflow-y-auto">
-
-
           <ChatPage
             aiAgent={selectedAIAgent}
             onBack={() => {
@@ -582,13 +682,14 @@ export default function App() {
   if (currentPage === 'settings') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
+        <Helmet>
+          <title>{pageMetadata.title}</title>
+          <meta name="description" content={pageMetadata.description} />
+        </Helmet>
         <Sidebar {...commonSidebarProps} />
         {user && (
           <div className="flex-1 overflow-y-auto">
-            <SettingsPage
-              onBack={() => setCurrentPage('chat')}
-              user={user}
-            />
+            <SettingsPage onBack={() => setCurrentPage('chat')} user={user} />
           </div>
         )}
         {commonDialogProps}
@@ -600,6 +701,10 @@ export default function App() {
   if (currentPage === 'leaderboard') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
+        <Helmet>
+          <title>{pageMetadata.title}</title>
+          <meta name="description" content={pageMetadata.description} />
+        </Helmet>
         <Sidebar {...commonSidebarProps} />
         <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-4 py-6">
@@ -614,6 +719,10 @@ export default function App() {
   if (currentPage === 'subscription') {
     return (
       <div className="flex h-screen bg-background overflow-hidden">
+        <Helmet>
+          <title>{pageMetadata.title}</title>
+          <meta name="description" content={pageMetadata.description} />
+        </Helmet>
         {/* Sidebar - Desktop only */}
         {/* <div className="hidden md:block"> */}
         <Sidebar {...commonSidebarProps} />
@@ -658,6 +767,10 @@ export default function App() {
   // Default: Render AI agents listing page
   return (
     <div className="flex h-screen bg-background overflow-hidden">
+      <Helmet>
+        <title>{pageMetadata.title}</title>
+        <meta name="description" content={pageMetadata.description} />
+      </Helmet>
       <Sidebar {...commonSidebarProps} />
       <div className="flex-1 overflow-y-auto">
         <main className="container mx-auto px-4 py-8">

@@ -1155,9 +1155,9 @@ export function ChatPage({
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
-          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4 justify-center">
+          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4 w-full">
             {/* Chat Section - Center with max width */}
-            <div className="w-full h-full lg:max-w-3xl space-y-0 flex flex-col">
+            <div className="w-full h-full lg:flex-1 space-y-0 flex flex-col">
               {/* Welcome Intro Section - Only show on first load */}
               {/* {messages.length === 1 && (
                 <div className="mb-8"> */}
@@ -1669,7 +1669,7 @@ export function ChatPage({
               {currentTab === 'hotTakes' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px]">
                   {/* Hot Takes Section */}
-                  <Card className="border-border">
+                  <Card className="border-border" style={{borderRadius: 0}}>
                     <CardHeader className="border-b border-border pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
                         <Zap className="w-4 h-4" />
@@ -1867,7 +1867,9 @@ export function ChatPage({
               <Card
                 className="border-border overflow-hidden"
                 style={{
-                  height: 'calc(100vh - 25rem)',
+                  height: 'calc(100vh - 23.8rem)',
+                  borderBottomLeftRadius: 0,
+                  borderBottomRightRadius: 0
                 }}
               >
                 <CardHeader className="border-b border-border pb-3">

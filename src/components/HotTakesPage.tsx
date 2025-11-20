@@ -49,8 +49,8 @@ export function HotTakesPage({
     selectedCategory === 'all'
       ? articles
       : articles?.filter(
-          (article) => oracleCategoryMap[article.oracle.id] === selectedCategory
-        );
+        (article) => oracleCategoryMap[article.oracle.id] === selectedCategory
+      );
 
   return (
     <div
@@ -61,7 +61,7 @@ export function HotTakesPage({
         <div className="container mx-auto px-4 py-6">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-left mb-2 dark:bg-gradient-to-r dark:from-blue-600 dark:to-cyan-600 bg-clip-text dark:text-[rgb(255,255,255)] text-[40px] light:text-black">
+            <h1 className="text-left mb-2 text-[40px]">
               Hot Takes
             </h1>
             <p className="text-left text-muted-foreground mb-8">

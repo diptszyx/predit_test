@@ -28,10 +28,10 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <section>
               <h2>1. Acceptance of Terms and Agreement to Binding Contract</h2>
               <p>
-                Welcome to Dehouse of Oracles, a decentralized prediction platform operated by Dehouse Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Dehouse Limited," "we," "our," or "us").
+                Welcome to Predit of Oracles, a decentralized prediction platform operated by Predit Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Predit Limited," "we," "our," or "us").
               </p>
               <p>
-                These Terms of Use ("Terms," "Agreement," or "Terms of Use") constitute a legally binding agreement between you (the "User," "you," or "your") and Dehouse Limited. By accessing, browsing, or using our website, platform, mobile applications, APIs, smart contracts, or any related services (collectively, the "Platform," "Services," or "Dehouse of Oracles"), you acknowledge that:
+                These Terms of Use ("Terms," "Agreement," or "Terms of Use") constitute a legally binding agreement between you (the "User," "you," or "your") and Predit Limited. By accessing, browsing, or using our website, platform, mobile applications, APIs, smart contracts, or any related services (collectively, the "Platform," "Services," or "Predit of Oracles"), you acknowledge that:
               </p>
               <ul>
                 <li>You have read, understood, and agree to be bound by these Terms in their entirety</li>
@@ -43,7 +43,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               <p>
                 <strong>IMPORTANT:</strong> IF YOU DO NOT AGREE TO THESE TERMS, YOU MUST IMMEDIATELY CEASE ALL USE OF THE PLATFORM AND SERVICES. YOUR CONTINUED USE OF THE PLATFORM CONSTITUTES YOUR ACCEPTANCE OF THESE TERMS AND ANY SUBSEQUENT MODIFICATIONS.
               </p>
-              
+
               <h3>1.1 Modifications to Terms</h3>
               <p>
                 We reserve the right to modify, amend, update, or replace these Terms at any time, at our sole discretion. Material changes will be notified through:
@@ -77,10 +77,10 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>2. Description of Services</h2>
-              
+
               <h3>2.1 Platform Overview</h3>
               <p>
-                Dehouse of Oracles is a decentralized prediction and entertainment platform operated by Dehouse Limited that combines artificial intelligence, blockchain technology, and gamification to provide:
+                Predit of Oracles is a decentralized prediction and entertainment platform operated by Predit Limited that combines artificial intelligence, blockchain technology, and gamification to provide:
               </p>
               <ul>
                 <li><strong>AI Oracle Consultations:</strong> Interactive predictions and insights from specialized AI agents across various domains (politics, entertainment, cryptocurrency, sports, technology, lifestyle)</li>
@@ -93,8 +93,8 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>2.2 Entertainment Purpose and No Professional Advice</h3>
               <p className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <strong>⚠️ CRITICAL DISCLAIMER - PLEASE READ CAREFULLY:</strong><br/>
-                ALL SERVICES, PREDICTIONS, INSIGHTS, AND CONTENT PROVIDED THROUGH DEHOUSE OF ORACLES ARE FOR ENTERTAINMENT PURPOSES ONLY. THE PLATFORM DOES NOT PROVIDE AND SHOULD NEVER BE INTERPRETED AS PROVIDING:
+                <strong>⚠️ CRITICAL DISCLAIMER - PLEASE READ CAREFULLY:</strong><br />
+                ALL SERVICES, PREDICTIONS, INSIGHTS, AND CONTENT PROVIDED THROUGH PREDIT OF ORACLES ARE FOR ENTERTAINMENT PURPOSES ONLY. THE PLATFORM DOES NOT PROVIDE AND SHOULD NEVER BE INTERPRETED AS PROVIDING:
               </p>
               <ul>
                 <li><strong>Financial, Investment, or Trading Advice:</strong> Predictions about cryptocurrencies, stocks, markets, or financial instruments are not investment recommendations</li>
@@ -136,7 +136,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>3. Eligibility and Account Requirements</h2>
-              
+
               <h3>3.1 Age and Legal Capacity</h3>
               <p>
                 To use the Services, you must:
@@ -177,7 +177,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </ul>
 
               <h3>3.4 Account Creation and Security</h3>
-              
+
               <h4>3.4.1 Account Registration</h4>
               <p>
                 To access certain features, you must create an account by:
@@ -214,7 +214,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <li>Logging out of your account when using shared or public devices</li>
               </ul>
               <p className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                <strong>⚠️ CRITICAL SECURITY WARNING:</strong><br/>
+                <strong>⚠️ CRITICAL SECURITY WARNING:</strong><br />
                 WE NEVER STORE, HAVE ACCESS TO, OR CAN RECOVER YOUR PRIVATE KEYS OR SEED PHRASES. LOSS OF YOUR PRIVATE KEYS WILL RESULT IN PERMANENT, IRREVERSIBLE LOSS OF ACCESS TO YOUR CRYPTOCURRENCY ASSETS. WE CANNOT AND WILL NOT BE ABLE TO RECOVER LOST PRIVATE KEYS, RESET WALLETS, OR REVERSE BLOCKCHAIN TRANSACTIONS.
               </p>
 
@@ -254,7 +254,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>4. AI-Generated Predictions and Content</h2>
-              
+
               <h3>4.1 Nature of AI-Powered Services</h3>
               <p>
                 Our Platform utilizes artificial intelligence, machine learning algorithms, and large language models to generate predictions, insights, responses, and content. You acknowledge and understand that:
@@ -271,7 +271,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>4.2 No Guarantees or Warranties for AI Content</h3>
               <p className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <strong>⚠️ DISCLAIMER OF AI ACCURACY:</strong><br/>
+                <strong>⚠️ DISCLAIMER OF AI ACCURACY:</strong><br />
                 WE MAKE NO REPRESENTATIONS, WARRANTIES, OR GUARANTEES REGARDING:
               </p>
               <ul>
@@ -290,7 +290,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <strong>YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT:</strong>
               </p>
               <ul>
-                <li>Dehouse Limited is NOT LIABLE for any actions you take based on AI-generated predictions or content</li>
+                <li>Predit Limited is NOT LIABLE for any actions you take based on AI-generated predictions or content</li>
                 <li>You assume ALL RISKS associated with relying on AI predictions</li>
                 <li>We are NOT RESPONSIBLE for financial losses, missed opportunities, or adverse outcomes resulting from AI predictions</li>
                 <li>AI-generated content is provided "AS IS" without warranties of any kind</li>
@@ -342,10 +342,10 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>5. $DEOR Token and Virtual Assets</h2>
-              
+
               <h3>5.1 $DEOR Token Overview</h3>
               <p>
-                $DEOR is the native utility token of the Dehouse of Oracles platform. It serves various functions including:
+                $DEOR is the native utility token of the Predit of Oracles platform. It serves various functions including:
               </p>
               <ul>
                 <li>Payment for premium services and subscriptions</li>
@@ -359,12 +359,12 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>5.2 Not a Security or Investment</h3>
               <p className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                <strong>⚠️ IMPORTANT NOTICE:</strong><br/>
+                <strong>⚠️ IMPORTANT NOTICE:</strong><br />
                 $DEOR TOKENS AND OTHER PLATFORM ASSETS ARE UTILITY TOKENS FOR PLATFORM FUNCTIONALITY AND ENTERTAINMENT PURPOSES ONLY. THEY ARE NOT AND SHOULD NOT BE CONSIDERED AS:
               </p>
               <ul>
                 <li>Securities, investment contracts, or financial instruments under any jurisdiction</li>
-                <li>Shares, equity, or ownership interests in Dehouse Limited</li>
+                <li>Shares, equity, or ownership interests in Predit Limited</li>
                 <li>Debt instruments or promises to pay</li>
                 <li>Stores of value or mediums of exchange outside the Platform</li>
                 <li>Investment opportunities or profit-generating assets</li>
@@ -374,7 +374,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <strong>$DEOR tokens do not represent or confer:</strong>
               </p>
               <ul>
-                <li>Any claim to Dehouse Limited's assets, revenues, or profits</li>
+                <li>Any claim to Predit Limited's assets, revenues, or profits</li>
                 <li>Any voting rights in corporate governance (except platform governance where specified)</li>
                 <li>Any entitlement to dividends, distributions, or financial returns</li>
                 <li>Any intellectual property rights</li>
@@ -435,13 +435,13 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>6. Blockchain and Cryptocurrency Risks</h2>
-              
+
               <h3>6.1 Acknowledgment of Blockchain Risks</h3>
               <p className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <strong>⚠️ CRITICAL RISK WARNING:</strong><br/>
+                <strong>⚠️ CRITICAL RISK WARNING:</strong><br />
                 BY USING BLOCKCHAIN TECHNOLOGY AND CRYPTOCURRENCY FEATURES, YOU ACKNOWLEDGE AND ACCEPT THE FOLLOWING RISKS:
               </p>
-              
+
               <h4>6.1.1 Irreversibility of Transactions</h4>
               <ul>
                 <li>Blockchain transactions are PERMANENT and IRREVERSIBLE</li>
@@ -499,7 +499,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               <h3>6.2 Gas Fees and Transaction Costs</h3>
               <p>You are responsible for all gas fees and network transaction costs:</p>
               <ul>
-                <li>Gas fees are paid to blockchain validators, not to Dehouse Limited</li>
+                <li>Gas fees are paid to blockchain validators, not to Predit Limited</li>
                 <li>Fees are non-refundable even if transactions fail</li>
                 <li>We do not control or receive gas fees</li>
                 <li>High network activity may result in excessive fees</li>
@@ -531,7 +531,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>7. Prediction Markets and Betting</h2>
-              
+
               <h3>7.1 Prediction Market Mechanics</h3>
               <p>Our prediction markets allow users to:</p>
               <ul>
@@ -557,7 +557,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <li>Verification of outcomes through designated data sources</li>
                 <li>Resolution procedures outlined in market rules</li>
                 <li>Dispute periods for challenging outcomes</li>
-                <li>Final decisions by Dehouse Limited or designated arbitrators</li>
+                <li>Final decisions by Predit Limited or designated arbitrators</li>
               </ul>
               <p>
                 <strong>Market settlements are final and binding after the dispute period expires.</strong>
@@ -565,7 +565,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>7.4 Gambling Restrictions</h3>
               <p className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                <strong>⚠️ GAMBLING WARNING:</strong><br/>
+                <strong>⚠️ GAMBLING WARNING:</strong><br />
                 Prediction markets may be considered gambling in certain jurisdictions. You are responsible for:
               </p>
               <ul>
@@ -586,13 +586,13 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <li>International resources available at BeGambleAware.org</li>
               </ul>
               <p>
-                You can self-exclude or set limits on your account by contacting support@dehouseoforacles.com.
+                You can self-exclude or set limits on your account by contacting support@preditoforacles.com.
               </p>
             </section>
 
             <section>
               <h2>8. Subscriptions and Payments</h2>
-              
+
               <h3>8.1 Subscription Tiers</h3>
               <p>We offer various subscription tiers with different features, benefits, and pricing:</p>
               <ul>
@@ -640,10 +640,10 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>9. Intellectual Property Rights</h2>
-              
+
               <h3>9.1 Our Intellectual Property</h3>
               <p>
-                All content, features, functionality, designs, graphics, logos, trademarks, service marks, software code, algorithms, AI models, and other materials on the Platform (collectively, "Platform Content") are the exclusive property of Dehouse Limited or our licensors and are protected by:
+                All content, features, functionality, designs, graphics, logos, trademarks, service marks, software code, algorithms, AI models, and other materials on the Platform (collectively, "Platform Content") are the exclusive property of Predit Limited or our licensors and are protected by:
               </p>
               <ul>
                 <li>Copyright laws and international copyright treaties</li>
@@ -674,14 +674,14 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>9.3 Trademarks</h3>
               <p>
-                "Dehouse of Oracles," "Dehouse," "$DEOR," oracle character names, and associated logos are trademarks or registered trademarks of Dehouse Limited. Unauthorized use is strictly prohibited.
+                "Predit of Oracles," "Predit," "$DEOR," oracle character names, and associated logos are trademarks or registered trademarks of Predit Limited. Unauthorized use is strictly prohibited.
               </p>
 
               <h3>9.4 User-Generated Content</h3>
-              
+
               <h4>9.4.1 License Grant from Users</h4>
               <p>
-                By submitting, posting, or displaying content on the Platform (including but not limited to predictions, comments, messages, profiles, images, videos), you grant Dehouse Limited a worldwide, non-exclusive, royalty-free, perpetual, irrevocable, transferable, sublicensable license to:
+                By submitting, posting, or displaying content on the Platform (including but not limited to predictions, comments, messages, profiles, images, videos), you grant Predit Limited a worldwide, non-exclusive, royalty-free, perpetual, irrevocable, transferable, sublicensable license to:
               </p>
               <ul>
                 <li>Use, reproduce, modify, adapt, and create derivative works</li>
@@ -717,7 +717,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 AI-generated predictions and content created by our oracles:
               </p>
               <ul>
-                <li>Are owned by Dehouse Limited</li>
+                <li>Are owned by Predit Limited</li>
                 <li>May be used by us for any purpose</li>
                 <li>Are provided to you under the limited license above</li>
                 <li>Should not be commercially exploited without authorization</li>
@@ -728,8 +728,8 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 If you believe that content on our Platform infringes your copyright, please submit a DMCA notice to:
               </p>
               <ul>
-                <li><strong>Email:</strong> dmca@dehouseoforacles.com</li>
-                <li><strong>Mail:</strong> Dehouse Limited, DMCA Agent, [Address]</li>
+                <li><strong>Email:</strong> dmca@preditoforacles.com</li>
+                <li><strong>Mail:</strong> Predit Limited, DMCA Agent, [Address]</li>
               </ul>
               <p>Your notice must include:</p>
               <ul>
@@ -801,7 +801,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>10.6 Impersonation and Misrepresentation</h3>
               <ul>
-                <li>Impersonating other users, entities, or Dehouse Limited staff</li>
+                <li>Impersonating other users, entities, or Predit Limited staff</li>
                 <li>Providing false or misleading information</li>
                 <li>Creating fake or fraudulent accounts</li>
                 <li>Misrepresenting your affiliation or credentials</li>
@@ -829,14 +829,14 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>11. Disclaimers and Warranties</h2>
-              
+
               <p className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                 <strong>⚠️ PLEASE READ THIS SECTION CAREFULLY - IT LIMITS OUR LIABILITY</strong>
               </p>
 
               <h3>11.1 "AS IS" and "AS AVAILABLE" Disclaimer</h3>
               <p>
-                <strong>THE PLATFORM AND SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED.</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, DEHOUSE LIMITED DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO:
+                <strong>THE PLATFORM AND SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED.</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, PREDIT LIMITED DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO:
               </p>
               <ul>
                 <li><strong>MERCHANTABILITY:</strong> No warranty that the Platform is suitable for your purposes</li>
@@ -896,14 +896,14 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>12. Limitation of Liability</h2>
-              
+
               <p className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                 <strong>⚠️ CRITICAL - PLEASE READ CAREFULLY</strong>
               </p>
 
               <h3>12.1 Exclusion of Damages</h3>
               <p>
-                <strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL DEHOUSE LIMITED, ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, OR LICENSORS BE LIABLE FOR:</strong>
+                <strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL PREDIT LIMITED, ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, OR LICENSORS BE LIABLE FOR:</strong>
               </p>
               <ul>
                 <li><strong>INDIRECT DAMAGES:</strong> Any indirect, incidental, special, consequential, or punitive damages</li>
@@ -923,7 +923,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW, OUR TOTAL LIABILITY TO YOU FOR ALL CLAIMS ARISING FROM OR RELATED TO THE SERVICES SHALL NOT EXCEED THE GREATER OF:</strong>
               </p>
               <ul>
-                <li>(A) The total amount you paid to Dehouse Limited in the twelve (12) months preceding the claim; OR</li>
+                <li>(A) The total amount you paid to Predit Limited in the twelve (12) months preceding the claim; OR</li>
                 <li>(B) One hundred US dollars (USD $100)</li>
               </ul>
 
@@ -960,7 +960,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <section>
               <h2>13. Indemnification</h2>
               <p>
-                <strong>YOU AGREE TO INDEMNIFY, DEFEND, AND HOLD HARMLESS DEHOUSE LIMITED, ITS PARENT COMPANIES, SUBSIDIARIES, AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, CONTRACTORS, LICENSORS, AND SERVICE PROVIDERS (COLLECTIVELY, "INDEMNIFIED PARTIES") FROM AND AGAINST ANY AND ALL CLAIMS, LIABILITIES, DAMAGES, LOSSES, COSTS, EXPENSES, OR FEES (INCLUDING REASONABLE ATTORNEYS' FEES) ARISING FROM OR RELATED TO:</strong>
+                <strong>YOU AGREE TO INDEMNIFY, DEFEND, AND HOLD HARMLESS PREDIT LIMITED, ITS PARENT COMPANIES, SUBSIDIARIES, AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, CONTRACTORS, LICENSORS, AND SERVICE PROVIDERS (COLLECTIVELY, "INDEMNIFIED PARTIES") FROM AND AGAINST ANY AND ALL CLAIMS, LIABILITIES, DAMAGES, LOSSES, COSTS, EXPENSES, OR FEES (INCLUDING REASONABLE ATTORNEYS' FEES) ARISING FROM OR RELATED TO:</strong>
               </p>
               <ul>
                 <li>Your use or misuse of the Services</li>
@@ -994,14 +994,14 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>14. Dispute Resolution and Arbitration</h2>
-              
+
               <h3>14.1 Informal Resolution First</h3>
               <p>
                 <strong>BEFORE FILING ANY CLAIM OR LAWSUIT, YOU AGREE TO FIRST CONTACT US TO ATTEMPT INFORMAL RESOLUTION.</strong> Send a detailed description of your dispute to:
               </p>
               <ul>
-                <li><strong>Email:</strong> legal@dehouseoforacles.com</li>
-                <li><strong>Mail:</strong> Dehouse Limited, Legal Department, [Address]</li>
+                <li><strong>Email:</strong> legal@preditoforacles.com</li>
+                <li><strong>Mail:</strong> Predit Limited, Legal Department, [Address]</li>
               </ul>
               <p>
                 We will attempt to resolve the dispute within 60 days. If we cannot reach a resolution, you may then proceed with formal dispute resolution.
@@ -1014,7 +1014,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               <p>
                 Except where prohibited by law, YOU AGREE THAT ANY DISPUTE, CLAIM, OR CONTROVERSY ARISING FROM OR RELATED TO THESE TERMS OR THE SERVICES SHALL BE RESOLVED THROUGH BINDING ARBITRATION RATHER THAN IN COURT.
               </p>
-              
+
               <h4>14.2.1 Arbitration Rules</h4>
               <ul>
                 <li>Arbitration shall be administered by [Arbitration Organization] under its rules</li>
@@ -1056,7 +1056,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>14.4 Opt-Out Right</h3>
               <p>
-                You have the right to opt out of this arbitration agreement within 30 days of first accepting these Terms by sending written notice to legal@dehouseoforacles.com with:
+                You have the right to opt out of this arbitration agreement within 30 days of first accepting these Terms by sending written notice to legal@preditoforacles.com with:
               </p>
               <ul>
                 <li>Your name, username, and email address</li>
@@ -1075,7 +1075,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>15. Governing Law and Jurisdiction</h2>
-              
+
               <h3>15.1 Governing Law</h3>
               <p>
                 These Terms and any disputes arising from or related to the Services shall be governed by and construed in accordance with the laws of [Jurisdiction], without regard to its conflict of law principles.
@@ -1094,12 +1094,12 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>16. Termination</h2>
-              
+
               <h3>16.1 Termination by You</h3>
               <p>You may terminate your account at any time by:</p>
               <ul>
                 <li>Using the account deletion feature in settings</li>
-                <li>Contacting support@dehouseoforacles.com</li>
+                <li>Contacting support@preditoforacles.com</li>
                 <li>Ceasing all use of the Platform</li>
               </ul>
 
@@ -1172,7 +1172,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>20. Severability and Waiver</h2>
-              
+
               <h3>20.1 Severability</h3>
               <p>
                 If any provision of these Terms is found to be unenforceable, invalid, or illegal by a court of competent jurisdiction, that provision shall be:
@@ -1194,7 +1194,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <section>
               <h2>21. Entire Agreement</h2>
               <p>
-                These Terms, together with our Privacy Policy and any additional terms referenced herein, constitute the entire agreement between you and Dehouse Limited regarding the Services and supersede all prior agreements, understandings, negotiations, and discussions, whether oral or written.
+                These Terms, together with our Privacy Policy and any additional terms referenced herein, constitute the entire agreement between you and Predit Limited regarding the Services and supersede all prior agreements, understandings, negotiations, and discussions, whether oral or written.
               </p>
             </section>
 
@@ -1218,7 +1218,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
             <section>
               <h2>23. Notices and Communications</h2>
-              
+
               <h3>23.1 Electronic Communications</h3>
               <p>
                 By using the Services, you consent to receive electronic communications from us, including:
@@ -1236,11 +1236,11 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               <h3>23.2 How to Contact Us</h3>
               <p>For questions, complaints, or notices regarding these Terms:</p>
               <ul>
-                <li><strong>General Inquiries:</strong> support@dehouseoforacles.com</li>
-                <li><strong>Legal Matters:</strong> legal@dehouseoforacles.com</li>
-                <li><strong>Privacy:</strong> privacy@dehouseoforacles.com</li>
-                <li><strong>Copyright/DMCA:</strong> dmca@dehouseoforacles.com</li>
-                <li><strong>Mail:</strong> Dehouse Limited, [Address], [City], [Country], [Postal Code]</li>
+                <li><strong>General Inquiries:</strong> support@preditoforacles.com</li>
+                <li><strong>Legal Matters:</strong> legal@preditoforacles.com</li>
+                <li><strong>Privacy:</strong> privacy@preditoforacles.com</li>
+                <li><strong>Copyright/DMCA:</strong> dmca@preditoforacles.com</li>
+                <li><strong>Mail:</strong> Predit Limited, [Address], [City], [Country], [Postal Code]</li>
               </ul>
 
               <h3>23.3 How to Contact You</h3>
@@ -1261,7 +1261,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <section>
               <h2>24. Accessibility</h2>
               <p>
-                We strive to make our Platform accessible to users with disabilities. If you experience accessibility issues, please contact accessibility@dehouseoforacles.com.
+                We strive to make our Platform accessible to users with disabilities. If you experience accessibility issues, please contact accessibility@preditoforacles.com.
               </p>
             </section>
 
@@ -1275,7 +1275,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <div className="space-y-4 mt-8">
               <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/30">
                 <p className="text-sm text-red-600 dark:text-red-400">
-                  <strong>⚠️ CRITICAL DISCLAIMER:</strong> Dehouse of Oracles, operated by Dehouse Limited, and all AI-generated predictions are for ENTERTAINMENT PURPOSES ONLY. We expressly disclaim ALL LIABILITY for any decisions made, actions taken, or losses incurred based on predictions, insights, or content provided through our Services. DO NOT make financial, legal, medical, or other important decisions based solely on AI-generated content. ALWAYS consult qualified professionals. USE AT YOUR OWN RISK.
+                  <strong>⚠️ CRITICAL DISCLAIMER:</strong> Predit of Oracles, operated by Predit Limited, and all AI-generated predictions are for ENTERTAINMENT PURPOSES ONLY. We expressly disclaim ALL LIABILITY for any decisions made, actions taken, or losses incurred based on predictions, insights, or content provided through our Services. DO NOT make financial, legal, medical, or other important decisions based solely on AI-generated content. ALWAYS consult qualified professionals. USE AT YOUR OWN RISK.
                 </p>
               </div>
 
@@ -1293,13 +1293,13 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <div className="p-6 rounded-xl bg-blue-500/10 border border-blue-500/30">
                 <p className="text-sm text-blue-600 dark:text-blue-400">
-                  <strong>📋 IMPORTANT NOTICES:</strong> Please read these Terms carefully. By using our Services, you agree to binding arbitration and waive your right to jury trial and class actions. You are solely responsible for your account security, private keys, and all decisions made using the Platform. Contact legal@dehouseoforacles.com with questions.
+                  <strong>📋 IMPORTANT NOTICES:</strong> Please read these Terms carefully. By using our Services, you agree to binding arbitration and waive your right to jury trial and class actions. You are solely responsible for your account security, private keys, and all decisions made using the Platform. Contact legal@preditoforacles.com with questions.
                 </p>
               </div>
 
               <div className="p-6 rounded-xl bg-gray-500/10 border border-gray-500/30">
                 <p className="text-sm text-muted-foreground">
-                  <strong>📜 Version Information:</strong> These Terms of Use were last updated on October 16, 2025. Document Version 2.0. Previous versions available upon request. Governed by the laws of [Jurisdiction]. For questions or concerns, contact legal@dehouseoforacles.com.
+                  <strong>📜 Version Information:</strong> These Terms of Use were last updated on October 16, 2025. Document Version 2.0. Previous versions available upon request. Governed by the laws of [Jurisdiction]. For questions or concerns, contact legal@preditoforacles.com.
                 </p>
               </div>
             </div>

@@ -241,7 +241,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
         <div>
           <h1>Settings & Customization</h1>
           <p className="text-sm text-muted-foreground">
-            Tailor your feed for optimal Polymarket trading insights
+            Tailor your feed for optimal Predit trading insights
           </p>
         </div>
         {/* Profile Settings */}

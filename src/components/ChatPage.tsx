@@ -1126,47 +1126,6 @@ export function ChatPage({
           <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4 w-full">
             {/* Chat Section - Center with max width */}
             <div className="w-full h-full lg:flex-1 space-y-0 flex flex-col">
-              {/* Welcome Intro Section - Only show on first load */}
-              {/* {messages.length === 1 && (
-                <div className="mb-8"> */}
-              {/* Call to Action */}
-              {/* <div className="py-8">
-                    <h2 className="text-2xl sm:text-3xl bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-6 pb-1">
-                      Gain the Edge with Our Elite AI Agents
-                    </h2> */}
-
-              {/* Features Grid */}
-              {/* <div className="grid gap-4 mb-6"> */}
-              {/* Feature 1 */}
-              {/* <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                        <h3 className="text-base sm:text-lg mb-2">
-                          ✨ Specialized Expertise for Pinpoint Accuracy
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Fine-tuned on niche data for stocks, cryptos,
-                          politics, sports, and more—delivering spot-on
-                          predictions that crush the competition.
-                        </p>
-                      </div> */}
-
-              {/* Feature 2 */}
-              {/* <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                        <h3 className="text-base sm:text-lg mb-2">
-                          🚀 Supercharge Your Bets and Investments
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Spot trends, minimize risks, and maximize wins with
-                          actionable insights tailored just for you.
-                        </p>
-                      </div>
-                    </div>
-
-                    <p className="text-base sm:text-lg text-foreground">
-                      Ready to win? Ask our AI for a prediction right now
-                    </p>
-                  </div>
-                </div>
-              )} */}
               {/* Oracle mobile header tab */}
               <div className="lg:hidden fixed top-0 left-0 right-0 z-[10]">
                 <Card
@@ -1280,7 +1239,7 @@ export function ChatPage({
                       className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
                       style={{
                         borderRadius: '0px',
-                        padding: '16px 8px',
+                        padding: '14px 8px',
                       }}
                     >
                       <div className="flex items-center gap-2 sm:gap-3">

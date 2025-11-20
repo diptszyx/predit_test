@@ -436,7 +436,7 @@ export function HomePage({
             />
           </div>
           <div className="space-y-6 order-1 lg:order-2">
-            <h2 className="text-4xl md:text-5xl">Why Choose Dehouse?</h2>
+            <h2 className="text-4xl md:text-5xl">Why Choose Predit?</h2>
             <p className="text-xl text-muted-foreground">
               Join thousands of users making informed predictions with
               AI-powered insights

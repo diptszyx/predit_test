@@ -55,14 +55,13 @@ export function ReferralCard({
     user.referralCode ||
     (onGenerateCode
       ? onGenerateCode()
-      : `${
-          user.username
-            ? user.username
-                .toUpperCase()
-                .replace(/[^A-Z0-9]/g, '')
-                .slice(0, 8)
-            : 'User'
-        }-${Math.random().toString(36).slice(2, 6)?.toUpperCase()} `);
+      : `${user.username
+        ? user.username
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, '')
+          .slice(0, 8)
+        : 'User'
+      }-${Math.random().toString(36).slice(2, 6)?.toUpperCase()} `);
 
   const referralLink = `${window.location.origin}?ref=${referralCode}`;
   const referredCount = user.friendsReferred || 0;
@@ -87,7 +86,7 @@ export function ReferralCard({
   };
 
   const shareViaTwitter = () => {
-    const text = `Join me on Dehouse of Predictions - Get AI predictions from specialized prediction agents! Use my code: ${referralCode}`;
+    const text = `Join me on Predit of Predictions - Get AI predictions from specialized prediction agents! Use my code: ${referralCode}`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       text
     )}&url=${encodeURIComponent(referralLink)}`;

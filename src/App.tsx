@@ -249,7 +249,7 @@ export default function App() {
           const authenticatedUser = await authenticateWithToken(oauthToken);
 
           toast.success(
-            isNewUser ? 'Welcome to Dehouse!' : 'Signed in successfully.',
+            isNewUser ? 'Welcome to Predit!' : 'Signed in successfully.',
             {
               description: isNewUser
                 ? "Your Google account is now linked. Let's get started."
@@ -311,7 +311,7 @@ export default function App() {
       });
 
       toast.success('🎉 Referral bonus applied! +300 XP', {
-        description: 'Welcome to Dehouse of Predictions!',
+        description: 'Welcome to Predit of Predictions!',
       });
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Failed to apply referral');
@@ -373,6 +373,7 @@ export default function App() {
       <XPInfoDialog
         open={xpInfoDialogOpen}
         onOpenChange={setXPInfoDialogOpen}
+        onNavigate={setCurrentPage}
       />
       <PrivacyPolicy
         open={privacyDialogOpen}

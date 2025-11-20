@@ -127,17 +127,14 @@ export function WalletConnectDialog({
 
     switch (provider) {
       case 'google':
-        const signInGoogleLink = `${
-          import.meta.env.VITE_API_BASE_URL
-        }/auth/${provider}/authorize?redirectUri=${
-          import.meta.env.VITE_API_BASE_URL
-        }/auth/google/callback`;
+        const signInGoogleLink = `${import.meta.env.VITE_API_BASE_URL
+          }/auth/${provider}/authorize?redirectUri=${import.meta.env.VITE_API_BASE_URL
+          }/auth/google/callback`;
         window.location.href = signInGoogleLink;
         break;
       case 'x':
-        const signInXLink = `${
-          import.meta.env.VITE_API_BASE_URL
-        }/auth/${provider}/authorize`;
+        const signInXLink = `${import.meta.env.VITE_API_BASE_URL
+          }/auth/${provider}/authorize`;
         window.location.href = signInXLink;
         break;
     }
@@ -165,7 +162,7 @@ export function WalletConnectDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="w-5 h-5" />
-            Connect to Dehouse of Predictions
+            Connect to Predit of Predictions
           </DialogTitle>
           <DialogDescription>
             Sign in with your wallet or social account
@@ -182,11 +179,9 @@ export function WalletConnectDialog({
                   key={social.id}
                   onClick={() => handleSocialConnect(social.id)}
                   disabled={isConnecting}
-                  className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
-                    social.color
-                  } ${
-                    isConnecting ? 'border-blue-500 bg-accent' : 'border-border'
-                  }`}
+                  className={`w-full p-3 rounded-lg border-2 transition-all text-left ${social.color
+                    } ${isConnecting ? 'border-blue-500 bg-accent' : 'border-border'
+                    }`}
                 >
                   <div className="flex items-center justify-center gap-3">
                     <img
@@ -363,11 +358,10 @@ const WalletConnectButton = ({
       key={wallet.id}
       onClick={() => handleConnect(wallet.id)}
       disabled={!wallet.supported || loading}
-      className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-        wallet.supported
+      className={`w-full p-4 rounded-xl border-2 transition-all text-left ${wallet.supported
           ? 'border-border hover:border-blue-500 hover:bg-accent cursor-pointer'
           : 'border-border opacity-50 cursor-not-allowed'
-      } ${loading ? 'border-blue-500 bg-accent' : ''}`}
+        } ${loading ? 'border-blue-500 bg-accent' : ''}`}
     >
       <div className="flex items-center gap-4">
         <div

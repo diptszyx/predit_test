@@ -39,7 +39,7 @@ export function UnifiedHeader({
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <div className="flex items-center gap-6">
-          <button 
+          <button
             onClick={() => onNavigate("aiAgents")}
             className="flex flex-col hover:opacity-80 transition-opacity"
           >
@@ -47,7 +47,7 @@ export function UnifiedHeader({
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
                 <span className="text-2xl">🔮</span>
               </div>
-              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-[rgb(255,255,255)] font-bold">Dehouse of Predictions</span>
+              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-[rgb(255,255,255)] font-bold">Predit of Predictions</span>
             </h1>
 
           </button>
@@ -55,7 +55,7 @@ export function UnifiedHeader({
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
-          <MainNavigation 
+          <MainNavigation
             currentPage={currentPage}
             onNavigate={onNavigate}
             user={user}
@@ -142,7 +142,7 @@ export function UnifiedHeader({
         <div className="border-t border-border bg-background md:hidden">
           <div className="container mx-auto space-y-1 px-4 py-4">
             <div className="flex flex-col gap-1">
-              <MainNavigation 
+              <MainNavigation
                 currentPage={currentPage}
                 onNavigate={(page) => {
                   onNavigate(page);
@@ -154,7 +154,7 @@ export function UnifiedHeader({
                 onSetPendingNavigation={onSetPendingNavigation}
               />
             </div>
-            
+
             <div className="border-t border-border pt-4 mt-4 space-y-2">
               {/* How XP Works - Mobile */}
               {onOpenXPInfo && (
@@ -180,7 +180,7 @@ export function UnifiedHeader({
                 {darkMode ? 'Light Mode' : 'Dark Mode'}
               </Button>
             </div>
-            
+
             <div className="pt-4 space-y-2">
               {user ? (
                 <>

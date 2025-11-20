@@ -16,7 +16,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   const steps = [
     {
-      title: "Welcome to Dehouse of Predictions",
+      title: "Welcome to Predit of Predictions",
       subtitle: "Your AI Prediction Agents for Smarter Insights",
       content: (
         <div className="text-center space-y-6">
@@ -26,7 +26,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="space-y-2">
             <h2>AI-Powered Market Intelligence</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Get real-time insights from specialized AI Oracles trained on cryptocurrency, blockchain, and digital assets to make informed trading decisions on Polymarket.
+              Get real-time insights from specialized AI Oracles trained on cryptocurrency, blockchain, and digital assets to make informed trading decisions on Predit.
             </p>
           </div>
           <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto pt-4">
@@ -63,11 +63,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 prev.includes("crypto-crystal") ? prev.filter(o => o !== "crypto-crystal") : [...prev, "crypto-crystal"]
               );
             }}
-            className={`cursor-pointer transition-all ${
-              selectedOracles.includes("crypto-crystal")
-                ? "border-cyan-500 bg-cyan-500/10"
-                : "border-border hover:border-cyan-500/50"
-            }`}
+            className={`cursor-pointer transition-all ${selectedOracles.includes("crypto-crystal")
+              ? "border-cyan-500 bg-cyan-500/10"
+              : "border-border hover:border-cyan-500/50"
+              }`}
           >
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -102,11 +101,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 prev.includes("economics") ? prev.filter(o => o !== "economics") : [...prev, "economics"]
               );
             }}
-            className={`cursor-pointer transition-all ${
-              selectedOracles.includes("economics")
-                ? "border-emerald-500 bg-emerald-500/10"
-                : "border-border hover:border-emerald-500/50"
-            }`}
+            className={`cursor-pointer transition-all ${selectedOracles.includes("economics")
+              ? "border-emerald-500 bg-emerald-500/10"
+              : "border-border hover:border-emerald-500/50"
+              }`}
           >
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -162,18 +160,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       : [...prev, interest.id]
                   );
                 }}
-                className={`cursor-pointer transition-all ${
-                  selectedInterests.includes(interest.id)
-                    ? "border-blue-500 bg-blue-500/10"
-                    : "border-border hover:border-blue-500/50"
-                }`}
+                className={`cursor-pointer transition-all ${selectedInterests.includes(interest.id)
+                  ? "border-blue-500 bg-blue-500/10"
+                  : "border-border hover:border-blue-500/50"
+                  }`}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Checkbox
                         checked={selectedInterests.includes(interest.id)}
-                        onCheckedChange={() => {}}
+                        onCheckedChange={() => { }}
                       />
                       <span>{interest.label}</span>
                     </div>
@@ -203,7 +200,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       )
     },
     {
-      title: "Connect to Polymarket",
+      title: "Connect to Predit",
       subtitle: "Optional: Link your account for personalized insights",
       content: (
         <div className="text-center space-y-6 max-w-lg mx-auto">
@@ -213,11 +210,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="space-y-2">
             <h3>Enhanced Trading Experience</h3>
             <p className="text-sm text-muted-foreground">
-              Connect your Polymarket account to get personalized news filtered by your active bets, 
+              Connect your Predit account to get personalized news filtered by your active bets,
               real-time odds updates, and one-click market access.
             </p>
           </div>
-          
+
           <div className="space-y-3 text-left bg-card border border-border rounded-xl p-4">
             <h4 className="text-sm">Benefits of connecting:</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
@@ -242,7 +239,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
           <div className="space-y-2">
             <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
-              Connect Polymarket Account
+              Connect Predit Account
             </Button>
             <Button variant="ghost" className="w-full" onClick={onComplete}>
               Skip for now
@@ -273,13 +270,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           {steps.map((_, index) => (
             <div
               key={index}
-              className={`h-2 rounded-full transition-all ${
-                index === currentStep
-                  ? "w-8 bg-blue-500"
-                  : index < currentStep
+              className={`h-2 rounded-full transition-all ${index === currentStep
+                ? "w-8 bg-blue-500"
+                : index < currentStep
                   ? "w-2 bg-blue-500"
                   : "w-2 bg-accent"
-              }`}
+                }`}
             />
           ))}
         </div>
@@ -302,7 +298,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           ) : (
             <div />
           )}
-          
+
           <div className="flex gap-2">
             {currentStep < steps.length - 1 && (
               <Button variant="ghost" onClick={handleSkip}>

@@ -1787,7 +1787,7 @@ export function ChatPage({
               <Card
                 className="border-border overflow-hidden"
                 style={{
-                  height: 'calc(100vh - 25.2rem)',
+                  height: 'calc(100vh - 23.8rem)',
                   borderBottomLeftRadius: 0,
                   borderBottomRightRadius: 0
                 }}

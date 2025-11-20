@@ -25,6 +25,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
+import { subscriptionService } from "../services/subscription.service";
 
 interface SubscriptionManagementDialogProps {
   open: boolean;
@@ -67,8 +68,15 @@ export function SubscriptionManagementDialog({
     onOpenChange(false);
   };
 
-  const handleSubscribe = () => {
-    setView('payment');
+  const handleSubscribe = async () => {
+    // setView('payment');
+    try {
+      await subscriptionService.upgradeToPro()
+    } catch (error) {
+      console.error('Failed to handle payment', error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handlePaymentSubmit = async () => {
@@ -149,7 +157,7 @@ export function SubscriptionManagementDialog({
                       <Badge variant="outline" className="bg-green-500/10 border-green-500/30 text-green-400">75% OFF</Badge>
                     </div>
                     <p className="text-5xl mb-2">$4.99<span className="text-xl text-muted-foreground">/month</span></p>
-                    <p className="text-sm text-muted-foreground">Cancel anytime</p>
+                    {/* <p className="text-sm text-muted-foreground">Cancel anytime</p> */}
                   </div>
 
                   {/* Features List */}
@@ -242,7 +250,7 @@ export function SubscriptionManagementDialog({
                   </div>
 
                   {/* Management Options */}
-                  <div className="space-y-3">
+                  {/* <div className="space-y-3">
                     <Button variant="outline" className="w-full" onClick={() => setView('payment')}>
                       <CreditCard className="w-4 h-4 mr-2" />
                       Update Payment Method
@@ -269,7 +277,7 @@ export function SubscriptionManagementDialog({
                     <p className="text-xs text-muted-foreground">
                       If you cancel, you'll retain Pro access until the end of your current billing period.
                     </p>
-                  </div>
+                  </div> */}
                 </>
               )}
             </div>

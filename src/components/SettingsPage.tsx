@@ -714,7 +714,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                       Upgrade to Pro
                     </Button>
                     <p className="text-xs text-center text-muted-foreground mt-2">
-                      Cancel anytime • Full access immediately
+                      {/* Cancel anytime • */}
+                      Full access immediately
                     </p>
                   </div>
                 )}

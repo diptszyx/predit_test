@@ -130,20 +130,20 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                   Upgrade to Pro
                 </DialogTitle>
                 <DialogDescription>
-                  Choose your payment method and complete your upgrade to unlock unlimited predictions and 2x XP.
+                  Complete your upgrade to unlock unlimited predictions and 2x XP.
                 </DialogDescription>
               </DialogHeader>
 
               <form onSubmit={handlePaymentSubmit} className="space-y-4">
                 {/* Payment Method Selection */}
-                <div className="space-y-3">
+                {/* <div className="space-y-3">
                   <Label>Payment Method</Label>
                   <RadioGroup
                     value={paymentMethod}
                     onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}
                     className="grid grid-cols-3 gap-3"
                   >
-                    {/* <div>
+                    <div>
                       <RadioGroupItem
                         value="card"
                         id="card"
@@ -156,7 +156,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                         <CreditCard className="w-6 h-6 mb-2" />
                         <span className="text-sm">Card</span>
                       </Label>
-                    </div> */}
+                    </div>
 
                     <div>
                       <RadioGroupItem
@@ -173,7 +173,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                       </Label>
                     </div>
 
-                    {/* <div>
+                    <div>
                       <RadioGroupItem
                         value="wallet"
                         id="wallet"
@@ -186,9 +186,9 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                         <Wallet className="w-6 h-6 mb-2" />
                         <span className="text-sm">Wallet</span>
                       </Label>
-                    </div> */}
+                    </div>
                   </RadioGroup>
-                </div>
+                </div> */}
 
                 {/* Card Payment Form */}
                 {paymentMethod === "card" && (
@@ -257,7 +257,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                 )}
 
                 {/* Crypto Payment Info */}
-                {paymentMethod === "crypto" && (
+                {/* {paymentMethod === "crypto" && (
                   <div className="space-y-4">
                     <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
                       <p className="text-sm mb-3">
@@ -273,7 +273,7 @@ export function SubscriptionPage({ user, onOpenWalletDialog, onSubscriptionSucce
                       </p>
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* Wallet Payment Info */}
                 {paymentMethod === "wallet" && (

@@ -8,20 +8,16 @@ import {
   Lock,
   MessageSquare,
   Moon,
-  PanelLeft,
-  PanelLeftClose,
-  Share2,
   Sparkles,
   Star,
   Sun,
   ThumbsUp,
-  Zap,
+  Zap
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { DisclaimerDialog } from './DisclaimerDialog';
 import { ShareAIAgentDialog } from './ShareAIAgentDialog';
 import { SharePredictionDialog } from './SharePredictionDialog';
-import { Sidebar } from './Sidebar';
 import { SubscriptionManagementDialog } from './SubscriptionManagementDialog';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -35,13 +31,17 @@ import {
 import { ScrollArea } from './ui/scroll-area';
 import { Skeleton } from './ui/skeleton';
 
+import clsx from 'clsx';
+import { motion } from 'motion/react';
 import { toast } from 'sonner';
-import apiClient from '../lib/axios';
+import { timeAgo } from '../lib/date';
 import type { User } from '../lib/types';
 import { ChatMessage, messageService } from '../services/message.service';
+import { News, newsService } from '../services/news.service';
 import { OracleEntity, oraclesServices } from '../services/oracles.service';
 import useAuthStore from '../store/auth.store';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { InfoAgentDialog } from './InfoAgentDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,12 +52,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
-import { News, newsService } from '../services/news.service';
-import { timeAgo } from '../lib/date';
-import clsx from 'clsx';
-import { Dialog } from './ui/dialog';
-import { InfoAgentDialog } from './InfoAgentDialog';
-import { motion } from 'motion/react';
 
 interface AIAgent {
   id: string;
@@ -1129,9 +1123,50 @@ export function ChatPage({
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
-          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4 justify-center">
+          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4 w-full">
             {/* Chat Section - Center with max width */}
-            <div className="w-full h-full lg:max-w-3xl space-y-0 flex flex-col">
+            <div className="w-full h-full lg:flex-1 space-y-0 flex flex-col">
+              {/* Welcome Intro Section - Only show on first load */}
+              {/* {messages.length === 1 && (
+                <div className="mb-8"> */}
+              {/* Call to Action */}
+              {/* <div className="py-8">
+                    <h2 className="text-2xl sm:text-3xl bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-6 pb-1">
+                      Gain the Edge with Our Elite AI Agents
+                    </h2> */}
+
+              {/* Features Grid */}
+              {/* <div className="grid gap-4 mb-6"> */}
+              {/* Feature 1 */}
+              {/* <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                        <h3 className="text-base sm:text-lg mb-2">
+                          ✨ Specialized Expertise for Pinpoint Accuracy
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Fine-tuned on niche data for stocks, cryptos,
+                          politics, sports, and more—delivering spot-on
+                          predictions that crush the competition.
+                        </p>
+                      </div> */}
+
+              {/* Feature 2 */}
+              {/* <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                        <h3 className="text-base sm:text-lg mb-2">
+                          🚀 Supercharge Your Bets and Investments
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Spot trends, minimize risks, and maximize wins with
+                          actionable insights tailored just for you.
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-base sm:text-lg text-foreground">
+                      Ready to win? Ask our AI for a prediction right now
+                    </p>
+                  </div>
+                </div>
+              )} */}
               {/* Oracle mobile header tab */}
               <div className="lg:hidden fixed top-0 left-0 right-0 z-[10]">
                 <Card
@@ -1441,7 +1476,7 @@ export function ChatPage({
                       </div>
 
                       {/* Input Section - Fixed at top with semi-transparent background */}
-                      <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90 border-r border-l">
+                      <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90 border-r">
                         <div className="max-w-4xl mx-auto">
                           {/* Daily Prediction Limit Counter for Free Users */}
                           {user?.id &&
@@ -1586,7 +1621,7 @@ export function ChatPage({
                           AI agents can make mistakes. Check{' '}
                           <button
                             onClick={() => setDisclaimerDialogOpen(true)}
-                            className="text-blue-400 hover:text-blue-300 underline transition-colors"
+                            className="text-blue-400 hover:text-blue-300 underline transition-colors cursor-pointer"
                           >
                             Disclaimer
                           </button>
@@ -1599,7 +1634,7 @@ export function ChatPage({
               {currentTab === 'hotTakes' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px]">
                   {/* Hot Takes Section */}
-                  <Card className="border-border">
+                  <Card className="border-border" style={{ borderRadius: 0 }}>
                     <CardHeader className="border-b border-border pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
                         <Zap className="w-4 h-4" />
@@ -1793,7 +1828,9 @@ export function ChatPage({
               <Card
                 className="border-border overflow-hidden"
                 style={{
-                  height: 'calc(100vh - 25rem)',
+                  height: 'calc(100vh - 25.2rem)',
+                  borderBottomLeftRadius: 0,
+                  borderBottomRightRadius: 0
                 }}
               >
                 <CardHeader className="border-b border-border pb-3">

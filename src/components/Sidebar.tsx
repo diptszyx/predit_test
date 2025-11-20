@@ -178,7 +178,7 @@ export function Sidebar({
   const MobileSidebarContent = () => (
     <>
       {/* Logo Section */}
-      <div className="relative px-6 py-4 border-b border-border">
+      <div className="relative px-6 py-3 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -667,7 +667,7 @@ export function Sidebar({
                         Lv {!Number.isNaN(userLevel) ? userLevel : 0}
                       </span>
                     </div>
-                    {user.subscriptionTier === "master" && (
+                    {user.isPro && (
                       <Badge
                         variant="outline"
                         className="bg-primary/10 text-primary border-primary/20 text-xs px-1.5 py-0"

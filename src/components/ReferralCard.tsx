@@ -49,7 +49,6 @@ export function ReferralCard({
   onAwardXP,
 }: ReferralCardProps) {
   const [copied, setCopied] = useState(false);
-  console.log(refList);
   // Generate referral code if not exists (format: USERNAME-XXXX)
   const referralCode =
     user.referralCode ||

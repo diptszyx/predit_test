@@ -10,7 +10,9 @@ interface TermsOfUseProps {
 export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh]">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh]"
+        style={{ zIndex: '99999' }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
@@ -25,7 +27,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
         <ScrollArea className="h-[60vh] pr-4">
           <div className="prose prose-sm dark:prose-invert max-w-none space-y-6">
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>1. Acceptance of Terms and Agreement to Binding Contract</h2>
               <p>
                 Welcome to Predit of Oracles, a decentralized prediction platform operated by Predit Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Predit Limited," "we," "our," or "us").
@@ -75,7 +77,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               <p>In the event of conflict between these Terms and additional terms, the additional terms shall prevail for that specific feature or service.</p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>2. Description of Services</h2>
 
               <h3>2.1 Platform Overview</h3>
@@ -134,7 +136,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>3. Eligibility and Account Requirements</h2>
 
               <h3>3.1 Age and Legal Capacity</h3>
@@ -252,7 +254,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>4. AI-Generated Predictions and Content</h2>
 
               <h3>4.1 Nature of AI-Powered Services</h3>
@@ -340,7 +342,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>5. $DEOR Token and Virtual Assets</h2>
 
               <h3>5.1 $DEOR Token Overview</h3>
@@ -433,7 +435,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>6. Blockchain and Cryptocurrency Risks</h2>
 
               <h3>6.1 Acknowledgment of Blockchain Risks</h3>
@@ -529,7 +531,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>7. Prediction Markets and Betting</h2>
 
               <h3>7.1 Prediction Market Mechanics</h3>
@@ -590,7 +592,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>8. Subscriptions and Payments</h2>
 
               <h3>8.1 Subscription Tiers</h3>
@@ -638,7 +640,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>9. Intellectual Property Rights</h2>
 
               <h3>9.1 Our Intellectual Property</h3>
@@ -742,7 +744,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>10. Prohibited Conduct and Activities</h2>
               <p>
                 You agree NOT to engage in any of the following prohibited activities:
@@ -827,7 +829,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>11. Disclaimers and Warranties</h2>
 
               <p className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
@@ -894,7 +896,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>12. Limitation of Liability</h2>
 
               <p className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
@@ -957,7 +959,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>13. Indemnification</h2>
               <p>
                 <strong>YOU AGREE TO INDEMNIFY, DEFEND, AND HOLD HARMLESS PREDIT LIMITED, ITS PARENT COMPANIES, SUBSIDIARIES, AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, CONTRACTORS, LICENSORS, AND SERVICE PROVIDERS (COLLECTIVELY, "INDEMNIFIED PARTIES") FROM AND AGAINST ANY AND ALL CLAIMS, LIABILITIES, DAMAGES, LOSSES, COSTS, EXPENSES, OR FEES (INCLUDING REASONABLE ATTORNEYS' FEES) ARISING FROM OR RELATED TO:</strong>
@@ -992,7 +994,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>14. Dispute Resolution and Arbitration</h2>
 
               <h3>14.1 Informal Resolution First</h3>
@@ -1073,7 +1075,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>15. Governing Law and Jurisdiction</h2>
 
               <h3>15.1 Governing Law</h3>
@@ -1092,7 +1094,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>16. Termination</h2>
 
               <h3>16.1 Termination by You</h3>
@@ -1134,7 +1136,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>17. Privacy and Data Protection</h2>
               <p>
                 Your use of the Services is also governed by our Privacy Policy, which is incorporated into these Terms by reference. Please review our Privacy Policy to understand our data collection, use, and sharing practices.
@@ -1144,7 +1146,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>18. Export Controls and Sanctions</h2>
               <p>
                 You agree to comply with all applicable export control laws, trade sanctions, and regulations, including but not limited to:
@@ -1160,7 +1162,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>19. Assignment and Transfer</h2>
               <p>
                 <strong>You may NOT assign or transfer your rights or obligations under these Terms without our prior written consent.</strong> Any attempted assignment in violation of this provision is void.
@@ -1170,7 +1172,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>20. Severability and Waiver</h2>
 
               <h3>20.1 Severability</h3>
@@ -1191,14 +1193,14 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>21. Entire Agreement</h2>
               <p>
                 These Terms, together with our Privacy Policy and any additional terms referenced herein, constitute the entire agreement between you and Predit Limited regarding the Services and supersede all prior agreements, understandings, negotiations, and discussions, whether oral or written.
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>22. Force Majeure</h2>
               <p>
                 We shall not be liable for any delay or failure to perform resulting from causes outside our reasonable control, including but not limited to:
@@ -1216,7 +1218,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>23. Notices and Communications</h2>
 
               <h3>23.1 Electronic Communications</h3>
@@ -1258,14 +1260,14 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>24. Accessibility</h2>
               <p>
                 We strive to make our Platform accessible to users with disabilities. If you experience accessibility issues, please contact accessibility@preditoforacles.com.
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>25. Language</h2>
               <p>
                 These Terms are written in English. Any translation is provided for convenience only. In the event of conflict between the English version and any translation, the English version shall prevail.

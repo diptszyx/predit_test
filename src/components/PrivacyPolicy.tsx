@@ -10,7 +10,9 @@ interface PrivacyPolicyProps {
 export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh]">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh]"
+        style={{ zIndex: '99999' }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
@@ -25,7 +27,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
 
         <ScrollArea className="h-[60vh] pr-4">
           <div className="prose prose-sm dark:prose-invert max-w-none space-y-6">
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>1. Introduction and Scope</h2>
               <p>
                 Welcome to Predit of Oracles, a decentralized prediction platform operated by Predit Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Predit Limited", "we," "our," or "us").
@@ -41,7 +43,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>2. Information We Collect</h2>
 
               <h3>2.1 Information You Provide Directly</h3>
@@ -165,7 +167,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>3. How We Use Your Information</h2>
               <p>We use the collected information for the following purposes:</p>
 
@@ -241,7 +243,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>4. Legal Bases for Processing (GDPR Compliance)</h2>
               <p>For users in the European Economic Area (EEA), United Kingdom, and Switzerland, we process personal data based on the following legal grounds:</p>
               <ul>
@@ -254,7 +256,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>5. Information Sharing and Disclosure</h2>
 
               <h3>5.1 Service Providers and Processors</h3>
@@ -326,7 +328,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>6. Data Security and Protection</h2>
 
               <h3>6.1 Security Measures</h3>
@@ -387,7 +389,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>7. Data Retention and Deletion</h2>
 
               <h3>7.1 Retention Periods</h3>
@@ -414,7 +416,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>8. Your Privacy Rights and Choices</h2>
 
               <h3>8.1 Access and Portability</h3>
@@ -500,7 +502,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>9. International Data Transfers</h2>
               <p>
                 Predit Limited operates globally, and your information may be transferred to, stored, and processed in countries other than your country of residence. These countries may have different data protection laws.
@@ -532,7 +534,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>10. Children's Privacy</h2>
               <p>
                 Our Services are not intended for individuals under the age of 18 (or the age of majority in your jurisdiction). We do not knowingly collect, use, or disclose personal information from children.
@@ -545,7 +547,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>11. State-Specific Privacy Rights (United States)</h2>
 
               <h3>11.1 California Privacy Rights (CCPA/CPRA)</h3>
@@ -569,7 +571,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               <p>Nevada residents may opt out of the sale of certain covered information. We do not currently sell covered information as defined under Nevada law.</p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>12. Cookies and Tracking Technologies</h2>
 
               <h3>12.1 Types of Cookies We Use</h3>
@@ -633,7 +635,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>13. AI and Machine Learning</h2>
 
               <h3>13.1 AI Data Processing</h3>
@@ -659,7 +661,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>14. Third-Party Links and Services</h2>
               <p>
                 Our Platform may contain links to third-party websites, applications, and services. We are not responsible for the privacy practices of these third parties. We encourage you to review their privacy policies before providing any personal information.
@@ -675,7 +677,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>15. Changes to This Privacy Policy</h2>
               <p>
                 We may update this Privacy Policy from time to time to reflect changes in our practices, technologies, legal requirements, or other factors. We will notify you of material changes by:
@@ -694,7 +696,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </p>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>16. Contact Information and Data Protection Officer</h2>
 
               <h3>16.1 Privacy Inquiries</h3>
@@ -725,7 +727,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               </ul>
             </section>
 
-            <section>
+            <section className="space-y-4 py-6 border-b border-border/40">
               <h2>17. Additional Information for Specific Regions</h2>
 
               <h3>17.1 European Economic Area (EEA) Users</h3>

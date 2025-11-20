@@ -184,10 +184,13 @@ export function WalletConnectDialog({
                     }`}
                 >
                   <div className="flex items-center justify-center gap-3">
-                    <img
-                      className="w-5 h-5"
-                      src={social.icon}
-                    />
+                    {
+                      social.id === 'x' ? <span className='text-2xl'>𝕏</span> :
+                        <img
+                          className="w-5 h-5"
+                          src={social.icon}
+                        />
+                    }
                     <span className="text-sm flex-1">{social.name}</span>
                     {isConnecting && (
                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -233,14 +236,14 @@ export function WalletConnectDialog({
               By continuing, you agree to our{' '}
               <button
                 onClick={onOpenPrivacy}
-                className="text-blue-500 hover:underline"
+                className="text-blue-500 hover:underline cursor-pointer"
               >
                 Privacy Policy
               </button>{' '}
               and{' '}
               <button
                 onClick={onOpenTerms}
-                className="text-blue-500 hover:underline"
+                className="text-blue-500 hover:underline cursor-pointer"
               >
                 Terms of Use
               </button>
@@ -359,8 +362,8 @@ const WalletConnectButton = ({
       onClick={() => handleConnect(wallet.id)}
       disabled={!wallet.supported || loading}
       className={`w-full p-4 rounded-xl border-2 transition-all text-left ${wallet.supported
-          ? 'border-border hover:border-blue-500 hover:bg-accent cursor-pointer'
-          : 'border-border opacity-50 cursor-not-allowed'
+        ? 'border-border hover:border-blue-500 hover:bg-accent cursor-pointer'
+        : 'border-border opacity-50 cursor-not-allowed'
         } ${loading ? 'border-blue-500 bg-accent' : ''}`}
     >
       <div className="flex items-center gap-4">

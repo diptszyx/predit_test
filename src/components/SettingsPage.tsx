@@ -283,12 +283,12 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                       <Badge
                         variant="outline"
                         className={
-                          user.subscriptionTier === 'master'
+                          user.isPro
                             ? 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50'
                             : 'bg-muted border-border'
                         }
                       >
-                        {user.subscriptionTier === 'master' ? (
+                        {user.isPro ? (
                           <>
                             <Crown className="w-3 h-3 mr-1" />
                             Pro

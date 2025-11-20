@@ -367,8 +367,14 @@ export default function App() {
         onOpenChange={setWalletDialogOpen}
         onConnect={handleWalletConnect}
         onSocialConnect={handleSocialConnect}
-        onOpenPrivacy={() => setPrivacyDialogOpen(true)}
-        onOpenTerms={() => setTermsDialogOpen(true)}
+        onOpenPrivacy={() => {
+          setPrivacyDialogOpen(true)
+          setWalletDialogOpen(false)
+        }}
+        onOpenTerms={() => {
+          setTermsDialogOpen(true)
+          setWalletDialogOpen(false)
+        }}
       />
       <XPInfoDialog
         open={xpInfoDialogOpen}

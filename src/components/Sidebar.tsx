@@ -567,7 +567,7 @@ export function Sidebar({
           </nav>
 
           {/* Bottom Section */}
-          <div className="p-4 border-t border-border space-y-1.5">
+          <div className="p-4 border-t border-border space-y-2">
             {/* Social Links */}
             <div className="flex items-center justify-center gap-4 pb-2">
               {SOCIAL_LINKS.map((social) => {

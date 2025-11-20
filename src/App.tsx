@@ -528,7 +528,7 @@ export default function App() {
   // Render chat page
   if (currentPage === 'chat' && selectedAIAgent) {
     return (
-      <div className="flex h-screen bg-background overflow-hidden">
+      <div className="flex h-dvh bg-background overflow-hidden">
         <Sidebar {...commonSidebarProps} />
         <div className="flex-1 overflow-y-auto">
 

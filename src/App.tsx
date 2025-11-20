@@ -626,7 +626,7 @@ function AppContent() {
   // Render chat page
   if (currentPage === 'chat' && selectedAIAgent) {
     return (
-      <div className="flex h-screen bg-background overflow-hidden">
+      <div className="flex h-dvh bg-background overflow-hidden">
         <Helmet>
           <title>{pageMetadata.title}</title>
           <meta name="description" content={pageMetadata.description} />

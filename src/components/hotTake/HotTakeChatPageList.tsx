@@ -4,10 +4,11 @@ import { Badge, Zap } from 'lucide-react';
 import { timeAgo } from '../../lib/date';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Skeleton } from '../ui/skeleton';
+import { News } from '../../services/news.service';
 
 interface Props {
   isLoadingNews: boolean;
-  newsArticles: any[];
+  newsArticles: News[];
   getMore: () => void;
   hasMoreArticles: boolean;
   handleArticleClick: (id: string) => void;
@@ -64,7 +65,7 @@ export default function HotTakeChatPageList({
             <Card
               key={article.id}
               className="overflow-hidden hover:shadow-md transition-all duration-300 group relative cursor-pointer"
-              onClick={() => handleArticleClick(article.id)}
+              onClick={() => handleArticleClick(article.slug)}
             >
               <div className="relative h-32 md:h-[200px]! overflow-hidden">
                 <ImageWithFallback

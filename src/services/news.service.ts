@@ -9,6 +9,7 @@ export interface News {
   image: string;
   relevance: string;
   oracle: OracleEntity;
+  slug: string;
 }
 
 const mockImage = [
@@ -72,6 +73,14 @@ export const newsService = {
   },
   getNewsDetail: async (newsId: string): Promise<News> => {
     const { data } = await apiClient.get<News>(`/news/${newsId}`);
+    return {
+      ...data,
+      image: data.image || getRandomImage(),
+      relevance: data.relevance || getRandomRelevance(),
+    };
+  },
+  getBySlug: async (slug: string): Promise<News> => {
+    const { data } = await apiClient.get<News>(`/news/slug/${slug}`);
     return {
       ...data,
       image: data.image || getRandomImage(),

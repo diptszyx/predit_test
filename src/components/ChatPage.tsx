@@ -54,6 +54,7 @@ import {
 } from './ui/alert-dialog';
 import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
 import { questionsByAIAgent } from '../constants/prediction';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -164,6 +165,8 @@ export function ChatPage({
   // Rating flash functionality
   const [ratingFlashing, setRatingFlashing] = useState(false);
   const [currentTab, setCurrentTab] = useState<string>('chat');
+
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -439,12 +442,8 @@ export function ChatPage({
     return randomSet;
   }
 
-  const handleArticleClick = async (articleId: string) => {
-    const data = await newsService.getNewsDetail(articleId);
-
-    if (onArticleClick) {
-      onArticleClick(data);
-    }
+  const handleArticleClick = async (slug: string) => {
+    navigate(`/hot-takes/${slug}`);
   };
 
   const handleSend = async (messageToSend?: string) => {
@@ -1287,7 +1286,9 @@ export function ChatPage({
               <Card
                 className="border-border overflow-hidden"
                 style={{
-                  height: `${user ? 'calc(100vh - 25.2rem)' : 'calc(100vh - 23.8rem)'}`,
+                  height: `${
+                    user ? 'calc(100vh - 25.2rem)' : 'calc(100vh - 23.8rem)'
+                  }`,
                   borderBottomLeftRadius: 0,
                   borderBottomRightRadius: 0,
                 }}

@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useParams,
+  useLocation,
+  useSearchParams,
+} from 'react-router-dom';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 import type { WalletType } from './components/WalletConnectDialog';
@@ -25,56 +34,25 @@ import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import apiClient from './lib/axios';
-import { News, newsService } from './services/news.service';
+import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
-
-// Constants
-const AI_AGENT_IMAGES = {
-  crypto:
-    'https://images.unsplash.com/photo-1672071673701-4c9a564c8046?w=800&q=80',
-  tech: 'https://images.unsplash.com/photo-1643962579365-3a9222e923b8?w=800&q=80',
-  politics:
-    'https://images.unsplash.com/photo-1567619863607-cb9e8f595a95?w=800&q=80',
-  sports:
-    'https://images.unsplash.com/photo-1744782211816-c5224434614f?w=800&q=80',
-  entertainment:
-    'https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?w=800&q=80',
-  fortune:
-    'https://images.unsplash.com/photo-1618071264149-da6cfa159cfd?w=800&q=80',
-  gaming:
-    'https://images.unsplash.com/photo-1719937075989-795943caad2a?w=800&q=80',
-  general:
-    'https://images.unsplash.com/photo-1676410205325-5d01d0107039?w=800&q=80',
-};
-
-// AI Agents Data
-const AI_AGENTS: OracleEntity[] = [
-  {
-    id: 'crypto-crystal',
-    name: 'Crypto Crystal Czar',
-    type: 'Cryptocurrency Expert',
-    description:
-      'Master of blockchain technology and cryptocurrency markets. Analyzes market trends, tokenomics, DeFi protocols, and on-chain data to provide insights on Bitcoin, Ethereum, altcoins, and emerging crypto projects.',
-    image: AI_AGENT_IMAGES.fortune,
-    rating: '91%',
-    predictions: 58200,
-    likes: 12300,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    __entity: 'OracleEntity',
-  },
-];
 
 export default function App() {
   return (
     <HelmetProvider>
-      <AppContent />
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
     </HelmetProvider>
   );
 }
 
 function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
     const stored = localStorage.getItem('theme');
@@ -92,9 +70,6 @@ function AppContent() {
   const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser);
 
   // App state
-  const [currentPage, setCurrentPage] = useState<string>(() => {
-    return localStorage.getItem('deorCurrentPage') || 'home';
-  });
   const [listOracles, setListOracles] = useState<OracleEntity[]>([]);
   const [selectedAIAgent, setSelectedAIAgent] = useState<OracleEntity | null>(
     null
@@ -102,9 +77,6 @@ function AppContent() {
   const [selectedArticle, setSelectedArticle] = useState<News | null>(null);
   const [articleContext, setArticleContext] = useState<News | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
-  const [sharedPredictionId, setSharedPredictionId] = useState<string | null>(
-    null
-  );
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(
     null
   );
@@ -120,9 +92,65 @@ function AppContent() {
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
 
+  // Get current page from route
+  const getCurrentPage = () => {
+    const path = location.pathname;
+    if (path === '/' || path === '/home') return 'home';
+    if (path === '/chat' || path.startsWith('/chat/')) return 'chat';
+    if (path === '/hot-takes') return 'hotTakes';
+    if (path.match(/^\/hot-takes\/[^/]+$/)) return 'hotTakeDetail';
+    if (path === '/leaderboard') return 'leaderboard';
+    if (path === '/subscription') return 'subscription';
+    if (path === '/settings') return 'settings';
+    if (path === '/oracles') return 'oracles';
+    if (path.startsWith('/prediction/')) return 'shared-prediction';
+    return 'home';
+  };
+
+  const currentPage = getCurrentPage();
+
+  // Navigation helper that converts page names to routes
+  const handleNavigate = (page: string) => {
+    switch (page) {
+      case 'home':
+        navigate('/');
+        break;
+      case 'chat':
+        // Navigate to chat with oracle if one is selected
+        if (selectedAIAgent) {
+          navigate(`/chat/${selectedAIAgent.id}`);
+        } else {
+          const savedOracleId = localStorage.getItem('deor-currentOracle');
+          if (savedOracleId) {
+            navigate(`/chat/${savedOracleId}`);
+          } else {
+            navigate('/chat');
+          }
+        }
+        break;
+      case 'hotTakes':
+        navigate('/hot-takes');
+        break;
+      case 'leaderboard':
+        navigate('/leaderboard');
+        break;
+      case 'subscription':
+        navigate('/subscription');
+        break;
+      case 'settings':
+        navigate('/settings');
+        break;
+      case 'oracles':
+        navigate('/oracles');
+        break;
+      default:
+        navigate('/');
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [currentPage]);
+  }, [location.pathname]);
 
   const openProfileDialog = (options?: {
     user?: User | null;
@@ -200,24 +228,11 @@ function AppContent() {
     }
   }, [darkMode]);
 
+  // Check for referral code or OAuth token in URL
   useEffect(() => {
-    localStorage.setItem('deorCurrentPage', currentPage);
-  }, [currentPage]);
-
-  // Check for shared prediction, referral code, or OAuth token in URL
-  useEffect(() => {
-    const path = window.location.pathname;
-    const predictionMatch = path.match(/\/prediction\/([^/]+)/);
-
-    if (predictionMatch) {
-      setSharedPredictionId(predictionMatch[1]);
-      setCurrentPage('shared-prediction');
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const referralCode = urlParams.get('ref');
-    const oauthToken = urlParams.get('token');
-    const isNewUser = urlParams.get('isNew') === 'true';
+    const referralCode = searchParams.get('ref');
+    const oauthToken = searchParams.get('token');
+    const isNewUser = searchParams.get('isNew') === 'true';
 
     if (referralCode) {
       sessionStorage.setItem('pendingReferralCode', referralCode);
@@ -227,13 +242,13 @@ function AppContent() {
     }
 
     if (oauthToken) {
-      const cleanedParams = new URLSearchParams(urlParams);
-      cleanedParams.delete('token');
-      cleanedParams.delete('isNew');
-      const baseUrl = `${window.location.origin}${window.location.pathname}`;
-      const newUrl = cleanedParams.toString()
-        ? `${baseUrl}?${cleanedParams.toString()}`
-        : baseUrl;
+      // Clean URL params
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('token');
+      newSearchParams.delete('isNew');
+      const newUrl = newSearchParams.toString()
+        ? `${location.pathname}?${newSearchParams.toString()}`
+        : location.pathname;
       window.history.replaceState({}, '', newUrl);
 
       void (async () => {
@@ -250,10 +265,15 @@ function AppContent() {
           );
 
           if (pendingNavigation) {
-            setCurrentPage(pendingNavigation);
+            handleNavigate(pendingNavigation);
             setPendingNavigation(null);
           } else {
-            setCurrentPage('chat');
+            const savedOracleId = localStorage.getItem('deor-currentOracle');
+            if (savedOracleId) {
+              navigate(`/chat/${savedOracleId}`);
+            } else {
+              navigate('/chat');
+            }
           }
 
           if (isNewUser) {
@@ -269,7 +289,7 @@ function AppContent() {
         }
       })();
     }
-  }, [authenticateWithToken, pendingNavigation]);
+  }, [searchParams, authenticateWithToken, pendingNavigation]);
 
   const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);
@@ -284,7 +304,7 @@ function AppContent() {
     }
 
     if (pendingNavigation) {
-      setCurrentPage(pendingNavigation);
+      handleNavigate(pendingNavigation);
       setPendingNavigation(null);
     }
   };
@@ -316,7 +336,7 @@ function AppContent() {
   const handleWalletDisconnect = () => {
     logout();
     closeProfileDialog();
-    setCurrentPage('home');
+    navigate('/');
     toast.info('Wallet disconnected');
   };
 
@@ -338,12 +358,12 @@ function AppContent() {
   // Common sidebar and dialog props
   const commonSidebarProps = {
     currentPage,
-    onNavigate: setCurrentPage,
+    onNavigate: handleNavigate,
     user,
     onOpenWalletDialog: () => setWalletDialogOpen(true),
     onWalletDisconnect: handleWalletDisconnect,
     shortenAddress,
-    onOpenSettings: () => setCurrentPage('settings'),
+    onOpenSettings: () => navigate('/settings'),
     onSetPendingNavigation: setPendingNavigation,
     onOpenXPInfo: () => setXPInfoDialogOpen(true),
     darkMode,
@@ -360,18 +380,18 @@ function AppContent() {
         onConnect={handleWalletConnect}
         onSocialConnect={handleSocialConnect}
         onOpenPrivacy={() => {
-          setPrivacyDialogOpen(true)
-          setWalletDialogOpen(false)
+          setPrivacyDialogOpen(true);
+          setWalletDialogOpen(false);
         }}
         onOpenTerms={() => {
-          setTermsDialogOpen(true)
-          setWalletDialogOpen(false)
+          setTermsDialogOpen(true);
+          setWalletDialogOpen(false);
         }}
       />
       <XPInfoDialog
         open={xpInfoDialogOpen}
         onOpenChange={setXPInfoDialogOpen}
-        onNavigate={setCurrentPage}
+        onNavigate={handleNavigate}
       />
       <PrivacyPolicy
         open={privacyDialogOpen}
@@ -388,402 +408,618 @@ function AppContent() {
     </>
   );
 
-  // SEO metadata based on current page
-  const getPageMetadata = () => {
-    switch (currentPage) {
-      case 'home':
-        return {
-          title: 'Predit AI Oracles - AI-Powered Predictions',
-          description:
-            'Get expert predictions and insights from specialized AI agents. Chat with AI oracles for crypto, tech, politics, sports, and more.',
-        };
-      case 'chat':
-        return {
-          title: selectedAIAgent
-            ? `Chat with ${selectedAIAgent.name} - Predit AI`
-            : 'Chat - Predit AI',
-          description: selectedAIAgent
-            ? `Get expert predictions from ${selectedAIAgent.name}, a ${selectedAIAgent.type}`
-            : 'Chat with AI oracles to get expert predictions',
-        };
-      case 'hotTakes':
-        return {
-          title: 'Hot Takes - Predit AI Oracles',
-          description:
-            'Explore trending news and articles analyzed by our AI oracles',
-        };
-      case 'articleDetail':
-        return {
-          title: selectedArticle
-            ? `${selectedArticle.title} - Predit AI`
-            : 'Article - Predit AI',
-          description:
-            'Read detailed analysis and predictions from our AI oracles',
-        };
-      case 'leaderboard':
-        return {
-          title: 'Leaderboard - Predit AI Oracles',
-          description:
-            'View top predictors and compete with other users on the Predit leaderboard',
-        };
-      case 'subscription':
-        return {
-          title: 'Subscription Plans - Predit AI Oracles',
-          description:
-            'Upgrade to Pro for unlimited predictions and exclusive features',
-        };
-      case 'settings':
-        return {
-          title: 'Settings - Predit AI Oracles',
-          description: 'Manage your account settings and preferences',
-        };
-      default:
-        return {
-          title: 'Predit AI Oracles - AI-Powered Predictions',
-          description:
-            'Get expert predictions and insights from specialized AI agents',
-        };
-    }
-  };
+  return (
+    <Routes>
+      {/* Home Page */}
+      <Route
+        path="/"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Predit AI Oracles - AI-Powered Predictions</title>
+              <meta
+                name="description"
+                content="Get expert predictions and insights from specialized AI agents. Chat with AI oracles for crypto, tech, politics, sports, and more."
+              />
+              <meta
+                name="keywords"
+                content="AI predictions, AI oracles, cryptocurrency predictions, tech predictions, sports predictions, AI agents"
+              />
+              <meta
+                property="og:title"
+                content="Predit AI Oracles - AI-Powered Predictions"
+              />
+              <meta
+                property="og:description"
+                content="Get expert predictions and insights from specialized AI agents."
+              />
+              <meta property="og:type" content="website" />
+              <meta name="twitter:card" content="summary_large_image" />
+              <meta
+                name="twitter:title"
+                content="Predit AI Oracles - AI-Powered Predictions"
+              />
+              <meta
+                name="twitter:description"
+                content="Get expert predictions and insights from specialized AI agents."
+              />
+              <link rel="canonical" href={window.location.origin} />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+              <HomePage
+                onGetStarted={() => setWalletDialogOpen(true)}
+                onExplorePredictions={(prompt) => {
+                  if (prompt) {
+                    setInitialPrompt(prompt);
+                  }
+                  if (!selectedAIAgent && listOracles.length > 0) {
+                    localStorage.setItem(
+                      'deor-currentOracle',
+                      listOracles[0].id
+                    );
+                    setSelectedAIAgent(listOracles[0]);
+                    navigate(`/chat/${listOracles[0].id}`);
+                  } else if (selectedAIAgent) {
+                    navigate(`/chat/${selectedAIAgent.id}`);
+                  } else {
+                    navigate('/chat');
+                  }
+                }}
+                user={user}
+              />
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
 
-  const pageMetadata = getPageMetadata();
+      {/* Chat Page - Oracle Selection */}
+      <Route
+        path="/chat"
+        element={
+          <div className="flex h-dvh bg-background overflow-hidden">
+            <Helmet>
+              <title>Chat - Select AI Oracle - Predit AI</title>
+              <meta
+                name="description"
+                content="Choose an AI oracle to get expert predictions and insights"
+              />
+              <link rel="canonical" href={`${window.location.origin}/chat`} />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <div className="flex-1 overflow-y-auto">
+              <main className="container mx-auto px-4 py-8">
+                <div className="mb-8">
+                  <h1 className="mb-2">Choose Your AI Agent</h1>
+                  <p className="text-muted-foreground">
+                    Select an AI agent to get expert predictions and insights
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {listOracles.map((aiAgent) => (
+                    <AIAgentCard
+                      key={aiAgent.id}
+                      aiAgent={aiAgent}
+                      onClick={() => {
+                        localStorage.setItem('deor-currentOracle', aiAgent.id);
+                        setSelectedAIAgent(aiAgent);
+                        navigate(`/chat/${aiAgent.id}`);
+                      }}
+                    />
+                  ))}
+                </div>
+              </main>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
 
-  // Render shared prediction page
-  if (currentPage === 'shared-prediction' && sharedPredictionId) {
-    return (
-      <>
-        <Helmet>
-          <title>Shared Prediction - Predit AI Oracles</title>
-          <meta
-            name="description"
-            content="View shared prediction from Predit AI Oracles"
-          />
-        </Helmet>
-        <SharedPredictionPage
-          predictionId={sharedPredictionId}
-          onBack={() => {
-            setSharedPredictionId(null);
-            setCurrentPage('chat');
-            window.history.pushState({}, '', '/');
-          }}
-        />
-      </>
-    );
-  }
-
-  // Render hot takes page
-  if (currentPage === 'hotTakes') {
-    return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Helmet>
-          <title>{pageMetadata.title}</title>
-          <meta name="description" content={pageMetadata.description} />
-        </Helmet>
-        <Sidebar {...commonSidebarProps} />
-        <HotTakesPage
-          onArticleClick={(article) => {
-            setSelectedArticle(article);
-            setPreviousPage('hotTakes');
-            setCurrentPage('articleDetail');
-          }}
-          onBack={() => setCurrentPage('home')}
-        />
-        {commonDialogProps}
-      </div>
-    );
-  }
-
-  if (currentPage === 'home') {
-    return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Helmet>
-          <title>{pageMetadata.title}</title>
-          <meta name="description" content={pageMetadata.description} />
-          <meta
-            name="keywords"
-            content="AI predictions, AI oracles, cryptocurrency predictions, tech predictions, sports predictions, AI agents"
-          />
-          <meta property="og:title" content={pageMetadata.title} />
-          <meta property="og:description" content={pageMetadata.description} />
-          <meta property="og:type" content="website" />
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content={pageMetadata.title} />
-          <meta name="twitter:description" content={pageMetadata.description} />
-        </Helmet>
-        {/* Sidebar - Desktop only */}
-        {/* <div className="hidden md:block"> */}
-        <Sidebar {...commonSidebarProps} />
-        {/* </div> */}
-
-        {/* Main content */}
-        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
-          <HomePage
-            onGetStarted={() => setWalletDialogOpen(true)}
-            onExplorePredictions={(prompt) => {
-              if (prompt) {
-                setInitialPrompt(prompt);
-              }
-              // Set the first AI agent as selected if none is selected
-              if (!selectedAIAgent && listOracles.length > 0) {
-                localStorage.setItem('deor-currentOracle', listOracles[0].id);
-                setSelectedAIAgent(listOracles[0]);
-              }
-              setCurrentPage('chat');
-            }}
-            user={user}
-          />
-        </div>
-
-        {/* Bottom Navigation - Mobile only */}
-        {/* <BottomNav
-          currentPage={currentPage}
-          onNavigate={setCurrentPage}
-          user={user}
-          onOpenWalletDialog={() => setWalletDialogOpen(true)}
-          onOpenSettings={() => setCurrentPage("settings")}
-        /> */}
-
-        {commonDialogProps}
-      </div>
-    );
-  }
-
-  // Render article detail page
-  if (currentPage === 'articleDetail' && selectedArticle) {
-    return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Helmet>
-          <title>{pageMetadata.title}</title>
-          <meta name="description" content={pageMetadata.description} />
-          <meta property="og:title" content={pageMetadata.title} />
-          <meta property="og:description" content={pageMetadata.description} />
-        </Helmet>
-        <Sidebar {...commonSidebarProps} />
-        <div className="flex-1 overflow-y-auto">
-          <ArticleDetailPage
-            hotTake={selectedArticle}
-            onSelectRelated={setSelectedArticle}
+      {/* Chat Page - With Oracle */}
+      <Route
+        path="/chat/:oracleId"
+        element={
+          <ChatWithOracleWrapper
+            selectedAIAgent={selectedAIAgent}
+            setSelectedAIAgent={setSelectedAIAgent}
+            listOracles={listOracles}
             previousPage={previousPage}
-            onBack={() => {
-              if (previousPage === 'chat' && selectedAIAgent) {
-                setPreviousPage(null);
-                setCurrentPage('chat');
-              } else if (previousPage === 'hotTakes') {
-                setPreviousPage(null);
-                setCurrentPage('hotTakes');
-              } else if (previousPage === 'home') {
-                setPreviousPage(null);
-                setCurrentPage('home');
-              } else {
-                setPreviousPage(null);
-                setCurrentPage('chat');
-              }
-              setSelectedArticle(null);
-            }}
-            aiAgentName={selectedAIAgent?.name}
-            aiAgentSpecialty={selectedAIAgent?.type}
-            user={user}
-            darkMode={darkMode}
-            onToggleDarkMode={() => setDarkMode(!darkMode)}
-            onNavigate={setCurrentPage}
-            onOpenWalletDialog={() => setWalletDialogOpen(true)}
-            onWalletDisconnect={handleWalletDisconnect}
-            shortenAddress={shortenAddress}
-            onSetPendingNavigation={setPendingNavigation}
-            onOpenSettings={() => setCurrentPage('settings')}
-            currentPage={currentPage}
-            onWalletConnect={handleWalletConnect}
-            onSocialConnect={handleSocialConnect}
-            onOpenPrivacy={() => setPrivacyDialogOpen(true)}
-            onOpenTerms={() => setTermsDialogOpen(true)}
-            onAIAgentClick={(aiAgentId: string) => {
-              const aiAgent = listOracles.find((a) => a.id === aiAgentId);
-              if (aiAgent) {
-                setSelectedAIAgent(aiAgent);
-                localStorage.setItem('deor-currentOracle', aiAgent.id);
-                setArticleContext(selectedArticle);
-                setPreviousPage('articleDetail');
-                setCurrentPage('chat');
-              }
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // Render chat page
-  if (currentPage === 'chat' && selectedAIAgent) {
-    return (
-      <div className="flex h-dvh bg-background overflow-hidden">
-        <Helmet>
-          <title>{pageMetadata.title}</title>
-          <meta name="description" content={pageMetadata.description} />
-        </Helmet>
-        <Sidebar {...commonSidebarProps} />
-        <div className="flex-1 overflow-y-auto">
-          <ChatPage
-            aiAgent={selectedAIAgent}
-            onBack={() => {
-              if (previousPage === 'articleDetail' && selectedArticle) {
-                setPreviousPage(null);
-                setCurrentPage('articleDetail');
-              } else {
-                setSelectedAIAgent(null);
-                setArticleContext(null);
-                setPreviousPage(null);
-                setCurrentPage('chat');
-              }
-            }}
+            setPreviousPage={setPreviousPage}
+            selectedArticle={selectedArticle}
+            setSelectedArticle={setSelectedArticle}
+            articleContext={articleContext}
+            setArticleContext={setArticleContext}
             darkMode={darkMode}
             setDarkMode={setDarkMode}
             user={user}
-            onOpenWalletDialog={() => setWalletDialogOpen(true)}
-            onNavigate={setCurrentPage}
+            commonSidebarProps={commonSidebarProps}
+            commonDialogProps={commonDialogProps}
+            handleWalletDisconnect={handleWalletDisconnect}
+            setWalletDialogOpen={setWalletDialogOpen}
+            handleNavigate={handleNavigate}
             currentPage={currentPage}
-            onWalletDisconnect={handleWalletDisconnect}
-            shortenAddress={shortenAddress}
             updateUser={updateUser}
             awardXPToUser={awardXPToUser}
             trackQuestProgress={trackQuestProgress}
-            onArticleClick={(article) => {
-              setSelectedArticle(article);
-              setPreviousPage('chat');
-              setCurrentPage('articleDetail');
-            }}
-            onOpenSettings={() => setCurrentPage('settings')}
-            onSetPendingNavigation={setPendingNavigation}
-            articleContext={articleContext}
-            onArticleContextUsed={() => setArticleContext(null)}
-            onOpenXPInfo={() => setXPInfoDialogOpen(true)}
+            setPendingNavigation={setPendingNavigation}
+            setXPInfoDialogOpen={setXPInfoDialogOpen}
             initialPrompt={initialPrompt}
-            onInitialPromptUsed={() => setInitialPrompt(null)}
-            onReloadAiAgent={handleReloadOracle}
+            setInitialPrompt={setInitialPrompt}
+            handleReloadOracle={handleReloadOracle}
           />
-        </div>
+        }
+      />
 
-        {commonDialogProps}
-      </div>
-    );
-  }
-
-  // Render settings page
-  if (currentPage === 'settings') {
-    return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Helmet>
-          <title>{pageMetadata.title}</title>
-          <meta name="description" content={pageMetadata.description} />
-        </Helmet>
-        <Sidebar {...commonSidebarProps} />
-        {user && (
-          <div className="flex-1 overflow-y-auto">
-            <SettingsPage onBack={() => setCurrentPage('chat')} user={user} />
-          </div>
-        )}
-        {commonDialogProps}
-      </div>
-    );
-  }
-
-  // Render leaderboard page
-  if (currentPage === 'leaderboard') {
-    return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Helmet>
-          <title>{pageMetadata.title}</title>
-          <meta name="description" content={pageMetadata.description} />
-        </Helmet>
-        <Sidebar {...commonSidebarProps} />
-        <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-6">
-            <LeaderboardPage user={user !== null ? user : undefined} />
-          </div>
-        </div>
-        {commonDialogProps}
-      </div>
-    );
-  }
-
-  if (currentPage === 'subscription') {
-    return (
-      <div className="flex h-screen bg-background overflow-hidden">
-        <Helmet>
-          <title>{pageMetadata.title}</title>
-          <meta name="description" content={pageMetadata.description} />
-        </Helmet>
-        {/* Sidebar - Desktop only */}
-        {/* <div className="hidden md:block"> */}
-        <Sidebar {...commonSidebarProps} />
-        {/* </div> */}
-
-        {/* Main content */}
-        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
-          <div className="container mx-auto px-4 py-6">
-            <SubscriptionPage
-              user={user}
-              onOpenWalletDialog={() => setWalletDialogOpen(true)}
-              onSubscriptionSuccess={() => {
-                if (user) {
-                  // setUser({
-                  //   ...user,
-                  //   subscriptionTier: 'master',
-                  // });
-                  awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
-                  toast.success(
-                    '🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!'
-                  );
-                }
+      {/* Hot Takes Page */}
+      <Route
+        path="/hot-takes"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Hot Takes - Predit AI Oracles</title>
+              <meta
+                name="description"
+                content="Explore trending news and articles analyzed by our AI oracles"
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/hot-takes`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <HotTakesPage
+              onArticleClick={(article) => {
+                setSelectedArticle(article);
+                setPreviousPage('hotTakes');
+                navigate(`/hot-takes/${article.id}`);
               }}
+              onBack={() => navigate('/')}
             />
+            {commonDialogProps}
           </div>
-        </div>
+        }
+      />
 
-        {/* Bottom Navigation - Mobile only */}
-        {/* <BottomNav
-          currentPage={currentPage}
-          onNavigate={setCurrentPage}
-          user={user}
-          onOpenWalletDialog={() => setWalletDialogOpen(true)}
-          onOpenSettings={() => setCurrentPage("settings")}
-        /> */}
+      {/* Hot Take Detail Page */}
+      <Route
+        path="/hot-takes/:hotTakeId"
+        element={
+          <ArticleDetailWrapper
+            selectedArticle={selectedArticle}
+            setSelectedArticle={setSelectedArticle}
+            previousPage={previousPage}
+            setPreviousPage={setPreviousPage}
+            selectedAIAgent={selectedAIAgent}
+            setSelectedAIAgent={setSelectedAIAgent}
+            listOracles={listOracles}
+            setArticleContext={setArticleContext}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            user={user}
+            commonSidebarProps={commonSidebarProps}
+            commonDialogProps={commonDialogProps}
+            handleWalletDisconnect={handleWalletDisconnect}
+            handleWalletConnect={handleWalletConnect}
+            handleSocialConnect={handleSocialConnect}
+            setWalletDialogOpen={setWalletDialogOpen}
+            setPrivacyDialogOpen={setPrivacyDialogOpen}
+            setTermsDialogOpen={setTermsDialogOpen}
+            setPendingNavigation={setPendingNavigation}
+          />
+        }
+      />
 
-        {commonDialogProps}
-      </div>
-    );
+      {/* Leaderboard Page */}
+      <Route
+        path="/leaderboard"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Leaderboard - Predit AI Oracles</title>
+              <meta
+                name="description"
+                content="View top predictors and compete with other users on the Predit leaderboard"
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/leaderboard`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <div className="flex-1 overflow-y-auto">
+              <div className="container mx-auto px-4 py-6">
+                <LeaderboardPage user={user !== null ? user : undefined} />
+              </div>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      {/* Subscription Page */}
+      <Route
+        path="/subscription"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Subscription Plans - Predit AI Oracles</title>
+              <meta
+                name="description"
+                content="Upgrade to Pro for unlimited predictions and exclusive features"
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/subscription`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+              <div className="container mx-auto px-4 py-6">
+                <SubscriptionPage
+                  user={user}
+                  onOpenWalletDialog={() => setWalletDialogOpen(true)}
+                  onSubscriptionSuccess={() => {
+                    if (user) {
+                      awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
+                      toast.success(
+                        '🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!'
+                      );
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      {/* Settings Page */}
+      <Route
+        path="/settings"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Settings - Predit AI Oracles</title>
+              <meta
+                name="description"
+                content="Manage your account settings and preferences"
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/settings`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            {user && (
+              <div className="flex-1 overflow-y-auto">
+                <SettingsPage onBack={() => navigate('/chat')} user={user} />
+              </div>
+            )}
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      {/* Oracles Listing Page */}
+      <Route
+        path="/oracles"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>AI Oracles - Predit AI</title>
+              <meta
+                name="description"
+                content="Browse and select from our specialized AI oracles for expert predictions"
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/oracles`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <div className="flex-1 overflow-y-auto">
+              <main className="container mx-auto px-4 py-8">
+                <div className="mb-8">
+                  <h1 className="mb-2">Choose Your AI Agent</h1>
+                  <p className="text-muted-foreground">
+                    Select an AI agent to get expert predictions and insights
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {listOracles.map((aiAgent) => (
+                    <AIAgentCard
+                      key={aiAgent.id}
+                      aiAgent={aiAgent}
+                      onClick={() => {
+                        localStorage.setItem('deor-currentOracle', aiAgent.id);
+                        setSelectedAIAgent(aiAgent);
+                        navigate('/chat');
+                      }}
+                    />
+                  ))}
+                </div>
+              </main>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      {/* Shared Prediction Page */}
+      <Route
+        path="/prediction/:predictionId"
+        element={<SharedPredictionWrapper />}
+      />
+    </Routes>
+  );
+}
+
+// Wrapper component for Article Detail to handle params
+function ArticleDetailWrapper({
+  selectedArticle,
+  setSelectedArticle,
+  previousPage,
+  setPreviousPage,
+  selectedAIAgent,
+  setSelectedAIAgent,
+  listOracles,
+  setArticleContext,
+  darkMode,
+  setDarkMode,
+  user,
+  commonSidebarProps,
+  commonDialogProps,
+  handleWalletDisconnect,
+  handleWalletConnect,
+  handleSocialConnect,
+  setWalletDialogOpen,
+  setPrivacyDialogOpen,
+  setTermsDialogOpen,
+  setPendingNavigation,
+}: any) {
+  const navigate = useNavigate();
+  const { hotTakeId } = useParams();
+
+  if (!selectedArticle) {
+    // If no article is selected, redirect to hot takes
+    useEffect(() => {
+      navigate('/hot-takes');
+    }, []);
+    return null;
   }
 
-  // Default: Render AI agents listing page
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <Helmet>
-        <title>{pageMetadata.title}</title>
-        <meta name="description" content={pageMetadata.description} />
+        <title>{selectedArticle.title} - Predit AI</title>
+        <meta
+          name="description"
+          content={
+            selectedArticle.summary ||
+            'Read detailed analysis and predictions from our AI oracles'
+          }
+        />
+        <meta
+          property="og:title"
+          content={`${selectedArticle.title} - Predit AI`}
+        />
+        <meta
+          property="og:description"
+          content={
+            selectedArticle.summary || 'AI-powered analysis and predictions'
+          }
+        />
+        <link
+          rel="canonical"
+          href={`${window.location.origin}/hot-takes/${hotTakeId}`}
+        />
       </Helmet>
       <Sidebar {...commonSidebarProps} />
       <div className="flex-1 overflow-y-auto">
-        <main className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="mb-2">Choose Your AI Agent</h1>
-            <p className="text-muted-foreground">
-              Select an AI agent to get expert predictions and insights
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {listOracles.map((aiAgent) => (
-              <AIAgentCard
-                key={aiAgent.id}
-                aiAgent={aiAgent}
-                onClick={() => {
-                  setSelectedAIAgent(aiAgent);
-                  setCurrentPage('chat');
-                }}
-              />
-            ))}
-          </div>
-        </main>
+        <ArticleDetailPage
+          hotTake={selectedArticle}
+          onSelectRelated={setSelectedArticle}
+          previousPage={previousPage}
+          onBack={() => {
+            if (previousPage === 'chat' && selectedAIAgent) {
+              setPreviousPage(null);
+              navigate('/chat');
+            } else if (previousPage === 'hotTakes') {
+              setPreviousPage(null);
+              navigate('/hot-takes');
+            } else if (previousPage === 'home') {
+              setPreviousPage(null);
+              navigate('/');
+            } else {
+              setPreviousPage(null);
+              navigate('/chat');
+            }
+            setSelectedArticle(null);
+          }}
+          aiAgentName={selectedAIAgent?.name}
+          aiAgentSpecialty={selectedAIAgent?.type}
+          user={user}
+          darkMode={darkMode}
+          onToggleDarkMode={() => setDarkMode(!darkMode)}
+          onNavigate={(page: string) => {
+            switch (page) {
+              case 'home':
+                navigate('/');
+                break;
+              case 'chat':
+                navigate('/chat');
+                break;
+              case 'hotTakes':
+                navigate('/hot-takes');
+                break;
+              default:
+                navigate('/');
+            }
+          }}
+          onOpenWalletDialog={() => setWalletDialogOpen(true)}
+          onWalletDisconnect={handleWalletDisconnect}
+          shortenAddress={shortenAddress}
+          onSetPendingNavigation={setPendingNavigation}
+          onOpenSettings={() => navigate('/settings')}
+          currentPage="articleDetail"
+          onWalletConnect={handleWalletConnect}
+          onSocialConnect={handleSocialConnect}
+          onOpenPrivacy={() => setPrivacyDialogOpen(true)}
+          onOpenTerms={() => setTermsDialogOpen(true)}
+          onAIAgentClick={(aiAgentId: string) => {
+            const aiAgent = listOracles.find(
+              (a: OracleEntity) => a.id === aiAgentId
+            );
+            if (aiAgent) {
+              setSelectedAIAgent(aiAgent);
+              localStorage.setItem('deor-currentOracle', aiAgent.id);
+              setArticleContext(selectedArticle);
+              setPreviousPage('articleDetail');
+              navigate(`/chat/${aiAgent.id}`);
+            }
+          }}
+        />
       </div>
       {commonDialogProps}
     </div>
+  );
+}
+
+// Wrapper component for Chat with Oracle
+function ChatWithOracleWrapper({
+  selectedAIAgent,
+  setSelectedAIAgent,
+  listOracles,
+  previousPage,
+  setPreviousPage,
+  selectedArticle,
+  setSelectedArticle,
+  articleContext,
+  setArticleContext,
+  darkMode,
+  setDarkMode,
+  user,
+  commonSidebarProps,
+  commonDialogProps,
+  handleWalletDisconnect,
+  setWalletDialogOpen,
+  handleNavigate,
+  currentPage,
+  updateUser,
+  awardXPToUser,
+  trackQuestProgress,
+  setPendingNavigation,
+  setXPInfoDialogOpen,
+  initialPrompt,
+  setInitialPrompt,
+  handleReloadOracle,
+}: any) {
+  const navigate = useNavigate();
+  const { oracleId } = useParams();
+
+  // Load oracle from URL param if not already selected
+  useEffect(() => {
+    if (oracleId && listOracles.length > 0) {
+      const oracle = listOracles.find((o: OracleEntity) => o.id === oracleId);
+      if (oracle && (!selectedAIAgent || selectedAIAgent.id !== oracleId)) {
+        setSelectedAIAgent(oracle);
+        localStorage.setItem('deor-currentOracle', oracleId);
+      } else if (!oracle) {
+        // Oracle not found, redirect to chat selection
+        navigate('/chat');
+      }
+    }
+  }, [oracleId, listOracles, selectedAIAgent]);
+
+  if (!selectedAIAgent) {
+    return null; // Wait for oracle to load
+  }
+
+  return (
+    <div className="flex h-dvh bg-background overflow-hidden">
+      <Helmet>
+        <title>Chat with {selectedAIAgent.name} - Predit AI</title>
+        <meta
+          name="description"
+          content={`Get expert predictions from ${selectedAIAgent.name}, a ${selectedAIAgent.type}`}
+        />
+        <link
+          rel="canonical"
+          href={`${window.location.origin}/chat/${oracleId}`}
+        />
+      </Helmet>
+      <Sidebar {...commonSidebarProps} />
+      <div className="flex-1 overflow-y-auto">
+        <ChatPage
+          aiAgent={selectedAIAgent}
+          onBack={() => {
+            if (previousPage === 'articleDetail' && selectedArticle) {
+              setPreviousPage(null);
+              navigate(`/hot-takes/${selectedArticle.id}`);
+            } else {
+              setSelectedAIAgent(null);
+              setArticleContext(null);
+              setPreviousPage(null);
+              navigate('/chat');
+            }
+          }}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          user={user}
+          onOpenWalletDialog={() => setWalletDialogOpen(true)}
+          onNavigate={handleNavigate}
+          currentPage={currentPage}
+          onWalletDisconnect={handleWalletDisconnect}
+          shortenAddress={shortenAddress}
+          updateUser={updateUser}
+          awardXPToUser={awardXPToUser}
+          trackQuestProgress={trackQuestProgress}
+          onArticleClick={(article: News) => {
+            setSelectedArticle(article);
+            setPreviousPage('chat');
+            navigate(`/hot-takes/${article.id}`);
+          }}
+          onOpenSettings={() => navigate('/settings')}
+          onSetPendingNavigation={setPendingNavigation}
+          articleContext={articleContext}
+          onArticleContextUsed={() => setArticleContext(null)}
+          onOpenXPInfo={() => setXPInfoDialogOpen(true)}
+          initialPrompt={initialPrompt}
+          onInitialPromptUsed={() => setInitialPrompt(null)}
+          onReloadAiAgent={handleReloadOracle}
+        />
+      </div>
+      {commonDialogProps}
+    </div>
+  );
+}
+
+// Wrapper component for Shared Prediction
+function SharedPredictionWrapper() {
+  const navigate = useNavigate();
+  const { predictionId } = useParams();
+
+  return (
+    <>
+      <Helmet>
+        <title>Shared Prediction - Predit AI Oracles</title>
+        <meta
+          name="description"
+          content="View shared prediction from Predit AI Oracles"
+        />
+        <link
+          rel="canonical"
+          href={`${window.location.origin}/prediction/${predictionId}`}
+        />
+      </Helmet>
+      <SharedPredictionPage
+        predictionId={predictionId || ''}
+        onBack={() => {
+          navigate('/chat');
+        }}
+      />
+    </>
   );
 }

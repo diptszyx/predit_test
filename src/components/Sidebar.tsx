@@ -16,17 +16,17 @@ import {
   Trophy,
   Twitter,
   User,
-  Zap
-} from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useIsMobile } from "../hooks/useIsMobile";
-import { truncateName } from "../lib/truncateName";
-import { User as UserType } from "../lib/types";
-import { OracleEntity, oraclesServices } from "../services/oracles.service";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+  Zap,
+} from 'lucide-react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { useIsMobile } from '../hooks/useIsMobile';
+import { truncateName } from '../lib/truncateName';
+import { User as UserType } from '../lib/types';
+import { OracleEntity, oraclesServices } from '../services/oracles.service';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 
 interface SidebarProps {
   currentPage: string;
@@ -41,7 +41,7 @@ interface SidebarProps {
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
   selectedAIAgent: OracleEntity | null;
-  setSelectedAIAgent: Dispatch<SetStateAction<OracleEntity | null>>
+  setSelectedAIAgent: Dispatch<SetStateAction<OracleEntity | null>>;
 }
 
 interface NavigationItem {
@@ -54,35 +54,35 @@ interface NavigationItem {
   children?: OracleEntity[];
 }
 
-const NAVIGATION_ITEMS: NavigationItem[] = [
+const BASE_NAVIGATION_ITEMS: NavigationItem[] = [
   {
-    id: "home",
-    label: "Home",
+    id: 'home',
+    label: 'Home',
     icon: Home,
     requiresAuth: false,
   },
   {
-    id: "chat",
-    label: "Predictions",
+    id: 'chat',
+    label: 'Predictions',
     icon: MessageSquare,
     requiresAuth: false,
-    children: []
+    children: [],
   },
   {
-    id: "hotTakes",
-    label: "Hot Takes",
+    id: 'hotTakes',
+    label: 'Hot Takes',
     icon: Flame,
     requiresAuth: false,
   },
   {
-    id: "leaderboard",
-    label: "Leaderboard",
+    id: 'leaderboard',
+    label: 'Leaderboard',
     icon: Trophy,
     requiresAuth: false,
   },
   {
-    id: "subscription",
-    label: "Subscription",
+    id: 'subscription',
+    label: 'Subscription',
     icon: Crown,
     requiresAuth: false,
   },
@@ -90,19 +90,19 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
 
 const SOCIAL_LINKS = [
   {
-    href: "https://twitter.com",
+    href: 'https://twitter.com',
     icon: Twitter,
-    label: "X (Twitter)",
+    label: 'X (Twitter)',
   },
   {
-    href: "https://discord.com",
+    href: 'https://discord.com',
     icon: MessageCircle,
-    label: "Discord",
+    label: 'Discord',
   },
   {
-    href: "https://telegram.org",
+    href: 'https://telegram.org',
     icon: Send,
-    label: "Telegram",
+    label: 'Telegram',
   },
 ];
 
@@ -125,6 +125,9 @@ export function Sidebar({
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(
     currentPage === 'chat' ? 'chat' : null
   );
+  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>(
+    BASE_NAVIGATION_ITEMS
+  );
   const isMobile = useIsMobile(1024); // Use custom hook with 1024px breakpoint
   const userLevel = user ? user.level : 1;
 
@@ -134,18 +137,23 @@ export function Sidebar({
         const data = await oraclesServices.getAllOracles();
 
         if (data?.data) {
-          NAVIGATION_ITEMS.map(item => {
-            if (item.children && item.id === 'chat') {
-              item.children.push(...data.data)
-            }
-          })
+          setNavigationItems(
+            BASE_NAVIGATION_ITEMS.map((item) => {
+              if (item.id === 'chat') {
+                return {
+                  ...item,
+                  children: data.data,
+                };
+              }
+              return item;
+            })
+          );
         }
-
       } catch (error) {
         console.log('Failed to fetch all oracles', error);
       }
     })();
-  }, [])
+  }, []);
 
   // Close mobile menu when page changes
   useEffect(() => {
@@ -155,12 +163,12 @@ export function Sidebar({
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     }
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     };
   }, [isMobileMenuOpen]);
 
@@ -202,11 +210,10 @@ export function Sidebar({
 
       {/* Navigation Section */}
       <nav className="flex-1 p-4 space-y-1 min-h-[200px] overflow-y-auto scrollbar-hide">
-        {NAVIGATION_ITEMS.map((item) => {
+        {navigationItems.map((item) => {
           const Icon = item.icon;
           const hasChildren = !!item.children?.length;
-          const isActiveParent = currentPage === item.id && !hasChildren
-
+          const isActiveParent = currentPage === item.id && !hasChildren;
 
           const handleItemClick = () => {
             if (hasChildren) {
@@ -215,7 +222,7 @@ export function Sidebar({
             }
 
             if (item.isExternalLink && item.href) {
-              window.open(item.href, "_blank");
+              window.open(item.href, '_blank');
             } else {
               handleNavigation(item.id, item.requiresAuth);
             }
@@ -225,10 +232,11 @@ export function Sidebar({
             <div key={item.id} className="w-full">
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${isActiveParent
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  }`}
+                className={`w-full justify-start ${
+                  isActiveParent
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                }`}
                 onClick={handleItemClick}
               >
                 <Icon className="w-4 h-4 mr-3" />
@@ -245,32 +253,39 @@ export function Sidebar({
               {hasChildren && openSubmenu === item.id && (
                 <div className="mt-1 ml-3 flex flex-col gap-2">
                   {item.children!.map((child) => {
-                    const isActiveChild = currentPage === item.id && selectedAIAgent?.name === child.name;
+                    const isActiveChild =
+                      currentPage === item.id &&
+                      selectedAIAgent?.name === child.name;
 
                     return (
                       <Button
                         key={child.name}
                         variant="ghost"
                         size="sm"
-                        className={`w-full justify-start text-[12.5px] ${isActiveChild
-                          ? "bg-accent text-accent-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                          }`}
+                        className={`w-full justify-start text-[12.5px] ${
+                          isActiveChild
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                        }`}
                         onClick={() => {
                           setSelectedAIAgent(child);
-                          localStorage.setItem('deor-currentOracle', child.id)
+                          localStorage.setItem('deor-currentOracle', child.id);
                           onNavigate('chat');
                         }}
                       >
-                        {child.image ? <>
-                          <div className="w-5 h-5 md:w-6 md:h-6 rounded-full overflow-hidden border border-blue-500/30 mr-2">
-                            <ImageWithFallback
-                              src={child.image}
-                              alt={child.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        </> : <></>}
+                        {child.image ? (
+                          <>
+                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full overflow-hidden border border-blue-500/30 mr-2">
+                              <ImageWithFallback
+                                src={child.image}
+                                alt={child.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <></>
+                        )}
                         {truncateName(child.name)}
                       </Button>
                     );
@@ -354,7 +369,7 @@ export function Sidebar({
                   <AvatarImage
                     src={
                       user.photo?.path ||
-                      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+                      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80'
                     }
                     alt={user.username}
                   />
@@ -367,7 +382,7 @@ export function Sidebar({
                     {user.email || shortenAddress(user.appWallet)}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {user.email ? shortenAddress(user.appWallet) : ""}
+                    {user.email ? shortenAddress(user.appWallet) : ''}
                   </p>
                 </div>
               </div>
@@ -437,8 +452,8 @@ export function Sidebar({
         <button
           className="fixed p-2 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors translate-x-[-50%] z-[49]!"
           style={{
-            top: "3.2rem",
-            left: "0",
+            top: '3.2rem',
+            left: '0',
             zIndex: 9999,
             opacity: 0.9,
           }}
@@ -463,7 +478,7 @@ export function Sidebar({
       {isMobile && isMobileMenuOpen && (
         <aside
           className="fixed top-0 left-0 w-64 border-r border-border bg-sidebar flex flex-col animate-slide-in"
-          style={{ zIndex: 99999, height: "100dvh" }}
+          style={{ zIndex: 99999, height: '100dvh' }}
         >
           <MobileSidebarContent />
         </aside>
@@ -487,10 +502,10 @@ export function Sidebar({
 
           {/* Navigation Section */}
           <nav className="flex-1 p-4 space-y-1 min-h-[200px] overflow-y-auto scrollbar-hide">
-            {NAVIGATION_ITEMS.map((item) => {
+            {navigationItems.map((item) => {
               const Icon = item.icon;
               const hasChildren = !!item.children?.length;
-              const isActiveParent = currentPage === item.id && !hasChildren
+              const isActiveParent = currentPage === item.id && !hasChildren;
 
               const handleItemClick = () => {
                 if (hasChildren) {
@@ -499,7 +514,7 @@ export function Sidebar({
                 }
 
                 if (item.isExternalLink && item.href) {
-                  window.open(item.href, "_blank");
+                  window.open(item.href, '_blank');
                 } else {
                   handleNavigation(item.id, item.requiresAuth);
                 }
@@ -509,10 +524,11 @@ export function Sidebar({
                 <div key={item.id} className="w-full">
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${isActiveParent
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                      }`}
+                    className={`w-full justify-start ${
+                      isActiveParent
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
                     onClick={handleItemClick}
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -520,7 +536,11 @@ export function Sidebar({
 
                     {hasChildren && (
                       <span className="ml-auto text-xs">
-                        {openSubmenu === item.id ? <ChevronUp /> : <ChevronDown />}
+                        {openSubmenu === item.id ? (
+                          <ChevronUp />
+                        ) : (
+                          <ChevronDown />
+                        )}
                       </span>
                     )}
                   </Button>
@@ -529,32 +549,42 @@ export function Sidebar({
                   {hasChildren && openSubmenu === item.id && (
                     <div className="mt-1 ml-3 flex flex-col gap-2">
                       {item.children!.map((child) => {
-                        const isActiveChild = currentPage === item.id && selectedAIAgent?.name === child.name;
+                        const isActiveChild =
+                          currentPage === item.id &&
+                          selectedAIAgent?.name === child.name;
 
                         return (
                           <Button
                             key={child.name}
                             variant="ghost"
                             size="sm"
-                            className={`w-full justify-start text-[12.5px] ${isActiveChild
-                              ? "bg-accent text-accent-foreground"
-                              : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                              }`}
+                            className={`w-full justify-start text-[12.5px] ${
+                              isActiveChild
+                                ? 'bg-accent text-accent-foreground'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                            }`}
                             onClick={() => {
                               setSelectedAIAgent(child);
-                              localStorage.setItem('deor-currentOracle', child.id)
+                              localStorage.setItem(
+                                'deor-currentOracle',
+                                child.id
+                              );
                               onNavigate('chat');
                             }}
                           >
-                            {child.image ? <>
-                              <div className="w-3 h-3 md:w-6 md:h-6 rounded-full overflow-hidden border border-blue-500/30 mr-2">
-                                <ImageWithFallback
-                                  src={child.image}
-                                  alt={child.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            </> : <></>}
+                            {child.image ? (
+                              <>
+                                <div className="w-3 h-3 md:w-6 md:h-6 rounded-full overflow-hidden border border-blue-500/30 mr-2">
+                                  <ImageWithFallback
+                                    src={child.image}
+                                    alt={child.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              </>
+                            ) : (
+                              <></>
+                            )}
                             {truncateName(child.name)}
                           </Button>
                         );
@@ -632,7 +662,7 @@ export function Sidebar({
                       <AvatarImage
                         src={
                           user.photo?.path ||
-                          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80"
+                          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80'
                         }
                         alt={user.username}
                       />
@@ -642,12 +672,12 @@ export function Sidebar({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
-                        {user.email || shortenAddress(user?.appWallet || "")}
+                        {user.email || shortenAddress(user?.appWallet || '')}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {user.email
-                          ? shortenAddress(user?.appWallet || "")
-                          : ""}
+                          ? shortenAddress(user?.appWallet || '')
+                          : ''}
                       </p>
                     </div>
                   </div>

@@ -49,8 +49,19 @@ const getRandomRelevance = (): string => {
 };
 
 export const newsService = {
-  getNewsList: async (oracleId: string): Promise<News[]> => {
-    const { data } = await apiClient.get<News[]>(`/news/oracle/${oracleId}`);
+  getNewsList: async (
+    oracleId: string,
+    limit?: number,
+    offset?: number
+  ): Promise<News[]> => {
+    const params: any = {};
+    if (limit !== undefined) params.limit = limit;
+    if (offset !== undefined) params.offset = offset;
+
+    const { data } = await apiClient.get<News[]>(`/news/oracle/${oracleId}`, {
+      params,
+    });
+
     return data
       ? data.map((item) => ({
           ...item,

@@ -120,23 +120,6 @@ function AppContent() {
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
 
-  // news
-  const [news, setNews] = useState<News[]>();
-  const [isNewsLoading, setIsNewsLoading] = useState<boolean>(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        setIsNewsLoading(true);
-        const data = await newsService.getAll();
-        setNews(data);
-      } catch {
-      } finally {
-        setIsNewsLoading(false);
-      }
-    })();
-  }, []);
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentPage]);
@@ -498,7 +481,6 @@ function AppContent() {
         </Helmet>
         <Sidebar {...commonSidebarProps} />
         <HotTakesPage
-          articles={news}
           onArticleClick={(article) => {
             setSelectedArticle(article);
             setPreviousPage('hotTakes');

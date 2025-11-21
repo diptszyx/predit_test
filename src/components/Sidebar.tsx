@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useIsMobile } from "../hooks/useIsMobile";
+import { truncateName } from "../lib/truncateName";
 import { User as UserType } from "../lib/types";
 import { OracleEntity, oraclesServices } from "../services/oracles.service";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
@@ -177,14 +178,14 @@ export function Sidebar({
   const MobileSidebarContent = () => (
     <>
       {/* Logo Section */}
-      <div className="relative px-6 py-4 border-b border-border">
+      <div className="relative px-6 py-3 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold">Dehouse</h1>
+              <h1 className="text-lg font-semibold">Predit</h1>
               <p className="text-xs text-muted-foreground">AI Predictions</p>
             </div>
           </div>
@@ -270,7 +271,7 @@ export function Sidebar({
                             />
                           </div>
                         </> : <></>}
-                        {child.name}
+                        {truncateName(child.name)}
                       </Button>
                     );
                   })}
@@ -283,7 +284,7 @@ export function Sidebar({
 
       {/* Bottom Section */}
       <div
-        className="p-4 border-t border-border space-y-3
+        className="p-4 border-t border-border space-y-2
       "
       >
         {/* Social Links */}
@@ -478,7 +479,7 @@ export function Sidebar({
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold">Dehouse</h1>
+                <h1 className="text-lg font-semibold">Predit</h1>
                 <p className="text-xs text-muted-foreground">AI Predictions</p>
               </div>
             </div>
@@ -554,7 +555,7 @@ export function Sidebar({
                                 />
                               </div>
                             </> : <></>}
-                            {child.name}
+                            {truncateName(child.name)}
                           </Button>
                         );
                       })}
@@ -566,7 +567,7 @@ export function Sidebar({
           </nav>
 
           {/* Bottom Section */}
-          <div className="p-4 border-t border-border space-y-1.5">
+          <div className="p-4 border-t border-border space-y-2">
             {/* Social Links */}
             <div className="flex items-center justify-center gap-4 pb-2">
               {SOCIAL_LINKS.map((social) => {
@@ -666,7 +667,7 @@ export function Sidebar({
                         Lv {!Number.isNaN(userLevel) ? userLevel : 0}
                       </span>
                     </div>
-                    {user.subscriptionTier === "master" && (
+                    {user.isPro && (
                       <Badge
                         variant="outline"
                         className="bg-primary/10 text-primary border-primary/20 text-xs px-1.5 py-0"

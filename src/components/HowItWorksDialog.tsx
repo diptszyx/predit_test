@@ -10,13 +10,13 @@ import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { 
-  Star, 
-  Zap, 
-  Trophy, 
-  Target, 
-  TrendingUp, 
-  Flame, 
+import {
+  Star,
+  Zap,
+  Trophy,
+  Target,
+  TrendingUp,
+  Flame,
   Crown,
   Sparkles,
   Award,
@@ -63,8 +63,8 @@ export function HowItWorksDialog({ open, onOpenChange }: HowItWorksDialogProps) 
                     Quick Summary
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    Earn XP through oracle consultations and daily activities. 
-                    Your level is determined by your total prediction count: <strong>Level = floor(Predictions ÷ 100) + 1</strong>. 
+                    Earn XP through oracle consultations and daily activities.
+                    Your level is determined by your total prediction count: <strong>Level = floor(Predictions ÷ 100) + 1</strong>.
                     Multiply your XP gains with <strong>Pro subscription</strong> (2x) and daily login streaks!
                   </p>
                 </div>
@@ -77,7 +77,7 @@ export function HowItWorksDialog({ open, onOpenChange }: HowItWorksDialogProps) 
                 What is XP?
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Experience Points (XP) are earned by engaging with the Dehouse of Predictions platform through consultations 
+                Experience Points (XP) are earned by engaging with the Predit of Predictions platform through consultations
                 and daily activities. The more you participate, the more XP you earn. XP helps you:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

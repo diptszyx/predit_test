@@ -100,11 +100,11 @@ export function SharedPredictionPage({
             <div className="flex items-center gap-3">
               <img
                 src={logoIcon}
-                alt="Dehouse of Predictions"
+                alt="Predit of Predictions"
                 className="w-8 h-8"
               />
               <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                Dehouse of Predictions
+                Predit of Predictions
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -196,7 +196,7 @@ export function SharedPredictionPage({
           <CardContent className="p-8 text-center">
             <h3 className="mb-3">Want your own prediction?</h3>
             <p className="text-muted-foreground mb-6">
-              Join Dehouse of Predictions and chat with specialized AI
+              Join Predit of Predictions and chat with specialized AI
               prediction agents for free!
             </p>
             <Button
@@ -205,7 +205,7 @@ export function SharedPredictionPage({
               onClick={onBack}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              Try Dehouse of Oracles
+              Try Predit of Oracles
             </Button>
           </CardContent>
         </Card>

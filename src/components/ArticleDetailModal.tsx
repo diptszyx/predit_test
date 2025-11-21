@@ -37,7 +37,7 @@ interface ArticleDetailModalProps {
 function generateArticleContent(hotTake: HotTakeArticle, oracleName?: string, oracleSpecialty?: string) {
   // Extract key topic from title
   const topic = hotTake.title.split(':')[0] || hotTake.title;
-  
+
   return (
     <>
       <p className="text-xl text-muted-foreground leading-relaxed">
@@ -111,13 +111,13 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
               Article by {hotTake.source} - Published {hotTake.publishedAt}
             </DialogDescription>
           </DialogHeader>
-          
+
           <ScrollArea className="max-h-[90vh]">
             {/* Header Image */}
             {hotTake.image && (
               <div className="relative h-80 w-full overflow-hidden">
-                <img 
-                  src={hotTake.image} 
+                <img
+                  src={hotTake.image}
                   alt={hotTake.title}
                   className="w-full h-full object-cover"
                 />
@@ -131,7 +131,7 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
                 <h1 className="text-4xl leading-tight tracking-tight">
                   {hotTake.title}
                 </h1>
-                
+
                 {/* Author Info */}
                 <div className="flex items-center gap-3 py-4 border-y border-border">
                   <div className="flex items-center gap-3 flex-1">
@@ -150,7 +150,7 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm">
@@ -234,8 +234,8 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
           {/* Header Image */}
           {news.imageUrl && (
             <div className="relative h-64 w-full overflow-hidden">
-              <img 
-                src={news.imageUrl} 
+              <img
+                src={news.imageUrl}
                 alt={news.headline}
                 className="w-full h-full object-cover"
               />
@@ -288,13 +288,13 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
             <div className="space-y-3">
               <p className="text-muted-foreground">{news.summary}</p>
               <p className="text-muted-foreground">
-                This development has significant implications for market participants. Traders should monitor related 
-                indicators and adjust positions accordingly. The ripple effect across connected markets could create 
+                This development has significant implications for market participants. Traders should monitor related
+                indicators and adjust positions accordingly. The ripple effect across connected markets could create
                 both opportunities and risks in the coming days.
               </p>
               <p className="text-muted-foreground">
-                Historical analysis suggests similar events have led to measurable market movements, with an average 
-                duration of 2-3 weeks before stabilization. Current Polymarket odds reflect this uncertainty, offering 
+                Historical analysis suggests similar events have led to measurable market movements, with an average
+                duration of 2-3 weeks before stabilization. Current Predit odds reflect this uncertainty, offering
                 potential value for informed traders.
               </p>
             </div>
@@ -310,12 +310,11 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
                   <p className="text-sm text-muted-foreground mb-2">Market Impact Score</p>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-2 bg-accent rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${
-                          news.rippleEffect === "high" ? "bg-red-500 w-5/6" :
-                          news.rippleEffect === "medium" ? "bg-yellow-500 w-3/5" :
-                          "bg-blue-500 w-2/5"
-                        }`}
+                      <div
+                        className={`h-full ${news.rippleEffect === "high" ? "bg-red-500 w-5/6" :
+                            news.rippleEffect === "medium" ? "bg-yellow-500 w-3/5" :
+                              "bg-blue-500 w-2/5"
+                          }`}
                       />
                     </div>
                     <span className="text-sm uppercase">{news.rippleEffect}</span>
@@ -339,14 +338,14 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-emerald-400" />
-                    <h4 className="text-emerald-400">Related Polymarket Data</h4>
+                    <h4 className="text-emerald-400">Related Predit Data</h4>
                   </div>
                   <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
                     {news.polymarketOdds}% Odds
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Current market consensus suggests {news.polymarketOdds}% probability. 
+                  Current market consensus suggests {news.polymarketOdds}% probability.
                   Volume has increased 34% in the last 24 hours, indicating strong trader interest.
                 </p>
                 <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">

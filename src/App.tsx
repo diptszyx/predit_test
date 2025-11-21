@@ -241,7 +241,7 @@ function AppContent() {
           const authenticatedUser = await authenticateWithToken(oauthToken);
 
           toast.success(
-            isNewUser ? 'Welcome to Dehouse!' : 'Signed in successfully.',
+            isNewUser ? 'Welcome to Predit!' : 'Signed in successfully.',
             {
               description: isNewUser
                 ? "Your Google account is now linked. Let's get started."
@@ -303,7 +303,7 @@ function AppContent() {
       });
 
       toast.success('🎉 Referral bonus applied! +300 XP', {
-        description: 'Welcome to Dehouse of Predictions!',
+        description: 'Welcome to Predit of Predictions!',
       });
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Failed to apply referral');
@@ -359,12 +359,19 @@ function AppContent() {
         onOpenChange={setWalletDialogOpen}
         onConnect={handleWalletConnect}
         onSocialConnect={handleSocialConnect}
-        onOpenPrivacy={() => setPrivacyDialogOpen(true)}
-        onOpenTerms={() => setTermsDialogOpen(true)}
+        onOpenPrivacy={() => {
+          setPrivacyDialogOpen(true)
+          setWalletDialogOpen(false)
+        }}
+        onOpenTerms={() => {
+          setTermsDialogOpen(true)
+          setWalletDialogOpen(false)
+        }}
       />
       <XPInfoDialog
         open={xpInfoDialogOpen}
         onOpenChange={setXPInfoDialogOpen}
+        onNavigate={setCurrentPage}
       />
       <PrivacyPolicy
         open={privacyDialogOpen}
@@ -386,53 +393,53 @@ function AppContent() {
     switch (currentPage) {
       case 'home':
         return {
-          title: 'Dehouse AI Oracles - AI-Powered Predictions',
+          title: 'Predit AI Oracles - AI-Powered Predictions',
           description:
             'Get expert predictions and insights from specialized AI agents. Chat with AI oracles for crypto, tech, politics, sports, and more.',
         };
       case 'chat':
         return {
           title: selectedAIAgent
-            ? `Chat with ${selectedAIAgent.name} - Dehouse AI`
-            : 'Chat - Dehouse AI',
+            ? `Chat with ${selectedAIAgent.name} - Predit AI`
+            : 'Chat - Predit AI',
           description: selectedAIAgent
             ? `Get expert predictions from ${selectedAIAgent.name}, a ${selectedAIAgent.type}`
             : 'Chat with AI oracles to get expert predictions',
         };
       case 'hotTakes':
         return {
-          title: 'Hot Takes - Dehouse AI Oracles',
+          title: 'Hot Takes - Predit AI Oracles',
           description:
             'Explore trending news and articles analyzed by our AI oracles',
         };
       case 'articleDetail':
         return {
           title: selectedArticle
-            ? `${selectedArticle.title} - Dehouse AI`
-            : 'Article - Dehouse AI',
+            ? `${selectedArticle.title} - Predit AI`
+            : 'Article - Predit AI',
           description:
             'Read detailed analysis and predictions from our AI oracles',
         };
       case 'leaderboard':
         return {
-          title: 'Leaderboard - Dehouse AI Oracles',
+          title: 'Leaderboard - Predit AI Oracles',
           description:
-            'View top predictors and compete with other users on the Dehouse leaderboard',
+            'View top predictors and compete with other users on the Predit leaderboard',
         };
       case 'subscription':
         return {
-          title: 'Subscription Plans - Dehouse AI Oracles',
+          title: 'Subscription Plans - Predit AI Oracles',
           description:
             'Upgrade to Pro for unlimited predictions and exclusive features',
         };
       case 'settings':
         return {
-          title: 'Settings - Dehouse AI Oracles',
+          title: 'Settings - Predit AI Oracles',
           description: 'Manage your account settings and preferences',
         };
       default:
         return {
-          title: 'Dehouse AI Oracles - AI-Powered Predictions',
+          title: 'Predit AI Oracles - AI-Powered Predictions',
           description:
             'Get expert predictions and insights from specialized AI agents',
         };
@@ -446,10 +453,10 @@ function AppContent() {
     return (
       <>
         <Helmet>
-          <title>Shared Prediction - Dehouse AI Oracles</title>
+          <title>Shared Prediction - Predit AI Oracles</title>
           <meta
             name="description"
-            content="View shared prediction from Dehouse AI Oracles"
+            content="View shared prediction from Predit AI Oracles"
           />
         </Helmet>
         <SharedPredictionPage

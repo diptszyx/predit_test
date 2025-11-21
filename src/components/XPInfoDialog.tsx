@@ -11,9 +11,16 @@ import { Sparkles, TrendingUp, Users, Calendar, Zap } from "lucide-react";
 interface XPInfoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onNavigate: (page: string) => void
 }
 
-export function XPInfoDialog({ open, onOpenChange }: XPInfoDialogProps) {
+export function XPInfoDialog({ open, onOpenChange, onNavigate }: XPInfoDialogProps) {
+  const navigateToSubscriptionPage = () => {
+    onOpenChange(false)
+    setTimeout(() => {
+      onNavigate('subscription')
+    }, 500)
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh]">
@@ -23,7 +30,7 @@ export function XPInfoDialog({ open, onOpenChange }: XPInfoDialogProps) {
             How XP & Leveling Works
           </DialogTitle>
           <DialogDescription>
-            Earn XP to level up and unlock new perks on your journey through the Dehouse of Predictions
+            Earn XP to level up and unlock new perks on your journey through the Predit of Predictions
           </DialogDescription>
         </DialogHeader>
 
@@ -249,7 +256,7 @@ export function XPInfoDialog({ open, onOpenChange }: XPInfoDialogProps) {
             {/* Tips */}
             <div className="p-4 rounded-lg bg-blue-600/10 border border-blue-600/20">
               <p className="text-sm text-blue-600">
-                💡 <span>Pro Tip:</span> Stack multipliers for maximum XP! A Pro subscriber with a 30-day streak can earn up to <span className="font-medium">3x XP</span> on all activities.
+                💡 <span>Pro Tip:</span> Stack multipliers for maximum XP! <span className="font-medium underline cursor-pointer" onClick={navigateToSubscriptionPage}>A Pro subscriber</span> with a 30-day streak can earn up to <span className="font-medium">3x XP</span> on all activities.
               </p>
             </div>
           </div>

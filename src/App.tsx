@@ -397,7 +397,10 @@ function AppContent() {
         open={privacyDialogOpen}
         onOpenChange={setPrivacyDialogOpen}
       />
-      <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
+      <TermsOfUse
+        open={termsDialogOpen}
+        onOpenChange={setTermsDialogOpen}
+      />
       <UserProfileDialog
         open={profileDialogOpen}
         onOpenChange={handleProfileDialogOpenChange}
@@ -433,8 +436,14 @@ function AppContent() {
                 property="og:description"
                 content="Get expert predictions and insights from specialized AI agents."
               />
-              <meta property="og:type" content="website" />
-              <meta name="twitter:card" content="summary_large_image" />
+              <meta
+                property="og:type"
+                content="website"
+              />
+              <meta
+                name="twitter:card"
+                content="summary_large_image"
+              />
               <meta
                 name="twitter:title"
                 content="Predit AI Oracles - AI-Powered Predictions"
@@ -443,7 +452,10 @@ function AppContent() {
                 name="twitter:description"
                 content="Get expert predictions and insights from specialized AI agents."
               />
-              <link rel="canonical" href={window.location.origin} />
+              <link
+                rel="canonical"
+                href={window.location.origin}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
@@ -485,7 +497,10 @@ function AppContent() {
                 name="description"
                 content="Choose an AI oracle to get expert predictions and insights"
               />
-              <link rel="canonical" href={`${window.location.origin}/chat`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/chat`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <div className="flex-1 overflow-y-auto">
@@ -572,7 +587,7 @@ function AppContent() {
               onArticleClick={(article) => {
                 setSelectedArticle(article);
                 setPreviousPage('hotTakes');
-                navigate(`/hot-takes/${article.id}`);
+                navigate(`/hot-takes/${article.slug}`);
               }}
               onBack={() => navigate('/')}
             />
@@ -583,7 +598,7 @@ function AppContent() {
 
       {/* Hot Take Detail Page */}
       <Route
-        path="/hot-takes/:hotTakeId"
+        path="/hot-takes/:slug"
         element={
           <ArticleDetailWrapper
             selectedArticle={selectedArticle}
@@ -694,7 +709,10 @@ function AppContent() {
             <Sidebar {...commonSidebarProps} />
             {user && (
               <div className="flex-1 overflow-y-auto">
-                <SettingsPage onBack={() => navigate('/chat')} user={user} />
+                <SettingsPage
+                  onBack={() => navigate('/chat')}
+                  user={user}
+                />
               </div>
             )}
             {commonDialogProps}
@@ -780,42 +798,10 @@ function ArticleDetailWrapper({
   setPendingNavigation,
 }: any) {
   const navigate = useNavigate();
-  const { hotTakeId } = useParams();
-
-  if (!selectedArticle) {
-    // If no article is selected, redirect to hot takes
-    useEffect(() => {
-      navigate('/hot-takes');
-    }, []);
-    return null;
-  }
+  const { slug } = useParams();
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      <Helmet>
-        <title>{selectedArticle.title} - Predit AI</title>
-        <meta
-          name="description"
-          content={
-            selectedArticle.summary ||
-            'Read detailed analysis and predictions from our AI oracles'
-          }
-        />
-        <meta
-          property="og:title"
-          content={`${selectedArticle.title} - Predit AI`}
-        />
-        <meta
-          property="og:description"
-          content={
-            selectedArticle.summary || 'AI-powered analysis and predictions'
-          }
-        />
-        <link
-          rel="canonical"
-          href={`${window.location.origin}/hot-takes/${hotTakeId}`}
-        />
-      </Helmet>
       <Sidebar {...commonSidebarProps} />
       <div className="flex-1 overflow-y-auto">
         <ArticleDetailPage
@@ -825,7 +811,7 @@ function ArticleDetailWrapper({
           onBack={() => {
             if (previousPage === 'chat' && selectedAIAgent) {
               setPreviousPage(null);
-              navigate('/chat');
+              navigate(`/chat/${selectedAIAgent}`);
             } else if (previousPage === 'hotTakes') {
               setPreviousPage(null);
               navigate('/hot-takes');
@@ -834,7 +820,7 @@ function ArticleDetailWrapper({
               navigate('/');
             } else {
               setPreviousPage(null);
-              navigate('/chat');
+              navigate(-1);
             }
             setSelectedArticle(null);
           }}

@@ -506,7 +506,7 @@ function AppContent() {
             <div className="flex-1 overflow-y-auto">
               <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
-                  <h1 className="mb-2">Choose Your AI Agent</h1>
+                  <h1 className="text-4xl md:text-5xl mb-2">Choose Your AI Oracle Agent</h1>
                   <p className="text-muted-foreground">
                     Select an AI agent to get expert predictions and insights
                   </p>
@@ -740,7 +740,7 @@ function AppContent() {
             <div className="flex-1 overflow-y-auto">
               <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
-                  <h1 className="mb-2">Choose Your AI Agent</h1>
+                  <h1 className="text-4xl md:text-5xl mb-2">AI Oracle Agents - Expert Market Predictions</h1>
                   <p className="text-muted-foreground">
                     Select an AI agent to get expert predictions and insights
                   </p>

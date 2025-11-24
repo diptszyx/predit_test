@@ -193,7 +193,7 @@ export function Sidebar({
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold">Predit</h1>
+              <div className="text-lg font-semibold">Predit</div>
               <p className="text-xs text-muted-foreground">AI Predictions</p>
             </div>
           </div>
@@ -494,7 +494,7 @@ export function Sidebar({
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold">Predit</h1>
+                <div className="text-lg font-semibold">Predit</div>
                 <p className="text-xs text-muted-foreground">AI Predictions</p>
               </div>
             </div>

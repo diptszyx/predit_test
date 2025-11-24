@@ -167,11 +167,10 @@ export function HomePage({
             <div className="text-center flex gap-6 flex-col">
               {/* Headline */}
               <h1
-                className="text-white"
+                className="text-white font-semibold"
                 style={{
                   fontSize: 'clamp(32px, 5vw, 60px)',
                   lineHeight: '1.1',
-                  fontWeight: 600,
                   textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                 }}
               >

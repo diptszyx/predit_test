@@ -20,7 +20,7 @@ export function TopBar({ darkMode, onToggleDarkMode }: TopBarProps) {
             <span className="text-xl">🔮</span>
           </div>
           <div className="hidden md:block">
-            <h1 className="leading-none">Predit of Predictions</h1>
+            <div className="font-semibold leading-none">Predit of Predictions</div>
           </div>
         </div>
 

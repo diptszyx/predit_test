@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import {
   BrowserRouter,
-  Routes,
   Route,
+  Routes,
+  useLocation,
   useNavigate,
   useParams,
-  useLocation,
   useSearchParams,
 } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -20,6 +20,7 @@ import { useXP } from './lib/useXP';
 import { AIAgentCard } from './components/AIAgentCard';
 import { ArticleDetailPage } from './components/ArticleDetailPage';
 import { ChatPage } from './components/ChatPage';
+import CreateMarketPage from './components/CreateMarket';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
@@ -104,6 +105,7 @@ function AppContent() {
     if (path === '/settings') return 'settings';
     if (path === '/oracles') return 'oracles';
     if (path.startsWith('/prediction/')) return 'shared-prediction';
+    if (path === '/market/create') return 'market-create'
     return 'home';
   };
 
@@ -760,6 +762,34 @@ function AppContent() {
                 </div>
               </main>
             </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      {/* Admin Marketing Page */}
+      <Route
+        path="/market/create"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Create Market - Predit AI Oracles</title>
+              <meta
+                name="description"
+                content="Create and launch prediction markets powered by AI Oracles."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/market/create`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            {user && (
+              <div className="flex-1 overflow-y-auto">
+                <CreateMarketPage
+                />
+              </div>
+            )}
             {commonDialogProps}
           </div>
         }

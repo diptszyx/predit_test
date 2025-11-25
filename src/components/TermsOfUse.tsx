@@ -1,6 +1,6 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
-import { ScrollArea } from "./ui/scroll-area";
 import { FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface TermsOfUseProps {
   open: boolean;
@@ -96,7 +96,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               <h3>2.2 Entertainment Purpose and No Professional Advice</h3>
               <p className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                 <strong>⚠️ CRITICAL DISCLAIMER - PLEASE READ CAREFULLY:</strong><br />
-                ALL SERVICES, PREDICTIONS, INSIGHTS, AND CONTENT PROVIDED THROUGH PREDIT OF ORACLES ARE FOR ENTERTAINMENT PURPOSES ONLY. THE PLATFORM DOES NOT PROVIDE AND SHOULD NEVER BE INTERPRETED AS PROVIDING:
+                ALL SERVICES, PREDICTIONS, INSIGHTS, AND CONTENT PROVIDED THROUGH PREDIT MARKET OF ORACLES ARE FOR ENTERTAINMENT PURPOSES ONLY. THE PLATFORM DOES NOT PROVIDE AND SHOULD NEVER BE INTERPRETED AS PROVIDING:
               </p>
               <ul>
                 <li><strong>Financial, Investment, or Trading Advice:</strong> Predictions about cryptocurrencies, stocks, markets, or financial instruments are not investment recommendations</li>
@@ -838,7 +838,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>11.1 "AS IS" and "AS AVAILABLE" Disclaimer</h3>
               <p>
-                <strong>THE PLATFORM AND SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED.</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, PREDIT LIMITED DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO:
+                <strong>THE PLATFORM AND SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED.</strong> TO THE MAXIMUM EXTENT PERMITTED BY LAW, PREDIT MARKET LIMITED DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO:
               </p>
               <ul>
                 <li><strong>MERCHANTABILITY:</strong> No warranty that the Platform is suitable for your purposes</li>
@@ -905,7 +905,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>12.1 Exclusion of Damages</h3>
               <p>
-                <strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL PREDIT LIMITED, ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, OR LICENSORS BE LIABLE FOR:</strong>
+                <strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL PREDIT MARKET LIMITED, ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, OR LICENSORS BE LIABLE FOR:</strong>
               </p>
               <ul>
                 <li><strong>INDIRECT DAMAGES:</strong> Any indirect, incidental, special, consequential, or punitive damages</li>
@@ -962,7 +962,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>13. Indemnification</h2>
               <p>
-                <strong>YOU AGREE TO INDEMNIFY, DEFEND, AND HOLD HARMLESS PREDIT LIMITED, ITS PARENT COMPANIES, SUBSIDIARIES, AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, CONTRACTORS, LICENSORS, AND SERVICE PROVIDERS (COLLECTIVELY, "INDEMNIFIED PARTIES") FROM AND AGAINST ANY AND ALL CLAIMS, LIABILITIES, DAMAGES, LOSSES, COSTS, EXPENSES, OR FEES (INCLUDING REASONABLE ATTORNEYS' FEES) ARISING FROM OR RELATED TO:</strong>
+                <strong>YOU AGREE TO INDEMNIFY, DEFEND, AND HOLD HARMLESS PREDIT MARKET LIMITED, ITS PARENT COMPANIES, SUBSIDIARIES, AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, PARTNERS, CONTRACTORS, LICENSORS, AND SERVICE PROVIDERS (COLLECTIVELY, "INDEMNIFIED PARTIES") FROM AND AGAINST ANY AND ALL CLAIMS, LIABILITIES, DAMAGES, LOSSES, COSTS, EXPENSES, OR FEES (INCLUDING REASONABLE ATTORNEYS' FEES) ARISING FROM OR RELATED TO:</strong>
               </p>
               <ul>
                 <li>Your use or misuse of the Services</li>

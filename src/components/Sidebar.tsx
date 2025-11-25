@@ -193,7 +193,7 @@ export function Sidebar({
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold">Predit Market</h1>
+              <div className="text-lg font-semibold">Predit Market</div>
               <p className="text-xs text-muted-foreground">AI Predictions</p>
             </div>
           </div>
@@ -233,8 +233,8 @@ export function Sidebar({
               <Button
                 variant="ghost"
                 className={`w-full justify-start ${isActiveParent
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                   }`}
                 onClick={handleItemClick}
               >
@@ -262,8 +262,8 @@ export function Sidebar({
                         variant="ghost"
                         size="sm"
                         className={`w-full justify-start text-[12.5px] ${isActiveChild
-                            ? 'bg-accent text-accent-foreground'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                           }`}
                         onClick={() => {
                           setSelectedAIAgent(child);
@@ -492,7 +492,7 @@ export function Sidebar({
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold">Predit Market</h1>
+                <div className="text-lg font-semibold">Predit Market</div>
                 <p className="text-xs text-muted-foreground">AI Predictions</p>
               </div>
             </div>
@@ -523,8 +523,8 @@ export function Sidebar({
                   <Button
                     variant="ghost"
                     className={`w-full justify-start ${isActiveParent
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                       }`}
                     onClick={handleItemClick}
                   >
@@ -556,8 +556,8 @@ export function Sidebar({
                             variant="ghost"
                             size="sm"
                             className={`w-full justify-start text-[12.5px] ${isActiveChild
-                                ? 'bg-accent text-accent-foreground'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                              ? 'bg-accent text-accent-foreground'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                               }`}
                             onClick={() => {
                               setSelectedAIAgent(child);

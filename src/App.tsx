@@ -38,6 +38,7 @@ import apiClient from './lib/axios';
 import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
+import MarketPage from './components/MarketPage';
 
 export default function App() {
   return (
@@ -105,7 +106,7 @@ function AppContent() {
     if (path === '/settings') return 'settings';
     if (path === '/oracles') return 'oracles';
     if (path.startsWith('/prediction/')) return 'shared-prediction';
-    if (path === '/market/create') return 'market-create'
+    if (path === '/market' || path.startsWith('/market/')) return 'market'
     return 'home';
   };
 
@@ -769,24 +770,24 @@ function AppContent() {
 
       {/* Admin Marketing Page */}
       <Route
-        path="/market/create"
+        path="/market/:oracleId"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Create Market - Predit AI Oracles</title>
+              <title>Market - Predit Market AI Oracles</title>
               <meta
                 name="description"
                 content="Create and launch prediction markets powered by AI Oracles."
               />
               <link
                 rel="canonical"
-                href={`${window.location.origin}/market/create`}
+                href={`${window.location.origin}/market`}
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             {user && (
               <div className="flex-1 overflow-y-auto">
-                <CreateMarketPage
+                <MarketPage
                 />
               </div>
             )}

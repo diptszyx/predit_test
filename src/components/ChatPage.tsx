@@ -55,6 +55,7 @@ import {
 import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
 import { questionsByAIAgent } from '../constants/prediction';
 import { useNavigate } from 'react-router-dom';
+import MarketList from './market/marketList';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -818,12 +819,9 @@ export function ChatPage({
                           variant="ghost"
                           size="sm"
                           onClick={() => setInfoDialogOpen(true)}
-                          className="lg:hidden text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
+                          className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
                         >
                           <Info className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
-                            Info
-                          </span>
                         </Button>
                         {/* <Button
                           variant="ghost"
@@ -1182,113 +1180,38 @@ export function ChatPage({
               )}
             </div>
             {/* News Feed - Right - Hidden on mobile */}
-            <div className="hidden lg:block w-full h-full lg:w-80 space-y-3 pt-2">
-              {/* AI Agent Profile Card */}
-              <Card className="border-border overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="relative flex-shrink-0">
-                      <ImageWithFallback
-                        src={aiAgent.image}
-                        alt={aiAgent.name}
-                        className="w-16 h-16 rounded-full object-cover ring-2 ring-blue-500/20"
-                      />
-                      <div className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-1">
-                        <Sparkles className="w-3 h-3 text-white" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="truncate mb-0.5">{aiAgent.name}</h3>
-                      <p className="text-xs text-blue-400 mb-2">
-                        {aiAgent.type}
-                      </p>
-                      <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
-                        {aiAgent.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-3 py-3 border-t border-b border-border">
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 mb-1">
-                        <Star className="w-3.5 h-3.5 text-yellow-500" />
-                        <span className="text-sm">
-                          {Number(aiAgent.rating).toFixed(1)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Rating</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 mb-1">
-                        <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                        <span className="text-sm">{aiAgent.predictions}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Predictions
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Rate section */}
-                  <div
-                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${
-                      ratingFlashing ? 'ring-2 ring-blue-500' : ''
-                    }`}
-                  >
-                    <p className="text-xs text-muted-foreground mb-2">
-                      Rate this AI Agent
-                    </p>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          onClick={() => handleRating(star)}
-                          className="transition-opacity hover:opacity-70"
-                        >
-                          <Star
-                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${
-                              star <= userRating!
-                                ? 'fill-primary text-primary'
-                                : 'text-muted-foreground'
-                            }`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    {userRating! > 0 && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        You rated {Math.round(userRating!)}/5
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Like Button */}
-                  <Button
-                    variant="outline"
-                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${
-                      hasLiked
-                        ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                        : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
-                    }`}
-                    onClick={handleLike}
-                  >
-                    <ThumbsUp
-                      className={`w-4 h-4 mr-2 ${
-                        hasLiked ? 'fill-current' : ''
-                      }`}
-                    />
-                    {hasLiked ? 'Liked' : 'Like'} • {formatLikes(localLikes)}
-                  </Button>
-                </CardContent>
+            <div className="hidden lg:block w-full h-full lg:w-80">
+              {/* Market */}
+              <Card
+                className="border-border overflow-hidden mb-3"
+                style={{
+                  height: 'calc(50vh - 12px)',
+                  borderTopLeftRadius: 0,
+                  borderTopRightRadius: 0,
+                }}
+              >
+                <CardHeader className="border-b border-border pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Zap className="w-4 h-4" />
+                    <span>Markets</span>
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Latest market from {aiAgent.name}
+                  </p>
+                </CardHeader>
+                <div
+                  className="h-full"
+                  style={{ overflow: 'auto' }}
+                >
+                  <MarketList />
+                </div>
               </Card>
 
               {/* Hot Takes Section */}
               <Card
                 className="border-border overflow-hidden"
                 style={{
-                  height: `${
-                    user ? 'calc(100vh - 25.2rem)' : 'calc(100vh - 23.8rem)'
-                  }`,
+                  height: '50vh',
                   borderBottomLeftRadius: 0,
                   borderBottomRightRadius: 0,
                 }}

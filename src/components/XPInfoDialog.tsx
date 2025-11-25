@@ -30,7 +30,7 @@ export function XPInfoDialog({ open, onOpenChange, onNavigate }: XPInfoDialogPro
             How XP & Leveling Works
           </DialogTitle>
           <DialogDescription>
-            Earn XP to level up and unlock new perks on your journey through the Predit of Predictions
+            Earn XP to level up and unlock new perks on your journey through the Predit Market of Predictions
           </DialogDescription>
         </DialogHeader>
 

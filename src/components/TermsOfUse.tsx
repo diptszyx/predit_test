@@ -30,10 +30,10 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>1. Acceptance of Terms and Agreement to Binding Contract</h2>
               <p>
-                Welcome to Predit of Oracles, a decentralized prediction platform operated by Predit Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Predit Limited," "we," "our," or "us").
+                Welcome to Predit Market of Oracles, a decentralized prediction platform operated by Predit Market Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Predit Market Limited," "we," "our," or "us").
               </p>
               <p>
-                These Terms of Use ("Terms," "Agreement," or "Terms of Use") constitute a legally binding agreement between you (the "User," "you," or "your") and Predit Limited. By accessing, browsing, or using our website, platform, mobile applications, APIs, smart contracts, or any related services (collectively, the "Platform," "Services," or "Predit of Oracles"), you acknowledge that:
+                These Terms of Use ("Terms," "Agreement," or "Terms of Use") constitute a legally binding agreement between you (the "User," "you," or "your") and Predit Market Limited. By accessing, browsing, or using our website, platform, mobile applications, APIs, smart contracts, or any related services (collectively, the "Platform," "Services," or "Predit Market of Oracles"), you acknowledge that:
               </p>
               <ul>
                 <li>You have read, understood, and agree to be bound by these Terms in their entirety</li>
@@ -82,7 +82,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>2.1 Platform Overview</h3>
               <p>
-                Predit of Oracles is a decentralized prediction and entertainment platform operated by Predit Limited that combines artificial intelligence, blockchain technology, and gamification to provide:
+                Predit Market of Oracles is a decentralized prediction and entertainment platform operated by Predit Market Limited that combines artificial intelligence, blockchain technology, and gamification to provide:
               </p>
               <ul>
                 <li><strong>AI Oracle Consultations:</strong> Interactive predictions and insights from specialized AI agents across various domains (politics, entertainment, cryptocurrency, sports, technology, lifestyle)</li>
@@ -292,7 +292,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <strong>YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT:</strong>
               </p>
               <ul>
-                <li>Predit Limited is NOT LIABLE for any actions you take based on AI-generated predictions or content</li>
+                <li>Predit Market Limited is NOT LIABLE for any actions you take based on AI-generated predictions or content</li>
                 <li>You assume ALL RISKS associated with relying on AI predictions</li>
                 <li>We are NOT RESPONSIBLE for financial losses, missed opportunities, or adverse outcomes resulting from AI predictions</li>
                 <li>AI-generated content is provided "AS IS" without warranties of any kind</li>
@@ -347,7 +347,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>5.1 $DEOR Token Overview</h3>
               <p>
-                $DEOR is the native utility token of the Predit of Oracles platform. It serves various functions including:
+                $DEOR is the native utility token of the Predit Market of Oracles platform. It serves various functions including:
               </p>
               <ul>
                 <li>Payment for premium services and subscriptions</li>
@@ -366,7 +366,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               </p>
               <ul>
                 <li>Securities, investment contracts, or financial instruments under any jurisdiction</li>
-                <li>Shares, equity, or ownership interests in Predit Limited</li>
+                <li>Shares, equity, or ownership interests in Predit Market Limited</li>
                 <li>Debt instruments or promises to pay</li>
                 <li>Stores of value or mediums of exchange outside the Platform</li>
                 <li>Investment opportunities or profit-generating assets</li>
@@ -376,7 +376,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <strong>$DEOR tokens do not represent or confer:</strong>
               </p>
               <ul>
-                <li>Any claim to Predit Limited's assets, revenues, or profits</li>
+                <li>Any claim to Predit Market Limited's assets, revenues, or profits</li>
                 <li>Any voting rights in corporate governance (except platform governance where specified)</li>
                 <li>Any entitlement to dividends, distributions, or financial returns</li>
                 <li>Any intellectual property rights</li>
@@ -501,7 +501,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               <h3>6.2 Gas Fees and Transaction Costs</h3>
               <p>You are responsible for all gas fees and network transaction costs:</p>
               <ul>
-                <li>Gas fees are paid to blockchain validators, not to Predit Limited</li>
+                <li>Gas fees are paid to blockchain validators, not to Predit Market Limited</li>
                 <li>Fees are non-refundable even if transactions fail</li>
                 <li>We do not control or receive gas fees</li>
                 <li>High network activity may result in excessive fees</li>
@@ -559,7 +559,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <li>Verification of outcomes through designated data sources</li>
                 <li>Resolution procedures outlined in market rules</li>
                 <li>Dispute periods for challenging outcomes</li>
-                <li>Final decisions by Predit Limited or designated arbitrators</li>
+                <li>Final decisions by Predit Market Limited or designated arbitrators</li>
               </ul>
               <p>
                 <strong>Market settlements are final and binding after the dispute period expires.</strong>
@@ -588,7 +588,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <li>International resources available at BeGambleAware.org</li>
               </ul>
               <p>
-                You can self-exclude or set limits on your account by contacting support@preditoforacles.com.
+                You can self-exclude or set limits on your account by contacting support@preditmarketoforacles.com.
               </p>
             </section>
 
@@ -645,7 +645,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>9.1 Our Intellectual Property</h3>
               <p>
-                All content, features, functionality, designs, graphics, logos, trademarks, service marks, software code, algorithms, AI models, and other materials on the Platform (collectively, "Platform Content") are the exclusive property of Predit Limited or our licensors and are protected by:
+                All content, features, functionality, designs, graphics, logos, trademarks, service marks, software code, algorithms, AI models, and other materials on the Platform (collectively, "Platform Content") are the exclusive property of Predit Market Limited or our licensors and are protected by:
               </p>
               <ul>
                 <li>Copyright laws and international copyright treaties</li>
@@ -676,14 +676,14 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>9.3 Trademarks</h3>
               <p>
-                "Predit of Oracles," "Predit," "$DEOR," oracle character names, and associated logos are trademarks or registered trademarks of Predit Limited. Unauthorized use is strictly prohibited.
+                "Predit Market of Oracles," "Predit Market," "$DEOR," oracle character names, and associated logos are trademarks or registered trademarks of Predit Market Limited. Unauthorized use is strictly prohibited.
               </p>
 
               <h3>9.4 User-Generated Content</h3>
 
               <h4>9.4.1 License Grant from Users</h4>
               <p>
-                By submitting, posting, or displaying content on the Platform (including but not limited to predictions, comments, messages, profiles, images, videos), you grant Predit Limited a worldwide, non-exclusive, royalty-free, perpetual, irrevocable, transferable, sublicensable license to:
+                By submitting, posting, or displaying content on the Platform (including but not limited to predictions, comments, messages, profiles, images, videos), you grant Predit Market Limited a worldwide, non-exclusive, royalty-free, perpetual, irrevocable, transferable, sublicensable license to:
               </p>
               <ul>
                 <li>Use, reproduce, modify, adapt, and create derivative works</li>
@@ -719,7 +719,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 AI-generated predictions and content created by our oracles:
               </p>
               <ul>
-                <li>Are owned by Predit Limited</li>
+                <li>Are owned by Predit Market Limited</li>
                 <li>May be used by us for any purpose</li>
                 <li>Are provided to you under the limited license above</li>
                 <li>Should not be commercially exploited without authorization</li>
@@ -730,8 +730,8 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 If you believe that content on our Platform infringes your copyright, please submit a DMCA notice to:
               </p>
               <ul>
-                <li><strong>Email:</strong> dmca@preditoforacles.com</li>
-                <li><strong>Mail:</strong> Predit Limited, DMCA Agent, [Address]</li>
+                <li><strong>Email:</strong> dmca@preditmarketoforacles.com</li>
+                <li><strong>Mail:</strong> Predit Market Limited, DMCA Agent, [Address]</li>
               </ul>
               <p>Your notice must include:</p>
               <ul>
@@ -803,7 +803,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>10.6 Impersonation and Misrepresentation</h3>
               <ul>
-                <li>Impersonating other users, entities, or Predit Limited staff</li>
+                <li>Impersonating other users, entities, or Predit Market Limited staff</li>
                 <li>Providing false or misleading information</li>
                 <li>Creating fake or fraudulent accounts</li>
                 <li>Misrepresenting your affiliation or credentials</li>
@@ -925,7 +925,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW, OUR TOTAL LIABILITY TO YOU FOR ALL CLAIMS ARISING FROM OR RELATED TO THE SERVICES SHALL NOT EXCEED THE GREATER OF:</strong>
               </p>
               <ul>
-                <li>(A) The total amount you paid to Predit Limited in the twelve (12) months preceding the claim; OR</li>
+                <li>(A) The total amount you paid to Predit Market Limited in the twelve (12) months preceding the claim; OR</li>
                 <li>(B) One hundred US dollars (USD $100)</li>
               </ul>
 
@@ -1002,8 +1002,8 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
                 <strong>BEFORE FILING ANY CLAIM OR LAWSUIT, YOU AGREE TO FIRST CONTACT US TO ATTEMPT INFORMAL RESOLUTION.</strong> Send a detailed description of your dispute to:
               </p>
               <ul>
-                <li><strong>Email:</strong> legal@preditoforacles.com</li>
-                <li><strong>Mail:</strong> Predit Limited, Legal Department, [Address]</li>
+                <li><strong>Email:</strong> legal@preditmarketoforacles.com</li>
+                <li><strong>Mail:</strong> Predit Market Limited, Legal Department, [Address]</li>
               </ul>
               <p>
                 We will attempt to resolve the dispute within 60 days. If we cannot reach a resolution, you may then proceed with formal dispute resolution.
@@ -1058,7 +1058,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <h3>14.4 Opt-Out Right</h3>
               <p>
-                You have the right to opt out of this arbitration agreement within 30 days of first accepting these Terms by sending written notice to legal@preditoforacles.com with:
+                You have the right to opt out of this arbitration agreement within 30 days of first accepting these Terms by sending written notice to legal@preditmarketoforacles.com with:
               </p>
               <ul>
                 <li>Your name, username, and email address</li>
@@ -1101,7 +1101,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               <p>You may terminate your account at any time by:</p>
               <ul>
                 <li>Using the account deletion feature in settings</li>
-                <li>Contacting support@preditoforacles.com</li>
+                <li>Contacting support@preditmarketoforacles.com</li>
                 <li>Ceasing all use of the Platform</li>
               </ul>
 
@@ -1196,7 +1196,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>21. Entire Agreement</h2>
               <p>
-                These Terms, together with our Privacy Policy and any additional terms referenced herein, constitute the entire agreement between you and Predit Limited regarding the Services and supersede all prior agreements, understandings, negotiations, and discussions, whether oral or written.
+                These Terms, together with our Privacy Policy and any additional terms referenced herein, constitute the entire agreement between you and Predit Market Limited regarding the Services and supersede all prior agreements, understandings, negotiations, and discussions, whether oral or written.
               </p>
             </section>
 
@@ -1238,11 +1238,11 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
               <h3>23.2 How to Contact Us</h3>
               <p>For questions, complaints, or notices regarding these Terms:</p>
               <ul>
-                <li><strong>General Inquiries:</strong> support@preditoforacles.com</li>
-                <li><strong>Legal Matters:</strong> legal@preditoforacles.com</li>
-                <li><strong>Privacy:</strong> privacy@preditoforacles.com</li>
-                <li><strong>Copyright/DMCA:</strong> dmca@preditoforacles.com</li>
-                <li><strong>Mail:</strong> Predit Limited, [Address], [City], [Country], [Postal Code]</li>
+                <li><strong>General Inquiries:</strong> support@preditmarketoforacles.com</li>
+                <li><strong>Legal Matters:</strong> legal@preditmarketoforacles.com</li>
+                <li><strong>Privacy:</strong> privacy@preditmarketoforacles.com</li>
+                <li><strong>Copyright/DMCA:</strong> dmca@preditmarketoforacles.com</li>
+                <li><strong>Mail:</strong> Predit Market Limited, [Address], [City], [Country], [Postal Code]</li>
               </ul>
 
               <h3>23.3 How to Contact You</h3>
@@ -1263,7 +1263,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
               <h2>24. Accessibility</h2>
               <p>
-                We strive to make our Platform accessible to users with disabilities. If you experience accessibility issues, please contact accessibility@preditoforacles.com.
+                We strive to make our Platform accessible to users with disabilities. If you experience accessibility issues, please contact accessibility@preditmarketoforacles.com.
               </p>
             </section>
 
@@ -1277,7 +1277,7 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
             <div className="space-y-4 mt-8">
               <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/30">
                 <p className="text-sm text-red-600 dark:text-red-400">
-                  <strong>⚠️ CRITICAL DISCLAIMER:</strong> Predit of Oracles, operated by Predit Limited, and all AI-generated predictions are for ENTERTAINMENT PURPOSES ONLY. We expressly disclaim ALL LIABILITY for any decisions made, actions taken, or losses incurred based on predictions, insights, or content provided through our Services. DO NOT make financial, legal, medical, or other important decisions based solely on AI-generated content. ALWAYS consult qualified professionals. USE AT YOUR OWN RISK.
+                  <strong>⚠️ CRITICAL DISCLAIMER:</strong> Predit Market of Oracles, operated by Predit Market Limited, and all AI-generated predictions are for ENTERTAINMENT PURPOSES ONLY. We expressly disclaim ALL LIABILITY for any decisions made, actions taken, or losses incurred based on predictions, insights, or content provided through our Services. DO NOT make financial, legal, medical, or other important decisions based solely on AI-generated content. ALWAYS consult qualified professionals. USE AT YOUR OWN RISK.
                 </p>
               </div>
 
@@ -1295,13 +1295,13 @@ export function TermsOfUse({ open, onOpenChange }: TermsOfUseProps) {
 
               <div className="p-6 rounded-xl bg-blue-500/10 border border-blue-500/30">
                 <p className="text-sm text-blue-600 dark:text-blue-400">
-                  <strong>📋 IMPORTANT NOTICES:</strong> Please read these Terms carefully. By using our Services, you agree to binding arbitration and waive your right to jury trial and class actions. You are solely responsible for your account security, private keys, and all decisions made using the Platform. Contact legal@preditoforacles.com with questions.
+                  <strong>📋 IMPORTANT NOTICES:</strong> Please read these Terms carefully. By using our Services, you agree to binding arbitration and waive your right to jury trial and class actions. You are solely responsible for your account security, private keys, and all decisions made using the Platform. Contact legal@preditmarketoforacles.com with questions.
                 </p>
               </div>
 
               <div className="p-6 rounded-xl bg-gray-500/10 border border-gray-500/30">
                 <p className="text-sm text-muted-foreground">
-                  <strong>📜 Version Information:</strong> These Terms of Use were last updated on October 16, 2025. Document Version 2.0. Previous versions available upon request. Governed by the laws of [Jurisdiction]. For questions or concerns, contact legal@preditoforacles.com.
+                  <strong>📜 Version Information:</strong> These Terms of Use were last updated on October 16, 2025. Document Version 2.0. Previous versions available upon request. Governed by the laws of [Jurisdiction]. For questions or concerns, contact legal@preditmarketoforacles.com.
                 </p>
               </div>
             </div>

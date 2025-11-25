@@ -175,7 +175,7 @@ export function SharePredictionDialog({
 
   const handleTwitterShare = () => {
     storePredictionData();
-    const text = `Check out this prediction from ${aiAgentName} on Predit of Predictions! 🔮`;
+    const text = `Check out this prediction from ${aiAgentName} on Predit Market of Predictions! 🔮`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(url, '_blank');
   };
@@ -188,7 +188,7 @@ export function SharePredictionDialog({
 
   const handleRedditShare = () => {
     storePredictionData();
-    const title = `Prediction from ${aiAgentName} on Predit of Predictions`;
+    const title = `Prediction from ${aiAgentName} on Predit Market of Predictions`;
     const url = `https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(title)}`;
     window.open(url, '_blank');
   };

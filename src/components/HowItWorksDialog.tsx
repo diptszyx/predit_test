@@ -77,7 +77,7 @@ export function HowItWorksDialog({ open, onOpenChange }: HowItWorksDialogProps) 
                 What is XP?
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Experience Points (XP) are earned by engaging with the Predit of Predictions platform through consultations
+                Experience Points (XP) are earned by engaging with the Predit Market of Predictions platform through consultations
                 and daily activities. The more you participate, the more XP you earn. XP helps you:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

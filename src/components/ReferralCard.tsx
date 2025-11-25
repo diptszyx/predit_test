@@ -85,7 +85,7 @@ export function ReferralCard({
   };
 
   const shareViaTwitter = () => {
-    const text = `Join me on Predit of Predictions - Get AI predictions from specialized prediction agents! Use my code: ${referralCode}`;
+    const text = `Join me on Predit Market of Predictions - Get AI predictions from specialized prediction agents! Use my code: ${referralCode}`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       text
     )}&url=${encodeURIComponent(referralLink)}`;

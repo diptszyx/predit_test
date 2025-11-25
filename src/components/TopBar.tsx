@@ -20,7 +20,7 @@ export function TopBar({ darkMode, onToggleDarkMode }: TopBarProps) {
             <span className="text-xl">🔮</span>
           </div>
           <div className="hidden md:block">
-            <h1 className="leading-none">Predit of Predictions</h1>
+            <h1 className="leading-none">Predit Market of Predictions</h1>
           </div>
         </div>
 
@@ -60,7 +60,7 @@ export function TopBar({ darkMode, onToggleDarkMode }: TopBarProps) {
             className="hidden md:flex items-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
           >
             <TrendingUp className="w-4 h-4" />
-            Predit
+            Predit Market
           </Button>
 
           <Button

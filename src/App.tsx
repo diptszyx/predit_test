@@ -256,7 +256,7 @@ function AppContent() {
           const authenticatedUser = await authenticateWithToken(oauthToken);
 
           toast.success(
-            isNewUser ? 'Welcome to Predit!' : 'Signed in successfully.',
+            isNewUser ? 'Welcome to Predit Market!' : 'Signed in successfully.',
             {
               description: isNewUser
                 ? "Your Google account is now linked. Let's get started."
@@ -323,7 +323,7 @@ function AppContent() {
       });
 
       toast.success('🎉 Referral bonus applied! +300 XP', {
-        description: 'Welcome to Predit of Predictions!',
+        description: 'Welcome to Predit Market of Predictions!',
       });
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Failed to apply referral');
@@ -419,7 +419,7 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Predit AI Oracles - AI-Powered Predictions</title>
+              <title>Predit Market AI Oracles - AI-Powered Predictions</title>
               <meta
                 name="description"
                 content="Get expert predictions and insights from specialized AI agents. Chat with AI oracles for crypto, tech, politics, sports, and more."
@@ -430,7 +430,7 @@ function AppContent() {
               />
               <meta
                 property="og:title"
-                content="Predit AI Oracles - AI-Powered Predictions"
+                content="Predit Market AI Oracles - AI-Powered Predictions"
               />
               <meta
                 property="og:description"
@@ -446,7 +446,7 @@ function AppContent() {
               />
               <meta
                 name="twitter:title"
-                content="Predit AI Oracles - AI-Powered Predictions"
+                content="Predit Market AI Oracles - AI-Powered Predictions"
               />
               <meta
                 name="twitter:description"
@@ -492,7 +492,7 @@ function AppContent() {
         element={
           <div className="flex h-dvh bg-background overflow-hidden">
             <Helmet>
-              <title>Chat - Select AI Oracle - Predit AI</title>
+              <title>Chat - Select AI Oracle - Predit Market AI</title>
               <meta
                 name="description"
                 content="Choose an AI oracle to get expert predictions and insights"
@@ -572,7 +572,7 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Hot Takes - Predit AI Oracles</title>
+              <title>Hot Takes - Predit Market AI Oracles</title>
               <meta
                 name="description"
                 content="Explore trending news and articles analyzed by our AI oracles"
@@ -631,10 +631,10 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Leaderboard - Predit AI Oracles</title>
+              <title>Leaderboard - Predit Market AI Oracles</title>
               <meta
                 name="description"
-                content="View top predictors and compete with other users on the Predit leaderboard"
+                content="View top predictors and compete with other users on the Predit Market leaderboard"
               />
               <link
                 rel="canonical"
@@ -658,7 +658,7 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Subscription Plans - Predit AI Oracles</title>
+              <title>Subscription Plans - Predit Market AI Oracles</title>
               <meta
                 name="description"
                 content="Upgrade to Pro for unlimited predictions and exclusive features"
@@ -696,7 +696,7 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Settings - Predit AI Oracles</title>
+              <title>Settings - Predit Market AI Oracles</title>
               <meta
                 name="description"
                 content="Manage your account settings and preferences"
@@ -726,7 +726,7 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>AI Oracles - Predit AI</title>
+              <title>AI Oracles - Predit Market AI</title>
               <meta
                 name="description"
                 content="Browse and select from our specialized AI oracles for expert predictions"
@@ -926,7 +926,7 @@ function ChatWithOracleWrapper({
   return (
     <div className="flex h-dvh bg-background overflow-hidden">
       <Helmet>
-        <title>Chat with {selectedAIAgent.name} - Predit AI</title>
+        <title>Chat with {selectedAIAgent.name} - Predit Market AI</title>
         <meta
           name="description"
           content={`Get expert predictions from ${selectedAIAgent.name}, a ${selectedAIAgent.type}`}
@@ -990,10 +990,10 @@ function SharedPredictionWrapper() {
   return (
     <>
       <Helmet>
-        <title>Shared Prediction - Predit AI Oracles</title>
+        <title>Shared Prediction - Predit Market AI Oracles</title>
         <meta
           name="description"
-          content="View shared prediction from Predit AI Oracles"
+          content="View shared prediction from Predit Market AI Oracles"
         />
         <link
           rel="canonical"

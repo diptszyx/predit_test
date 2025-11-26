@@ -2,7 +2,7 @@
 
 :root {
   --font-size: 16px;
-  
+
   /* Light mode - Clean, minimal palette */
   --background: #ffffff;
   --foreground: #0f172a;
@@ -24,7 +24,7 @@
   --input: #e2e8f0;
   --ring: #6366f1;
   --radius: 0.75rem;
-  
+
   /* Sidebar */
   --sidebar: #fafafa;
   --sidebar-foreground: #0f172a;
@@ -57,7 +57,7 @@
   --border: #262626;
   --input: #1a1a1a;
   --ring: #3b82f6;
-  
+
   /* Sidebar */
   --sidebar: #0a0a0a;
   --sidebar-foreground: #f5f5f5;
@@ -222,7 +222,10 @@ html {
 }
 
 /* Override for specific elements that shouldn't transition */
-input, textarea, select, button {
+input,
+textarea,
+select,
+button {
   transition: none;
 }
 
@@ -231,6 +234,7 @@ input, textarea, select, button {
   from {
     transform: translateX(-100%);
   }
+
   to {
     transform: translateX(0);
   }

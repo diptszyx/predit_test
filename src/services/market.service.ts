@@ -5,12 +5,12 @@ import { OracleEntity } from './oracles.service';
 export interface Market {
   id: string;
   question: string;
-  status: 'open' | 'closed' | 'resolved' | 'cancelled';
+  status: 'open' | 'end' | 'resolved' | 'cancelled';
   imageUrl: string;
   yesPool: number;
   noPool: number;
   totalBets: number;
-  closedAt: string;
+  closeAt: string;
   oracle: OracleEntity;
   isBetted: boolean;
 }
@@ -22,6 +22,7 @@ export interface MarketBet {
   prediction: 'yes' | 'no';
   amount: number;
   payout: number;
+  market: Market
 }
 
 export interface QueryMarketParams {
@@ -38,11 +39,7 @@ export interface PlaceBetDto {
 
 export interface InfinityPaginationResponse<T> {
   data: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-  };
+  hasNextPage: boolean;
 }
 
 export const getListMarket = async (params?: QueryMarketParams) => {

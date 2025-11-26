@@ -96,6 +96,7 @@ interface ChatPageProps {
 const tabs = [
   { id: 'chat', label: 'Chat' },
   { id: 'hotTakes', label: 'Hot Takes' },
+  { id: 'market', label: 'Market' },
 ];
 
 const PAGE_SIZE = 10;
@@ -1178,6 +1179,33 @@ export function ChatPage({
                   </Card>
                 </div>
               )}
+
+              {currentTab === 'market' && (
+                <div className="lg:hidden w-full space-y-3 pt-[130px] h-full">
+                  {/* Market Section */}
+                  <Card
+                    className="border-border h-full"
+                    style={{ borderRadius: 0 }}
+                  >
+                    <CardHeader className="border-b border-border pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Zap className="w-4 h-4" />
+                        <span>Markets</span>
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Latest market from {aiAgent.name}
+                      </p>
+                    </CardHeader>
+
+                    <div
+                      className="h-full"
+                      style={{ overflow: 'auto' }}
+                    >
+                      <MarketList oracleId={aiAgent.id} />
+                    </div>
+                  </Card>
+                </div>
+              )}
             </div>
             {/* News Feed - Right - Hidden on mobile */}
             <div className="hidden lg:block w-full h-full lg:w-80">
@@ -1188,6 +1216,7 @@ export function ChatPage({
                   height: 'calc(50vh - 12px)',
                   borderTopLeftRadius: 0,
                   borderTopRightRadius: 0,
+                  gap: 0,
                 }}
               >
                 <CardHeader className="border-b border-border pb-3">
@@ -1203,7 +1232,7 @@ export function ChatPage({
                   className="h-full"
                   style={{ overflow: 'auto' }}
                 >
-                  <MarketList />
+                  <MarketList oracleId={aiAgent.id} />
                 </div>
               </Card>
 
@@ -1214,6 +1243,7 @@ export function ChatPage({
                   height: '50vh',
                   borderBottomLeftRadius: 0,
                   borderBottomRightRadius: 0,
+                  gap: 0,
                 }}
               >
                 <CardHeader className="border-b border-border pb-3">

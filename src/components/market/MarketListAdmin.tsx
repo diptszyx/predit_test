@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import { CircleAlert, Loader2, Pen } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '../ui/card';
-import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { Button } from '../ui/button';
-import { Skeleton } from '../ui/skeleton';
-import { Market } from '../../services/market.service';
+import { toast } from 'sonner';
 import { marketAdminServices } from '../../services/market-admin.service';
-import { Loader2 } from 'lucide-react';
+import { Market } from '../../services/market.service';
+import CreateUpdateMarketModal from '../CreateMarket';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
+import { Button } from '../ui/button';
+import { Card, CardContent } from '../ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Skeleton } from '../ui/skeleton';
 
 export interface MarketItemProps {
   item: Market;
@@ -39,7 +43,6 @@ export default function MarketListAdmin() {
           ...(statusFilter !== 'all' && { status: statusFilter }),
         };
         const data = await marketAdminServices.listAllMarkets(params);
-        console.log(data);
         setMarkets(data.data);
         setTotalPages(data.meta.totalPages);
         setError(null);
@@ -152,43 +155,175 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onClick }) => {
   const yesPercent = item.totalBets > 0 ? item.yesPool / item.totalBets : 50;
   const noPercent = item.totalBets > 0 ? item.noPool / item.totalBets : 50;
 
+  const [openConfirmCancel, setOpenConfirmCancel] = useState(false)
+  const [openMarketResult, setOpenMarketResult] = useState(false)
+  const [openUpdateMarket, setOpenUpdateMarket] = useState(false)
+
+  const handleCancelMarket = async () => {
+    try {
+      const data = await marketAdminServices.cancelMarket(item.id);
+      if (data) {
+        toast.success("Cancel market successfully!")
+        setOpenConfirmCancel(false)
+      }
+    } catch (error) {
+      console.error("Failed to cancel market: ", error);
+    }
+  }
+
+  const handleResolveMarket = async (result: "yes" | "no") => {
+    try {
+      const data = await marketAdminServices.resolveMarket(item.id, {
+        outcome: result
+      })
+
+      if (data) {
+        setOpenMarketResult(false)
+        toast.success(`Market outcome has been set to ${result.toUpperCase()}`)
+      }
+    } catch (error) {
+      console.log("Failed to resolve market: ", error)
+    }
+  }
+
   return (
-    <Card
-      className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg"
-      onClick={() => onClick(item)}
-    >
-      <div className="relative h-32 md:h-[200px] overflow-hidden">
-        <ImageWithFallback
-          src={item.imageUrl || '/placeholder.png'}
-          alt={item.question}
-          className="w-full h-full object-cover"
-        />
-      </div>
+    <>
+      {/* Confirm cancel */}
+      <AlertDialog
+        open={openConfirmCancel}
+        onOpenChange={setOpenConfirmCancel}
+      >
+        <AlertDialogContent className="max-w-md mx-0 sm:mx-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <CircleAlert className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+              Confirm Cancel Market
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                Are you sure you want to cancel this market?
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="w-full sm:w-auto">
+              Maybe Later
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelMarket}
+              className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto"
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <CardContent className="p-2">
-        <h4 className="text-xs mb-1 line-clamp-2 leading-tight">
-          {item.question}
-        </h4>
-
-        <div className="my-2">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs font-medium text-green-600">{yesPercent}%</p>
-            <p className="text-xs font-medium text-red-600">{noPercent}%</p>
+      {/* Resolve market */}
+      <Dialog open={openMarketResult} onOpenChange={setOpenMarketResult}>
+        <DialogContent className="sm:max-w-3xl"
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Resolve Market Outcome
+            </DialogTitle>
+            <DialogDescription className="text-left">
+              Select the final result for this market. Once confirmed, the outcome cannot
+              be changed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='flex gap-2 w-full mt-6'>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-600 hover:to-green-600 cursor-pointer"
+              onClick={() => handleResolveMarket("yes")}
+            >
+              Yes
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 bg-gradient-to-r from-red-500 to-red-500 hover:from-red-600 hover:to-red-600 cursor-pointer"
+              onClick={() => handleResolveMarket("no")}
+            >
+              No
+            </Button>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <div className="w-full h-2 rounded-full overflow-hidden flex">
-            <div className="bg-green-500" style={{ width: `${yesPercent}%` }} />
-            <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
-          </div>
+      <CreateUpdateMarketModal open={openUpdateMarket} onOpenChange={setOpenUpdateMarket} isUpdate item={item} />
+
+      <Card
+        className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg"
+        onClick={() => onClick(item)}
+      >
+        <div className="relative h-32 md:h-[200px] overflow-hidden">
+          <ImageWithFallback
+            src={item.imageUrl || '/placeholder.png'}
+            alt={item.question}
+            className="w-full h-full object-cover"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e: Event) => {
+              e.stopPropagation()
+              setOpenUpdateMarket(true)
+            }}
+            className="absolute top-2 right-2 bg-background/50"
+          >
+            <Pen className="w-4 h-4" />
+          </Button>
         </div>
 
-        <div className="flex items-center justify-between mt-2 gap-2">
-          <div className="flex-1 text-center text-xs text-gray-600">
-            Status: <span className="font-medium capitalize">{item.status}</span>
+        <CardContent className="p-2">
+          <h4 className="text-xs mb-1 line-clamp-2 leading-tight">
+            {item.question}
+          </h4>
+
+          <div className="my-2">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-medium text-green-600">{yesPercent}%</p>
+              <p className="text-xs font-medium text-red-600">{noPercent}%</p>
+            </div>
+
+            <div className="w-full h-2 rounded-full overflow-hidden flex">
+              <div className="bg-green-500" style={{ width: `${yesPercent}%` }} />
+              <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+
+          <div className="flex items-center justify-between mt-2 gap-2">
+            <div className="flex-1 text-center text-xs text-gray-600">
+              Status: <span className="font-medium capitalize">{item.status}</span>
+            </div>
+          </div>
+
+          {
+            item.status === "open" && <>
+              <div className='flex gap-2 mt-4'>
+                <Button variant="outline"
+                  size="sm" onClick={(e: Event) => {
+                    e.stopPropagation()
+                    setOpenConfirmCancel(true)
+                  }}
+                  className="flex-1"
+                >Cancel</Button>
+                <Button variant="outline"
+                  size="sm" onClick={(e: Event) => {
+                    e.stopPropagation()
+                    setOpenMarketResult(true)
+                  }}
+                  className="flex-1"
+                >Resolve</Button>
+              </div>
+            </>
+          }
+        </CardContent>
+      </Card >
+    </>
   );
 };
 

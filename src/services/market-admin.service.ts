@@ -1,9 +1,9 @@
-import apiClient from '../lib/axios';
+import apiClient from "../lib/axios";
 import {
-  Market,
   InfinityPaginationResponse,
+  Market,
   MarketBet,
-} from './market.service';
+} from "./market.service";
 
 export interface CreateMarketValues {
   question: string;
@@ -18,10 +18,11 @@ export interface CreateMarketValues {
 export interface UpdateMarketDto {
   question?: string;
   description?: string;
+  imageUrl?: string | null;
 }
 
 export interface ResolveMarketDto {
-  outcome: 'yes' | 'no';
+  outcome: "yes" | "no";
 }
 
 export interface QueryMarketAdminParams {
@@ -37,13 +38,13 @@ export interface QueryMarketBetsParams {
 
 export const marketAdminServices = {
   createMarket: async (createData: CreateMarketValues) => {
-    const response = await apiClient.post<Market>('/market-admin', createData);
+    const response = await apiClient.post<Market>("/market-admin", createData);
     return response.data;
   },
 
   listAllMarkets: async (params?: QueryMarketAdminParams) => {
     const response = await apiClient.get<InfinityPaginationResponse<Market>>(
-      '/market-admin',
+      "/market-admin",
       { params }
     );
     return response.data;
@@ -59,6 +60,11 @@ export const marketAdminServices = {
       `/market-admin/${id}`,
       updateData
     );
+    return response.data;
+  },
+
+  cancelMarket: async (id: string) => {
+    const response = await apiClient.post<Market>(`/market-admin/${id}/cancel`);
     return response.data;
   },
 

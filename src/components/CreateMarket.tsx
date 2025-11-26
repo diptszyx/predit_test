@@ -1,7 +1,7 @@
 import { Controller, useForm } from 'react-hook-form';
 
-import { CircleFadingPlus, Loader2 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { CircleFadingPlus, Loader2, Pen } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { uploadFile } from '../services/file.service';
@@ -9,6 +9,7 @@ import {
   CreateMarketValues,
   marketAdminServices,
 } from '../services/market-admin.service';
+import { Market } from '../services/market.service';
 import { Button } from './ui/button';
 import { DateTimePicker } from './ui/datetime-picker';
 import {
@@ -25,15 +26,19 @@ import { ScrollArea } from './ui/scroll-area';
 import { Textarea } from './ui/textarea';
 import { cn } from './ui/utils';
 
-interface CreateMarketModalProps {
+interface CreateUpdateMarketModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isUpdate?: boolean
+  item?: Market
 }
 
-export default function CreateMarketModal({
+export default function CreateUpdateMarketModal({
   open,
   onOpenChange,
-}: CreateMarketModalProps) {
+  isUpdate,
+  item,
+}: CreateUpdateMarketModalProps) {
   const { oracleId } = useParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -49,10 +54,10 @@ export default function CreateMarketModal({
     reset,
   } = useForm<CreateMarketValues>({
     defaultValues: {
-      question: '',
-      description: '',
+      question: isUpdate ? item?.question : '',
+      description: isUpdate ? item?.description : '',
       closeAt: undefined,
-      imageUrl: null,
+      imageUrl: isUpdate ? item?.imageUrl : null,
       oracleId: oracleId,
     },
   });
@@ -85,7 +90,7 @@ export default function CreateMarketModal({
       console.error('Error uploading photo:', error);
       toast.error(
         error?.response?.data?.message ||
-          'Failed to upload photo. Please try again.'
+        'Failed to upload photo. Please try again.'
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -97,17 +102,31 @@ export default function CreateMarketModal({
   };
 
   const onSubmit = async (data: CreateMarketValues) => {
-    const payload = {
-      ...data,
-      closeAt: data.closeAt ? new Date(data.closeAt).toISOString() : undefined,
-    };
     setIsCreating(true);
 
     try {
-      const res = await marketAdminServices.createMarket(payload);
-      if (res) {
-        toast.success('Create market successfully!');
-        handleClose();
+      if (!isUpdate) {
+        const payload = {
+          ...data,
+          closeAt: data.closeAt ? new Date(data.closeAt).toISOString() : undefined,
+        };
+        const res = await marketAdminServices.createMarket(payload);
+        if (res) {
+          toast.success('Create market successfully!');
+          handleClose();
+        }
+      } else {
+        if (!item) return
+        const payload = {
+          question: data.question,
+          description: data.description,
+          imageUrl: data.imageUrl
+        };
+        const res = await marketAdminServices.updateMarket(item?.id, payload);
+        if (res) {
+          toast.success('Update market successfully!');
+          handleClose();
+        }
       }
     } catch (error) {
       console.error('Failed to create market: ', error);
@@ -116,15 +135,31 @@ export default function CreateMarketModal({
     }
   };
 
+  useEffect(() => {
+    if (open && isUpdate && item) {
+      setValue("question", item.question)
+    }
+  }, [open, isUpdate, item, oracleId, reset]);
+
   const handleClose = () => {
     onOpenChange(false);
-    reset({
-      question: '',
-      description: '',
-      closeAt: undefined,
-      imageUrl: null,
-      oracleId: oracleId,
-    });
+
+    if (isUpdate && item) {
+      reset({
+        question: item.question,
+        description: item.description ?? '',
+        imageUrl: item.imageUrl ?? null,
+        oracleId,
+      });
+    } else {
+      reset({
+        question: '',
+        description: '',
+        closeAt: undefined,
+        imageUrl: null,
+        oracleId,
+      });
+    }
   };
 
   return (
@@ -135,14 +170,16 @@ export default function CreateMarketModal({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Create Market
+            {isUpdate ? "Update Market" : "Create Market"}
           </DialogTitle>
           <DialogDescription className="text-left">
-            Provide details to create your market.
+            {isUpdate ? 'Update the details of your market.' :
+              "Provide details to create your market."
+            }
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="h-[80vh] pr-4">
+        <ScrollArea className={`${!isUpdate && 'h-[80vh]'} pr-4`}>
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-5 overflow-x-hidden"
@@ -159,49 +196,52 @@ export default function CreateMarketModal({
                   setValue('question', e.currentTarget.value);
                   clearErrors('question');
                 }}
+                value={isUpdate && getValues("question")}
               />
               {errors.question && (
                 <p className="text-xs text-red-500">Question is required</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="closeAt" className="px-1">
-                Close At<span className="text-red-500">*</span>
-              </Label>
-              <Controller
-                control={control}
-                name="closeAt"
-                rules={{
-                  required: 'Close time is required',
-                  validate: (value) => {
-                    if (!value) return 'Close time is required';
-                    const now = new Date();
-                    if (value <= now) {
-                      return 'Close time must be in the future';
-                    }
-                    return true;
-                  },
-                }}
-                render={({ field }) => (
-                  <DateTimePicker
-                    value={field.value as Date}
-                    onChange={(date) => {
-                      field.onChange(date);
-                      clearErrors('closeAt');
-                    }}
-                    min={new Date()}
-                    modal={true}
-                  />
+            {
+              !isUpdate &&
+              <div className="space-y-2">
+                <Label htmlFor="closeAt" className="px-1">
+                  Close At<span className="text-red-500">*</span>
+                </Label>
+                <Controller
+                  control={control}
+                  name="closeAt"
+                  rules={{
+                    required: 'Close time is required',
+                    validate: (value) => {
+                      if (!value) return 'Close time is required';
+                      const now = new Date();
+                      if (value <= now) {
+                        return 'Close time must be in the future';
+                      }
+                      return true;
+                    },
+                  }}
+                  render={({ field }) => (
+                    <DateTimePicker
+                      value={field.value as Date}
+                      onChange={(date) => {
+                        field.onChange(date);
+                        clearErrors('closeAt');
+                      }}
+                      min={new Date()}
+                      modal={true}
+                    />
+                  )}
+                />
+                {errors.closeAt && (
+                  <p className="text-xs text-red-500">
+                    {errors.closeAt.message as string}
+                  </p>
                 )}
-              />
-              {errors.closeAt && (
-                <p className="text-xs text-red-500">
-                  {errors.closeAt.message as string}
-                </p>
-              )}
-            </div>
-
+              </div>
+            }
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
@@ -212,6 +252,7 @@ export default function CreateMarketModal({
                   setValue('description', e.currentTarget.value);
                   clearErrors('description');
                 }}
+                value={isUpdate && getValues("description")}
               />
             </div>
 
@@ -268,16 +309,22 @@ export default function CreateMarketModal({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isCreating}>
+              <Button
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 cursor-pointer"
+                type="submit" disabled={isCreating}>
                 {isCreating ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
+                    {isUpdate ? "Updating" : "Creating..."}
                   </>
                 ) : (
                   <>
-                    <CircleFadingPlus className="w-4 h-4 mr-1" />
-                    Create
+                    {isUpdate ?
+                      <Pen className="w-4 h-4 mr-1" />
+                      :
+                      <CircleFadingPlus className="w-4 h-4 mr-1" />
+                    }
+                    {isUpdate ? "Update" : "Create"}
                   </>
                 )}
               </Button>

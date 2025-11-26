@@ -12,6 +12,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -166,15 +167,14 @@ export function HomePage({
             <div className="text-center flex gap-6 flex-col">
               {/* Headline */}
               <h1
-                className="text-white"
+                className="text-white font-semibold"
                 style={{
                   fontSize: 'clamp(32px, 5vw, 60px)',
                   lineHeight: '1.1',
-                  fontWeight: 600,
                   textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                 }}
               >
-                Your Personalized AI for Markets
+                AI-Powered Market Predictions - Your Personalized AI for Markets
               </h1>
 
               {/* Subtitle */}
@@ -202,8 +202,9 @@ export function HomePage({
                 }}
               >
                 <div
-                  className={`relative transition-all duration-150 ease-out ${isFocused ? 'scale-[1.01]' : ''
-                    }`}
+                  className={`relative transition-all duration-150 ease-out ${
+                    isFocused ? 'scale-[1.01]' : ''
+                  }`}
                   style={{
                     height: 'clamp(56px, 8vw, 72px)',
                     borderRadius: '9999px',
@@ -331,10 +332,7 @@ export function HomePage({
         <div className="container mx-auto px-4 py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {STATS.map((stat, index) => (
-              <div
-                key={index}
-                className="text-center space-y-2"
-              >
+              <div key={index} className="text-center space-y-2">
                 <div className="flex justify-center">
                   <stat.icon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                 </div>
@@ -359,10 +357,7 @@ export function HomePage({
         </div>
         <div className="grid md:grid-cols-2 gap-6">
           {FEATURES.map((feature, index) => (
-            <Card
-              key={index}
-              className="p-6 hover:shadow-lg transition-shadow"
-            >
+            <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start gap-4">
                 <div
                   className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center flex-shrink-0`}
@@ -423,7 +418,6 @@ export function HomePage({
         </div>
       </section>
 
-
       {/* Benefits Section */}
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -443,10 +437,7 @@ export function HomePage({
             </p>
             <div className="space-y-3">
               {BENEFITS.map((benefit, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3"
-                >
+                <div key={index} className="flex items-start gap-3">
                   <CheckCircle2 className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                   <p className="text-lg">{benefit}</p>
                 </div>
@@ -500,6 +491,105 @@ export function HomePage({
           </Card>
         </div>
       </section>
+
+      {/* Footer Section with Internal Links */}
+      <footer className="border-t border-border bg-muted/30">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="font-semibold mb-4">Platform</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    to="/chat"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    AI Oracles
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/hot-takes"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Hot Takes
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/leaderboard"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Leaderboard
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/subscription"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Pricing
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Features</h3>
+              <ul className="space-y-2">
+                <li>
+                  <span className="text-muted-foreground">AI Predictions</span>
+                </li>
+                <li>
+                  <span className="text-muted-foreground">Market Analysis</span>
+                </li>
+                <li>
+                  <span className="text-muted-foreground">XP & Rewards</span>
+                </li>
+                <li>
+                  <span className="text-muted-foreground">
+                    Real-time Insights
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Resources</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    to="/settings"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Settings
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Company</h3>
+              <ul className="space-y-2">
+                <li>
+                  <span className="text-muted-foreground">About Us</span>
+                </li>
+                <li>
+                  <span className="text-muted-foreground">Privacy Policy</span>
+                </li>
+                <li>
+                  <span className="text-muted-foreground">
+                    Terms of Service
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
+            <p>
+              &copy; {new Date().getFullYear()} Predit AI Oracles. All rights
+              reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

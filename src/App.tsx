@@ -422,22 +422,22 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Predit AI Oracles - AI-Powered Predictions</title>
+              <title>AI-Powered Market Predictions | Predit AI Oracles Platform</title>
               <meta
                 name="description"
-                content="Get expert predictions and insights from specialized AI agents. Chat with AI oracles for crypto, tech, politics, sports, and more."
+                content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, sports, and financial markets with our AI agents platform."
               />
               <meta
                 name="keywords"
-                content="AI predictions, AI oracles, cryptocurrency predictions, tech predictions, sports predictions, AI agents"
+                content="AI-powered predictions, AI oracles, market predictions, cryptocurrency predictions, tech predictions, sports predictions, AI agents, financial market analysis"
               />
               <meta
                 property="og:title"
-                content="Predit AI Oracles - AI-Powered Predictions"
+                content="AI-Powered Market Predictions | Predit AI Oracles Platform"
               />
               <meta
                 property="og:description"
-                content="Get expert predictions and insights from specialized AI agents."
+                content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
               <meta
                 property="og:type"
@@ -449,11 +449,11 @@ function AppContent() {
               />
               <meta
                 name="twitter:title"
-                content="Predit AI Oracles - AI-Powered Predictions"
+                content="AI-Powered Market Predictions | Predit AI Oracles Platform"
               />
               <meta
                 name="twitter:description"
-                content="Get expert predictions and insights from specialized AI agents."
+                content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
               <link
                 rel="canonical"
@@ -495,10 +495,22 @@ function AppContent() {
         element={
           <div className="flex h-dvh bg-background overflow-hidden">
             <Helmet>
-              <title>Chat - Select AI Oracle - Predit AI</title>
+              <title>Chat with AI Oracle Agents | Expert Market Predictions</title>
               <meta
                 name="description"
-                content="Choose an AI oracle to get expert predictions and insights"
+                content="Chat with specialized AI oracle agents for expert market predictions. Choose from crypto, tech, politics, and financial market AI oracles to get personalized predictions and insights."
+              />
+              <meta
+                name="keywords"
+                content="AI oracle chat, AI agents, market predictions, crypto oracle, tech oracle, financial predictions, AI chat, expert predictions"
+              />
+              <meta
+                property="og:title"
+                content="Chat with AI Oracle Agents | Expert Market Predictions"
+              />
+              <meta
+                property="og:description"
+                content="Chat with specialized AI oracle agents for expert market predictions and insights."
               />
               <link
                 rel="canonical"
@@ -509,7 +521,7 @@ function AppContent() {
             <div className="flex-1 overflow-y-auto">
               <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
-                  <h1 className="mb-2">Choose Your AI Agent</h1>
+                  <h1 className="text-4xl md:text-5xl mb-2">Choose Your AI Oracle Agent</h1>
                   <p className="text-muted-foreground">
                     Select an AI agent to get expert predictions and insights
                   </p>
@@ -575,10 +587,22 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Hot Takes - Predit AI Oracles</title>
+              <title>Hot Takes & Market News | AI Oracle Analysis & Predictions</title>
               <meta
                 name="description"
-                content="Explore trending news and articles analyzed by our AI oracles"
+                content="Explore hot takes and trending market news analyzed by AI oracles. Get predictions and expert analysis on crypto, tech, and financial market news from our AI prediction platform."
+              />
+              <meta
+                name="keywords"
+                content="hot takes, market news, AI analysis, oracle predictions, crypto news, tech news, financial news analysis, AI predictions"
+              />
+              <meta
+                property="og:title"
+                content="Hot Takes & Market News | AI Oracle Analysis & Predictions"
+              />
+              <meta
+                property="og:description"
+                content="Explore trending market news and hot takes analyzed by AI oracles with expert predictions."
               />
               <link
                 rel="canonical"
@@ -634,10 +658,22 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Leaderboard - Predit AI Oracles</title>
+              <title>Prediction Leaderboard | Top AI Oracle Users & Rankings</title>
               <meta
                 name="description"
-                content="View top predictors and compete with other users on the Predit leaderboard"
+                content="View the prediction leaderboard and top AI oracle users. Compete with other predictors, track your rankings, earn XP, and climb the leaderboard on our AI predictions platform."
+              />
+              <meta
+                name="keywords"
+                content="prediction leaderboard, top predictors, AI oracle rankings, user rankings, XP leaderboard, prediction competition, AI platform rankings"
+              />
+              <meta
+                property="og:title"
+                content="Prediction Leaderboard | Top AI Oracle Users & Rankings"
+              />
+              <meta
+                property="og:description"
+                content="View top predictors and compete on the prediction leaderboard. Track rankings and earn XP."
               />
               <link
                 rel="canonical"
@@ -661,10 +697,22 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Subscription Plans - Predit AI Oracles</title>
+              <title>Subscription Plans & Pricing | Unlimited AI Predictions</title>
               <meta
                 name="description"
-                content="Upgrade to Pro for unlimited predictions and exclusive features"
+                content="Subscription plans and pricing for AI oracle predictions. Upgrade to Pro for unlimited predictions, 2x XP rewards, and exclusive AI market analysis features on our prediction platform."
+              />
+              <meta
+                name="keywords"
+                content="subscription plans, pricing, unlimited predictions, pro subscription, AI predictions pricing, oracle subscription, premium features"
+              />
+              <meta
+                property="og:title"
+                content="Subscription Plans & Pricing | Unlimited AI Predictions"
+              />
+              <meta
+                property="og:description"
+                content="Upgrade to Pro for unlimited AI oracle predictions and exclusive features."
               />
               <link
                 rel="canonical"
@@ -699,10 +747,22 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Settings - Predit AI Oracles</title>
+              <title>Account Settings | AI Oracle Predictions Platform</title>
               <meta
                 name="description"
-                content="Manage your account settings and preferences"
+                content="Manage your account settings and preferences for the AI oracle predictions platform. Update profile, manage subscription, and customize your prediction experience."
+              />
+              <meta
+                name="keywords"
+                content="account settings, user preferences, profile settings, subscription management, AI oracle settings, prediction platform settings"
+              />
+              <meta
+                property="og:title"
+                content="Account Settings | AI Oracle Predictions Platform"
+              />
+              <meta
+                property="og:description"
+                content="Manage your account settings and preferences for AI oracle predictions."
               />
               <link
                 rel="canonical"
@@ -729,10 +789,22 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>AI Oracles - Predit AI</title>
+              <title>Browse AI Oracle Agents | Expert Market Prediction Tools</title>
               <meta
                 name="description"
-                content="Browse and select from our specialized AI oracles for expert predictions"
+                content="Browse and select from specialized AI oracle agents for expert market predictions. Access crypto oracles, tech oracles, political prediction agents, and financial market analysis tools."
+              />
+              <meta
+                name="keywords"
+                content="AI oracles, oracle agents, crypto oracle, tech oracle, market prediction tools, AI prediction agents, financial oracles, expert AI agents"
+              />
+              <meta
+                property="og:title"
+                content="Browse AI Oracle Agents | Expert Market Prediction Tools"
+              />
+              <meta
+                property="og:description"
+                content="Browse specialized AI oracle agents for expert market predictions and analysis."
               />
               <link
                 rel="canonical"
@@ -743,7 +815,7 @@ function AppContent() {
             <div className="flex-1 overflow-y-auto">
               <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
-                  <h1 className="mb-2">Choose Your AI Agent</h1>
+                  <h1 className="text-4xl md:text-5xl mb-2">AI Oracle Agents - Expert Market Predictions</h1>
                   <p className="text-muted-foreground">
                     Select an AI agent to get expert predictions and insights
                   </p>
@@ -957,10 +1029,22 @@ function ChatWithOracleWrapper({
   return (
     <div className="flex h-dvh bg-background overflow-hidden">
       <Helmet>
-        <title>Chat with {selectedAIAgent.name} - Predit AI</title>
+        <title>Chat with {selectedAIAgent.name} | {selectedAIAgent.type} Oracle Predictions</title>
         <meta
           name="description"
-          content={`Get expert predictions from ${selectedAIAgent.name}, a ${selectedAIAgent.type}`}
+          content={`Chat with ${selectedAIAgent.name} AI oracle for expert ${selectedAIAgent.type} predictions. Get personalized market insights, analysis, and predictions from our specialized AI agent.`}
+        />
+        <meta
+          name="keywords"
+          content={`${selectedAIAgent.name}, ${selectedAIAgent.type} oracle, AI predictions, chat with AI oracle, market predictions, AI analysis, expert predictions`}
+        />
+        <meta
+          property="og:title"
+          content={`Chat with ${selectedAIAgent.name} | ${selectedAIAgent.type} Oracle Predictions`}
+        />
+        <meta
+          property="og:description"
+          content={`Get expert ${selectedAIAgent.type} predictions from ${selectedAIAgent.name} AI oracle.`}
         />
         <link
           rel="canonical"
@@ -1021,10 +1105,22 @@ function SharedPredictionWrapper() {
   return (
     <>
       <Helmet>
-        <title>Shared Prediction - Predit AI Oracles</title>
+        <title>Shared AI Prediction | Market Oracle Analysis</title>
         <meta
           name="description"
-          content="View shared prediction from Predit AI Oracles"
+          content="View shared AI oracle prediction and market analysis. Explore expert predictions, insights, and market forecasts from our AI prediction platform."
+        />
+        <meta
+          name="keywords"
+          content="shared prediction, AI oracle prediction, market analysis, prediction sharing, AI forecast, oracle insights, market prediction"
+        />
+        <meta
+          property="og:title"
+          content="Shared AI Prediction | Market Oracle Analysis"
+        />
+        <meta
+          property="og:description"
+          content="View shared AI oracle prediction and market analysis from our expert prediction platform."
         />
         <link
           rel="canonical"

@@ -1,10 +1,10 @@
-// services/market.service.ts
 import apiClient from '../lib/axios';
 import { OracleEntity } from './oracles.service';
 
 export interface Market {
   id: string;
   question: string;
+  description?: string;
   status: 'open' | 'end' | 'resolved' | 'cancelled';
   imageUrl: string;
   yesPool: number;
@@ -22,7 +22,7 @@ export interface MarketBet {
   prediction: 'yes' | 'no';
   amount: number;
   payout: number;
-  market: Market
+  market: Market;
 }
 
 export interface QueryMarketParams {
@@ -40,6 +40,14 @@ export interface PlaceBetDto {
 export interface InfinityPaginationResponse<T> {
   data: T[];
   hasNextPage: boolean;
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 export const getListMarket = async (params?: QueryMarketParams) => {

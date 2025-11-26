@@ -8,8 +8,10 @@ import {
   Lock,
   MessageSquare,
   Moon,
+  Plus,
   Sparkles,
   Star,
+  Store,
   Sun,
   ThumbsUp,
   Zap,
@@ -54,8 +56,9 @@ import {
 } from './ui/alert-dialog';
 import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
 import { questionsByAIAgent } from '../constants/prediction';
-import { useNavigate } from 'react-router-dom';
-import MarketList from './market/marketList';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ADMIN_EMAILS } from '../constants/admin';
+import MarketList from './market/MarketList';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -133,6 +136,11 @@ export function ChatPage({
   );
   const [articleCounter, setArticleCounter] = useState(5);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // user
+  const isAdmin = !!(
+    user && (user?.email ? ADMIN_EMAILS.includes(user?.email) : false)
+  );
+
   // Rating and Like states
   const [userRating, setUserRating] = useState<number | null>(0);
   const [hasLiked, setHasLiked] = useState(false);
@@ -169,6 +177,7 @@ export function ChatPage({
   const [currentTab, setCurrentTab] = useState<string>('chat');
 
   const navigate = useNavigate();
+  const { oracleId } = useParams();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -824,6 +833,19 @@ export function ChatPage({
                         >
                           <Info className="w-4 h-4 sm:w-5 sm:h-5" />
                         </Button>
+                        {user && isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/market/${oracleId}`)}
+                            className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
+                          >
+                            <Store className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
+                              Market
+                            </span>
+                          </Button>
+                        )}
                         {/* <Button
                           variant="ghost"
                           size="sm"
@@ -1151,10 +1173,7 @@ export function ChatPage({
               {currentTab === 'hotTakes' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px]">
                   {/* Hot Takes Section */}
-                  <Card
-                    className="border-border"
-                    style={{ borderRadius: 0 }}
-                  >
+                  <Card className="border-border" style={{ borderRadius: 0 }}>
                     <CardHeader className="border-b border-border pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
                         <Zap className="w-4 h-4" />
@@ -1164,10 +1183,7 @@ export function ChatPage({
                         Latest insights from {aiAgent.name}
                       </p>
                     </CardHeader>
-                    <div
-                      className="h-full"
-                      style={{ overflow: 'auto' }}
-                    >
+                    <div className="h-full" style={{ overflow: 'auto' }}>
                       <HotTakeChatPageList
                         newsArticles={newsArticles}
                         isLoadingNews={isLoadingNews}
@@ -1197,10 +1213,7 @@ export function ChatPage({
                       </p>
                     </CardHeader>
 
-                    <div
-                      className="h-full"
-                      style={{ overflow: 'auto' }}
-                    >
+                    <div className="h-full" style={{ overflow: 'auto' }}>
                       <MarketList oracleId={aiAgent.id} />
                     </div>
                   </Card>
@@ -1228,10 +1241,7 @@ export function ChatPage({
                     Latest market from {aiAgent.name}
                   </p>
                 </CardHeader>
-                <div
-                  className="h-full"
-                  style={{ overflow: 'auto' }}
-                >
+                <div className="h-full" style={{ overflow: 'auto' }}>
                   <MarketList oracleId={aiAgent.id} />
                 </div>
               </Card>
@@ -1255,10 +1265,7 @@ export function ChatPage({
                     Latest insights from {aiAgent.name}
                   </p>
                 </CardHeader>
-                <div
-                  className="h-full"
-                  style={{ overflow: 'auto' }}
-                >
+                <div className="h-full" style={{ overflow: 'auto' }}>
                   <HotTakeChatPageList
                     newsArticles={newsArticles}
                     isLoadingNews={isLoadingNews}
@@ -1273,10 +1280,7 @@ export function ChatPage({
         </div>
 
         {/* Sign In Dialog */}
-        <AlertDialog
-          open={signInDialogOpen}
-          onOpenChange={setSignInDialogOpen}
-        >
+        <AlertDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen}>
           <AlertDialogContent className="max-w-md mx-0 sm:mx-auto">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">

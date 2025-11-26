@@ -1,25 +1,47 @@
 import { CircleAlert, Loader2, Pen } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { marketAdminServices } from '../../services/market-admin.service';
 import { Market } from '../../services/market.service';
 import CreateUpdateMarketModal from '../CreateMarket';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
 import { Skeleton } from '../ui/skeleton';
 
 export interface MarketItemProps {
   item: Market;
   onClick: (item: Market) => void;
+  onRefetch: () => void;
 }
 
 type MarketStatus = 'open' | 'closed' | 'resolved' | 'cancelled' | 'all';
 
-export default function MarketListAdmin() {
+interface MarketListAdminProps {
+  onRefetchReady?: (refetch: () => void) => void;
+}
+
+export default function MarketListAdmin({
+  onRefetchReady,
+}: MarketListAdminProps) {
   const navigate = useNavigate();
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,37 +51,48 @@ export default function MarketListAdmin() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    const fetchMarkets = async () => {
-      try {
-        if (markets.length === 0) {
-          setLoading(true);
-        } else {
-          setFetching(true);
-        }
-        const params = {
-          page,
-          limit: 12,
-          ...(statusFilter !== 'all' && { status: statusFilter }),
-        };
-        const data = await marketAdminServices.listAllMarkets(params);
-        setMarkets(data.data);
-        setTotalPages(data.meta.totalPages);
-        setError(null);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load markets.');
-      } finally {
-        setLoading(false);
-        setFetching(false);
+  const fetchMarkets = async () => {
+    try {
+      if (markets.length === 0) {
+        setLoading(true);
+      } else {
+        setFetching(true);
       }
-    };
+      const params = {
+        page,
+        limit: 12,
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+      };
+      const data = await marketAdminServices.listAllMarkets(params);
+      setMarkets(data.data);
+      setTotalPages(data.meta.totalPages);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load markets.');
+    } finally {
+      setLoading(false);
+      setFetching(false);
+    }
+  };
 
+  useEffect(() => {
     fetchMarkets();
   }, [statusFilter, page]);
 
+  useEffect(() => {
+    // Expose refetch function to parent component
+    if (onRefetchReady) {
+      onRefetchReady(fetchMarkets);
+    }
+  }, [onRefetchReady]);
+
   const handleMarketClick = (item: Market) => {
     navigate(`/market/${item.oracle.id}/${item.id}`);
+  };
+
+  const handleRefetch = () => {
+    fetchMarkets();
   };
 
   if (loading) {
@@ -118,7 +151,12 @@ export default function MarketListAdmin() {
           </p>
         ) : (
           markets.map((item) => (
-            <MarketItem key={item.id} item={item} onClick={handleMarketClick} />
+            <MarketItem
+              key={item.id}
+              item={item}
+              onClick={handleMarketClick}
+              onRefetch={handleRefetch}
+            />
           ))
         )}
       </div>
@@ -151,48 +189,56 @@ export default function MarketListAdmin() {
   );
 }
 
-const MarketItem: React.FC<MarketItemProps> = ({ item, onClick }) => {
+const MarketItem: React.FC<MarketItemProps> = ({
+  item,
+  onClick,
+  onRefetch,
+}) => {
   const yesPercent = item.totalBets > 0 ? item.yesPool / item.totalBets : 50;
   const noPercent = item.totalBets > 0 ? item.noPool / item.totalBets : 50;
 
-  const [openConfirmCancel, setOpenConfirmCancel] = useState(false)
-  const [openMarketResult, setOpenMarketResult] = useState(false)
-  const [openUpdateMarket, setOpenUpdateMarket] = useState(false)
+  const [openConfirmCancel, setOpenConfirmCancel] = useState(false);
+  const [openMarketResult, setOpenMarketResult] = useState(false);
+  const [openUpdateMarket, setOpenUpdateMarket] = useState(false);
 
   const handleCancelMarket = async () => {
     try {
       const data = await marketAdminServices.cancelMarket(item.id);
       if (data) {
-        toast.success("Cancel market successfully!")
-        setOpenConfirmCancel(false)
+        toast.success('Cancel market successfully!');
+        setOpenConfirmCancel(false);
+        onRefetch(); // Refetch the market list
       }
     } catch (error) {
-      console.error("Failed to cancel market: ", error);
+      console.error('Failed to cancel market: ', error);
     }
-  }
+  };
 
-  const handleResolveMarket = async (result: "yes" | "no") => {
+  const handleResolveMarket = async (result: 'yes' | 'no') => {
     try {
       const data = await marketAdminServices.resolveMarket(item.id, {
-        outcome: result
-      })
+        outcome: result,
+      });
 
       if (data) {
-        setOpenMarketResult(false)
-        toast.success(`Market outcome has been set to ${result.toUpperCase()}`)
+        setOpenMarketResult(false);
+        toast.success(`Market outcome has been set to ${result.toUpperCase()}`);
+        onRefetch(); // Refetch the market list
       }
     } catch (error) {
-      console.log("Failed to resolve market: ", error)
+      console.log('Failed to resolve market: ', error);
     }
-  }
+  };
+
+  const handleUpdateSuccess = () => {
+    setOpenUpdateMarket(false);
+    onRefetch(); // Refetch the market list
+  };
 
   return (
     <>
       {/* Confirm cancel */}
-      <AlertDialog
-        open={openConfirmCancel}
-        onOpenChange={setOpenConfirmCancel}
-      >
+      <AlertDialog open={openConfirmCancel} onOpenChange={setOpenConfirmCancel}>
         <AlertDialogContent className="max-w-md mx-0 sm:mx-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -221,23 +267,22 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onClick }) => {
 
       {/* Resolve market */}
       <Dialog open={openMarketResult} onOpenChange={setOpenMarketResult}>
-        <DialogContent className="sm:max-w-3xl"
-        >
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Resolve Market Outcome
             </DialogTitle>
             <DialogDescription className="text-left">
-              Select the final result for this market. Once confirmed, the outcome cannot
-              be changed.
+              Select the final result for this market. Once confirmed, the
+              outcome cannot be changed.
             </DialogDescription>
           </DialogHeader>
-          <div className='flex gap-2 w-full mt-6'>
+          <div className="flex gap-2 w-full mt-6">
             <Button
               type="button"
               variant="outline"
               className="flex-1 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-600 hover:to-green-600 cursor-pointer"
-              onClick={() => handleResolveMarket("yes")}
+              onClick={() => handleResolveMarket('yes')}
             >
               Yes
             </Button>
@@ -245,7 +290,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onClick }) => {
               type="button"
               variant="outline"
               className="flex-1 bg-gradient-to-r from-red-500 to-red-500 hover:from-red-600 hover:to-red-600 cursor-pointer"
-              onClick={() => handleResolveMarket("no")}
+              onClick={() => handleResolveMarket('no')}
             >
               No
             </Button>
@@ -253,7 +298,13 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onClick }) => {
         </DialogContent>
       </Dialog>
 
-      <CreateUpdateMarketModal open={openUpdateMarket} onOpenChange={setOpenUpdateMarket} isUpdate item={item} />
+      <CreateUpdateMarketModal
+        open={openUpdateMarket}
+        onOpenChange={setOpenUpdateMarket}
+        isUpdate
+        item={item}
+        onSuccess={handleUpdateSuccess}
+      />
 
       <Card
         className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg"
@@ -261,7 +312,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onClick }) => {
       >
         <div className="relative h-32 md:h-[200px] overflow-hidden">
           <ImageWithFallback
-            src={item.imageUrl || '/placeholder.png'}
+            src={item.imageUrl || '/prediction-default.jpeg'}
             alt={item.question}
             className="w-full h-full object-cover"
           />
@@ -269,8 +320,8 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onClick }) => {
             variant="outline"
             size="sm"
             onClick={(e: Event) => {
-              e.stopPropagation()
-              setOpenUpdateMarket(true)
+              e.stopPropagation();
+              setOpenUpdateMarket(true);
             }}
             className="absolute top-2 right-2 bg-background/50"
           >
@@ -285,44 +336,56 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onClick }) => {
 
           <div className="my-2">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium text-green-600">{yesPercent}%</p>
+              <p className="text-xs font-medium text-green-600">
+                {yesPercent}%
+              </p>
               <p className="text-xs font-medium text-red-600">{noPercent}%</p>
             </div>
 
             <div className="w-full h-2 rounded-full overflow-hidden flex">
-              <div className="bg-green-500" style={{ width: `${yesPercent}%` }} />
+              <div
+                className="bg-green-500"
+                style={{ width: `${yesPercent}%` }}
+              />
               <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
             </div>
           </div>
 
           <div className="flex items-center justify-between mt-2 gap-2">
             <div className="flex-1 text-center text-xs text-gray-600">
-              Status: <span className="font-medium capitalize">{item.status}</span>
+              Status:{' '}
+              <span className="font-medium capitalize">{item.status}</span>
             </div>
           </div>
 
-          {
-            item.status === "open" && <>
-              <div className='flex gap-2 mt-4'>
-                <Button variant="outline"
-                  size="sm" onClick={(e: Event) => {
-                    e.stopPropagation()
-                    setOpenConfirmCancel(true)
-                  }}
-                  className="flex-1"
-                >Cancel</Button>
-                <Button variant="outline"
-                  size="sm" onClick={(e: Event) => {
-                    e.stopPropagation()
-                    setOpenMarketResult(true)
-                  }}
-                  className="flex-1"
-                >Resolve</Button>
-              </div>
-            </>
-          }
+          {item.status === 'open' && (
+            <div className="flex gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e: Event) => {
+                  e.stopPropagation();
+                  setOpenConfirmCancel(true);
+                }}
+                className="flex-1 border border-red-500! text-red-500 hover:bg-red-500! hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e: Event) => {
+                  e.stopPropagation();
+                  setOpenMarketResult(true);
+                }}
+                className="flex-1 border border-green-600! text-green-600 hover:bg-green-600! hover:text-white"
+              >
+                Resolve
+              </Button>
+            </div>
+          )}
         </CardContent>
-      </Card >
+      </Card>
     </>
   );
 };

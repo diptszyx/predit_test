@@ -294,7 +294,7 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
               </p>
               <p className="text-muted-foreground">
                 Historical analysis suggests similar events have led to measurable market movements, with an average
-                duration of 2-3 weeks before stabilization. Current Predit odds reflect this uncertainty, offering
+                duration of 2-3 weeks before stabilization. Current Predit Market odds reflect this uncertainty, offering
                 potential value for informed traders.
               </p>
             </div>
@@ -312,8 +312,8 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
                     <div className="flex-1 h-2 bg-accent rounded-full overflow-hidden">
                       <div
                         className={`h-full ${news.rippleEffect === "high" ? "bg-red-500 w-5/6" :
-                            news.rippleEffect === "medium" ? "bg-yellow-500 w-3/5" :
-                              "bg-blue-500 w-2/5"
+                          news.rippleEffect === "medium" ? "bg-yellow-500 w-3/5" :
+                            "bg-blue-500 w-2/5"
                           }`}
                       />
                     </div>
@@ -338,7 +338,7 @@ export function ArticleDetailModal({ news, hotTake, isOpen, onClose, oracleName,
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-emerald-400" />
-                    <h4 className="text-emerald-400">Related Predit Data</h4>
+                    <h4 className="text-emerald-400">Related Predit Market Data</h4>
                   </div>
                   <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
                     {news.polymarketOdds}% Odds

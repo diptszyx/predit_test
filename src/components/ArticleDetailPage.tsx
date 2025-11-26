@@ -73,19 +73,19 @@ export function ArticleDetailPage({
   onBack,
   user,
   darkMode = true,
-  onToggleDarkMode = () => {},
-  onNavigate = () => {},
-  onOpenWalletDialog = () => {},
-  onWalletDisconnect = () => {},
+  onToggleDarkMode = () => { },
+  onNavigate = () => { },
+  onOpenWalletDialog = () => { },
+  onWalletDisconnect = () => { },
   shortenAddress = (addr) => addr,
-  onSetPendingNavigation = () => {},
-  onOpenSettings = () => {},
+  onSetPendingNavigation = () => { },
+  onOpenSettings = () => { },
   currentPage = 'articleDetail',
   previousPage,
-  onWalletConnect = () => {},
-  onSocialConnect = () => {},
-  onOpenPrivacy = () => {},
-  onOpenTerms = () => {},
+  onWalletConnect = () => { },
+  onSocialConnect = () => { },
+  onOpenPrivacy = () => { },
+  onOpenTerms = () => { },
   onSelectRelated,
   onAIAgentClick,
 }: ArticleDetailPageProps) {
@@ -250,14 +250,14 @@ export function ArticleDetailPage({
   return (
     <>
       <Helmet>
-        <title>{article?.title} - Predit AI</title>
+        <title>{article?.title} - Predit Market AI</title>
         <meta
           name="description"
           content={'Read detailed analysis and predictions from our AI oracles'}
         />
         <meta
           property="og:title"
-          content={`${article?.title} - Predit AI`}
+          content={`${article?.title} - Predit Market AI`}
         />
         <meta
           property="og:description"

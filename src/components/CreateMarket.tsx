@@ -29,8 +29,9 @@ import { cn } from './ui/utils';
 interface CreateUpdateMarketModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  isUpdate?: boolean
-  item?: Market
+  isUpdate?: boolean;
+  item?: Market;
+  onSuccess?: () => void;
 }
 
 export default function CreateUpdateMarketModal({
@@ -38,13 +39,13 @@ export default function CreateUpdateMarketModal({
   onOpenChange,
   isUpdate,
   item,
+  onSuccess,
 }: CreateUpdateMarketModalProps) {
   const { oracleId } = useParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const {
-    register,
     handleSubmit,
     clearErrors,
     formState: { errors },
@@ -53,11 +54,12 @@ export default function CreateUpdateMarketModal({
     control,
     reset,
   } = useForm<CreateMarketValues>({
+    mode: 'onChange',
     defaultValues: {
-      question: isUpdate ? item?.question : '',
-      description: isUpdate ? item?.description : '',
+      question: '',
+      description: '',
       closeAt: undefined,
-      imageUrl: isUpdate ? item?.imageUrl : null,
+      imageUrl: null,
       oracleId: oracleId,
     },
   });
@@ -114,6 +116,7 @@ export default function CreateUpdateMarketModal({
         if (res) {
           toast.success('Create market successfully!');
           handleClose();
+          onSuccess?.(); // Call onSuccess callback
         }
       } else {
         if (!item) return
@@ -126,6 +129,7 @@ export default function CreateUpdateMarketModal({
         if (res) {
           toast.success('Update market successfully!');
           handleClose();
+          onSuccess?.(); // Call onSuccess callback
         }
       }
     } catch (error) {
@@ -136,30 +140,28 @@ export default function CreateUpdateMarketModal({
   };
 
   useEffect(() => {
-    if (open && isUpdate && item) {
-      setValue("question", item.question)
+    if (open) {
+      if (isUpdate && item) {
+        reset({
+          question: item.question,
+          description: item.description ?? '',
+          imageUrl: item.imageUrl ?? null,
+          oracleId,
+        });
+      } else {
+        reset({
+          question: '',
+          description: '',
+          closeAt: undefined,
+          imageUrl: null,
+          oracleId,
+        });
+      }
     }
   }, [open, isUpdate, item, oracleId, reset]);
 
   const handleClose = () => {
     onOpenChange(false);
-
-    if (isUpdate && item) {
-      reset({
-        question: item.question,
-        description: item.description ?? '',
-        imageUrl: item.imageUrl ?? null,
-        oracleId,
-      });
-    } else {
-      reset({
-        question: '',
-        description: '',
-        closeAt: undefined,
-        imageUrl: null,
-        oracleId,
-      });
-    }
   };
 
   return (
@@ -181,6 +183,7 @@ export default function CreateUpdateMarketModal({
 
         <ScrollArea className={`${!isUpdate && 'h-[80vh]'} pr-4`}>
           <form
+            key={isUpdate ? item?.id : 'create'}
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-5 overflow-x-hidden"
           >
@@ -188,15 +191,17 @@ export default function CreateUpdateMarketModal({
               <Label htmlFor="question">
                 Question<span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="question"
-                placeholder="Ex: Will Bitcoin reach $100k by the end of 2025?"
-                {...register('question', { required: true })}
-                onChange={(e: any) => {
-                  setValue('question', e.currentTarget.value);
-                  clearErrors('question');
-                }}
-                value={isUpdate && getValues("question")}
+              <Controller
+                control={control}
+                name="question"
+                rules={{ required: !isUpdate }}
+                render={({ field }) => (
+                  <Input
+                    id="question"
+                    placeholder="Ex: Will Bitcoin reach $100k by the end of 2025?"
+                    {...field}
+                  />
+                )}
               />
               {errors.question && (
                 <p className="text-xs text-red-500">Question is required</p>
@@ -244,15 +249,16 @@ export default function CreateUpdateMarketModal({
             }
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Provide details or context about this market (optional)"
-                {...register('description')}
-                onChange={(e: any) => {
-                  setValue('description', e.currentTarget.value);
-                  clearErrors('description');
-                }}
-                value={isUpdate && getValues("description")}
+              <Controller
+                control={control}
+                name="description"
+                render={({ field }) => (
+                  <Textarea
+                    id="description"
+                    placeholder="Provide details or context about this market (optional)"
+                    {...field}
+                  />
+                )}
               />
             </div>
 

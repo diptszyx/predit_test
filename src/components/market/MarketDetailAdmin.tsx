@@ -142,7 +142,7 @@ export default function MarketDetailAdmin() {
             {/* Market Image */}
             <div className="relative h-64 md:h-96 overflow-hidden">
               <ImageWithFallback
-                src={market.imageUrl || '/placeholder.png'}
+                src={market.imageUrl || '/prediction-default.jpeg'}
                 alt={market.question}
                 className="w-full h-full object-cover"
               />

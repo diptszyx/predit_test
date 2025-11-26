@@ -1,16 +1,15 @@
-import apiClient from "../lib/axios";
-import { OracleEntity } from "./oracles.service";
+import apiClient from '../lib/axios';
+import { OracleEntity } from './oracles.service';
 
 export interface Market {
   id: string;
   question: string;
-  description: string;
-  status: "open" | "closed" | "resolved" | "cancelled";
+  status: 'open' | 'end' | 'resolved' | 'cancelled';
   imageUrl: string;
   yesPool: number;
   noPool: number;
   totalBets: number;
-  closedAt: string;
+  closeAt: string;
   oracle: OracleEntity;
   isBetted: boolean;
 }
@@ -19,9 +18,10 @@ export interface MarketBet {
   id: string;
   marketId: string;
   userId: string;
-  prediction: "yes" | "no";
+  prediction: 'yes' | 'no';
   amount: number;
   payout: number;
+  market: Market;
 }
 
 export interface QueryMarketParams {
@@ -32,7 +32,7 @@ export interface QueryMarketParams {
 }
 
 export interface PlaceBetDto {
-  prediction: "yes" | "no";
+  prediction: 'yes' | 'no';
   amount: number;
 }
 
@@ -50,7 +50,7 @@ export interface InfinityPaginationResponse<T> {
 
 export const getListMarket = async (params?: QueryMarketParams) => {
   const response = await apiClient.get<InfinityPaginationResponse<Market>>(
-    "/market",
+    '/market',
     { params }
   );
   return response.data;
@@ -71,7 +71,7 @@ export const placeBet = async (marketId: string, bet: PlaceBetDto) => {
 
 export const getMyBets = async (params?: { page?: number; limit?: number }) => {
   const response = await apiClient.get<InfinityPaginationResponse<MarketBet>>(
-    "/market/my/bets",
+    '/market/my/bets',
     { params }
   );
   return response.data;

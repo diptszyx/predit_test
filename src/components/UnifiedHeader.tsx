@@ -47,7 +47,7 @@ export function UnifiedHeader({
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
                 <span className="text-2xl">🔮</span>
               </div>
-              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-[rgb(255,255,255)] font-bold">Predit of Predictions</span>
+              <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-[rgb(255,255,255)] font-bold">Predit Market of Predictions</span>
             </h1>
 
           </button>

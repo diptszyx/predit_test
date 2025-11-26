@@ -1,4 +1,4 @@
-import { CircleAlert, Loader2, Pen } from 'lucide-react';
+import { CircleAlert, Clock, Loader2, Pen } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../ui/alert-dialog';
+import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import {
@@ -189,17 +190,73 @@ export default function MarketListAdmin({
   );
 }
 
+// Helper function to calculate time remaining
+const getTimeRemaining = (closeAt: string) => {
+  const now = Date.now();
+  const closeTime = new Date(closeAt).getTime();
+  const diff = closeTime - now;
+
+  if (diff <= 0) return 'Closed';
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+
+  return `${seconds}s`;
+};
+
+// Helper function to get status badge variant and className
+const getStatusBadgeProps = (status: string) => {
+  switch (status) {
+    case 'open':
+      return { variant: 'default' as const, className: '' };
+    case 'end':
+      return {
+        variant: 'secondary' as const,
+        className: 'bg-orange-500 text-white hover:bg-orange-600',
+      };
+    case 'resolved':
+      return {
+        variant: 'secondary' as const,
+        className: 'bg-green-500 text-white hover:bg-green-600',
+      };
+    case 'cancelled':
+      return { variant: 'destructive' as const, className: '' };
+    default:
+      return { variant: 'secondary' as const, className: '' };
+  }
+};
+
 const MarketItem: React.FC<MarketItemProps> = ({
   item,
   onClick,
   onRefetch,
 }) => {
-  const yesPercent = item.totalBets > 0 ? item.yesPool / item.totalBets : 50;
-  const noPercent = item.totalBets > 0 ? item.noPool / item.totalBets : 50;
+  const yesPercent =
+    item.totalBets > 0 ? (item.yesPool / item.totalBets) * 100 : 50;
+  const noPercent =
+    item.totalBets > 0 ? (item.noPool / item.totalBets) * 100 : 50;
 
   const [openConfirmCancel, setOpenConfirmCancel] = useState(false);
   const [openMarketResult, setOpenMarketResult] = useState(false);
   const [openUpdateMarket, setOpenUpdateMarket] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(
+    getTimeRemaining(item.closeAt)
+  );
+
+  // Update time remaining every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeRemaining(getTimeRemaining(item.closeAt));
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, [item.closeAt]);
 
   const handleCancelMarket = async () => {
     try {
@@ -330,9 +387,19 @@ const MarketItem: React.FC<MarketItemProps> = ({
         </div>
 
         <CardContent className="p-2">
-          <h4 className="text-xs mb-1 line-clamp-2 leading-tight">
-            {item.question}
-          </h4>
+          <div className="flex items-start justify-between gap-1 mb-1">
+            <h4 className="text-xs line-clamp-2 leading-tight flex-1">
+              {item.question}
+            </h4>
+            <Badge
+              variant={getStatusBadgeProps(item.status).variant}
+              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
+                getStatusBadgeProps(item.status).className
+              }`}
+            >
+              {item.status}
+            </Badge>
+          </div>
 
           <div className="my-2">
             <div className="flex items-center justify-between mb-1">
@@ -351,12 +418,12 @@ const MarketItem: React.FC<MarketItemProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between mt-2 gap-2">
-            <div className="flex-1 text-center text-xs text-gray-600">
-              Status:{' '}
-              <span className="font-medium capitalize">{item.status}</span>
+          {item.status === 'open' && (
+            <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+              <Clock className="w-3 h-3" />
+              <span>Closes in {timeRemaining}</span>
             </div>
-          </div>
+          )}
 
           {item.status === 'open' && (
             <div className="flex gap-2 mt-4">

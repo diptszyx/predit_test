@@ -4,6 +4,7 @@ import { OracleEntity } from './oracles.service';
 export interface Market {
   id: string;
   question: string;
+  description?: string;
   status: 'open' | 'end' | 'resolved' | 'cancelled';
   imageUrl: string;
   yesPool: number;
@@ -38,6 +39,7 @@ export interface PlaceBetDto {
 
 export interface InfinityPaginationResponse<T> {
   data: T[];
+  hasNextPage: boolean;
   meta: {
     total: number;
     page: number;

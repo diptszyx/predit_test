@@ -158,7 +158,7 @@ export default function MarketList({ oracleId }: { oracleId: string }) {
             onClick={() => setStatusFilter(status.value)}
             className="min-w-[60px] text-xs"
             style={{
-              padding: '4px 12px'
+              padding: '4px 12px',
             }}
           >
             {status.label}
@@ -170,20 +170,13 @@ export default function MarketList({ oracleId }: { oracleId: string }) {
       <div className="p-3 space-y-3">
         <div className="grid grid-cols-1 gap-3">
           {markets.map((item) => (
-            <MarketItem
-              key={item.id}
-              item={item}
-              onSelect={handleSelect}
-            />
+            <MarketItem key={item.id} item={item} onSelect={handleSelect} />
           ))}
 
           {loading && (
             <>
               {[1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="space-y-2"
-                >
+                <div key={i} className="space-y-2">
                   <Skeleton className="h-20 w-full rounded-lg" />
                   <Skeleton className="h-3 w-full" />
                   <Skeleton className="h-2 w-2/3" />
@@ -285,14 +278,8 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
             </p>
           </div>
           <div className="w-full h-2 rounded-full overflow-hidden flex">
-            <div
-              className="bg-green-500"
-              style={{ width: `${yesPercent}%` }}
-            />
-            <div
-              className="bg-red-500"
-              style={{ width: `${noPercent}%` }}
-            />
+            <div className="bg-green-500" style={{ width: `${yesPercent}%` }} />
+            <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
           </div>
         </div>
 

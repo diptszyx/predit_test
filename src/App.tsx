@@ -39,6 +39,7 @@ import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
 import MarketPage from './components/MarketPage';
+import MarketDetailAdmin from './components/market/MarketDetailAdmin';
 
 export default function App() {
   return (
@@ -106,7 +107,9 @@ function AppContent() {
     if (path === '/settings') return 'settings';
     if (path === '/oracles') return 'oracles';
     if (path.startsWith('/prediction/')) return 'shared-prediction';
-    if (path === '/market' || path.startsWith('/market/')) return 'market'
+    if (path === '/market-admin') return 'market-admin';
+    if (path.match(/^\/market\/[^/]+\/[^/]+$/)) return 'market-detail';
+    if (path.startsWith('/market/')) return 'market';
     return 'home';
   };
 
@@ -840,7 +843,34 @@ function AppContent() {
         }
       />
 
-      {/* Admin Marketing Page */}
+      {/* Admin Market List Page */}
+      <Route
+        path="/market-admin"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Market Admin - Predit Market AI Oracles</title>
+              <meta
+                name="description"
+                content="Create and manage prediction markets powered by AI Oracles."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/market-admin`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            {user && (
+              <div className="flex-1 overflow-y-auto">
+                <MarketPage />
+              </div>
+            )}
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      {/* Market Page with Oracle */}
       <Route
         path="/market/:oracleId"
         element={
@@ -859,8 +889,34 @@ function AppContent() {
             <Sidebar {...commonSidebarProps} />
             {user && (
               <div className="flex-1 overflow-y-auto">
-                <MarketPage
-                />
+                <MarketPage />
+              </div>
+            )}
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      {/* Admin Market Detail Page */}
+      <Route
+        path="/market/:oracleId/:marketId"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Market Detail - Predit Market AI Oracles</title>
+              <meta
+                name="description"
+                content="View and manage prediction market details."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/market`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            {user && (
+              <div className="flex-1 overflow-y-auto">
+                <MarketDetailAdmin />
               </div>
             )}
             {commonDialogProps}

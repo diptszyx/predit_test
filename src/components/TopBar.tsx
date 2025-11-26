@@ -1,7 +1,7 @@
-import { Search, Moon, Sun, TrendingUp, Sparkles } from "lucide-react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { Moon, Search, Sun, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 interface TopBarProps {
   darkMode: boolean;
@@ -20,7 +20,7 @@ export function TopBar({ darkMode, onToggleDarkMode }: TopBarProps) {
             <span className="text-xl">🔮</span>
           </div>
           <div className="hidden md:block">
-            <div className="font-semibold leading-none">Predit of Predictions</div>
+            <div className="font-semibold leading-none">Predit Market of Predictions</div>
           </div>
         </div>
 
@@ -60,7 +60,7 @@ export function TopBar({ darkMode, onToggleDarkMode }: TopBarProps) {
             className="hidden md:flex items-center gap-2 border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
           >
             <TrendingUp className="w-4 h-4" />
-            Predit
+            Predit Market
           </Button>
 
           <Button

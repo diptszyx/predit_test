@@ -202,9 +202,8 @@ export function HomePage({
                 }}
               >
                 <div
-                  className={`relative transition-all duration-150 ease-out ${
-                    isFocused ? 'scale-[1.01]' : ''
-                  }`}
+                  className={`relative transition-all duration-150 ease-out ${isFocused ? 'scale-[1.01]' : ''
+                    }`}
                   style={{
                     height: 'clamp(56px, 8vw, 72px)',
                     borderRadius: '9999px',
@@ -430,7 +429,7 @@ export function HomePage({
             />
           </div>
           <div className="space-y-6 order-1 lg:order-2">
-            <h2 className="text-4xl md:text-5xl">Why Choose Predit?</h2>
+            <h2 className="text-4xl md:text-4xl">Why Choose Predit Market?</h2>
             <p className="text-xl text-muted-foreground">
               Join thousands of users making informed predictions with
               AI-powered insights
@@ -584,7 +583,7 @@ export function HomePage({
           </div>
           <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
             <p>
-              &copy; {new Date().getFullYear()} Predit AI Oracles. All rights
+              &copy; {new Date().getFullYear()} Predit Market AI Oracles. All rights
               reserved.
             </p>
           </div>

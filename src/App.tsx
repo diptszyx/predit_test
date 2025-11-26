@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import {
   BrowserRouter,
-  Routes,
   Route,
+  Routes,
+  useLocation,
   useNavigate,
   useParams,
-  useLocation,
   useSearchParams,
 } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -256,7 +256,7 @@ function AppContent() {
           const authenticatedUser = await authenticateWithToken(oauthToken);
 
           toast.success(
-            isNewUser ? 'Welcome to Predit!' : 'Signed in successfully.',
+            isNewUser ? 'Welcome to Predit Market!' : 'Signed in successfully.',
             {
               description: isNewUser
                 ? "Your Google account is now linked. Let's get started."
@@ -323,7 +323,7 @@ function AppContent() {
       });
 
       toast.success('🎉 Referral bonus applied! +300 XP', {
-        description: 'Welcome to Predit of Predictions!',
+        description: 'Welcome to Predit Market of Predictions!',
       });
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Failed to apply referral');
@@ -419,7 +419,7 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>AI-Powered Market Predictions | Predit AI Oracles Platform</title>
+              <title>AI-Powered Market Predictions | Predit Market AI Oracles Platform</title>
               <meta
                 name="description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, sports, and financial markets with our AI agents platform."
@@ -430,7 +430,7 @@ function AppContent() {
               />
               <meta
                 property="og:title"
-                content="AI-Powered Market Predictions | Predit AI Oracles Platform"
+                content="AI-Powered Market Predictions | Predit Market AI Oracles Platform"
               />
               <meta
                 property="og:description"
@@ -446,7 +446,7 @@ function AppContent() {
               />
               <meta
                 name="twitter:title"
-                content="AI-Powered Market Predictions | Predit AI Oracles Platform"
+                content="AI-Powered Market Predictions | Predit Market AI Oracles Platform"
               />
               <meta
                 name="twitter:description"
@@ -458,7 +458,7 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+            <div className="flex-1 overflow-y-auto">
               <HomePage
                 onGetStarted={() => setWalletDialogOpen(true)}
                 onExplorePredictions={(prompt) => {

@@ -162,7 +162,7 @@ export function WalletConnectDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="w-5 h-5" />
-            Connect to Predit of Predictions
+            Connect to Predit Market of Predictions
           </DialogTitle>
           <DialogDescription>
             Sign in with your wallet or social account

@@ -30,7 +30,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
             <section className="space-y-4 py-6 border-b border-border/40">
               <h2>1. Introduction and Scope</h2>
               <p>
-                Welcome to Predit of Oracles, a decentralized prediction platform operated by Predit Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Predit Limited", "we," "our," or "us").
+                Welcome to Predit Market of Oracles, a decentralized prediction platform operated by Predit Market Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Predit Market Limited", "we," "our," or "us").
               </p>
               <p>
                 This Privacy Policy describes how we collect, use, process, store, share, and protect your personal information when you access or use our platform, website, mobile applications, APIs, and related services (collectively, the "Platform" or "Services"). This policy applies to all users, including visitors, registered users, subscribers, and participants in our prediction markets.
@@ -486,14 +486,14 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               <ul>
                 <li>Clicking "unsubscribe" in any marketing email</li>
                 <li>Updating your notification preferences in account settings</li>
-                <li>Contacting us directly at privacy@preditoforacles.com</li>
+                <li>Contacting us directly at privacy@preditmarketoforacles.com</li>
               </ul>
               <p>Note: You will continue to receive transactional and service-related communications.</p>
 
               <h3>8.9 Exercising Your Rights</h3>
               <p>To exercise any of these rights:</p>
               <ul>
-                <li>Email: privacy@preditoforacles.com</li>
+                <li>Email: privacy@preditmarketoforacles.com</li>
                 <li>Use the "Privacy Rights" section in your account settings</li>
                 <li>Submit a written request to our registered office</li>
               </ul>
@@ -505,7 +505,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
             <section className="space-y-4 py-6 border-b border-border/40">
               <h2>9. International Data Transfers</h2>
               <p>
-                Predit Limited operates globally, and your information may be transferred to, stored, and processed in countries other than your country of residence. These countries may have different data protection laws.
+                Predit Market Limited operates globally, and your information may be transferred to, stored, and processed in countries other than your country of residence. These countries may have different data protection laws.
               </p>
 
               <h3>9.1 Transfer Mechanisms</h3>
@@ -540,7 +540,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
                 Our Services are not intended for individuals under the age of 18 (or the age of majority in your jurisdiction). We do not knowingly collect, use, or disclose personal information from children.
               </p>
               <p>
-                If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately at privacy@preditoforacles.com. We will take steps to delete such information from our systems.
+                If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately at privacy@preditmarketoforacles.com. We will take steps to delete such information from our systems.
               </p>
               <p>
                 <strong>Age Verification:</strong> By using our Services, you represent and warrant that you are at least 18 years old and have the legal capacity to enter into binding contracts.
@@ -702,10 +702,10 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
               <h3>16.1 Privacy Inquiries</h3>
               <p>For questions, concerns, or requests regarding this Privacy Policy or our data practices:</p>
               <ul>
-                <li><strong>Email:</strong> privacy@preditoforacles.com</li>
-                <li><strong>Data Protection Officer:</strong> dpo@preditoforacles.com</li>
-                <li><strong>Mail:</strong> Predit Limited, [Address], [City], [Country], [Postal Code]</li>
-                <li><strong>Support Portal:</strong> support.preditoforacles.com</li>
+                <li><strong>Email:</strong> privacy@preditmarketoforacles.com</li>
+                <li><strong>Data Protection Officer:</strong> dpo@preditmarketoforacles.com</li>
+                <li><strong>Mail:</strong> Predit Market Limited, [Address], [City], [Country], [Postal Code]</li>
+                <li><strong>Support Portal:</strong> support.preditmarketoforacles.com</li>
               </ul>
 
               <h3>16.2 Response Times</h3>
@@ -732,12 +732,12 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
 
               <h3>17.1 European Economic Area (EEA) Users</h3>
               <p>
-                Predit Limited is the data controller for your personal information. We comply with the General Data Protection Regulation (GDPR) and applicable national laws.
+                Predit Market Limited is the data controller for your personal information. We comply with the General Data Protection Regulation (GDPR) and applicable national laws.
               </p>
 
               <h3>17.2 UK Users</h3>
               <p>
-                We comply with the UK GDPR and Data Protection Act 2018. Our UK representative can be contacted at uk-rep@preditoforacles.com.
+                We comply with the UK GDPR and Data Protection Act 2018. Our UK representative can be contacted at uk-rep@preditmarketoforacles.com.
               </p>
 
               <h3>17.3 Brazilian Users</h3>
@@ -759,7 +759,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
             <div className="space-y-4 mt-8">
               <div className="p-6 rounded-xl bg-blue-500/10 border border-blue-500/30">
                 <p className="text-sm text-blue-600 dark:text-blue-400">
-                  <strong>🔒 Your Privacy Matters:</strong> Predit Limited is committed to protecting your privacy and giving you control over your personal information. We implement industry-leading security measures and comply with applicable data protection laws worldwide.
+                  <strong>🔒 Your Privacy Matters:</strong> Predit Market Limited is committed to protecting your privacy and giving you control over your personal information. We implement industry-leading security measures and comply with applicable data protection laws worldwide.
                 </p>
               </div>
 
@@ -777,7 +777,7 @@ export function PrivacyPolicy({ open, onOpenChange }: PrivacyPolicyProps) {
 
               <div className="p-6 rounded-xl bg-gray-500/10 border border-gray-500/30">
                 <p className="text-sm text-muted-foreground">
-                  <strong>📜 Version Information:</strong> This Privacy Policy was last updated on October 16, 2025. Document Version 2.0. Previous versions available upon request. For questions or concerns, contact privacy@preditoforacles.com.
+                  <strong>📜 Version Information:</strong> This Privacy Policy was last updated on October 16, 2025. Document Version 2.0. Previous versions available upon request. For questions or concerns, contact privacy@preditmarketoforacles.com.
                 </p>
               </div>
             </div>

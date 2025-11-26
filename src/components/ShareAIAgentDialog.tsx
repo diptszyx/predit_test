@@ -23,7 +23,7 @@ export function ShareAIAgentDialog({
   // Create the shareable URL for the AI agent
   const shareUrl = `${window.location.origin}?aiagent=${aiAgentId}`;
 
-  const shareText = `Check out ${aiAgentName} on Predit of Predictions! 🔮\n\n${aiAgentTitle}\n\n`;
+  const shareText = `Check out ${aiAgentName} on Predit Market of Predictions! 🔮\n\n${aiAgentTitle}\n\n`;
 
   const handleCopyLink = async () => {
     try {

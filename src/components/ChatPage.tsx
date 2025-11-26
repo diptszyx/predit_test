@@ -57,7 +57,7 @@ import {
 import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
 import { questionsByAIAgent } from '../constants/prediction';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ADMIN_IDS } from '../constants/admin';
+import { ADMIN_EMAILS } from '../constants/admin';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -134,6 +134,11 @@ export function ChatPage({
   );
   const [articleCounter, setArticleCounter] = useState(5);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // user
+  const isAdmin = !!(
+    user && (user?.email ? ADMIN_EMAILS.includes(user?.email) : false)
+  );
+
   // Rating and Like states
   const [userRating, setUserRating] = useState<number | null>(0);
   const [hasLiked, setHasLiked] = useState(false);
@@ -170,7 +175,7 @@ export function ChatPage({
   const [currentTab, setCurrentTab] = useState<string>('chat');
 
   const navigate = useNavigate();
-  const { oracleId } = useParams()
+  const { oracleId } = useParams();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -609,9 +614,9 @@ export function ChatPage({
       <div
         className={
           onNavigate &&
-            shortenAddress &&
-            onWalletDisconnect &&
-            onOpenWalletDialog
+          shortenAddress &&
+          onWalletDisconnect &&
+          onOpenWalletDialog
             ? 'flex-1 overflow-y-auto'
             : ''
         }
@@ -623,63 +628,63 @@ export function ChatPage({
           onWalletDisconnect &&
           onOpenWalletDialog
         ) && (
-            <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
-              <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onBack}
-                    className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                    <img
-                      src={aiAgent.image}
-                      alt={aiAgent.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="text-sm sm:text-base leading-none truncate">
-                      {aiAgent.name}
-                    </h1>
-                    <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                      {aiAgent.type}
-                    </p>
-                  </div>
+          <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
+            <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
+              <div className="flex items-center gap-3 min-w-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                  <img
+                    src={aiAgent.image}
+                    alt={aiAgent.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
-                  <div className="hidden sm:flex items-center gap-3">
-                    <span>{localRating} rating</span>
-                    <span>{formatLikes(localLikes)} likes</span>
-                    {aiAgent.consultSessions && (
-                      <span className="hidden md:inline">
-                        {aiAgent.consultSessions} sessions
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex sm:hidden">
-                    <span>{localRating}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDarkMode(!darkMode)}
-                    className="h-8 w-8"
-                  >
-                    {darkMode ? (
-                      <Sun className="w-4 h-4" />
-                    ) : (
-                      <Moon className="w-4 h-4" />
-                    )}
-                  </Button>
+                <div className="min-w-0">
+                  <h1 className="text-sm sm:text-base leading-none truncate">
+                    {aiAgent.name}
+                  </h1>
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                    {aiAgent.type}
+                  </p>
                 </div>
               </div>
-            </header>
-          )}
+
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
+                <div className="hidden sm:flex items-center gap-3">
+                  <span>{localRating} rating</span>
+                  <span>{formatLikes(localLikes)} likes</span>
+                  {aiAgent.consultSessions && (
+                    <span className="hidden md:inline">
+                      {aiAgent.consultSessions} sessions
+                    </span>
+                  )}
+                </div>
+                <div className="flex sm:hidden">
+                  <span>{localRating}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="h-8 w-8"
+                >
+                  {darkMode ? (
+                    <Sun className="w-4 h-4" />
+                  ) : (
+                    <Moon className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </header>
+        )}
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
@@ -829,7 +834,7 @@ export function ChatPage({
                             Info
                           </span>
                         </Button>
-                        {user && ADMIN_IDS.includes(user?.id) &&
+                        {user && isAdmin && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -841,7 +846,7 @@ export function ChatPage({
                               Market
                             </span>
                           </Button>
-                        }
+                        )}
                         {/* <Button
                           variant="ghost"
                           size="sm"
@@ -886,16 +891,18 @@ export function ChatPage({
                             {messages.map((message, index) => (
                               <div key={message.id}>
                                 <div
-                                  className={`flex ${message.sender === 'user'
-                                    ? 'justify-end'
-                                    : 'justify-start'
-                                    }`}
+                                  className={`flex ${
+                                    message.sender === 'user'
+                                      ? 'justify-end'
+                                      : 'justify-start'
+                                  }`}
                                 >
                                   <div
-                                    className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
-                                      ? 'bg-blue-600 text-white backdrop-blur-sm'
-                                      : `backdrop-blur-md border border-border`
-                                      }`}
+                                    className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
+                                      message.sender === 'user'
+                                        ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                        : `backdrop-blur-md border border-border`
+                                    }`}
                                   >
                                     {/* Article Attachment Thumbnail */}
                                     {/* {message.articleAttachment && (
@@ -920,10 +927,11 @@ export function ChatPage({
                                   </div>
                                 </div>
                                 <span
-                                  className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
-                                    ? 'text-right'
-                                    : 'text-left'
-                                    }`}
+                                  className={`text-xs mt-2 block text-muted-foreground ${
+                                    message.sender === 'user'
+                                      ? 'text-right'
+                                      : 'text-left'
+                                  }`}
                                 >
                                   {formatTime(message.createdAt)}
                                 </span>
@@ -1166,10 +1174,7 @@ export function ChatPage({
               {currentTab === 'hotTakes' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px]">
                   {/* Hot Takes Section */}
-                  <Card
-                    className="border-border"
-                    style={{ borderRadius: 0 }}
-                  >
+                  <Card className="border-border" style={{ borderRadius: 0 }}>
                     <CardHeader className="border-b border-border pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
                         <Zap className="w-4 h-4" />
@@ -1179,10 +1184,7 @@ export function ChatPage({
                         Latest insights from {aiAgent.name}
                       </p>
                     </CardHeader>
-                    <div
-                      className="h-full"
-                      style={{ overflow: 'auto' }}
-                    >
+                    <div className="h-full" style={{ overflow: 'auto' }}>
                       <HotTakeChatPageList
                         newsArticles={newsArticles}
                         isLoadingNews={isLoadingNews}
@@ -1245,8 +1247,9 @@ export function ChatPage({
 
                   {/* Rate section */}
                   <div
-                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${ratingFlashing ? 'ring-2 ring-blue-500' : ''
-                      }`}
+                    className={`mt-4 p-3 rounded-lg bg-muted/30 transition-all ${
+                      ratingFlashing ? 'ring-2 ring-blue-500' : ''
+                    }`}
                   >
                     <p className="text-xs text-muted-foreground mb-2">
                       Rate this AI Agent
@@ -1259,10 +1262,11 @@ export function ChatPage({
                           className="transition-opacity hover:opacity-70"
                         >
                           <Star
-                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${star <= userRating!
-                              ? 'fill-primary text-primary'
-                              : 'text-muted-foreground'
-                              }`}
+                            className={`w-4 h-4 sm:w-5 sm:h-5 cursor-pointer ${
+                              star <= userRating!
+                                ? 'fill-primary text-primary'
+                                : 'text-muted-foreground'
+                            }`}
                           />
                         </button>
                       ))}
@@ -1277,15 +1281,17 @@ export function ChatPage({
                   {/* Like Button */}
                   <Button
                     variant="outline"
-                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${hasLiked
-                      ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                      : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
-                      }`}
+                    className={`w-full mt-3 h-9 transition-all cursor-pointer ${
+                      hasLiked
+                        ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                        : 'border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50'
+                    }`}
                     onClick={handleLike}
                   >
                     <ThumbsUp
-                      className={`w-4 h-4 mr-2 ${hasLiked ? 'fill-current' : ''
-                        }`}
+                      className={`w-4 h-4 mr-2 ${
+                        hasLiked ? 'fill-current' : ''
+                      }`}
                     />
                     {hasLiked ? 'Liked' : 'Like'} • {formatLikes(localLikes)}
                   </Button>
@@ -1296,8 +1302,9 @@ export function ChatPage({
               <Card
                 className="border-border overflow-hidden"
                 style={{
-                  height: `${user ? 'calc(100vh - 25.2rem)' : 'calc(100vh - 23.8rem)'
-                    }`,
+                  height: `${
+                    user ? 'calc(100vh - 25.2rem)' : 'calc(100vh - 23.8rem)'
+                  }`,
                   borderBottomLeftRadius: 0,
                   borderBottomRightRadius: 0,
                 }}
@@ -1311,10 +1318,7 @@ export function ChatPage({
                     Latest insights from {aiAgent.name}
                   </p>
                 </CardHeader>
-                <div
-                  className="h-full"
-                  style={{ overflow: 'auto' }}
-                >
+                <div className="h-full" style={{ overflow: 'auto' }}>
                   <HotTakeChatPageList
                     newsArticles={newsArticles}
                     isLoadingNews={isLoadingNews}
@@ -1329,10 +1333,7 @@ export function ChatPage({
         </div>
 
         {/* Sign In Dialog */}
-        <AlertDialog
-          open={signInDialogOpen}
-          onOpenChange={setSignInDialogOpen}
-        >
+        <AlertDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen}>
           <AlertDialogContent className="max-w-md mx-0 sm:mx-auto">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">

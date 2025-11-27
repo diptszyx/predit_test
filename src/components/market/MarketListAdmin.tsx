@@ -419,9 +419,9 @@ const MarketItem: React.FC<MarketItemProps> = ({
           <div className="my-2">
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs font-medium text-green-600">
-                {yesPercent}%
+                {yesPercent.toFixed(0)}%
               </p>
-              <p className="text-xs font-medium text-red-600">{noPercent}%</p>
+              <p className="text-xs font-medium text-red-600">{noPercent.toFixed(0)}%</p>
             </div>
 
             <div className="w-full h-2 rounded-full overflow-hidden flex">

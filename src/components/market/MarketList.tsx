@@ -268,7 +268,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
           {getStatusBadge(item.status)}
         </div>
         <ImageWithFallback
-          src={item.imageUrl || '/placeholder.png'}
+          src={item.image?.path || item.imageUrl || '/placeholder.png'}
           alt={item.question}
           className="w-full h-full object-cover"
         />

@@ -40,6 +40,7 @@ import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
 import MarketPage from './components/MarketPage';
 import MarketDetailAdmin from './components/market/MarketDetailAdmin';
+import { ADMIN_EMAILS } from './constants/admin';
 
 export default function App() {
   return (
@@ -107,9 +108,8 @@ function AppContent() {
     if (path === '/settings') return 'settings';
     if (path === '/oracles') return 'oracles';
     if (path.startsWith('/prediction/')) return 'shared-prediction';
-    if (path === '/market-admin') return 'market-admin';
-    if (path.match(/^\/market\/[^/]+\/[^/]+$/)) return 'market-detail';
-    if (path.startsWith('/market/')) return 'market';
+    if (path === '/market') return 'market';
+    if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
     return 'home';
   };
 
@@ -148,6 +148,9 @@ function AppContent() {
         break;
       case 'oracles':
         navigate('/oracles');
+        break;
+      case 'market':
+        navigate('/market');
         break;
       default:
         navigate('/');
@@ -376,6 +379,7 @@ function AppContent() {
     onToggleDarkMode: () => setDarkMode(!darkMode),
     selectedAIAgent: selectedAIAgent,
     setSelectedAIAgent: setSelectedAIAgent,
+    isAdmin: user && user.email ? ADMIN_EMAILS.includes(user.email) : false,
   };
 
   const commonDialogProps = (
@@ -843,43 +847,16 @@ function AppContent() {
         }
       />
 
-      {/* Admin Market List Page */}
+      {/* Market List Page */}
       <Route
-        path="/market-admin"
-        element={
-          <div className="flex h-screen bg-background overflow-hidden">
-            <Helmet>
-              <title>Market Admin - Predit Market AI Oracles</title>
-              <meta
-                name="description"
-                content="Create and manage prediction markets powered by AI Oracles."
-              />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/market-admin`}
-              />
-            </Helmet>
-            <Sidebar {...commonSidebarProps} />
-            {user && (
-              <div className="flex-1 overflow-y-auto">
-                <MarketPage />
-              </div>
-            )}
-            {commonDialogProps}
-          </div>
-        }
-      />
-
-      {/* Market Page with Oracle */}
-      <Route
-        path="/market/:oracleId"
+        path="/market"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
               <title>Market - Predit Market AI Oracles</title>
               <meta
                 name="description"
-                content="Create and launch prediction markets powered by AI Oracles."
+                content="Create and manage prediction markets powered by AI Oracles."
               />
               <link
                 rel="canonical"
@@ -897,9 +874,9 @@ function AppContent() {
         }
       />
 
-      {/* Admin Market Detail Page */}
+      {/* Market Detail Page */}
       <Route
-        path="/market/:oracleId/:marketId"
+        path="/market/:marketId"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>

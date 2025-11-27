@@ -1,8 +1,7 @@
 import { Controller, useForm } from 'react-hook-form';
 
-import { CircleFadingPlus, Loader2, Pen } from 'lucide-react';
+import { Check, ChevronDown, CircleFadingPlus, Loader2, Pen } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { uploadFile } from '../services/file.service';
 import {
@@ -10,6 +9,7 @@ import {
   marketAdminServices,
 } from '../services/market-admin.service';
 import { Market } from '../services/market.service';
+import { OracleEntity, oraclesServices } from '../services/oracles.service';
 import { Button } from './ui/button';
 import { DateTimePicker } from './ui/datetime-picker';
 import {
@@ -34,6 +34,84 @@ interface CreateUpdateMarketModalProps {
   onSuccess?: () => void;
 }
 
+interface CustomOracleSelectProps {
+  value?: string;
+  onChange: (value: string) => void;
+  oracles: OracleEntity[];
+}
+
+function CustomOracleSelect({ value, onChange, oracles }: CustomOracleSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectedOracle = oracles.find((o) => o.id === value);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'flex w-full items-center justify-between gap-2 rounded-md border border-input bg-input-background px-3 py-2 text-sm h-9',
+          'hover:bg-input/50 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring',
+          'disabled:cursor-not-allowed disabled:opacity-50',
+          !selectedOracle && 'text-muted-foreground'
+        )}
+      >
+        <span>{selectedOracle ? selectedOracle.name : 'Select an oracle'}</span>
+        <ChevronDown className="h-4 w-4 opacity-50" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border border-border bg-background shadow-md animate-in fade-in-0 zoom-in-95">
+          <ScrollArea className="max-h-60 bg-background">
+            <div className="p-1 bg-background">
+              {oracles.map((oracle) => (
+                <button
+                  key={oracle.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(oracle.id);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    'relative flex w-full cursor-default items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none',
+                    'hover:bg-accent hover:text-accent-foreground',
+                    'focus:bg-accent focus:text-accent-foreground',
+                    oracle.id === value && 'bg-accent'
+                  )}
+                >
+                  {oracle.id === value && (
+                    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                      <Check className="h-4 w-4" />
+                    </span>
+                  )}
+                  {oracle.name}
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CreateUpdateMarketModal({
   open,
   onOpenChange,
@@ -41,10 +119,10 @@ export default function CreateUpdateMarketModal({
   item,
   onSuccess,
 }: CreateUpdateMarketModalProps) {
-  const { oracleId } = useParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [oracles, setOracles] = useState<OracleEntity[]>([]);
   const {
     handleSubmit,
     clearErrors,
@@ -60,9 +138,27 @@ export default function CreateUpdateMarketModal({
       description: '',
       closeAt: undefined,
       imageUrl: null,
-      oracleId: oracleId,
+      oracleId: undefined,
     },
   });
+
+  // Fetch oracles list
+  useEffect(() => {
+    const fetchOracles = async () => {
+      try {
+        const data = await oraclesServices.getAllOracles();
+        if (data?.data) {
+          setOracles(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch oracles:', error);
+      }
+    };
+
+    if (!isUpdate) {
+      fetchOracles();
+    }
+  }, [isUpdate]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,7 +188,7 @@ export default function CreateUpdateMarketModal({
       console.error('Error uploading photo:', error);
       toast.error(
         error?.response?.data?.message ||
-        'Failed to upload photo. Please try again.'
+          'Failed to upload photo. Please try again.'
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -110,7 +206,9 @@ export default function CreateUpdateMarketModal({
       if (!isUpdate) {
         const payload = {
           ...data,
-          closeAt: data.closeAt ? new Date(data.closeAt).toISOString() : undefined,
+          closeAt: data.closeAt
+            ? new Date(data.closeAt).toISOString()
+            : undefined,
         };
         const res = await marketAdminServices.createMarket(payload);
         if (res) {
@@ -119,11 +217,11 @@ export default function CreateUpdateMarketModal({
           onSuccess?.(); // Call onSuccess callback
         }
       } else {
-        if (!item) return
+        if (!item) return;
         const payload = {
           question: data.question,
           description: data.description,
-          imageUrl: data.imageUrl
+          imageUrl: data.imageUrl,
         };
         const res = await marketAdminServices.updateMarket(item?.id, payload);
         if (res) {
@@ -146,7 +244,7 @@ export default function CreateUpdateMarketModal({
           question: item.question,
           description: item.description ?? '',
           imageUrl: item.imageUrl ?? null,
-          oracleId,
+          oracleId: item.oracle?.id,
         });
       } else {
         reset({
@@ -154,11 +252,11 @@ export default function CreateUpdateMarketModal({
           description: '',
           closeAt: undefined,
           imageUrl: null,
-          oracleId,
+          oracleId: undefined,
         });
       }
     }
-  }, [open, isUpdate, item, oracleId, reset]);
+  }, [open, isUpdate, item, reset]);
 
   const handleClose = () => {
     onOpenChange(false);
@@ -172,12 +270,12 @@ export default function CreateUpdateMarketModal({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isUpdate ? "Update Market" : "Create Market"}
+            {isUpdate ? 'Update Market' : 'Create Market'}
           </DialogTitle>
           <DialogDescription className="text-left">
-            {isUpdate ? 'Update the details of your market.' :
-              "Provide details to create your market."
-            }
+            {isUpdate
+              ? 'Update the details of your market.'
+              : 'Provide details to create your market.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -208,8 +306,32 @@ export default function CreateUpdateMarketModal({
               )}
             </div>
 
-            {
-              !isUpdate &&
+            {!isUpdate && (
+              <div className="space-y-2">
+                <Label htmlFor="oracleId">
+                  Oracle<span className="text-red-500">*</span>
+                </Label>
+                <Controller
+                  control={control}
+                  name="oracleId"
+                  rules={{ required: 'Oracle is required' }}
+                  render={({ field }) => (
+                    <CustomOracleSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      oracles={oracles}
+                    />
+                  )}
+                />
+                {errors.oracleId && (
+                  <p className="text-xs text-red-500">
+                    {errors.oracleId.message as string}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!isUpdate && (
               <div className="space-y-2">
                 <Label htmlFor="closeAt" className="px-1">
                   Close At<span className="text-red-500">*</span>
@@ -246,7 +368,7 @@ export default function CreateUpdateMarketModal({
                   </p>
                 )}
               </div>
-            }
+            )}
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Controller
@@ -317,20 +439,22 @@ export default function CreateUpdateMarketModal({
               </Button>
               <Button
                 className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 cursor-pointer"
-                type="submit" disabled={isCreating}>
+                type="submit"
+                disabled={isCreating}
+              >
                 {isCreating ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {isUpdate ? "Updating" : "Creating..."}
+                    {isUpdate ? 'Updating' : 'Creating...'}
                   </>
                 ) : (
                   <>
-                    {isUpdate ?
+                    {isUpdate ? (
                       <Pen className="w-4 h-4 mr-1" />
-                      :
+                    ) : (
                       <CircleFadingPlus className="w-4 h-4 mr-1" />
-                    }
-                    {isUpdate ? "Update" : "Create"}
+                    )}
+                    {isUpdate ? 'Update' : 'Create'}
                   </>
                 )}
               </Button>

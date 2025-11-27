@@ -123,12 +123,12 @@ export default function CreateUpdateMarketModal({
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [oracles, setOracles] = useState<OracleEntity[]>([]);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const {
     handleSubmit,
     clearErrors,
     formState: { errors },
     setValue,
-    getValues,
     control,
     reset,
   } = useForm<CreateMarketValues>({
@@ -137,7 +137,7 @@ export default function CreateUpdateMarketModal({
       question: '',
       description: '',
       closeAt: undefined,
-      imageUrl: null,
+      imageId: null,
       oracleId: undefined,
     },
   });
@@ -180,8 +180,11 @@ export default function CreateUpdateMarketModal({
 
     try {
       const uploadResponse = await uploadFile(file);
-      if (uploadResponse.file.path) {
-        setValue('imageUrl', uploadResponse.file.path ?? null);
+      if (uploadResponse.file.id) {
+        // Store the image ID for backend reference
+        setValue('imageId', uploadResponse.file.id);
+        // Store the path for preview
+        setPreviewImageUrl(uploadResponse.file.path ?? null);
         toast.success('Upload image successfully');
       }
     } catch (error: any) {
@@ -221,10 +224,15 @@ export default function CreateUpdateMarketModal({
         const payload = {
           question: data.question,
           description: data.description,
-          imageUrl: data.imageUrl,
+          // Send imageId if new image uploaded
+          ...(data.imageId && { imageId: data.imageId }),
         };
         const res = await marketAdminServices.updateMarket(item?.id, payload);
         if (res) {
+          // Update preview URL with fresh image path from response
+          if (res.image?.path) {
+            setPreviewImageUrl(res.image.path);
+          }
           toast.success('Update market successfully!');
           handleClose();
           onSuccess?.(); // Call onSuccess callback
@@ -243,17 +251,20 @@ export default function CreateUpdateMarketModal({
         reset({
           question: item.question,
           description: item.description ?? '',
-          imageUrl: item.imageUrl ?? null,
+          imageId: item.image?.id ?? null,
           oracleId: item.oracle?.id,
         });
+        // Set preview URL from existing item
+        setPreviewImageUrl(item.image?.path || item.imageUrl || null);
       } else {
         reset({
           question: '',
           description: '',
           closeAt: undefined,
-          imageUrl: null,
+          imageId: null,
           oracleId: undefined,
         });
+        setPreviewImageUrl(null);
       }
     }
   }, [open, isUpdate, item, reset]);
@@ -403,9 +414,9 @@ export default function CreateUpdateMarketModal({
                 role="button"
                 aria-label="Upload image"
               >
-                {getValues('imageUrl') ? (
+                {previewImageUrl ? (
                   <img
-                    src={getValues('imageUrl')!}
+                    src={previewImageUrl}
                     alt="Market image"
                     className="w-full h-full object-top-left"
                   />

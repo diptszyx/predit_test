@@ -9,7 +9,7 @@ export interface CreateMarketValues {
   question: string;
   description?: string;
   closeAt?: Date | string;
-  imageUrl?: string | null;
+  imageId?: string | null;
   oracleId?: string;
   yesPool?: number;
   noPool?: number;
@@ -18,7 +18,7 @@ export interface CreateMarketValues {
 export interface UpdateMarketDto {
   question?: string;
   description?: string;
-  imageUrl?: string | null;
+  imageId?: string | null;
 }
 
 export interface ResolveMarketDto {

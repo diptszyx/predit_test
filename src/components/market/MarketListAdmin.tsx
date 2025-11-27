@@ -324,7 +324,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
 
       {/* Resolve market */}
       <Dialog open={openMarketResult} onOpenChange={setOpenMarketResult}>
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Resolve Market Outcome
@@ -395,9 +395,8 @@ const MarketItem: React.FC<MarketItemProps> = ({
             </h4>
             <Badge
               variant={getStatusBadgeProps(item.status).variant}
-              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
-                getStatusBadgeProps(item.status).className
-              }`}
+              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
+                }`}
             >
               {item.status}
             </Badge>

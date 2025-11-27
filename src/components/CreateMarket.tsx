@@ -188,7 +188,7 @@ export default function CreateUpdateMarketModal({
       console.error('Error uploading photo:', error);
       toast.error(
         error?.response?.data?.message ||
-          'Failed to upload photo. Please try again.'
+        'Failed to upload photo. Please try again.'
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -308,31 +308,6 @@ export default function CreateUpdateMarketModal({
 
             {!isUpdate && (
               <div className="space-y-2">
-                <Label htmlFor="oracleId">
-                  Oracle<span className="text-red-500">*</span>
-                </Label>
-                <Controller
-                  control={control}
-                  name="oracleId"
-                  rules={{ required: 'Oracle is required' }}
-                  render={({ field }) => (
-                    <CustomOracleSelect
-                      value={field.value}
-                      onChange={field.onChange}
-                      oracles={oracles}
-                    />
-                  )}
-                />
-                {errors.oracleId && (
-                  <p className="text-xs text-red-500">
-                    {errors.oracleId.message as string}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {!isUpdate && (
-              <div className="space-y-2">
                 <Label htmlFor="closeAt" className="px-1">
                   Close At<span className="text-red-500">*</span>
                 </Label>
@@ -369,6 +344,33 @@ export default function CreateUpdateMarketModal({
                 )}
               </div>
             )}
+
+            {!isUpdate && (
+              <div className="space-y-2">
+                <Label htmlFor="oracleId">
+                  Oracle<span className="text-red-500">*</span>
+                </Label>
+                <Controller
+                  control={control}
+                  name="oracleId"
+                  rules={{ required: 'Oracle is required' }}
+                  render={({ field }) => (
+                    <CustomOracleSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      oracles={oracles}
+                    />
+                  )}
+                />
+                {errors.oracleId && (
+                  <p className="text-xs text-red-500">
+                    {errors.oracleId.message as string}
+                  </p>
+                )}
+              </div>
+            )}
+
+
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Controller

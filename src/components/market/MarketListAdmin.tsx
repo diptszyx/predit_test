@@ -382,7 +382,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
       >
         <div className="relative h-32 md:h-[200px]! overflow-hidden">
           <ImageWithFallback
-            src={item.imageUrl}
+            src={item.image?.path || item.imageUrl || ''}
             alt={item.question}
             className="w-full h-full object-cover"
           />

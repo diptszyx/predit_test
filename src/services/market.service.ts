@@ -6,13 +6,23 @@ export interface Market {
   question: string;
   description?: string;
   status: 'open' | 'end' | 'resolved' | 'cancelled';
-  imageUrl: string;
+  imageUrl?: string;
+  image?: {
+    id: string;
+    path?: string;
+  };
   yesPool: number;
   noPool: number;
   totalBets: number;
+  totalParticipants?: number;
   closeAt: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  outcome?: 'yes' | 'no';
   oracle: OracleEntity;
   isBetted: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface MarketBet {

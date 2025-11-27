@@ -101,7 +101,10 @@ export default function MarketListAdmin({
       <div className="space-y-4">
         <div className="flex gap-2 flex-wrap">
           {['all', 'open', 'end', 'resolved', 'cancelled'].map((status) => (
-            <Skeleton key={status} className="h-9 w-20" />
+            <Skeleton
+              key={status}
+              className="h-9 w-20"
+            />
           ))}
         </div>
         <div className="grid grid-cols-4 gap-3">
@@ -238,9 +241,13 @@ const MarketItem: React.FC<MarketItemProps> = ({
   onRefetch,
 }) => {
   const yesPercent =
-    item.totalBets > 0 ? (item.yesPool / item.totalBets) * 100 : 50;
+    item.totalBets > 0
+      ? (item.yesPool * 100) / (item.yesPool + item.noPool)
+      : 50;
   const noPercent =
-    item.totalBets > 0 ? (item.noPool / item.totalBets) * 100 : 50;
+    item.totalBets > 0
+      ? (item.noPool * 100) / (item.yesPool + item.noPool)
+      : 50;
 
   const [openConfirmCancel, setOpenConfirmCancel] = useState(false);
   const [openMarketResult, setOpenMarketResult] = useState(false);
@@ -295,7 +302,10 @@ const MarketItem: React.FC<MarketItemProps> = ({
   return (
     <>
       {/* Confirm cancel */}
-      <AlertDialog open={openConfirmCancel} onOpenChange={setOpenConfirmCancel}>
+      <AlertDialog
+        open={openConfirmCancel}
+        onOpenChange={setOpenConfirmCancel}
+      >
         <AlertDialogContent className="max-w-md mx-0 sm:mx-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -323,7 +333,10 @@ const MarketItem: React.FC<MarketItemProps> = ({
       </AlertDialog>
 
       {/* Resolve market */}
-      <Dialog open={openMarketResult} onOpenChange={setOpenMarketResult}>
+      <Dialog
+        open={openMarketResult}
+        onOpenChange={setOpenMarketResult}
+      >
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -369,7 +382,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
       >
         <div className="relative h-32 md:h-[200px] overflow-hidden">
           <ImageWithFallback
-            src={item.imageUrl || '/prediction-default.jpeg'}
+            src={item.imageUrl}
             alt={item.question}
             className="w-full h-full object-cover"
           />
@@ -395,8 +408,9 @@ const MarketItem: React.FC<MarketItemProps> = ({
             </h4>
             <Badge
               variant={getStatusBadgeProps(item.status).variant}
-              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
-                }`}
+              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
+                getStatusBadgeProps(item.status).className
+              }`}
             >
               {item.status}
             </Badge>
@@ -415,7 +429,10 @@ const MarketItem: React.FC<MarketItemProps> = ({
                 className="bg-green-500"
                 style={{ width: `${yesPercent}%` }}
               />
-              <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
+              <div
+                className="bg-red-500"
+                style={{ width: `${noPercent}%` }}
+              />
             </div>
           </div>
 

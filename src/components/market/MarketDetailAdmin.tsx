@@ -130,7 +130,7 @@ export default function MarketDetailAdmin() {
       ? (market.noPool * 100) / (market.yesPool + market.noPool)
       : 50;
   const isResolved = market.status === 'resolved';
-  const canResolve = market.status === 'open' || market.status === 'closed';
+  const canResolve = market.status === 'open' || market.status === 'end';
 
   return (
     <div className="min-h-screen bg-background">
@@ -145,9 +145,9 @@ export default function MarketDetailAdmin() {
         <div className="max-w-4xl mx-auto">
           <Card className="overflow-hidden">
             {/* Market Image */}
-            <div className="relative h-64 md:h-96 overflow-hidden">
+            <div className="relative h-64 md:h-96! overflow-hidden">
               <ImageWithFallback
-                src={market.image?.path || market.imageUrl || '/prediction-default.jpeg'}
+                src={market.image?.path || market.imageUrl}
                 alt={market.question}
                 className="w-full h-full object-cover"
               />
@@ -208,17 +208,21 @@ export default function MarketDetailAdmin() {
               {/* Total Bets */}
               <div className="p-4 rounded-lg bg-muted">
                 <p className="text-sm text-muted-foreground">Total Bets</p>
-                <p className="text-xl font-bold">{market.totalBets} Participants</p>
+                <p className="text-xl font-bold">
+                  {market.totalBets} Participants
+                </p>
               </div>
 
               {/* Resolve Buttons */}
               {canResolve && (
                 <div className="space-y-3">
                   <div className="border-t pt-4">
-                    <h3 className="text-lg font-semibold mb-3">Resolve Market</h3>
+                    <h3 className="text-lg font-semibold mb-3">
+                      Resolve Market
+                    </h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Choose the outcome to resolve this market. This action will
-                      distribute payouts to all winning bets.
+                      Choose the outcome to resolve this market. This action
+                      will distribute payouts to all winning bets.
                     </p>
                   </div>
                   <div className="flex gap-4">

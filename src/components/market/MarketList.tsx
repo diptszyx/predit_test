@@ -208,6 +208,26 @@ export default function MarketList({ oracleId }: { oracleId: string }) {
   );
 }
 
+const getTimeRemaining = (closeAt: string) => {
+  const now = Date.now();
+  const closeTime = new Date(closeAt).getTime();
+  const diff = closeTime - now;
+
+  if (diff <= 0) return 'Closed';
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+
+  return `${seconds}s`;
+};
+
+
 const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
   const user = useAuthStore((state) => state.user);
 
@@ -234,10 +254,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
         setTimeLeft('Closed');
         clearInterval(interval);
       } else {
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+        setTimeLeft(getTimeRemaining(item.closeAt));
       }
     }, 1000);
 

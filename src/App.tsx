@@ -245,9 +245,13 @@ function AppContent() {
 
     if (referralCode) {
       sessionStorage.setItem('pendingReferralCode', referralCode);
-      toast.info('Referral code detected! Sign up to get your bonus.', {
-        description: "You'll earn 100 XP when you create your account!",
-      });
+      if (user?.id) {
+        handleRefAutoApply();
+      } else {
+        toast.info('Referral code detected! Sign up to get your bonus.', {
+          description: "You'll earn 100 XP when you create your account!",
+        });
+      }
     }
 
     if (oauthToken) {
@@ -429,7 +433,10 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>AI-Powered Market Predictions | Predit Market AI Oracles Platform</title>
+              <title>
+                AI-Powered Market Predictions | Predit Market AI Oracles
+                Platform
+              </title>
               <meta
                 name="description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, sports, and financial markets with our AI agents platform."
@@ -502,7 +509,9 @@ function AppContent() {
         element={
           <div className="flex h-dvh bg-background overflow-hidden">
             <Helmet>
-              <title>Chat with AI Oracle Agents | Expert Market Predictions</title>
+              <title>
+                Chat with AI Oracle Agents | Expert Market Predictions
+              </title>
               <meta
                 name="description"
                 content="Chat with specialized AI oracle agents for expert market predictions. Choose from crypto, tech, politics, and financial market AI oracles to get personalized predictions and insights."
@@ -528,7 +537,9 @@ function AppContent() {
             <div className="flex-1 overflow-y-auto">
               <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
-                  <h1 className="text-4xl md:text-5xl mb-2">Choose Your AI Oracle Agent</h1>
+                  <h1 className="text-4xl md:text-5xl mb-2">
+                    Choose Your AI Oracle Agent
+                  </h1>
                   <p className="text-muted-foreground">
                     Select an AI agent to get expert predictions and insights
                   </p>
@@ -594,7 +605,9 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Hot Takes & Market News | AI Oracle Analysis & Predictions</title>
+              <title>
+                Hot Takes & Market News | AI Oracle Analysis & Predictions
+              </title>
               <meta
                 name="description"
                 content="Explore hot takes and trending market news analyzed by AI oracles. Get predictions and expert analysis on crypto, tech, and financial market news from our AI prediction platform."
@@ -665,7 +678,9 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Prediction Leaderboard | Top AI Oracle Users & Rankings</title>
+              <title>
+                Prediction Leaderboard | Top AI Oracle Users & Rankings
+              </title>
               <meta
                 name="description"
                 content="View the prediction leaderboard and top AI oracle users. Compete with other predictors, track your rankings, earn XP, and climb the leaderboard on our AI predictions platform."
@@ -704,7 +719,9 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Subscription Plans & Pricing | Unlimited AI Predictions</title>
+              <title>
+                Subscription Plans & Pricing | Unlimited AI Predictions
+              </title>
               <meta
                 name="description"
                 content="Subscription plans and pricing for AI oracle predictions. Upgrade to Pro for unlimited predictions, 2x XP rewards, and exclusive AI market analysis features on our prediction platform."
@@ -796,7 +813,9 @@ function AppContent() {
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Browse AI Oracle Agents | Expert Market Prediction Tools</title>
+              <title>
+                Browse AI Oracle Agents | Expert Market Prediction Tools
+              </title>
               <meta
                 name="description"
                 content="Browse and select from specialized AI oracle agents for expert market predictions. Access crypto oracles, tech oracles, political prediction agents, and financial market analysis tools."
@@ -822,7 +841,9 @@ function AppContent() {
             <div className="flex-1 overflow-y-auto">
               <main className="container mx-auto px-4 py-8">
                 <div className="mb-8">
-                  <h1 className="text-4xl md:text-5xl mb-2">AI Oracle Agents - Expert Market Predictions</h1>
+                  <h1 className="text-4xl md:text-5xl mb-2">
+                    AI Oracle Agents - Expert Market Predictions
+                  </h1>
                   <p className="text-muted-foreground">
                     Select an AI agent to get expert predictions and insights
                   </p>
@@ -1062,7 +1083,10 @@ function ChatWithOracleWrapper({
   return (
     <div className="flex h-dvh bg-background overflow-hidden">
       <Helmet>
-        <title>Chat with {selectedAIAgent.name} | {selectedAIAgent.type} Oracle Predictions</title>
+        <title>
+          Chat with {selectedAIAgent.name} | {selectedAIAgent.type} Oracle
+          Predictions
+        </title>
         <meta
           name="description"
           content={`Chat with ${selectedAIAgent.name} AI oracle for expert ${selectedAIAgent.type} predictions. Get personalized market insights, analysis, and predictions from our specialized AI agent.`}

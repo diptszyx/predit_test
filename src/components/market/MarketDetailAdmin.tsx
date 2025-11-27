@@ -11,9 +11,8 @@ import { toast } from 'sonner';
 
 export default function MarketDetailAdmin() {
   const navigate = useNavigate();
-  const { marketId, oracleId } = useParams<{
+  const { marketId } = useParams<{
     marketId: string;
-    oracleId: string;
   }>();
   const [market, setMarket] = useState<Market | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +64,7 @@ export default function MarketDetailAdmin() {
   };
 
   const handleBack = () => {
-    navigate('/market-admin');
+    navigate('/market');
   };
 
   if (loading) {

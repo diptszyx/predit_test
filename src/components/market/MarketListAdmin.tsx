@@ -89,7 +89,7 @@ export default function MarketListAdmin({
   }, [onRefetchReady]);
 
   const handleMarketClick = (item: Market) => {
-    navigate(`/market/${item.oracle.id}/${item.id}`);
+    navigate(`/market/${item.id}`);
   };
 
   const handleRefetch = () => {
@@ -373,17 +373,19 @@ const MarketItem: React.FC<MarketItemProps> = ({
             alt={item.question}
             className="w-full h-full object-cover"
           />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e: Event) => {
-              e.stopPropagation();
-              setOpenUpdateMarket(true);
-            }}
-            className="absolute top-2 right-2 bg-background/50"
-          >
-            <Pen className="w-4 h-4" />
-          </Button>
+          {item.status === 'open' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e: Event) => {
+                e.stopPropagation();
+                setOpenUpdateMarket(true);
+              }}
+              className="absolute top-2 right-2 bg-background/50"
+            >
+              <Pen className="w-4 h-4" />
+            </Button>
+          )}
         </div>
 
         <CardContent className="p-2">

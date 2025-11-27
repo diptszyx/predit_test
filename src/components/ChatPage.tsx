@@ -11,7 +11,6 @@ import {
   Plus,
   Sparkles,
   Star,
-  Store,
   Sun,
   ThumbsUp,
   Zap,
@@ -57,7 +56,6 @@ import {
 import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
 import { questionsByAIAgent } from '../constants/prediction';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ADMIN_EMAILS } from '../constants/admin';
 import MarketList from './market/MarketList';
 
 interface ChatPageProps {
@@ -136,10 +134,6 @@ export function ChatPage({
   );
   const [articleCounter, setArticleCounter] = useState(5);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  // user
-  const isAdmin = !!(
-    user && (user?.email ? ADMIN_EMAILS.includes(user?.email) : false)
-  );
 
   // Rating and Like states
   const [userRating, setUserRating] = useState<number | null>(0);
@@ -833,19 +827,6 @@ export function ChatPage({
                         >
                           <Info className="w-4 h-4 sm:w-5 sm:h-5" />
                         </Button>
-                        {user && isAdmin && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/market/${oracleId}`)}
-                            className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                          >
-                            <Store className="w-4 h-4 sm:w-5 sm:h-5" />
-                            <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
-                              Market
-                            </span>
-                          </Button>
-                        )}
                         {/* <Button
                           variant="ghost"
                           size="sm"

@@ -11,6 +11,7 @@ import {
   Moon,
   Send,
   Settings,
+  ShoppingCart,
   Sparkles,
   Sun,
   Trophy,
@@ -42,6 +43,7 @@ interface SidebarProps {
   onToggleDarkMode?: () => void;
   selectedAIAgent: OracleEntity | null;
   setSelectedAIAgent: Dispatch<SetStateAction<OracleEntity | null>>;
+  isAdmin?: boolean;
 }
 
 interface NavigationItem {
@@ -54,7 +56,7 @@ interface NavigationItem {
   children?: OracleEntity[];
 }
 
-const BASE_NAVIGATION_ITEMS: NavigationItem[] = [
+const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   {
     id: 'home',
     label: 'Home',
@@ -86,6 +88,12 @@ const BASE_NAVIGATION_ITEMS: NavigationItem[] = [
     icon: Crown,
     requiresAuth: false,
   },
+  ...(isAdmin ? [{
+    id: 'market',
+    label: 'Market',
+    icon: ShoppingCart,
+    requiresAuth: true,
+  }] : []),
 ];
 
 const SOCIAL_LINKS = [
@@ -120,13 +128,14 @@ export function Sidebar({
   onToggleDarkMode,
   selectedAIAgent,
   setSelectedAIAgent,
+  isAdmin = false,
 }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(
     currentPage === 'chat' ? 'chat' : null
   );
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>(
-    BASE_NAVIGATION_ITEMS
+    getBaseNavigationItems(isAdmin)
   );
   const isMobile = useIsMobile(1024); // Use custom hook with 1024px breakpoint
   const userLevel = user ? user.level : 1;
@@ -138,7 +147,7 @@ export function Sidebar({
 
         if (data?.data) {
           setNavigationItems(
-            BASE_NAVIGATION_ITEMS.map((item) => {
+            getBaseNavigationItems(isAdmin).map((item) => {
               if (item.id === 'chat') {
                 return {
                   ...item,
@@ -153,7 +162,7 @@ export function Sidebar({
         console.log('Failed to fetch all oracles', error);
       }
     })();
-  }, []);
+  }, [isAdmin]);
 
   // Close mobile menu when page changes
   useEffect(() => {

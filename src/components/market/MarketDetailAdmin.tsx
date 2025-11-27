@@ -145,9 +145,9 @@ export default function MarketDetailAdmin() {
         <div className="max-w-4xl mx-auto">
           <Card className="overflow-hidden">
             {/* Market Image */}
-            <div className="relative h-64 md:h-96 overflow-hidden">
+            <div className="relative h-64 md:h-96! overflow-hidden">
               <ImageWithFallback
-                src={market.imageUrl || '/prediction-default.jpeg'}
+                src={market.imageUrl}
                 alt={market.question}
                 className="w-full h-full object-cover"
               />

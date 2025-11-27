@@ -380,7 +380,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
         className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg"
         onClick={() => onClick(item)}
       >
-        <div className="relative h-32 md:h-[200px] overflow-hidden">
+        <div className="relative h-32 md:h-[200px]! overflow-hidden">
           <ImageWithFallback
             src={item.imageUrl}
             alt={item.question}

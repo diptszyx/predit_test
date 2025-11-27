@@ -263,7 +263,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
 
   return (
     <Card className="overflow-hidden transition-all duration-300 cursor-pointer">
-      <div className="relative h-32 md:h-[200px] overflow-hidden">
+      <div className="relative h-32 md:h-[200px]! overflow-hidden">
         <div className="absolute top-2 right-2 z-10">
           {getStatusBadge(item.status)}
         </div>

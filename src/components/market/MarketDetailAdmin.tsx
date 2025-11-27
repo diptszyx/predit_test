@@ -121,8 +121,14 @@ export default function MarketDetailAdmin() {
     );
   }
 
-  const yesPercent = market.totalBets > 0 ? (market.yesPool / market.totalBets) * 100 : 50;
-  const noPercent = market.totalBets > 0 ? (market.noPool / market.totalBets) * 100 : 50;
+  const yesPercent =
+    market.totalBets > 0
+      ? (market.yesPool * 100) / (market.yesPool + market.noPool)
+      : 50;
+  const noPercent =
+    market.totalBets > 0
+      ? (market.noPool * 100) / (market.yesPool + market.noPool)
+      : 50;
   const isResolved = market.status === 'resolved';
   const canResolve = market.status === 'open' || market.status === 'closed';
 
@@ -171,13 +177,13 @@ export default function MarketDetailAdmin() {
                   <div className="text-sm">
                     <p className="text-muted-foreground">YES Pool</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {market.yesPool} XP ({yesPercent.toFixed(1)}%)
+                      {market.yesPool} XP ({yesPercent.toFixed(0)}%)
                     </p>
                   </div>
                   <div className="text-sm text-right">
                     <p className="text-muted-foreground">NO Pool</p>
                     <p className="text-2xl font-bold text-red-600">
-                      {market.noPool} XP ({noPercent.toFixed(1)}%)
+                      {market.noPool} XP ({noPercent.toFixed(0)}%)
                     </p>
                   </div>
                 </div>
@@ -202,7 +208,7 @@ export default function MarketDetailAdmin() {
               {/* Total Bets */}
               <div className="p-4 rounded-lg bg-muted">
                 <p className="text-sm text-muted-foreground">Total Bets</p>
-                <p className="text-xl font-bold">{market.totalBets} XP</p>
+                <p className="text-xl font-bold">{market.totalBets} Participants</p>
               </div>
 
               {/* Resolve Buttons */}

@@ -12,6 +12,8 @@ import { Market, placeBet } from '../../services/market.service';
 import useAuthStore from '../../store/auth.store';
 import { Input } from '../ui/input';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Info } from 'lucide-react';
 
 interface MarketModalProps {
   open: boolean;
@@ -50,7 +52,7 @@ export function MarketModal({
     }
 
     if (amount > user.xp) {
-      toast.error('Insufficient XP to place this bet');
+      toast.error('Insufficient XP to place this market');
       return;
     }
 
@@ -63,12 +65,12 @@ export function MarketModal({
 
       await fetchCurrentUser();
 
-      toast.success(`Bet placed: ${choice} ${amount} XP`);
+      toast.success(`Market placed: ${choice} ${amount} XP`);
 
       onConfirm();
     } catch (err) {
       console.error(err);
-      toast.success(`Bet placed: ${choice} ${amount} XP`);
+      toast.success(`Market placed: ${choice} ${amount} XP`);
     } finally {
       setLoading(false);
       setAmount(0);
@@ -91,7 +93,21 @@ export function MarketModal({
         </DialogHeader>
 
         <div className="my-4">
-          <label className="text-xs mb-1 block">Bet Amount</label>
+          <div className="flex items-center gap-1">
+            <label className="text-xs mb-1 block">Xp Amount</label>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-3 w-3 cursor-pointer text-muted-foreground" />
+              </TooltipTrigger>
+
+              <TooltipContent side="right">
+                <p className="text-xs">
+                  The amount of XP you place for this market.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <Input
             type="number"
             className="w-full text-sm"

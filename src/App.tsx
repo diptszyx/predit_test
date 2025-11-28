@@ -20,27 +20,27 @@ import { useXP } from './lib/useXP';
 import { AIAgentCard } from './components/AIAgentCard';
 import { ArticleDetailPage } from './components/ArticleDetailPage';
 import { ChatPage } from './components/ChatPage';
-import CreateMarketPage from './components/CreateMarket';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
+import MarketDetailAdmin from './components/market/MarketDetailAdmin';
+import MarketPage from './components/MarketPage';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { SettingsPage } from './components/SettingsPage';
 import { SharedPredictionPage } from './components/SharedPredictionPage';
 import { Sidebar } from './components/Sidebar';
 import { SubscriptionPage } from './components/SubscriptionPage';
 import { TermsOfUse } from './components/TermsOfUse';
+import TopicPage from './components/topic/TopicPage';
 import UserProfileDialog from './components/UserProfileDialog';
 import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
+import { ADMIN_EMAILS, ADMIN_IDS } from './constants/admin';
 import { shortenAddress } from './lib/address';
 import apiClient from './lib/axios';
 import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
-import MarketPage from './components/MarketPage';
-import MarketDetailAdmin from './components/market/MarketDetailAdmin';
-import { ADMIN_EMAILS } from './constants/admin';
 
 export default function App() {
   return (
@@ -109,6 +109,7 @@ function AppContent() {
     if (path === '/oracles') return 'oracles';
     if (path.startsWith('/prediction/')) return 'shared-prediction';
     if (path === '/market') return 'market';
+    if (path === '/topic') return 'topic';
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
     return 'home';
   };
@@ -151,6 +152,9 @@ function AppContent() {
         break;
       case 'market':
         navigate('/market');
+        break;
+      case 'topic':
+        navigate('/topic');
         break;
       default:
         navigate('/');
@@ -888,6 +892,32 @@ function AppContent() {
             {user && (
               <div className="flex-1 overflow-y-auto">
                 <MarketPage />
+              </div>
+            )}
+            {commonDialogProps}
+          </div>
+        }
+      />
+      {/* Topics Page */}
+      <Route
+        path="/topic"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Topic - Predit Market AI Oracles</title>
+              <meta
+                name="description"
+                content="Create and manage topics powered by AI Oracles."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/topic`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            {user && (
+              <div className="flex-1 overflow-y-auto">
+                <TopicPage />
               </div>
             )}
             {commonDialogProps}

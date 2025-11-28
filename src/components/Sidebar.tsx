@@ -1,4 +1,5 @@
 import {
+  BookType,
   ChevronDown,
   ChevronsLeftRight,
   ChevronUp,
@@ -92,6 +93,11 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     id: 'market',
     label: 'Market',
     icon: ShoppingCart,
+    requiresAuth: true,
+  }, {
+    id: 'topic',
+    label: 'Topic',
+    icon: BookType,
     requiresAuth: true,
   }] : []),
 ];

@@ -6,6 +6,7 @@ import { News, newsService } from '../services/news.service';
 import { timeAgo } from '../lib/date';
 import { removeBrokenImages } from '../lib/htmlUtil';
 import { Skeleton } from './ui/skeleton';
+import { Topic, topicServices } from '../services/topic-admin.service';
 
 interface HotTakesPageProps {
   onArticleClick: (article: News) => void;
@@ -20,84 +21,78 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [topicList, setTopicList] = useState<Topic[]>([]);
+  const [topicFilter, setTopicFilter] = useState<string | null>(null);
+  const [isLoadingTopicList, setIsLoadingTopicList] = useState(false);
+
   const pageWrapper = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadingMoreRef = useRef(false);
 
+  // Load articles
   const loadArticles = async (reset = false) => {
     if (loadingMoreRef.current) return;
     loadingMoreRef.current = true;
 
     try {
       setLoading(true);
-
       const offset = reset ? 0 : page * PAGE_SIZE;
+      const result = await newsService.getAll(
+        topicFilter || undefined,
+        PAGE_SIZE,
+        offset
+      );
 
-      const result = await newsService.getAll(PAGE_SIZE, offset);
-
-      if (reset) {
-        setArticles(result);
-      } else {
-        setArticles((prev) => [...prev, ...result]);
-      }
-
-      if (result.length < PAGE_SIZE) setHasMore(false);
-      else setHasMore(true);
-    } catch (e) {
-      console.error(e);
+      setArticles((prev) => (reset ? result : [...prev, ...result]));
+      setHasMore(result.length === PAGE_SIZE);
+      if (reset) setPage(1);
+      else setPage((prev) => prev + 1);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
       loadingMoreRef.current = false;
     }
   };
 
+  // Load topics
+  useEffect(() => {
+    (async () => {
+      try {
+        setIsLoadingTopicList(true);
+        const topics = await topicServices.getAllTopics();
+        setTopicList(topics);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoadingTopicList(false);
+      }
+    })();
+  }, []);
+
+  // Reset articles when topicFilter changes
   useEffect(() => {
     loadArticles(true);
-  }, []);
+    pageWrapper.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [topicFilter]);
 
+  // Infinite scroll observer
   useEffect(() => {
-    pageWrapper?.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
-  useEffect(() => {
-    const el = loadMoreRef.current;
-    if (!el) return;
+    if (!loadMoreRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
         if (first.isIntersecting && hasMore && !loading) {
-          setPage((prev) => prev + 1);
           loadArticles(false);
         }
       },
       { threshold: 1 }
     );
 
-    observer.observe(el);
+    observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
   }, [hasMore, loading, loadArticles]);
-
-  const oracleCategoryMap: Record<string, string> = {
-    crypto: 'Cryptocurrency',
-    economics: 'Economics',
-    'financial-markets': 'Financial Markets',
-    fortune: 'Fortune & Mysticism',
-    'fundamental-analysis': 'Fundamental Analysis',
-    'meme-coins': 'Meme Coins',
-    politics: 'Politics',
-    'technical-analysis': 'Technical Analysis',
-  };
-
-  const availableCategories = ['all'];
-
-  const filteredArticles =
-    selectedCategory === 'all'
-      ? articles
-      : articles.filter(
-        (a) => oracleCategoryMap[a.oracle.id] === selectedCategory
-      );
 
   return (
     <div
@@ -108,46 +103,55 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
         <div className="container mx-auto px-4 py-6">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-left mb-2 text-[40px]">
-              Hot Takes
-            </h1>
+            <h1 className="text-left mb-2 text-[40px]">Hot Takes</h1>
             <p className="text-left text-muted-foreground mb-8">
               Latest insights and analyses from our oracle community
             </p>
           </div>
 
-          {/* Categories */}
+          {/* Topic Filter */}
           <div className="mb-8">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-              {availableCategories.map((category) => (
-                <Button
-                  key={category}
-                  variant={
-                    selectedCategory === category ? 'default' : 'outline'
-                  }
-                  size="sm"
-                  onClick={() => setSelectedCategory(category)}
-                  className={
-                    selectedCategory === category
-                      ? 'whitespace-nowrap bg-[rgb(152,16,250)] hover:bg-[rgb(152,16,250)]/90'
-                      : 'whitespace-nowrap border-blue-500/50 hover:border-blue-500 hover:bg-blue-500/10'
-                  }
-                >
-                  {category === 'all' ? 'All Categories' : category}
-                </Button>
-              ))}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              <Button
+                size="sm"
+                variant={topicFilter === null ? 'default' : 'outline'}
+                onClick={() => setTopicFilter(null)}
+                className="min-w-[60px] text-xs"
+                style={{ padding: '4px 12px' }}
+              >
+                All
+              </Button>
+
+              {isLoadingTopicList
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton
+                      key={i}
+                      className="h-8 w-20 rounded"
+                    />
+                  ))
+                : topicList.map((topic) => (
+                    <Button
+                      key={topic.id}
+                      size="sm"
+                      variant={topicFilter === topic.id ? 'default' : 'outline'}
+                      onClick={() => setTopicFilter(topic.id)}
+                      className="min-w-[60px] text-xs"
+                      style={{ padding: '4px 12px' }}
+                    >
+                      {topic.name}
+                    </Button>
+                  ))}
             </div>
           </div>
 
-          {/* Article Grid */}
+          {/* Articles Grid */}
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredArticles.map((article) => (
+            {articles.map((article) => (
               <div
                 key={article.id}
                 onClick={() => onArticleClick(article)}
                 className="group cursor-pointer rounded-lg border border-border bg-card overflow-hidden hover:border-blue-500/50 transition-all duration-300"
               >
-                {/* Image */}
                 <div className="aspect-video overflow-hidden bg-muted relative">
                   <ImageWithFallback
                     src={article.image || ''}
@@ -156,7 +160,6 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
                   />
                 </div>
 
-                {/* Content */}
                 <div className="p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Badge
@@ -165,7 +168,6 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
                     >
                       {article.oracle.name}
                     </Badge>
-
                     <span className="text-xs text-muted-foreground">
                       {timeAgo(article.createdAt)}
                     </span>
@@ -184,19 +186,16 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
                 </div>
               </div>
             ))}
-          </div>
 
-          {/* Skeleton while loading more */}
-          {loading && (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 py-6">
-              {[1, 2, 3].map((i) => (
+            {/* Skeleton while loading */}
+            {loading &&
+              Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton
                   key={i}
                   className="h-40 w-full rounded-lg"
                 />
               ))}
-            </div>
-          )}
+          </div>
 
           {/* Infinite scroll trigger */}
           <div
@@ -204,8 +203,8 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
             className="h-10"
           />
 
-          {/* Empty State */}
-          {!loading && filteredArticles.length === 0 && (
+          {/* Empty state */}
+          {!loading && articles.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="text-6xl mb-4">📰</div>
               <h3 className="mb-2">No articles found</h3>

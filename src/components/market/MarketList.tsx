@@ -8,6 +8,10 @@ import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
 import useAuthStore from '../../store/auth.store';
 import { toast } from 'sonner';
+import clsx from 'clsx';
+import { MarketAskModal } from './MarketAskModal';
+import { messageService } from '../../services/message.service';
+import { useNavigate } from 'react-router-dom';
 
 export type MarketChoice = 'yes' | 'no' | null;
 
@@ -26,12 +30,20 @@ const statusOptions: {
   { label: 'Cancelled', value: 'cancelled' },
 ];
 
-export default function MarketList({ oracleId }: { oracleId: string }) {
+export default function MarketList({
+  oracleId,
+  isFromMarketPage,
+}: {
+  oracleId?: string;
+  isFromMarketPage?: boolean;
+}) {
+  const navigate = useNavigate();
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [isOpenMarketAskModal, setIsOpenMarketAskModal] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Market | null>(null);
@@ -135,19 +147,49 @@ export default function MarketList({ oracleId }: { oracleId: string }) {
   };
 
   const handleSelect = (choice: MarketChoice, item: Market) => {
-    setSelectedChoice(choice);
     setSelectedItem(item);
-    setModalOpen(true);
+    if (!isFromMarketPage) {
+      setSelectedChoice(choice);
+      setModalOpen(true);
+    } else {
+      setIsOpenMarketAskModal(true);
+    }
   };
 
   const handleConfirm = () => {
     setModalOpen(false);
   };
 
+  const handleConfirmMarketAsk = async () => {
+    if (!selectedItem?.oracle?.id || !selectedItem?.question) {
+      console.error('Missing oracleId or question');
+      return;
+    }
+
+    try {
+      const oracleId = selectedItem.oracle.id;
+      const question = selectedItem.question;
+
+      await messageService.sendMessageStream(question, oracleId, {
+        onMetadata: () => {},
+        onSession: () => {},
+        onThinking: () => {},
+        onContent: () => {},
+        onComplete: () => {},
+        onDone: () => {},
+        onError: () => {},
+      });
+
+      navigate(`/chat/${oracleId}`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className='h-full overflow-hidden'>
+    <div className="h-full overflow-hidden">
       {/* Status filter */}
       <div className="flex gap-2 overflow-x-auto lg:mt-3 px-2 pb-2 scrollbar-hidden">
         {statusOptions.map((status) => (
@@ -171,7 +213,13 @@ export default function MarketList({ oracleId }: { oracleId: string }) {
       >
         {/* Market list */}
         <div className="p-3 space-y-3">
-          <div className="grid grid-cols-1 gap-3">
+          <div
+            className={clsx({
+              'grid grid-cols-1 gap-3': !isFromMarketPage,
+              'relative grid grid-cols-2 md:grid-cols-4 gap-3':
+                isFromMarketPage,
+            })}
+          >
             {markets.map((item) => (
               <MarketItem
                 key={item.id}
@@ -206,6 +254,17 @@ export default function MarketList({ oracleId }: { oracleId: string }) {
             marketId={selectedItem?.id}
             onConfirm={handleConfirm}
             onBetPlaced={handleBetPlaced}
+          />
+
+          <MarketAskModal
+            open={isOpenMarketAskModal}
+            title={selectedItem?.question || ''}
+            onClose={() => setIsOpenMarketAskModal(false)}
+            onCancel={() => {
+              setIsOpenMarketAskModal(false);
+              setModalOpen(true);
+            }}
+            onConfirm={handleConfirmMarketAsk}
           />
 
           {!loading && markets.length === 0 && (

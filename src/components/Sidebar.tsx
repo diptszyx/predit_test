@@ -89,17 +89,22 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     icon: Crown,
     requiresAuth: false,
   },
-  ...(isAdmin ? [{
+  {
     id: 'market',
     label: 'Market',
     icon: ShoppingCart,
     requiresAuth: true,
-  }, {
-    id: 'topic',
-    label: 'Topic',
-    icon: BookType,
-    requiresAuth: true,
-  }] : []),
+  },
+  ...(isAdmin
+    ? [
+        {
+          id: 'topic',
+          label: 'Topic',
+          icon: BookType,
+          requiresAuth: true,
+        },
+      ]
+    : []),
 ];
 
 const SOCIAL_LINKS = [
@@ -244,13 +249,17 @@ export function Sidebar({
           };
 
           return (
-            <div key={item.id} className="w-full">
+            <div
+              key={item.id}
+              className="w-full"
+            >
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${isActiveParent
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
+                className={`w-full justify-start ${
+                  isActiveParent
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                }`}
                 onClick={handleItemClick}
               >
                 <Icon className="w-4 h-4 mr-3" />
@@ -276,10 +285,11 @@ export function Sidebar({
                         key={child.name}
                         variant="ghost"
                         size="sm"
-                        className={`w-full justify-start text-[12.5px] ${isActiveChild
-                          ? 'bg-accent text-accent-foreground'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                          }`}
+                        className={`w-full justify-start text-[12.5px] ${
+                          isActiveChild
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                        }`}
                         onClick={() => {
                           setSelectedAIAgent(child);
                           localStorage.setItem('deor-currentOracle', child.id);
@@ -449,7 +459,10 @@ export function Sidebar({
             </div>
           </div>
         ) : (
-          <Button className="w-full" onClick={onOpenWalletDialog}>
+          <Button
+            className="w-full"
+            onClick={onOpenWalletDialog}
+          >
             <User className="w-4 h-4 mr-2" />
             Sign In
           </Button>
@@ -534,13 +547,17 @@ export function Sidebar({
               };
 
               return (
-                <div key={item.id} className="w-full">
+                <div
+                  key={item.id}
+                  className="w-full"
+                >
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${isActiveParent
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                      }`}
+                    className={`w-full justify-start ${
+                      isActiveParent
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
                     onClick={handleItemClick}
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -570,10 +587,11 @@ export function Sidebar({
                             key={child.name}
                             variant="ghost"
                             size="sm"
-                            className={`w-full justify-start text-[12.5px] ${isActiveChild
-                              ? 'bg-accent text-accent-foreground'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                              }`}
+                            className={`w-full justify-start text-[12.5px] ${
+                              isActiveChild
+                                ? 'bg-accent text-accent-foreground'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                            }`}
                             onClick={() => {
                               setSelectedAIAgent(child);
                               localStorage.setItem(
@@ -742,7 +760,10 @@ export function Sidebar({
                 </div>
               </div>
             ) : (
-              <Button className="w-full" onClick={onOpenWalletDialog}>
+              <Button
+                className="w-full"
+                onClick={onOpenWalletDialog}
+              >
                 <User className="w-4 h-4 mr-2" />
                 Sign In
               </Button>

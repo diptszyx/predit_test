@@ -52,12 +52,14 @@ const getRandomRelevance = (): string => {
 export const newsService = {
   getNewsList: async (
     oracleId: string,
+    topicFilter?: string,
     limit?: number,
     offset?: number
   ): Promise<News[]> => {
     const params: any = {};
     if (limit !== undefined) params.limit = limit;
     if (offset !== undefined) params.offset = offset;
+    if (topicFilter !== undefined) params.topic = topicFilter;
 
     const { data } = await apiClient.get<News[]>(`/news/oracle/${oracleId}`, {
       params,
@@ -87,10 +89,11 @@ export const newsService = {
       relevance: data.relevance || getRandomRelevance(),
     };
   },
-  getAll: async (limit?: number, offset?: number): Promise<News[]> => {
+  getAll: async (topicFilter?:string, limit?: number, offset?: number): Promise<News[]> => {
     const params: any = {};
     if (limit) params.limit = limit;
     if (offset) params.offset = offset;
+    if (topicFilter !== undefined) params.topic = topicFilter;
 
     const { data } = await apiClient.get<News[]>('/news', { params });
     return data

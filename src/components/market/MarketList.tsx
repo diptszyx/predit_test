@@ -147,9 +147,9 @@ export default function MarketList({ oracleId }: { oracleId: string }) {
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <>
+    <div className='h-full overflow-hidden'>
       {/* Status filter */}
-      <div className="flex gap-2 overflow-x-auto lg:mt-3 px-2 scrollbar-hidden">
+      <div className="flex gap-2 overflow-x-auto lg:mt-3 px-2 pb-2 scrollbar-hidden">
         {statusOptions.map((status) => (
           <Button
             key={status.value}
@@ -165,46 +165,57 @@ export default function MarketList({ oracleId }: { oracleId: string }) {
           </Button>
         ))}
       </div>
+      <div
+        className="h-full pb-10"
+        style={{ overflow: 'auto' }}
+      >
+        {/* Market list */}
+        <div className="p-3 space-y-3">
+          <div className="grid grid-cols-1 gap-3">
+            {markets.map((item) => (
+              <MarketItem
+                key={item.id}
+                item={item}
+                onSelect={handleSelect}
+              />
+            ))}
 
-      {/* Market list */}
-      <div className="p-3 space-y-3">
-        <div className="grid grid-cols-1 gap-3">
-          {markets.map((item) => (
-            <MarketItem key={item.id} item={item} onSelect={handleSelect} />
-          ))}
+            {loading && (
+              <>
+                {[1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="space-y-2"
+                  >
+                    <Skeleton className="h-20 w-full rounded-lg" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-2 w-2/3" />
+                  </div>
+                ))}
+              </>
+            )}
 
-          {loading && (
-            <>
-              {[1, 2].map((i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="h-20 w-full rounded-lg" />
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-2 w-2/3" />
-                </div>
-              ))}
-            </>
+            <div ref={loaderRef} />
+          </div>
+
+          <MarketModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            title={selectedItem?.question || ''}
+            choice={selectedChoice}
+            marketId={selectedItem?.id}
+            onConfirm={handleConfirm}
+            onBetPlaced={handleBetPlaced}
+          />
+
+          {!loading && markets.length === 0 && (
+            <p className="text-center text-xs text-muted-foreground py-8">
+              No markets available
+            </p>
           )}
-
-          <div ref={loaderRef} />
         </div>
-
-        <MarketModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          title={selectedItem?.question || ''}
-          choice={selectedChoice}
-          marketId={selectedItem?.id}
-          onConfirm={handleConfirm}
-          onBetPlaced={handleBetPlaced}
-        />
-
-        {!loading && markets.length === 0 && (
-          <p className="text-center text-xs text-muted-foreground py-8">
-            No markets available
-          </p>
-        )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -226,7 +237,6 @@ const getTimeRemaining = (closeAt: string) => {
 
   return `${seconds}s`;
 };
-
 
 const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
   const user = useAuthStore((state) => state.user);
@@ -295,8 +305,14 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
             </p>
           </div>
           <div className="w-full h-2 rounded-full overflow-hidden flex">
-            <div className="bg-green-500" style={{ width: `${yesPercent}%` }} />
-            <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
+            <div
+              className="bg-green-500"
+              style={{ width: `${yesPercent}%` }}
+            />
+            <div
+              className="bg-red-500"
+              style={{ width: `${noPercent}%` }}
+            />
           </div>
         </div>
 

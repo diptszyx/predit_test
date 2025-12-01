@@ -58,6 +58,7 @@ import { questionsByAIAgent } from '../constants/prediction';
 import { useNavigate, useParams } from 'react-router-dom';
 import MarketList from './market/MarketList';
 import { Topic, topicServices } from '../services/topic-admin.service';
+import Markdown from './chat/Markdown';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -138,6 +139,11 @@ export function ChatPage({
   );
   const [articleCounter, setArticleCounter] = useState(5);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Streaming states
+  const [thinkingTokens, setThinkingTokens] = useState(0);
+  const [citations, setCitations] = useState<string[]>([]);
+  const [sessionId, setSessionId] = useState<string>('');
 
   // Rating and Like states
   const [userRating, setUserRating] = useState<number | null>(0);
@@ -541,26 +547,76 @@ export function ChatPage({
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setThinkingTokens(0);
+    setCitations([]);
 
     setSuggestedQuestions(generateSuggestedQuestions(aiAgent, trimmedInput));
 
+    // Create a temporary assistant message for streaming
+    const assistantMessageId = (Date.now() + 1).toString();
+    const assistantMessage: ChatMessage = {
+      id: assistantMessageId,
+      sender: 'assistant',
+      content: '',
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, assistantMessage]);
+
     try {
-      // const response = await sendToGrokAPI(trimmedInput, aiAgent);
-      const data = await messageService.sendMessage(trimmedInput, aiAgent.id);
-      if (data) {
-        setMessages((prev) => [...prev, data.assistantMessage]);
-        fetchUser();
-        onReloadAiAgent?.(aiAgent.id);
-        if (data.xpReward.milestone) {
-          toast.success(
-            `🎯 Prediction Milestone Reached! +${data.xpReward.milestone?.xp} XP earned.`
+      await messageService.sendMessageStream(trimmedInput, aiAgent.id, {
+        onMetadata: (metadata) => {
+          // Handle metadata (userMessage and xpReward)
+          if (metadata.xpReward.milestone) {
+            toast.success(
+              `🎯 Prediction Milestone Reached! +${metadata.xpReward.milestone?.xp} XP earned.`
+            );
+          }
+        },
+        onSession: (id) => {
+          setSessionId(id);
+          console.log('Session ID:', id);
+        },
+        onThinking: (tokens) => {
+          setThinkingTokens(tokens);
+        },
+        onContent: (content) => {
+          // Handle streaming content
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId
+                ? { ...msg, content: msg.content + content }
+                : msg
+            )
           );
-        }
-      }
+        },
+        onComplete: (data) => {
+          // Handle completion with usage stats and citations
+          if (data.citations && data.citations.length > 0) {
+            setCitations(data.citations);
+          }
+          console.log('Stream complete. Usage:', data.usage);
+        },
+        onDone: () => {
+          // Handle stream done
+          setIsLoading(false);
+          setThinkingTokens(0);
+          fetchUser();
+          onReloadAiAgent?.(aiAgent.id);
+        },
+        onError: (error) => {
+          // Handle error
+          console.error('Error streaming message:', error);
+          toast.error('Failed to send message. Please try again.');
+          setIsLoading(false);
+          setThinkingTokens(0);
+        },
+      });
     } catch (error) {
       console.error('Error sending message:', error);
-    } finally {
+      toast.error('Failed to send message. Please try again.');
       setIsLoading(false);
+      setThinkingTokens(0);
     }
   };
 
@@ -913,26 +969,15 @@ export function ChatPage({
                                         : `backdrop-blur-md border border-border`
                                     }`}
                                   >
-                                    {/* Article Attachment Thumbnail */}
-                                    {/* {message.articleAttachment && (
-                                  <div className="mb-2 rounded-lg overflow-hidden border border-border">
-                                    <div className="aspect-video relative bg-muted/20">
-                                      <ImageWithFallback
-                                        src={message.articleAttachment.image || ''}
-                                        alt={message.articleAttachment.title}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div className="p-2 bg-muted/30">
-                                      <p className="text-xs line-clamp-2">{message.articleAttachment.title}</p>
-                                      <p className="text-xs text-muted-foreground mt-1">{message.articleAttachment.source}</p>
-                                    </div>
-                                  </div>
-                                )} */}
-
-                                    <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
-                                      {message.content}
-                                    </p>
+                                    {message.sender === 'assistant' ? (
+                                      <div className="text-xs sm:text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs">
+                                        <Markdown text={message.content} />
+                                      </div>
+                                    ) : (
+                                      <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                                        {message.content}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                                 <span
@@ -987,38 +1032,42 @@ export function ChatPage({
                                   )}
                               </div>
                             ))}
-                            {isLoading && (
-                              <div className="flex justify-start">
-                                <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
-                                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
-                                      <ImageWithFallback
-                                        src={aiAgent.image}
-                                        alt={aiAgent.name}
-                                        className="w-full h-full object-cover"
+                            {isLoading &&
+                              messages.length > 0 &&
+                              messages[messages.length - 1].content === '' && (
+                                <div className="flex justify-start">
+                                  <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
+                                        <ImageWithFallback
+                                          src={aiAgent.image}
+                                          alt={aiAgent.name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                      <span className="text-xs text-foreground">
+                                        {thinkingTokens > 0
+                                          ? `${aiAgent.name} is thinking... (${thinkingTokens} tokens)`
+                                          : `${aiAgent.name} is typing...`}
+                                      </span>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <div
+                                        className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                        style={{ animationDelay: '0ms' }}
+                                      />
+                                      <div
+                                        className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                        style={{ animationDelay: '150ms' }}
+                                      />
+                                      <div
+                                        className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                        style={{ animationDelay: '300ms' }}
                                       />
                                     </div>
-                                    <span className="text-xs text-foreground">
-                                      {aiAgent.name} is typing...
-                                    </span>
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <div
-                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                      style={{ animationDelay: '0ms' }}
-                                    />
-                                    <div
-                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                      style={{ animationDelay: '150ms' }}
-                                    />
-                                    <div
-                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                      style={{ animationDelay: '300ms' }}
-                                    />
                                   </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
                             <div ref={messagesEndRef} />
                           </div>
                         </ScrollArea>
@@ -1183,10 +1232,7 @@ export function ChatPage({
               {currentTab === 'hotTakes' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px]">
                   {/* Hot Takes Section */}
-                  <Card
-                    className="border-border"
-                    style={{ borderRadius: 0 }}
-                  >
+                  <Card className="border-border" style={{ borderRadius: 0 }}>
                     <CardHeader className="border-b border-border pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
                         <Zap className="w-4 h-4" />
@@ -1295,10 +1341,7 @@ export function ChatPage({
         </div>
 
         {/* Sign In Dialog */}
-        <AlertDialog
-          open={signInDialogOpen}
-          onOpenChange={setSignInDialogOpen}
-        >
+        <AlertDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen}>
           <AlertDialogContent className="max-w-md mx-0 sm:mx-auto">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">

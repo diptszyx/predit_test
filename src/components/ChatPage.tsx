@@ -958,12 +958,12 @@ export function ChatPage({
                                 <div
                                   className={`flex ${
                                     message.sender === 'user'
-                                      ? 'justify-end'
+                                      ? 'justify-end max-w-[94vw]'
                                       : 'justify-start'
                                   }`}
                                 >
                                   <div
-                                    className={`max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
+                                    className={`max-w-[65%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
                                       message.sender === 'user'
                                         ? 'bg-blue-600 text-white backdrop-blur-sm'
                                         : `backdrop-blur-md border border-border`
@@ -983,7 +983,7 @@ export function ChatPage({
                                 <span
                                   className={`text-xs mt-2 block text-muted-foreground ${
                                     message.sender === 'user'
-                                      ? 'text-right'
+                                      ? 'text-right max-w-[94vw]'
                                       : 'text-left'
                                   }`}
                                 >

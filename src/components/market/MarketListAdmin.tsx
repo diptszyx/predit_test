@@ -101,10 +101,7 @@ export default function MarketListAdmin({
       <div className="space-y-4">
         <div className="flex gap-2 flex-wrap">
           {['all', 'open', 'end', 'resolved', 'cancelled'].map((status) => (
-            <Skeleton
-              key={status}
-              className="h-9 w-20"
-            />
+            <Skeleton key={status} className="h-9 w-20" />
           ))}
         </div>
         <div className="grid grid-cols-4 gap-3">
@@ -143,7 +140,7 @@ export default function MarketListAdmin({
       {error && <p className="text-red-500 text-center py-2">{error}</p>}
 
       {/* Markets Grid */}
-      <div className="relative grid grid-cols-4 gap-3">
+      <div className="relative grid grid-cols-2 md:grid-cols-4 gap-3">
         {fetching && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
             <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
@@ -302,10 +299,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
   return (
     <>
       {/* Confirm cancel */}
-      <AlertDialog
-        open={openConfirmCancel}
-        onOpenChange={setOpenConfirmCancel}
-      >
+      <AlertDialog open={openConfirmCancel} onOpenChange={setOpenConfirmCancel}>
         <AlertDialogContent className="max-w-md mx-0 sm:mx-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -333,10 +327,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
       </AlertDialog>
 
       {/* Resolve market */}
-      <Dialog
-        open={openMarketResult}
-        onOpenChange={setOpenMarketResult}
-      >
+      <Dialog open={openMarketResult} onOpenChange={setOpenMarketResult}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -421,7 +412,9 @@ const MarketItem: React.FC<MarketItemProps> = ({
               <p className="text-xs font-medium text-green-600">
                 {yesPercent.toFixed(0)}%
               </p>
-              <p className="text-xs font-medium text-red-600">{noPercent.toFixed(0)}%</p>
+              <p className="text-xs font-medium text-red-600">
+                {noPercent.toFixed(0)}%
+              </p>
             </div>
 
             <div className="w-full h-2 rounded-full overflow-hidden flex">
@@ -429,10 +422,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
                 className="bg-green-500"
                 style={{ width: `${yesPercent}%` }}
               />
-              <div
-                className="bg-red-500"
-                style={{ width: `${noPercent}%` }}
-              />
+              <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
             </div>
           </div>
 

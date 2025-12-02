@@ -170,17 +170,9 @@ export default function MarketList({
       const oracleId = selectedItem.oracle.id;
       const question = selectedItem.question;
 
-      await messageService.sendMessageStream(question, oracleId, {
-        onMetadata: () => {},
-        onSession: () => {},
-        onThinking: () => {},
-        onContent: () => {},
-        onComplete: () => {},
-        onDone: () => {},
-        onError: () => {},
+      navigate(`/chat/${oracleId}`, {
+        state: { autoSend: { question } },
       });
-
-      navigate(`/chat/${oracleId}`);
     } catch (e: any) {
       toast.error(e.message);
     }

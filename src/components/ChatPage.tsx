@@ -55,7 +55,7 @@ import {
 } from './ui/alert-dialog';
 import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
 import { questionsByAIAgent } from '../constants/prediction';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import MarketList from './market/MarketList';
 import { Topic, topicServices } from '../services/topic-admin.service';
 import Markdown from './chat/Markdown';
@@ -187,6 +187,10 @@ export function ChatPage({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // auto send
+  const location = useLocation();
+  const autoSend = location.state?.autoSend;
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -204,6 +208,11 @@ export function ChatPage({
       try {
         const data = await messageService.loadMessages(aiAgent.id);
         if (data) setMessages(data.reverse());
+        if (autoSend) {
+          const { question } = autoSend;
+          handleSend(question);
+          navigate(location.pathname, { replace: true, state: null });
+        }
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -1232,7 +1241,10 @@ export function ChatPage({
               {currentTab === 'hotTakes' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px]">
                   {/* Hot Takes Section */}
-                  <Card className="border-border" style={{ borderRadius: 0 }}>
+                  <Card
+                    className="border-border"
+                    style={{ borderRadius: 0 }}
+                  >
                     <CardHeader className="border-b border-border pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
                         <Zap className="w-4 h-4" />
@@ -1341,7 +1353,10 @@ export function ChatPage({
         </div>
 
         {/* Sign In Dialog */}
-        <AlertDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen}>
+        <AlertDialog
+          open={signInDialogOpen}
+          onOpenChange={setSignInDialogOpen}
+        >
           <AlertDialogContent className="max-w-md mx-0 sm:mx-auto">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">

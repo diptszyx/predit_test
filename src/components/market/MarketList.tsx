@@ -61,6 +61,7 @@ export default function MarketList({
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const [isBetHistoryPage, setIsBetHistoryPage] = useState(false)
   const [myBetHistory, setMyBetHistory] = useState<MarketBet[]>([])
   const loadMoreBetHistoryRef = useRef<HTMLDivElement>(null);
   const [pageMyBetHistory, setPageMyBetHistory] = useState(1);
@@ -244,6 +245,7 @@ export default function MarketList({
             onClick={() => {
               setStatusFilter(status.value)
               setMyBetHistory([])
+              setIsBetHistoryPage(false)
             }}
             className="min-w-[60px] text-xs"
             style={{
@@ -254,12 +256,13 @@ export default function MarketList({
           </Button>
         ))}
         <Button
-          variant={myBetHistory.length > 0 ? 'default' : 'outline'}
+          variant={isBetHistoryPage ? 'default' : 'outline'}
           size="sm"
           onClick={() => {
             fetchMyBets(1)
             setStatusFilter(undefined)
             setPageMyBetHistory(1)
+            setIsBetHistoryPage(true)
           }}
           className="capitalize text-xs"
         >
@@ -280,7 +283,7 @@ export default function MarketList({
                 isFromMarketPage,
             })}
           >
-            {!myBetHistory.length && markets.map((item) => (
+            {!isBetHistoryPage && markets.map((item) => (
               <MarketItem
                 key={item.id}
                 item={item}
@@ -340,7 +343,7 @@ export default function MarketList({
             onConfirm={handleConfirmMarketAsk}
           />
 
-          {!loading && markets.length === 0 && (
+          {!loading && (markets.length === 0 || (myBetHistory.length === 0 && isBetHistoryPage)) && (
             <p className="text-center text-xs text-muted-foreground py-8">
               No markets available
             </p>

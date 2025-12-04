@@ -37,6 +37,7 @@ export default function MarketList({
   oracleId?: string;
   isFromMarketPage?: boolean;
 }) {
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,6 +57,7 @@ export default function MarketList({
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchMarkets = async (pageNum: number, replace = false) => {
+    if (!user?.appliedInviteCode) return;
     try {
       setLoading(true);
       const data = await getListMarket({
@@ -220,7 +222,7 @@ export default function MarketList({
               />
             ))}
 
-            {loading && (
+            {(loading || !user?.appliedInviteCode) && (
               <>
                 {[1, 2].map((i) => (
                   <div

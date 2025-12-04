@@ -53,7 +53,7 @@ export default function NotHaveInviteCode({ onOpenWalletDialog }: Props) {
 
   return (
     <div className="absolute inset-0 z-50 bg-black/10 backdrop-blur-xs! flex items-center justify-center p-6">
-      <div className="bg-secondary/50 shadow-2xl! p-6 rounded-2xl w-full max-w-sm text-center space-y-4">
+      <div className="bg-secondary shadow-2xl! p-6 rounded-2xl w-full max-w-sm text-center space-y-4">
         {!user && (
           <>
             <h2 className="text-xl font-semibold">Welcome</h2>

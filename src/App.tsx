@@ -248,71 +248,71 @@ function AppContent() {
   }, [darkMode]);
 
   // Check for referral code or OAuth token in URL
-  // useEffect(() => {
-  //   const referralCode = searchParams.get('ref');
-  //   const oauthToken = searchParams.get('token');
-  //   const isNewUser = searchParams.get('isNew') === 'true';
+  useEffect(() => {
+    // const referralCode = searchParams.get('ref');
+    const oauthToken = searchParams.get('token');
+    const isNewUser = searchParams.get('isNew') === 'true';
 
-  //   if (referralCode) {
-  //     sessionStorage.setItem('pendingReferralCode', referralCode);
-  //     if (user?.id) {
-  //       handleRefAutoApply();
-  //     } else {
-  //       toast.info('Referral code detected! Sign up to get your bonus.', {
-  //         description: "You'll earn 100 XP when you create your account!",
-  //       });
-  //     }
-  //   }
+    // if (referralCode) {
+    //   sessionStorage.setItem('pendingReferralCode', referralCode);
+    //   if (user?.id) {
+    //     handleRefAutoApply();
+    //   } else {
+    //     toast.info('Referral code detected! Sign up to get your bonus.', {
+    //       description: "You'll earn 100 XP when you create your account!",
+    //     });
+    //   }
+    // }
 
-  //   if (oauthToken) {
-  //     // Clean URL params
-  //     const newSearchParams = new URLSearchParams(searchParams);
-  //     newSearchParams.delete('token');
-  //     newSearchParams.delete('isNew');
-  //     const newUrl = newSearchParams.toString()
-  //       ? `${location.pathname}?${newSearchParams.toString()}`
-  //       : location.pathname;
-  //     window.history.replaceState({}, '', newUrl);
+    if (oauthToken) {
+      // Clean URL params
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('token');
+      newSearchParams.delete('isNew');
+      const newUrl = newSearchParams.toString()
+        ? `${location.pathname}?${newSearchParams.toString()}`
+        : location.pathname;
+      window.history.replaceState({}, '', newUrl);
 
-  //     void (async () => {
-  //       try {
-  //         const authenticatedUser = await authenticateWithToken(oauthToken);
+      void (async () => {
+        try {
+          const authenticatedUser = await authenticateWithToken(oauthToken);
 
-  //         toast.success(
-  //           isNewUser ? 'Welcome to Predit Market!' : 'Signed in successfully.',
-  //           {
-  //             description: isNewUser
-  //               ? "Your Google account is now linked. Let's get started."
-  //               : "You're back in. Pick up where you left off.",
-  //           }
-  //         );
+          toast.success(
+            isNewUser ? 'Welcome to Predit Market!' : 'Signed in successfully.',
+            {
+              description: isNewUser
+                ? "Your Google account is now linked. Let's get started."
+                : "You're back in. Pick up where you left off.",
+            }
+          );
 
-  //         if (pendingNavigation) {
-  //           handleNavigate(pendingNavigation);
-  //           setPendingNavigation(null);
-  //         } else {
-  //           const savedOracleId = localStorage.getItem('deor-currentOracle');
-  //           if (savedOracleId) {
-  //             navigate(`/chat/${savedOracleId}`);
-  //           } else {
-  //             navigate('/chat');
-  //           }
-  //         }
+          if (pendingNavigation) {
+            handleNavigate(pendingNavigation);
+            setPendingNavigation(null);
+          } else {
+            const savedOracleId = localStorage.getItem('deor-currentOracle');
+            if (savedOracleId) {
+              navigate(`/chat/${savedOracleId}`);
+            } else {
+              navigate('/chat');
+            }
+          }
 
-  //         if (isNewUser) {
-  //           openProfileDialog({
-  //             user: authenticatedUser,
-  //             require: true,
-  //           });
-  //         } else if (authenticatedUser) {
-  //           setProfileDialogUser(authenticatedUser);
-  //         }
-  //       } catch {
-  //         toast.error("We couldn't sign you in. Please try again.");
-  //       }
-  //     })();
-  //   }
-  // }, [searchParams, authenticateWithToken, pendingNavigation]);
+          if (isNewUser) {
+            openProfileDialog({
+              user: authenticatedUser,
+              require: true,
+            });
+          } else if (authenticatedUser) {
+            setProfileDialogUser(authenticatedUser);
+          }
+        } catch {
+          toast.error("We couldn't sign you in. Please try again.");
+        }
+      })();
+    }
+  }, [authenticateWithToken, pendingNavigation]);
 
   const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);

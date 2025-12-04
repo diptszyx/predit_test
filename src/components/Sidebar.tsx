@@ -169,7 +169,7 @@ export function Sidebar({
               if (item.id === 'chat') {
                 return {
                   ...item,
-                  children: data.data,
+                  children: data.data
                 };
               }
               return item;
@@ -302,7 +302,12 @@ export function Sidebar({
                         onClick={() => {
                           setSelectedAIAgent(child);
                           localStorage.setItem('deor-currentOracle', child.id);
-                          onNavigate('chat');
+                          if(user) {
+                            onNavigate('chat');
+                          } else if(item.requiresAuth) {
+                            onSetPendingNavigation('chat');
+                            onOpenWalletDialog();
+                          }
                         }}
                       >
                         {child.image ? (

@@ -290,13 +290,6 @@ function AppContent() {
           if (pendingNavigation) {
             handleNavigate(pendingNavigation);
             setPendingNavigation(null);
-          } else {
-            const savedOracleId = localStorage.getItem('deor-currentOracle');
-            if (savedOracleId) {
-              navigate(`/chat/${savedOracleId}`);
-            } else {
-              navigate('/chat');
-            }
           }
 
           if (isNewUser) {

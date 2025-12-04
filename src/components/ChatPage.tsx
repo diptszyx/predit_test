@@ -55,7 +55,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
-import { questionsByAIAgent } from '../constants/prediction';
+import { MAX_PREDICTIONS_PER_DAY, questionsByAIAgent } from '../constants/prediction';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import MarketList from './market/MarketList';
 import { Topic, topicServices } from '../services/topic-admin.service';
@@ -1098,7 +1098,7 @@ export function ChatPage({
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                       <MessageSquare className="w-4 h-4" />
                                       <span>
-                                        {user.restTodayPredictionCount}/5
+                                        {user.restTodayPredictionCount}/{MAX_PREDICTIONS_PER_DAY} {' '}
                                         messages remaining today
                                       </span>
                                     </div>

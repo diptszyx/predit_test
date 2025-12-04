@@ -211,7 +211,7 @@ const getTimeRemaining = (closeAt: string) => {
 };
 
 // Helper function to get status badge variant and className
-const getStatusBadgeProps = (status: string) => {
+export const getStatusBadgeProps = (status: string) => {
   switch (status) {
     case 'open':
       return { variant: 'default' as const, className: '' };
@@ -221,11 +221,13 @@ const getStatusBadgeProps = (status: string) => {
         className: 'bg-orange-500 text-white hover:bg-orange-600',
       };
     case 'resolved':
+    case 'yes':
       return {
         variant: 'secondary' as const,
         className: 'bg-green-500 text-white hover:bg-green-600',
       };
     case 'cancelled':
+    case 'no':
       return { variant: 'destructive' as const, className: '' };
     default:
       return { variant: 'secondary' as const, className: '' };
@@ -399,9 +401,8 @@ const MarketItem: React.FC<MarketItemProps> = ({
             </h4>
             <Badge
               variant={getStatusBadgeProps(item.status).variant}
-              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
-                getStatusBadgeProps(item.status).className
-              }`}
+              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
+                }`}
             >
               {item.status}
             </Badge>

@@ -1,17 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { MarketModal } from './MarketModal';
-import { Card, CardContent } from '../ui/card';
-import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { Button } from '../ui/button';
-import { getListMarket, Market } from '../../services/market.service';
-import { Skeleton } from '../ui/skeleton';
-import { Badge } from '../ui/badge';
-import useAuthStore from '../../store/auth.store';
-import { toast } from 'sonner';
 import clsx from 'clsx';
-import { MarketAskModal } from './MarketAskModal';
-import { messageService } from '../../services/message.service';
+import { Clock } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { getListMarket, getMyBets, Market, MarketBet } from '../../services/market.service';
+import useAuthStore from '../../store/auth.store';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
+import { Card, CardContent } from '../ui/card';
+import { Skeleton } from '../ui/skeleton';
+import { MarketAskModal } from './MarketAskModal';
+import { getStatusBadgeProps } from './MarketListAdmin';
+import { MarketModal } from './MarketModal';
 
 export type MarketChoice = 'yes' | 'no' | null;
 
@@ -20,15 +21,20 @@ export interface MarketItemProps {
   onSelect: (choice: MarketChoice, item: Market) => void;
 }
 
+export interface MyBetMarketsProps {
+  item: Market;
+  marketBet: MarketBet
+}
+
 const statusOptions: {
   label: string;
   value: 'open' | 'end' | 'resolved' | 'cancelled';
 }[] = [
-  { label: 'Open', value: 'open' },
-  { label: 'End', value: 'end' },
-  { label: 'Resolved', value: 'resolved' },
-  { label: 'Cancelled', value: 'cancelled' },
-];
+    { label: 'Open', value: 'open' },
+    { label: 'End', value: 'end' },
+    { label: 'Resolved', value: 'resolved' },
+    { label: 'Cancelled', value: 'cancelled' },
+  ];
 
 export default function MarketList({
   oracleId,
@@ -50,11 +56,17 @@ export default function MarketList({
   const [selectedItem, setSelectedItem] = useState<Market | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<MarketChoice>(null);
   const [statusFilter, setStatusFilter] = useState<
-    'open' | 'end' | 'resolved' | 'cancelled'
+    'open' | 'end' | 'resolved' | 'cancelled' | undefined
   >('open');
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [isBetHistoryPage, setIsBetHistoryPage] = useState(false)
+  const [myBetHistory, setMyBetHistory] = useState<MarketBet[]>([])
+  const loadMoreBetHistoryRef = useRef<HTMLDivElement>(null);
+  const [pageMyBetHistory, setPageMyBetHistory] = useState(1);
+  const [hasMoreMyBetHistory, setHasMoreMyBetHistory] = useState(false);
 
   const fetchMarkets = async (pageNum: number, replace = false) => {
     if (!user?.appliedInviteCode) return;
@@ -75,6 +87,47 @@ export default function MarketList({
       setLoading(false);
     }
   };
+
+  const fetchMyBets = async (pageNum: number, replace = false) => {
+    try {
+      setLoading(true);
+      const data = await getMyBets({
+        page: pageNum,
+        limit: 10,
+      });
+      setMyBetHistory((prev) => (replace ? data.data : [...prev, ...data.data]));
+      setHasMoreMyBetHistory(data.meta.hasNextPage);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load markets.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!loadMoreBetHistoryRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMoreMyBetHistory && !loading) {
+          setPageMyBetHistory(prev => prev + 1);
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(loadMoreBetHistoryRef.current);
+    return () => observer.disconnect();
+  }, [hasMoreMyBetHistory, loading, loadMoreBetHistoryRef]);
+
+  useEffect(() => {
+    if (pageMyBetHistory === 1) return;
+
+    fetchMyBets(pageMyBetHistory);
+  }, [pageMyBetHistory]);
 
   // Fetch markets on status filter change or oracleId change
   useEffect(() => {
@@ -191,7 +244,11 @@ export default function MarketList({
             key={status.value}
             size="sm"
             variant={statusFilter === status.value ? 'default' : 'outline'}
-            onClick={() => setStatusFilter(status.value)}
+            onClick={() => {
+              setStatusFilter(status.value)
+              setMyBetHistory([])
+              setIsBetHistoryPage(false)
+            }}
             className="min-w-[60px] text-xs"
             style={{
               padding: '4px 12px',
@@ -200,7 +257,21 @@ export default function MarketList({
             {status.label}
           </Button>
         ))}
+        <Button
+          variant={isBetHistoryPage ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            fetchMyBets(1)
+            setStatusFilter(undefined)
+            setPageMyBetHistory(1)
+            setIsBetHistoryPage(true)
+          }}
+          className="capitalize text-xs"
+        >
+          My Placed
+        </Button>
       </div>
+
       <div
         className="h-full pb-10"
         style={{ overflow: 'auto' }}
@@ -214,13 +285,26 @@ export default function MarketList({
                 isFromMarketPage,
             })}
           >
-            {markets.map((item) => (
+            {!isBetHistoryPage && markets.map((item) => (
               <MarketItem
                 key={item.id}
                 item={item}
                 onSelect={handleSelect}
               />
             ))}
+
+            {
+              myBetHistory.length > 0 && myBetHistory.map((item) => (
+                <MyBetsHistoryItem key={item.id} item={item.market} marketBet={item} />
+              ))}
+            {/* Infinite scroll trigger */}
+            {
+              hasMoreMyBetHistory &&
+              <div
+                ref={loadMoreBetHistoryRef}
+                className="h-10"
+              />
+            }
 
             {(loading || !user?.appliedInviteCode) && (
               <>
@@ -261,11 +345,13 @@ export default function MarketList({
             onConfirm={handleConfirmMarketAsk}
           />
 
-          {!loading && user?.appliedInviteCode && markets.length === 0 && (
-            <p className="text-center text-xs text-muted-foreground py-8">
-              No markets available
-            </p>
-          )}
+          {!loading
+            && user?.appliedInviteCode
+            && (markets.length === 0 || (myBetHistory.length === 0 && isBetHistoryPage)) && (
+              <p className="text-center text-xs text-muted-foreground py-8">
+                No markets available
+              </p>
+            )}
         </div>
       </div>
     </div>
@@ -423,4 +509,106 @@ const getStatusBadge = (status: 'open' | 'end' | 'resolved' | 'cancelled') => {
     default:
       return null;
   }
+};
+
+const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
+  item,
+  marketBet
+}) => {
+  const yesPercent =
+    item.totalBets > 0
+      ? (item.yesPool * 100) / (item.yesPool + item.noPool)
+      : 50;
+  const noPercent =
+    item.totalBets > 0
+      ? (item.noPool * 100) / (item.yesPool + item.noPool)
+      : 50;
+
+  const [timeRemaining, setTimeRemaining] = useState(
+    getTimeRemaining(item.closeAt)
+  );
+
+  // Update time remaining every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeRemaining(getTimeRemaining(item.closeAt));
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, [item.closeAt]);
+
+  return (
+    <>
+      <Card
+        className="overflow-hidden transition-all duration-300 cursor-pointer"
+      >
+        <div className="relative h-32 md:h-[200px]! overflow-hidden">
+          <div className="absolute top-2 right-2 z-10">
+            {getStatusBadge(item.status)}
+          </div>
+          <ImageWithFallback
+            src={item.image?.path || item.imageUrl || ''}
+            alt={item.question}
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        <CardContent className="p-2">
+          <div className="flex items-start justify-between gap-1 mb-1">
+            <h4 className="text-xs line-clamp-2 leading-tight flex-1 font-normal">
+              {item.question}
+            </h4>
+            {
+              item.outcome &&
+              <Badge
+                variant={getStatusBadgeProps(item.outcome).variant}
+                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.outcome).className
+                  }`}
+              >
+                {item.outcome}
+              </Badge>
+            }
+          </div>
+
+          <div className="my-2">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-medium text-green-600">
+                {yesPercent.toFixed(0)}%
+              </p>
+              <p className="text-xs font-medium text-red-600">
+                {noPercent.toFixed(0)}%
+              </p>
+            </div>
+
+            <div className="w-full h-2 rounded-full overflow-hidden flex">
+              <div
+                className="bg-green-500"
+                style={{ width: `${yesPercent}%` }}
+              />
+              <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
+            </div>
+          </div>
+
+          {item.status === 'open' && (
+            <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+              <Clock className="w-3 h-3" />
+              <span>Closes in {timeRemaining}</span>
+            </div>
+          )}
+
+          {item.status === 'resolved' ? (
+            <div className={`border rounded-md p-2 space-y-2 mt-5 text-xs capitalize text-center text-white ${marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'} `}>
+              {marketBet.status}
+            </div>
+          ) : (
+            <div className='border rounded-md p-2 mt-5 bg-slate-500 shadow-xs text-white'>
+              <p className="text-xs">
+                Prediction: <span className={`font-semibold capitalize`}>{marketBet.prediction}</span>
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
 };

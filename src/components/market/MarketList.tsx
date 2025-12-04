@@ -266,7 +266,7 @@ export default function MarketList({
           }}
           className="capitalize text-xs"
         >
-          Bet History
+          My Placed
         </Button>
       </div>
 

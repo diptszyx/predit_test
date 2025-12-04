@@ -345,11 +345,13 @@ export default function MarketList({
             onConfirm={handleConfirmMarketAsk}
           />
 
-          {!loading && (markets.length === 0 || (myBetHistory.length === 0 && isBetHistoryPage)) && (
-            <p className="text-center text-xs text-muted-foreground py-8">
-              No markets available
-            </p>
-          )}
+          {!loading
+            && user?.appliedInviteCode
+            && (markets.length === 0 || (myBetHistory.length === 0 && isBetHistoryPage)) && (
+              <p className="text-center text-xs text-muted-foreground py-8">
+                No markets available
+              </p>
+            )}
         </div>
       </div>
     </div>

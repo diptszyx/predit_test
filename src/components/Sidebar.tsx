@@ -18,6 +18,7 @@ import {
   Trophy,
   Twitter,
   User,
+  Users,
   Zap,
 } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
@@ -68,7 +69,7 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     id: 'chat',
     label: 'Predictions',
     icon: MessageSquare,
-    requiresAuth: false,
+    requiresAuth: true,
     children: [],
   },
   {
@@ -81,18 +82,24 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     id: 'leaderboard',
     label: 'Leaderboard',
     icon: Trophy,
-    requiresAuth: false,
+    requiresAuth: true,
   },
   {
     id: 'subscription',
     label: 'Subscription',
     icon: Crown,
-    requiresAuth: false,
+    requiresAuth: true,
   },
   {
     id: 'market',
     label: 'Market',
     icon: ShoppingCart,
+    requiresAuth: true,
+  },
+  {
+    id: 'invites',
+    label: 'Invites',
+    icon: Users,
     requiresAuth: true,
   },
   ...(isAdmin
@@ -244,7 +251,7 @@ export function Sidebar({
               setOpenSubmenu((prev) => (prev === item.id ? null : item.id));
               return;
             }
-
+            
             if (item.isExternalLink && item.href) {
               window.open(item.href, '_blank');
             } else {
@@ -477,7 +484,7 @@ export function Sidebar({
       {/* Mobile Menu Button - Only visible on mobile screens */}
       {isMobile && (
         <button
-          className="fixed p-2 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors translate-x-[-50%] z-[49]!"
+          className="fixed p-2 bg-sidebar border border-border rounded-lg shadow-lg hover:bg-accent transition-colors translate-x-[-50%] z-[99]!"
           style={{
             top: '3.2rem',
             left: '0',

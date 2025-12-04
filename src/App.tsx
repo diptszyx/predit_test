@@ -41,6 +41,8 @@ import apiClient from './lib/axios';
 import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
+import InviteCodePage from './pages/InviteCodePage';
+import InviteCodeGuard from './components/guard/InviteCodeGuard';
 
 export default function App() {
   return (
@@ -110,6 +112,7 @@ function AppContent() {
     if (path.startsWith('/prediction/')) return 'shared-prediction';
     if (path === '/market') return 'market';
     if (path === '/topic') return 'topic';
+    if (path === '/invites') return 'invites';
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
     return 'home';
   };
@@ -155,6 +158,9 @@ function AppContent() {
         break;
       case 'topic':
         navigate('/topic');
+        break;
+      case 'invites':
+        navigate('/invites');
         break;
       default:
         navigate('/');
@@ -242,77 +248,77 @@ function AppContent() {
   }, [darkMode]);
 
   // Check for referral code or OAuth token in URL
-  useEffect(() => {
-    const referralCode = searchParams.get('ref');
-    const oauthToken = searchParams.get('token');
-    const isNewUser = searchParams.get('isNew') === 'true';
+  // useEffect(() => {
+  //   const referralCode = searchParams.get('ref');
+  //   const oauthToken = searchParams.get('token');
+  //   const isNewUser = searchParams.get('isNew') === 'true';
 
-    if (referralCode) {
-      sessionStorage.setItem('pendingReferralCode', referralCode);
-      if (user?.id) {
-        handleRefAutoApply();
-      } else {
-        toast.info('Referral code detected! Sign up to get your bonus.', {
-          description: "You'll earn 100 XP when you create your account!",
-        });
-      }
-    }
+  //   if (referralCode) {
+  //     sessionStorage.setItem('pendingReferralCode', referralCode);
+  //     if (user?.id) {
+  //       handleRefAutoApply();
+  //     } else {
+  //       toast.info('Referral code detected! Sign up to get your bonus.', {
+  //         description: "You'll earn 100 XP when you create your account!",
+  //       });
+  //     }
+  //   }
 
-    if (oauthToken) {
-      // Clean URL params
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete('token');
-      newSearchParams.delete('isNew');
-      const newUrl = newSearchParams.toString()
-        ? `${location.pathname}?${newSearchParams.toString()}`
-        : location.pathname;
-      window.history.replaceState({}, '', newUrl);
+  //   if (oauthToken) {
+  //     // Clean URL params
+  //     const newSearchParams = new URLSearchParams(searchParams);
+  //     newSearchParams.delete('token');
+  //     newSearchParams.delete('isNew');
+  //     const newUrl = newSearchParams.toString()
+  //       ? `${location.pathname}?${newSearchParams.toString()}`
+  //       : location.pathname;
+  //     window.history.replaceState({}, '', newUrl);
 
-      void (async () => {
-        try {
-          const authenticatedUser = await authenticateWithToken(oauthToken);
+  //     void (async () => {
+  //       try {
+  //         const authenticatedUser = await authenticateWithToken(oauthToken);
 
-          toast.success(
-            isNewUser ? 'Welcome to Predit Market!' : 'Signed in successfully.',
-            {
-              description: isNewUser
-                ? "Your Google account is now linked. Let's get started."
-                : "You're back in. Pick up where you left off.",
-            }
-          );
+  //         toast.success(
+  //           isNewUser ? 'Welcome to Predit Market!' : 'Signed in successfully.',
+  //           {
+  //             description: isNewUser
+  //               ? "Your Google account is now linked. Let's get started."
+  //               : "You're back in. Pick up where you left off.",
+  //           }
+  //         );
 
-          if (pendingNavigation) {
-            handleNavigate(pendingNavigation);
-            setPendingNavigation(null);
-          } else {
-            const savedOracleId = localStorage.getItem('deor-currentOracle');
-            if (savedOracleId) {
-              navigate(`/chat/${savedOracleId}`);
-            } else {
-              navigate('/chat');
-            }
-          }
+  //         if (pendingNavigation) {
+  //           handleNavigate(pendingNavigation);
+  //           setPendingNavigation(null);
+  //         } else {
+  //           const savedOracleId = localStorage.getItem('deor-currentOracle');
+  //           if (savedOracleId) {
+  //             navigate(`/chat/${savedOracleId}`);
+  //           } else {
+  //             navigate('/chat');
+  //           }
+  //         }
 
-          if (isNewUser) {
-            openProfileDialog({
-              user: authenticatedUser,
-              require: true,
-            });
-          } else if (authenticatedUser) {
-            setProfileDialogUser(authenticatedUser);
-          }
-        } catch {
-          toast.error("We couldn't sign you in. Please try again.");
-        }
-      })();
-    }
-  }, [searchParams, authenticateWithToken, pendingNavigation]);
+  //         if (isNewUser) {
+  //           openProfileDialog({
+  //             user: authenticatedUser,
+  //             require: true,
+  //           });
+  //         } else if (authenticatedUser) {
+  //           setProfileDialogUser(authenticatedUser);
+  //         }
+  //       } catch {
+  //         toast.error("We couldn't sign you in. Please try again.");
+  //       }
+  //     })();
+  //   }
+  // }, [searchParams, authenticateWithToken, pendingNavigation]);
 
   const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);
     toast.success(`Connected with ${walletType}!`);
 
-    handleRefAutoApply();
+    // handleRefAutoApply();
 
     const createdAt = new Date(user.createdAt).getTime();
     const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
@@ -327,28 +333,28 @@ function AppContent() {
   };
 
   const handleSocialConnect = () => {
-    handleRefAutoApply();
+    // handleRefAutoApply();
   };
 
-  const handleRefAutoApply = async () => {
-    const referralCode = sessionStorage.getItem('pendingReferralCode');
-    if (!referralCode) return;
+  // const handleRefAutoApply = async () => {
+  //   const referralCode = sessionStorage.getItem('pendingReferralCode');
+  //   if (!referralCode) return;
 
-    try {
-      await apiClient.post('/auth/redeem-referral', {
-        referralCode,
-      });
+  //   try {
+  //     await apiClient.post('/auth/redeem-referral', {
+  //       referralCode,
+  //     });
 
-      toast.success('🎉 Referral bonus applied! +300 XP', {
-        description: 'Welcome to Predit Market of Predictions!',
-      });
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Failed to apply referral');
-    } finally {
-      sessionStorage.removeItem('pendingReferralCode');
-      fetchCurrentUser();
-    }
-  };
+  //     toast.success('🎉 Referral bonus applied! +300 XP', {
+  //       description: 'Welcome to Predit Market of Predictions!',
+  //     });
+  //   } catch (err: any) {
+  //     toast.error(err?.response?.data?.message ?? 'Failed to apply referral');
+  //   } finally {
+  //     sessionStorage.removeItem('pendingReferralCode');
+  //     fetchCurrentUser();
+  //   }
+  // };
 
   const handleWalletDisconnect = () => {
     logout();
@@ -538,31 +544,36 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            <div className="flex-1 overflow-y-auto">
-              <main className="container mx-auto px-4 py-8">
-                <div className="mb-8">
-                  <h1 className="text-4xl md:text-5xl mb-2">
-                    Choose Your AI Oracle Agent
-                  </h1>
-                  <p className="text-muted-foreground">
-                    Select an AI agent to get expert predictions and insights
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {listOracles.map((aiAgent) => (
-                    <AIAgentCard
-                      key={aiAgent.id}
-                      aiAgent={aiAgent}
-                      onClick={() => {
-                        localStorage.setItem('deor-currentOracle', aiAgent.id);
-                        setSelectedAIAgent(aiAgent);
-                        navigate(`/chat/${aiAgent.id}`);
-                      }}
-                    />
-                  ))}
-                </div>
-              </main>
-            </div>
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <div className="flex-1 overflow-y-auto">
+                <main className="container mx-auto px-4 py-8">
+                  <div className="mb-8">
+                    <h1 className="text-4xl md:text-5xl mb-2">
+                      Choose Your AI Oracle Agent
+                    </h1>
+                    <p className="text-muted-foreground">
+                      Select an AI agent to get expert predictions and insights
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {listOracles.map((aiAgent) => (
+                      <AIAgentCard
+                        key={aiAgent.id}
+                        aiAgent={aiAgent}
+                        onClick={() => {
+                          localStorage.setItem(
+                            'deor-currentOracle',
+                            aiAgent.id
+                          );
+                          setSelectedAIAgent(aiAgent);
+                          navigate(`/chat/${aiAgent.id}`);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </main>
+              </div>
+            </InviteCodeGuard>
             {commonDialogProps}
           </div>
         }
@@ -707,12 +718,14 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            <div className="flex-1 overflow-y-auto">
-              <div className="container mx-auto px-4 py-6">
-                <LeaderboardPage user={user !== null ? user : undefined} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <div className="flex-1 overflow-y-auto">
+                <div className="container mx-auto px-4 py-6">
+                  <LeaderboardPage user={user !== null ? user : undefined} />
+                </div>
               </div>
-            </div>
-            {commonDialogProps}
+              {commonDialogProps}
+            </InviteCodeGuard>
           </div>
         }
       />
@@ -748,23 +761,25 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
-              <div className="container mx-auto px-4 py-6">
-                <SubscriptionPage
-                  user={user}
-                  onOpenWalletDialog={() => setWalletDialogOpen(true)}
-                  onSubscriptionSuccess={() => {
-                    if (user) {
-                      awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
-                      toast.success(
-                        '🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!'
-                      );
-                    }
-                  }}
-                />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+                <div className="container mx-auto px-4 py-6">
+                  <SubscriptionPage
+                    user={user}
+                    onOpenWalletDialog={() => setWalletDialogOpen(true)}
+                    onSubscriptionSuccess={() => {
+                      if (user) {
+                        awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
+                        toast.success(
+                          '🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!'
+                        );
+                      }
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-            {commonDialogProps}
+              {commonDialogProps}
+            </InviteCodeGuard>
           </div>
         }
       />
@@ -798,15 +813,17 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            {user && (
-              <div className="flex-1 overflow-y-auto">
-                <SettingsPage
-                  onBack={() => navigate('/chat')}
-                  user={user}
-                />
-              </div>
-            )}
-            {commonDialogProps}
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <SettingsPage
+                    onBack={() => navigate('/chat')}
+                    user={user}
+                  />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
           </div>
         }
       />
@@ -842,32 +859,37 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            <div className="flex-1 overflow-y-auto">
-              <main className="container mx-auto px-4 py-8">
-                <div className="mb-8">
-                  <h1 className="text-4xl md:text-5xl mb-2">
-                    AI Oracle Agents - Expert Market Predictions
-                  </h1>
-                  <p className="text-muted-foreground">
-                    Select an AI agent to get expert predictions and insights
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {listOracles.map((aiAgent) => (
-                    <AIAgentCard
-                      key={aiAgent.id}
-                      aiAgent={aiAgent}
-                      onClick={() => {
-                        localStorage.setItem('deor-currentOracle', aiAgent.id);
-                        setSelectedAIAgent(aiAgent);
-                        navigate('/chat');
-                      }}
-                    />
-                  ))}
-                </div>
-              </main>
-            </div>
-            {commonDialogProps}
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <div className="flex-1 overflow-y-auto">
+                <main className="container mx-auto px-4 py-8">
+                  <div className="mb-8">
+                    <h1 className="text-4xl md:text-5xl mb-2">
+                      AI Oracle Agents - Expert Market Predictions
+                    </h1>
+                    <p className="text-muted-foreground">
+                      Select an AI agent to get expert predictions and insights
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {listOracles.map((aiAgent) => (
+                      <AIAgentCard
+                        key={aiAgent.id}
+                        aiAgent={aiAgent}
+                        onClick={() => {
+                          localStorage.setItem(
+                            'deor-currentOracle',
+                            aiAgent.id
+                          );
+                          setSelectedAIAgent(aiAgent);
+                          navigate('/chat');
+                        }}
+                      />
+                    ))}
+                  </div>
+                </main>
+              </div>
+              {commonDialogProps}
+            </InviteCodeGuard>
           </div>
         }
       />
@@ -889,12 +911,14 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            {user && (
-              <div className="flex-1 overflow-y-auto">
-                <MarketPage />
-              </div>
-            )}
-            {commonDialogProps}
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <MarketPage />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
           </div>
         }
       />
@@ -915,12 +939,14 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            {user && (
-              <div className="flex-1 overflow-y-auto">
-                <TopicPage />
-              </div>
-            )}
-            {commonDialogProps}
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <TopicPage />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
           </div>
         }
       />
@@ -942,12 +968,14 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            {user && (
-              <div className="flex-1 overflow-y-auto">
-                <MarketDetailAdmin />
-              </div>
-            )}
-            {commonDialogProps}
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <MarketDetailAdmin />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
           </div>
         }
       />
@@ -956,6 +984,48 @@ function AppContent() {
       <Route
         path="/prediction/:predictionId"
         element={<SharedPredictionWrapper />}
+      />
+
+      <Route
+        path="/invites"
+        element={
+          <div className="flex h-dvh bg-background overflow-hidden">
+            <Helmet>
+              <title>
+                Invite with AI Oracle Agents | Expert Market Predictions
+              </title>
+              <meta
+                name="description"
+                content="Invite with specialized AI oracle agents for expert market predictions. Choose from crypto, tech, politics, and financial market AI oracles to get personalized predictions and insights."
+              />
+              <meta
+                name="keywords"
+                content="AI oracle chat, AI agents, market predictions, crypto oracle, tech oracle, financial predictions, AI chat, expert predictions"
+              />
+              <meta
+                property="og:title"
+                content="Invite with AI Oracle Agents | Expert Market Predictions"
+              />
+              <meta
+                property="og:description"
+                content="Invite with specialized AI oracle agents for expert market predictions and insights."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/invites`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <div className="flex-1 overflow-y-auto">
+                <main className="container mx-auto px-4 py-8">
+                  <InviteCodePage />
+                </main>
+              </div>
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
       />
     </Routes>
   );
@@ -1139,47 +1209,49 @@ function ChatWithOracleWrapper({
         />
       </Helmet>
       <Sidebar {...commonSidebarProps} />
-      <div className="flex-1 overflow-y-auto">
-        <ChatPage
-          aiAgent={selectedAIAgent}
-          onBack={() => {
-            if (previousPage === 'articleDetail' && selectedArticle) {
-              setPreviousPage(null);
-              navigate(`/hot-takes/${selectedArticle.id}`);
-            } else {
-              setSelectedAIAgent(null);
-              setArticleContext(null);
-              setPreviousPage(null);
-              navigate('/chat');
-            }
-          }}
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
-          user={user}
-          onOpenWalletDialog={() => setWalletDialogOpen(true)}
-          onNavigate={handleNavigate}
-          currentPage={currentPage}
-          onWalletDisconnect={handleWalletDisconnect}
-          shortenAddress={shortenAddress}
-          updateUser={updateUser}
-          awardXPToUser={awardXPToUser}
-          trackQuestProgress={trackQuestProgress}
-          onArticleClick={(article: News) => {
-            setSelectedArticle(article);
-            setPreviousPage('chat');
-            navigate(`/hot-takes/${article.id}`);
-          }}
-          onOpenSettings={() => navigate('/settings')}
-          onSetPendingNavigation={setPendingNavigation}
-          articleContext={articleContext}
-          onArticleContextUsed={() => setArticleContext(null)}
-          onOpenXPInfo={() => setXPInfoDialogOpen(true)}
-          initialPrompt={initialPrompt}
-          onInitialPromptUsed={() => setInitialPrompt(null)}
-          onReloadAiAgent={handleReloadOracle}
-        />
-      </div>
-      {commonDialogProps}
+      <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+        <div className="flex-1 overflow-y-auto">
+          <ChatPage
+            aiAgent={selectedAIAgent}
+            onBack={() => {
+              if (previousPage === 'articleDetail' && selectedArticle) {
+                setPreviousPage(null);
+                navigate(`/hot-takes/${selectedArticle.id}`);
+              } else {
+                setSelectedAIAgent(null);
+                setArticleContext(null);
+                setPreviousPage(null);
+                navigate('/chat');
+              }
+            }}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            user={user}
+            onOpenWalletDialog={() => setWalletDialogOpen(true)}
+            onNavigate={handleNavigate}
+            currentPage={currentPage}
+            onWalletDisconnect={handleWalletDisconnect}
+            shortenAddress={shortenAddress}
+            updateUser={updateUser}
+            awardXPToUser={awardXPToUser}
+            trackQuestProgress={trackQuestProgress}
+            onArticleClick={(article: News) => {
+              setSelectedArticle(article);
+              setPreviousPage('chat');
+              navigate(`/hot-takes/${article.id}`);
+            }}
+            onOpenSettings={() => navigate('/settings')}
+            onSetPendingNavigation={setPendingNavigation}
+            articleContext={articleContext}
+            onArticleContextUsed={() => setArticleContext(null)}
+            onOpenXPInfo={() => setXPInfoDialogOpen(true)}
+            initialPrompt={initialPrompt}
+            onInitialPromptUsed={() => setInitialPrompt(null)}
+            onReloadAiAgent={handleReloadOracle}
+          />
+        </div>
+        {commonDialogProps}
+      </InviteCodeGuard>
     </div>
   );
 }

@@ -216,7 +216,7 @@ export function UserProfileForm({
         </p>
       </div>
 
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <Label
           htmlFor="referralCode"
           className="text-sm flex items-center gap-2"
@@ -233,7 +233,7 @@ export function UserProfileForm({
           }
           className="w-full"
         />
-      </div>
+      </div> */}
 
       <Separator />
 

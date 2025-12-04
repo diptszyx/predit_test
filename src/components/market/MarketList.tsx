@@ -261,7 +261,7 @@ export default function MarketList({
             onConfirm={handleConfirmMarketAsk}
           />
 
-          {!loading && markets.length === 0 && (
+          {!loading && user?.appliedInviteCode && markets.length === 0 && (
             <p className="text-center text-xs text-muted-foreground py-8">
               No markets available
             </p>

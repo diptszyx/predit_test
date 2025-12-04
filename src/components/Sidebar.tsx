@@ -97,13 +97,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(isAdmin
     ? [
-        {
-          id: 'topic',
-          label: 'Topic',
-          icon: BookType,
-          requiresAuth: true,
-        },
-      ]
+      {
+        id: 'topic',
+        label: 'Topic',
+        icon: BookType,
+        requiresAuth: true,
+      },
+    ]
     : []),
 ];
 
@@ -210,7 +210,11 @@ export function Sidebar({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
+              <ImageWithFallback
+                src={'/logo-MarkWhite.svg'}
+                alt={'logo'}
+                className="w-5 h-5 text-primary-foreground"
+              />
             </div>
             <div>
               <div className="text-lg font-semibold">Predit Market</div>
@@ -255,11 +259,10 @@ export function Sidebar({
             >
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${
-                  isActiveParent
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                }`}
+                className={`w-full justify-start ${isActiveParent
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  }`}
                 onClick={handleItemClick}
               >
                 <Icon className="w-4 h-4 mr-3" />
@@ -285,11 +288,10 @@ export function Sidebar({
                         key={child.name}
                         variant="ghost"
                         size="sm"
-                        className={`w-full justify-start text-[12.5px] ${
-                          isActiveChild
-                            ? 'bg-accent text-accent-foreground'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                        }`}
+                        className={`w-full justify-start text-[12.5px] ${isActiveChild
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                          }`}
                         onClick={() => {
                           setSelectedAIAgent(child);
                           localStorage.setItem('deor-currentOracle', child.id);
@@ -517,7 +519,11 @@ export function Sidebar({
           <div className="py-4 px-6 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary-foreground" />
+                <ImageWithFallback
+                  src={'/logo-MarkWhite.svg'}
+                  alt={'logo'}
+                  className="w-5 h-5 text-primary-foreground"
+                />
               </div>
               <div>
                 <div className="text-lg font-semibold">Predit Market</div>
@@ -553,11 +559,10 @@ export function Sidebar({
                 >
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${
-                      isActiveParent
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                    }`}
+                    className={`w-full justify-start ${isActiveParent
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                      }`}
                     onClick={handleItemClick}
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -587,11 +592,10 @@ export function Sidebar({
                             key={child.name}
                             variant="ghost"
                             size="sm"
-                            className={`w-full justify-start text-[12.5px] ${
-                              isActiveChild
-                                ? 'bg-accent text-accent-foreground'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                            }`}
+                            className={`w-full justify-start text-[12.5px] ${isActiveChild
+                              ? 'bg-accent text-accent-foreground'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                              }`}
                             onClick={() => {
                               setSelectedAIAgent(child);
                               localStorage.setItem(

@@ -28,6 +28,7 @@ export interface User {
   xp: number;
   streakDays: number;
   restTodayPredictionCount: number;
+  appliedInviteCode: boolean;
   totalPredictions: number;
   accurateRate: number;
   aiAgentsVisited: number;

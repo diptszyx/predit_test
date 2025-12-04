@@ -872,10 +872,10 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
         </Card>
 
         {/* Referral System */}
-        <ReferralCard
+        {/* <ReferralCard
           user={user}
           refList={refList}
-        />
+        /> */}
       </div>
 
       {/* Subscription Management Dialog */}

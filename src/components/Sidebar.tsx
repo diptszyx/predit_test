@@ -109,18 +109,18 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
 
 const SOCIAL_LINKS = [
   {
-    href: 'https://twitter.com',
-    icon: Twitter,
+    href: 'https://x.com/preditmarket',
+    icon: '/Twitter-X.svg',
     label: 'X (Twitter)',
   },
   {
-    href: 'https://discord.com',
-    icon: MessageCircle,
+    href: 'https://discord.com/invite/pVkpN2Au6P',
+    icon: '/discord-outline.svg',
     label: 'Discord',
   },
   {
-    href: 'https://telegram.org',
-    icon: Send,
+    href: 'https://t.me/+7UaHn3GlQqxjYmRl',
+    icon: '/telegram.svg',
     label: 'Telegram',
   },
 ];
@@ -328,9 +328,8 @@ export function Sidebar({
       "
       >
         {/* Social Links */}
-        <div className="flex items-center justify-center gap-4 pb-1">
+        <div className="flex items-center justify-center gap-6 pb-1">
           {SOCIAL_LINKS.map((social) => {
-            const Icon = social.icon;
             return (
               <a
                 key={social.label}
@@ -340,7 +339,7 @@ export function Sidebar({
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 aria-label={social.label}
               >
-                <Icon className="w-5 h-5" />
+                <ImageWithFallback src={social.icon} alt={social.label} className='w-5 h-5' />
               </a>
             );
           })}
@@ -632,7 +631,7 @@ export function Sidebar({
           {/* Bottom Section */}
           <div className="p-4 border-t border-border space-y-2">
             {/* Social Links */}
-            <div className="flex items-center justify-center gap-4 pb-2">
+            <div className="flex items-center justify-center gap-6 pb-2">
               {SOCIAL_LINKS.map((social) => {
                 const Icon = social.icon;
                 return (
@@ -644,7 +643,7 @@ export function Sidebar({
                     className="text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={social.label}
                   >
-                    <Icon className="w-5 h-5" />
+                    <ImageWithFallback src={social.icon} alt={social.label} className='w-5 h-5' />
                   </a>
                 );
               })}

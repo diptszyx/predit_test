@@ -1,26 +1,29 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableCell,
-  TableBody,
-} from '../components/ui/table';
+import { Copy } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import CreateInviteCodeModal from '../components/inviteCode/CreateInviteCodeModal';
+import CreateUserCodeModal from '../components/inviteCode/CreateUserCodeModal';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Skeleton } from '../components/ui/skeleton';
-import { ADMIN_EMAILS } from '../constants/admin';
-import useAuthStore from '../store/auth.store';
-import { InviteCode, inviteCodeService } from '../services/invite-code.service';
-import CreateInviteCodeModal from '../components/inviteCode/CreateInviteCodeModal';
 import {
   Select,
+  SelectContent,
+  SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectItem,
-  SelectContent,
 } from '../components/ui/select';
-import { toast } from 'sonner';
+import { Skeleton } from '../components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
+import { ADMIN_EMAILS, ADMIN_IDS } from '../constants/admin';
+import { copyToClipboard } from '../lib/clipboardUtils';
+import { InviteCode, inviteCodeService } from '../services/invite-code.service';
+import useAuthStore from '../store/auth.store';
 
 export default function InviteCodePage() {
   const user = useAuthStore((state) => state.user);
@@ -29,6 +32,7 @@ export default function InviteCodePage() {
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
+  const [openCreateUserCode, setOpenCreateUserCode] = useState(false);
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'all' | 'used' | 'unused'>('all');
@@ -38,17 +42,20 @@ export default function InviteCodePage() {
 
   const [total, setTotal] = useState(0);
 
+  const [userWallet, setUserWallet] = useState('')
+
   const params = {
     search,
     status: status === 'all' ? undefined : status,
     page,
     limit: pageSize,
+    appWallet: userWallet,
   };
 
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await (isAdmin ? inviteCodeService.getAll(params) :  inviteCodeService.getMyCode(params));
+      const res = await (isAdmin ? inviteCodeService.getAll(params) : inviteCodeService.getMyCode(params));
       setCodes(res.data || []);
       setTotal(res.meta.total || 0);
     } catch (err) {
@@ -56,7 +63,7 @@ export default function InviteCodePage() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, page]);
+  }, [search, status, page, userWallet]);
 
   useEffect(() => {
     refetch();
@@ -86,6 +93,39 @@ export default function InviteCodePage() {
     } catch (err: any) {
       const message = err?.response?.data?.message || 'Something when wrong';
       throw new Error(message);
+    }
+  };
+
+  const handleConfirmCreateUserCode = async ({
+    appWallet,
+    prefix,
+  }: {
+    appWallet: string;
+    prefix?: string;
+  }) => {
+    try {
+      await inviteCodeService.generateCodeForUser({ appWallet, prefix });
+      await refetch();
+      setOpenCreateUserCode(false);
+
+      toast.success(
+        `Created invite code for user successfully!`
+      );
+    } catch (err: any) {
+      const message = err?.response?.data?.message || 'Something when wrong';
+      throw new Error(message);
+    }
+  };
+
+  const handleCopyToClipboard = async (text?: string) => {
+    if (!text) return;
+    const success = await copyToClipboard(text);
+    if (success) {
+      toast.success('Wallet address copied to clipboard!');
+    } else {
+      toast.error('Unable to copy automatically', {
+        description: 'Please copy the address manually'
+      });
     }
   };
 
@@ -122,9 +162,21 @@ export default function InviteCodePage() {
               setSearch(e.target.value)
             }
           />
+
+          {isAdmin && <Input
+            placeholder="Search by user's wallet address..."
+            className="flex-1"
+            value={userWallet}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setUserWallet(e.target.value)
+            }
+          />}
         </div>
 
         <Button onClick={() => setOpenCreate(true)}>Create Code</Button>
+        {isAdmin &&
+          <Button onClick={() => setOpenCreateUserCode(true)}>Create User's Code</Button>
+        }
       </div>
 
       <CreateInviteCodeModal
@@ -133,12 +185,18 @@ export default function InviteCodePage() {
         onConfirm={handleConfirmCreate}
       />
 
+      <CreateUserCodeModal
+        open={openCreateUserCode}
+        onClose={() => setOpenCreateUserCode(false)}
+        onConfirm={handleConfirmCreateUserCode}
+      />
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40">
               <TableCell className="font-semibold">Code</TableCell>
-              <TableCell className="font-semibold">Created At</TableCell>
+              <TableCell className="font-semibold">Referral Link</TableCell>
               <TableCell className="font-semibold">Status</TableCell>
             </TableRow>
           </TableHeader>
@@ -171,14 +229,17 @@ export default function InviteCodePage() {
             )}
 
             {!loading &&
-              codes?.map((code, idx) => (
-                <TableRow
+              codes?.map((code, idx) => {
+                const referralLink = `${window.location.origin}?invitecode=${code.code}`;
+
+                return (<TableRow
                   key={code.id}
                   className={idx % 2 === 0 ? 'bg-muted/20' : ''}
                 >
                   <TableCell className="font-medium">{code.code}</TableCell>
-                  <TableCell>
-                    {new Date(code.createdAt).toLocaleString()}
+                  <TableCell className="flex items-center">
+                    {referralLink}
+                    <Copy className='h-3 w-3 ml-3 cursor-pointer' onClick={() => handleCopyToClipboard(referralLink)} />
                   </TableCell>
                   <TableCell>
                     {code.usedBy ? (
@@ -187,8 +248,8 @@ export default function InviteCodePage() {
                       <span className="text-green-600 font-medium">Unused</span>
                     )}
                   </TableCell>
-                </TableRow>
-              ))}
+                </TableRow>)
+              })}
           </TableBody>
         </Table>
       </div>

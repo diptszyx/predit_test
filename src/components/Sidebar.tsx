@@ -3,6 +3,7 @@ import {
   ChevronDown,
   ChevronsLeftRight,
   ChevronUp,
+  Copy,
   Crown,
   Flame,
   Home,
@@ -30,6 +31,8 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { copyToClipboard } from '../lib/clipboardUtils';
+import { toast } from 'sonner';
 
 interface SidebarProps {
   currentPage: string;
@@ -209,6 +212,18 @@ export function Sidebar({
     setIsMobileMenuOpen(false);
   };
 
+  const handleCopyToClipboard = async (text?: string) => {
+    if (!text) return;
+    const success = await copyToClipboard(text);
+    if (success) {
+      toast.success('Wallet address copied to clipboard!');
+    } else {
+      toast.error('Unable to copy automatically', {
+        description: 'Please copy the address manually'
+      });
+    }
+  };
+
   // Mobile Sidebar Content (with close button)
   const MobileSidebarContent = () => (
     <>
@@ -251,7 +266,7 @@ export function Sidebar({
               setOpenSubmenu((prev) => (prev === item.id ? null : item.id));
               return;
             }
-            
+
             if (item.isExternalLink && item.href) {
               window.open(item.href, '_blank');
             } else {
@@ -302,9 +317,9 @@ export function Sidebar({
                         onClick={() => {
                           setSelectedAIAgent(child);
                           localStorage.setItem('deor-currentOracle', child.id);
-                          if(user) {
+                          if (user) {
                             onNavigate('chat');
-                          } else if(item.requiresAuth) {
+                          } else if (item.requiresAuth) {
                             onSetPendingNavigation('chat');
                             onOpenWalletDialog();
                           }
@@ -415,11 +430,17 @@ export function Sidebar({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {user.email || shortenAddress(user.appWallet)}
+                    {user.email || <p className='flex items-center'>
+                      {shortenAddress(user?.appWallet || '')}
+                      <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
+                    </p>}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {user.email ? shortenAddress(user.appWallet) : ''}
-                  </p>
+
+                  {user.email ?
+                    <p className="text-xs text-muted-foreground flex items-center">
+                      {shortenAddress(user?.appWallet || '')}
+                      <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
+                    </p> : ''}
                 </div>
               </div>
 
@@ -716,13 +737,17 @@ export function Sidebar({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
-                        {user.email || shortenAddress(user?.appWallet || '')}
+                        {user.email || <p className='flex items-center'>
+                          {shortenAddress(user?.appWallet || '')}
+                          <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
+                        </p>}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {user.email
-                          ? shortenAddress(user?.appWallet || '')
-                          : ''}
-                      </p>
+
+                      {user.email ?
+                        <p className="text-xs text-muted-foreground flex items-center">
+                          {shortenAddress(user?.appWallet || '')}
+                          <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
+                        </p> : ''}
                     </div>
                   </div>
 

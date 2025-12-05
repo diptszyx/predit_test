@@ -430,7 +430,7 @@ export function Sidebar({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {user.email || <p className='flex items-center'>
+                    {user.email || <p className='flex items-center font-medium'>
                       {shortenAddress(user?.appWallet || '')}
                       <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
                     </p>}
@@ -737,7 +737,7 @@ export function Sidebar({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
-                        {user.email || <p className='flex items-center'>
+                        {user.email || <p className='flex items-center font-medium'>
                           {shortenAddress(user?.appWallet || '')}
                           <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
                         </p>}

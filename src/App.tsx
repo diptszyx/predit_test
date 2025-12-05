@@ -324,7 +324,8 @@ function AppContent() {
         }
       })();
     }
-  }, [authenticateWithToken, pendingNavigation, user, searchParams, fetchCurrentUser, navigate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);

@@ -6,10 +6,29 @@ import { Input } from '../ui/input';
 import { inviteCodeService } from '../../services/invite-code.service';
 import { toast } from 'sonner';
 import { ADMIN_EMAILS } from '../../constants/admin';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
 
 interface Props {
   onOpenWalletDialog: () => void;
 }
+
+const SOCIAL_LINKS = [
+  {
+    href: 'https://x.com/preditmarket',
+    icon: '/Twitter-X.svg',
+    label: 'X (Twitter)',
+  },
+  {
+    href: 'https://discord.com/invite/pVkpN2Au6P',
+    icon: '/discord-outline.svg',
+    label: 'Discord',
+  },
+  {
+    href: 'https://t.me/+7UaHn3GlQqxjYmRl',
+    icon: '/telegram.svg',
+    label: 'Telegram',
+  },
+];
 
 export default function NotHaveInviteCode({ onOpenWalletDialog }: Props) {
   const user = useAuthStore((state) => state.user);
@@ -54,7 +73,7 @@ export default function NotHaveInviteCode({ onOpenWalletDialog }: Props) {
   return (
     <div className="absolute inset-0 z-50 bg-black/10 backdrop-blur-xs! flex items-center justify-center p-6">
       <div className="relative">
-        <div className="absolute -inset-1 bg-white/5 rounded-2xl -z-1 blur-xs!"/>
+        <div className="absolute -inset-1 bg-white/5 rounded-2xl -z-1 blur-xs!" />
         <div className="bg-sidebar p-6 rounded-2xl w-full max-w-sm text-center space-y-4">
           {!user && (
             <>
@@ -62,10 +81,7 @@ export default function NotHaveInviteCode({ onOpenWalletDialog }: Props) {
               <p className="text-muted-foreground text-sm">
                 Please sign in to continue.
               </p>
-              <Button
-                className="w-full"
-                onClick={onOpenWalletDialog}
-              >
+              <Button className="w-full" onClick={onOpenWalletDialog}>
                 <User className="w-4 h-4 mr-2" />
                 Sign In
               </Button>
@@ -78,6 +94,29 @@ export default function NotHaveInviteCode({ onOpenWalletDialog }: Props) {
               <p className="text-muted-foreground text-sm">
                 You need an invite code to access this app.
               </p>
+              <p className="text-muted-foreground text-xs">
+                If you don't have a code, request one on our social channels:
+              </p>
+
+              {/* Social Links */}
+              <div className="flex items-center justify-center gap-4">
+                {SOCIAL_LINKS.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={social.label}
+                  >
+                    <ImageWithFallback
+                      src={social.icon}
+                      alt={social.label}
+                      className="w-5 h-5"
+                    />
+                  </a>
+                ))}
+              </div>
 
               <Input
                 variant="outline"

@@ -147,7 +147,7 @@ export default function InviteCodePage() {
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Filter status" />
             </SelectTrigger>
-            <SelectContent className="bg-[#1a1a1a]">
+            <SelectContent className="bg-background">
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="unused">Unused</SelectItem>
               <SelectItem value="used">Used</SelectItem>

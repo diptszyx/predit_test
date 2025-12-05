@@ -1,34 +1,41 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableCell,
-  TableBody,
-} from '../components/ui/table';
+import { Copy } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import CreateUserCodeModal from '../components/inviteCode/CreateUserCodeModal';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Skeleton } from '../components/ui/skeleton';
-import { ADMIN_EMAILS } from '../constants/admin';
-import useAuthStore from '../store/auth.store';
-import { InviteCode, inviteCodeService } from '../services/invite-code.service';
+import { Checkbox } from '../components/ui/checkbox';
 import CreateInviteCodeModal from '../components/inviteCode/CreateInviteCodeModal';
 import {
   Select,
+  SelectContent,
+  SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectItem,
-  SelectContent,
 } from '../components/ui/select';
+import { Skeleton } from '../components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table';
+import { ADMIN_EMAILS } from '../constants/admin';
+import { copyToClipboard } from '../lib/clipboardUtils';
+import { InviteCode, inviteCodeService } from '../services/invite-code.service';
+import useAuthStore from '../store/auth.store';
 import { toast } from 'sonner';
+import { Twitter } from 'lucide-react';
 
 export default function InviteCodePage() {
+  const appUrl = `${import.meta.env.VITE_APP_URL}`;
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
 
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
+  const [openCreateUserCode, setOpenCreateUserCode] = useState(false);
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'all' | 'used' | 'unused'>('all');
@@ -38,17 +45,72 @@ export default function InviteCodePage() {
 
   const [total, setTotal] = useState(0);
 
+  const [userWallet, setUserWallet] = useState('');
+  // Selected codes for sharing
+  const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
+
   const params = {
     search,
     status: status === 'all' ? undefined : status,
     page,
     limit: pageSize,
+    appWallet: userWallet,
+  };
+
+  const shareOnX = (codesToShare: string[]) => {
+    // Format codes: 4 codes per line
+    const formattedCodes = codesToShare.reduce((acc, code, idx) => {
+      if (idx > 0 && idx % 4 === 0) {
+        acc += '\n';
+      } else if (idx > 0) {
+        acc += ' ';
+      }
+      return acc + code;
+    }, '');
+
+    const text = encodeURIComponent(
+      `Join Predict Market using my invite code and get 300 XP bonus!
+
+${formattedCodes}
+
+${appUrl}
+
+#predit_market #prediction`
+    );
+    window.open(`https://x.com/intent/tweet?text=${text}`, '_blank');
+  };
+
+  const handleShareOnX = () => {
+    if (selectedCodes.length === 0) {
+      toast.error('Please select at least one code to share');
+      return;
+    }
+    shareOnX(selectedCodes);
+    toast.success('Opening X (Twitter) to share your invite codes!');
+  };
+
+  const handleSelectCode = (code: string, checked: boolean) => {
+    if (checked) {
+      setSelectedCodes((prev) => [...prev, code]);
+    } else {
+      setSelectedCodes((prev) => prev.filter((c) => c !== code));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedCodes(codes.map((c) => c.code));
+    } else {
+      setSelectedCodes([]);
+    }
   };
 
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await (isAdmin ? inviteCodeService.getAll(params) :  inviteCodeService.getMyCode(params));
+      const res = await (isAdmin
+        ? inviteCodeService.getAll(params)
+        : inviteCodeService.getMyCode(params));
       setCodes(res.data || []);
       setTotal(res.meta.total || 0);
     } catch (err) {
@@ -56,7 +118,7 @@ export default function InviteCodePage() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, page]);
+  }, [search, status, page, userWallet]);
 
   useEffect(() => {
     refetch();
@@ -65,6 +127,10 @@ export default function InviteCodePage() {
   useEffect(() => {
     setPage(1);
   }, [search, status]);
+
+  useEffect(() => {
+    setSelectedCodes([]);
+  }, [page, search, status]);
 
   const totalPages = Math.ceil(total / pageSize);
 
@@ -89,25 +155,55 @@ export default function InviteCodePage() {
     }
   };
 
+  const handleConfirmCreateUserCode = async ({
+    appWallet,
+    prefix,
+  }: {
+    appWallet: string;
+    prefix?: string;
+  }) => {
+    try {
+      await inviteCodeService.generateCodeForUser({ appWallet, prefix });
+      await refetch();
+      setOpenCreateUserCode(false);
+
+      toast.success(`Created invite code for user successfully!`);
+    } catch (err: any) {
+      const message = err?.response?.data?.message || 'Something when wrong';
+      throw new Error(message);
+    }
+  };
+
+  const handleCopyToClipboard = async (text?: string) => {
+    if (!text) return;
+    const success = await copyToClipboard(text);
+    if (success) {
+      toast.success('Referral link copied to clipboard!');
+    } else {
+      toast.error('Unable to copy automatically', {
+        description: 'Please copy the link manually',
+      });
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Invite Codes</h1>
         <p className="text-muted-foreground">
-          Manage your invite codes or generate new ones to share with users.
+          {isAdmin
+            ? 'Manage your invite codes or generate new ones to share with users.'
+            : 'Manage your invite codes and share with users.'}
         </p>
       </div>
 
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-1">
-          <Select
-            value={status}
-            onValueChange={(v: any) => setStatus(v)}
-          >
+          <Select value={status} onValueChange={(v: any) => setStatus(v)}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Filter status" />
             </SelectTrigger>
-            <SelectContent className="bg-[#1a1a1a]">
+            <SelectContent className="bg-background">
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="unused">Unused</SelectItem>
               <SelectItem value="used">Used</SelectItem>
@@ -122,9 +218,36 @@ export default function InviteCodePage() {
               setSearch(e.target.value)
             }
           />
+
+          {isAdmin && (
+            <Input
+              placeholder="Search by user's wallet address..."
+              className="flex-1"
+              value={userWallet}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setUserWallet(e.target.value)
+              }
+            />
+          )}
         </div>
 
-        <Button onClick={() => setOpenCreate(true)}>Create Code</Button>
+        {isAdmin ? (
+          <>
+            <Button onClick={() => setOpenCreate(true)}>Create Code</Button>
+            <Button onClick={() => setOpenCreateUserCode(true)}>
+              Create User's Code
+            </Button>
+          </>
+        ) : (
+          <Button
+            onClick={handleShareOnX}
+            disabled={selectedCodes.length === 0}
+            className="gap-2"
+          >
+            <Twitter className="w-4 h-4" />
+            Share on X {selectedCodes.length > 0 && `(${selectedCodes.length})`}
+          </Button>
+        )}
       </div>
 
       <CreateInviteCodeModal
@@ -133,12 +256,28 @@ export default function InviteCodePage() {
         onConfirm={handleConfirmCreate}
       />
 
+      <CreateUserCodeModal
+        open={openCreateUserCode}
+        onClose={() => setOpenCreateUserCode(false)}
+        onConfirm={handleConfirmCreateUserCode}
+      />
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40">
+              {!isAdmin && (
+                <TableCell className="font-semibold w-12">
+                  <Checkbox
+                    checked={
+                      codes.length > 0 && selectedCodes.length === codes.length
+                    }
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableCell>
+              )}
               <TableCell className="font-semibold">Code</TableCell>
-              <TableCell className="font-semibold">Created At</TableCell>
+              <TableCell className="font-semibold">Referral Link</TableCell>
               <TableCell className="font-semibold">Status</TableCell>
             </TableRow>
           </TableHeader>
@@ -147,6 +286,11 @@ export default function InviteCodePage() {
             {loading &&
               [1, 2, 3].map((i) => (
                 <TableRow key={i}>
+                  {!isAdmin && (
+                    <TableCell>
+                      <Skeleton className="h-5 w-5" />
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Skeleton className="h-5 w-32" />
                   </TableCell>
@@ -162,7 +306,7 @@ export default function InviteCodePage() {
             {!loading && codes?.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={3}
+                  colSpan={isAdmin ? 3 : 4}
                   className="text-center py-6 text-muted-foreground"
                 >
                   No invite codes found
@@ -171,24 +315,44 @@ export default function InviteCodePage() {
             )}
 
             {!loading &&
-              codes?.map((code, idx) => (
-                <TableRow
-                  key={code.id}
-                  className={idx % 2 === 0 ? 'bg-muted/20' : ''}
-                >
-                  <TableCell className="font-medium">{code.code}</TableCell>
-                  <TableCell>
-                    {new Date(code.createdAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    {code.usedBy ? (
-                      <span className="text-red-500 font-medium">Used</span>
-                    ) : (
-                      <span className="text-green-600 font-medium">Unused</span>
+              codes?.map((code, idx) => {
+                const referralLink = `${appUrl}?invitecode=${code.code}`;
+
+                return (
+                  <TableRow
+                    key={code.id}
+                    className={idx % 2 === 0 ? 'bg-muted/20' : ''}
+                  >
+                    {!isAdmin && (
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedCodes.includes(code.code)}
+                          onCheckedChange={(checked: boolean) =>
+                            handleSelectCode(code.code, checked)
+                          }
+                        />
+                      </TableCell>
                     )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    <TableCell className="font-medium">{code.code}</TableCell>
+                    <TableCell className="flex items-center">
+                      {referralLink}
+                      <Copy
+                        className="h-3 w-3 ml-3 cursor-pointer"
+                        onClick={() => handleCopyToClipboard(referralLink)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {code.usedBy ? (
+                        <span className="text-red-500 font-medium">Used</span>
+                      ) : (
+                        <span className="text-green-600 font-medium">
+                          Unused
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
         </Table>
       </div>

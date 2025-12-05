@@ -48,7 +48,7 @@ export default function InviteCodePage() {
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await inviteCodeService.getMyCode(params);
+      const res = await (isAdmin ? inviteCodeService.getAll(params) :  inviteCodeService.getMyCode(params));
       setCodes(res.data || []);
       setTotal(res.meta.total || 0);
     } catch (err) {

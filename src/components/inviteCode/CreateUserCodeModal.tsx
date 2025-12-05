@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { Input } from '../ui/input';
-import { Wallet } from 'lucide-react';
 
 export default function CreateUserCodeModal({
   open,
@@ -70,17 +69,19 @@ export default function CreateUserCodeModal({
               type="text"
               value={appWallet}
               onChange={(e) => setAppWallet(e.target.value)}
-              placeholder="Ex: 0xabc"
+              placeholder="Ex: 0x0e43...2a07"
+              className="mt-1"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium">Prefix (optional)</label>
+            <label className="text-sm font-medium mb-2">Prefix (optional)</label>
             <Input
               type="text"
               value={prefix}
               onChange={(e) => setPrefix(e.target.value)}
               placeholder="default: DEH"
+              className="mt-1"
             />
           </div>
         </div>

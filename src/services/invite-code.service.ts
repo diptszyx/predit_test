@@ -46,8 +46,13 @@ export const inviteCodeService = {
     return res.data;
   },
 
-  getAll: async (): Promise<InviteCode[]> => {
-    const res = await apiClient.get('/invite-codes/all');
+  getAll: async (params: {
+    search: string;
+    page: number;
+    status?: 'used' | 'unused' | 'all';
+    limit: number;
+  }): Promise<PaginatedResponse<InviteCode>> => {
+    const res = await apiClient.get('/invite-codes/all', { params });
     return res.data;
   },
 

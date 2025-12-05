@@ -3,6 +3,7 @@ import { Clock } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { ADMIN_EMAILS, ADMIN_IDS } from '../../constants/admin';
 import { getListMarket, getMyBets, Market, MarketBet } from '../../services/market.service';
 import useAuthStore from '../../store/auth.store';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
@@ -45,6 +46,8 @@ export default function MarketList({
 }) {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -257,19 +260,21 @@ export default function MarketList({
             {status.label}
           </Button>
         ))}
-        <Button
-          variant={isBetHistoryPage ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => {
-            fetchMyBets(1)
-            setStatusFilter(undefined)
-            setPageMyBetHistory(1)
-            setIsBetHistoryPage(true)
-          }}
-          className="capitalize text-xs"
-        >
-          My Placed
-        </Button>
+        {!isAdmin &&
+          <Button
+            variant={isBetHistoryPage ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => {
+              fetchMyBets(1)
+              setStatusFilter(undefined)
+              setPageMyBetHistory(1)
+              setIsBetHistoryPage(true)
+            }}
+            className="capitalize text-xs"
+          >
+            My Placed
+          </Button>
+        }
       </div>
 
       <div

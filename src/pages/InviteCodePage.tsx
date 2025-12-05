@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
-import { ADMIN_EMAILS, ADMIN_IDS } from '../constants/admin';
+import { ADMIN_EMAILS } from '../constants/admin';
 import { copyToClipboard } from '../lib/clipboardUtils';
 import { InviteCode, inviteCodeService } from '../services/invite-code.service';
 import useAuthStore from '../store/auth.store';
@@ -121,10 +121,10 @@ export default function InviteCodePage() {
     if (!text) return;
     const success = await copyToClipboard(text);
     if (success) {
-      toast.success('Wallet address copied to clipboard!');
+      toast.success('Referral link copied to clipboard!');
     } else {
       toast.error('Unable to copy automatically', {
-        description: 'Please copy the address manually'
+        description: 'Please copy the link manually'
       });
     }
   };

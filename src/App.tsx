@@ -37,9 +37,9 @@ import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { ADMIN_EMAILS, ADMIN_IDS } from './constants/admin';
 import { shortenAddress } from './lib/address';
-import apiClient from './lib/axios';
 import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
+import { inviteCodeService } from './services/invite-code.service';
 import useAuthStore from './store/auth.store';
 import InviteCodePage from './pages/InviteCodePage';
 import InviteCodeGuard from './components/guard/InviteCodeGuard';
@@ -247,23 +247,42 @@ function AppContent() {
     }
   }, [darkMode]);
 
-  // Check for referral code or OAuth token in URL
+  // Check for invite code, referral code or OAuth token in URL
   useEffect(() => {
-    // const referralCode = searchParams.get('ref');
+    const inviteCodeFromUrl = searchParams.get('invitecode');
     const oauthToken = searchParams.get('token');
     const isNewUser = searchParams.get('isNew') === 'true';
+    const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
 
-    // if (referralCode) {
-    //   sessionStorage.setItem('pendingReferralCode', referralCode);
-    //   if (user?.id) {
-    //     handleRefAutoApply();
-    //   } else {
-    //     toast.info('Referral code detected! Sign up to get your bonus.', {
-    //       description: "You'll earn 100 XP when you create your account!",
-    //     });
-    //   }
-    // }
+    // Handle invite code from URL
+    if (inviteCodeFromUrl && user && !user.appliedInviteCode && !isAdmin) {
+      // Clean URL params
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('invitecode');
+      const newUrl = newSearchParams.toString()
+        ? `${location.pathname}?${newSearchParams.toString()}`
+        : location.pathname;
+      window.history.replaceState({}, '', newUrl);
 
+      // Auto-apply the invite code
+      void (async () => {
+        try {
+          await inviteCodeService.applyCode(inviteCodeFromUrl);
+          await fetchCurrentUser();
+
+          toast.success('🎉 Bonus applied! +300 XP', {
+            description: 'Welcome to Predict Market of Predictions!',
+          });
+
+          navigate('/');
+        } catch (err) {
+          console.error('Failed to auto-apply invite code:', err);
+          toast.error('Invalid or expired invite code.');
+        }
+      })();
+    }
+
+    // Handle OAuth token
     if (oauthToken) {
       // Clean URL params
       const newSearchParams = new URLSearchParams(searchParams);
@@ -305,7 +324,8 @@ function AppContent() {
         }
       })();
     }
-  }, [authenticateWithToken, pendingNavigation]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);

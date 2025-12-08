@@ -1,4 +1,4 @@
-import { CircleAlert, Clock, Loader2, Pen } from 'lucide-react';
+import { CircleAlert, Clock, Loader2, Pen, Share2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -298,6 +298,19 @@ const MarketItem: React.FC<MarketItemProps> = ({
     onRefetch(); // Refetch the market list
   };
 
+  const handleShareMarket = async (e: Event) => {
+    e.stopPropagation();
+    const marketUrl = `${window.location.origin}/market/${item.id}`;
+
+    try {
+      await navigator.clipboard.writeText(marketUrl);
+      toast.success('Market link copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy link: ', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
   return (
     <>
       {/* Confirm cancel */}
@@ -457,17 +470,27 @@ const MarketItem: React.FC<MarketItemProps> = ({
                   LIVE
                 </Badge>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e: Event) => {
-                  e.stopPropagation();
-                  setOpenUpdateMarket(true);
-                }}
-                className="absolute top-2 right-2 bg-background/white hover:bg-gray-800! p-1 rounded-full"
-              >
-                <Pen className="w-4 h-4" />
-              </Button>
+              <div className="absolute top-2 right-2 flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShareMarket}
+                  className="bg-background/50 hover:bg-background/70 p-1 rounded-full"
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e: Event) => {
+                    e.stopPropagation();
+                    setOpenUpdateMarket(true);
+                  }}
+                  className="bg-background/white hover:bg-gray-800! p-1 rounded-full"
+                >
+                  <Pen className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

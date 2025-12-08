@@ -1,4 +1,4 @@
-import { Sparkles, Zap } from "lucide-react";
+import { Sparkles, Zap } from 'lucide-react';
 
 interface RotatingBannersProps {
   onNavigate: (page: string) => void;
@@ -17,9 +17,13 @@ export function RotatingBanners({ onNavigate }: RotatingBannersProps) {
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg mb-2">Specialized Expertise for Pinpoint Accuracy</h3>
+                <h3 className="text-lg mb-2">
+                  Specialized Expertise for Pinpoint Accuracy
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Fine-tuned on niche data for stocks, cryptos, politics, sports, and more—delivering spot-on predictions that crush the competition.
+                  Fine-tuned on niche data for stocks, cryptos, politics,
+                  sports, and more—delivering spot-on predictions that crush the
+                  competition.
                 </p>
               </div>
             </div>
@@ -34,9 +38,10 @@ export function RotatingBanners({ onNavigate }: RotatingBannersProps) {
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg mb-2">Supercharge Your Bets and Investments</h3>
+                <h3 className="text-lg mb-2">Supercharge s and Investments</h3>
                 <p className="text-sm text-muted-foreground">
-                  Spot trends, minimize risks, and maximize wins with actionable insights tailored just for you.
+                  Spot trends, minimize risks, and maximize wins with actionable
+                  insights tailored just for you.
                 </p>
               </div>
             </div>

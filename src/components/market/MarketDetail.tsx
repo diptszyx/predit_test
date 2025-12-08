@@ -4,22 +4,28 @@ import { Card, CardContent } from '../ui/card';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Button } from '../ui/button';
 import { Skeleton } from '../ui/skeleton';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Market } from '../../services/market.service';
-import { marketAdminServices } from '../../services/market-admin.service';
+import { ArrowLeft, Clock, Share2 } from 'lucide-react';
+import { Market, getMarketById } from '../../services/market.service';
 import { toast } from 'sonner';
+import { MarketModal } from './MarketModal';
+import useAuthStore from '../../store/auth.store';
 import { Badge } from '../ui/badge';
 import { getStatusBadgeProps } from './MarketListAdmin';
 
-export default function MarketDetailAdmin() {
+export default function MarketDetail() {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const { marketId } = useParams<{
     marketId: string;
   }>();
   const [market, setMarket] = useState<Market | null>(null);
   const [loading, setLoading] = useState(true);
-  const [resolving, setResolving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedChoice, setSelectedChoice] = useState<'yes' | 'no' | null>(
+    null
+  );
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
 
   useEffect(() => {
     const fetchMarket = async () => {
@@ -27,7 +33,7 @@ export default function MarketDetailAdmin() {
 
       try {
         setLoading(true);
-        const data = await marketAdminServices.getMarketById(marketId);
+        const data = await getMarketById(marketId);
         setMarket(data);
       } catch (err) {
         console.error(err);
@@ -40,33 +46,85 @@ export default function MarketDetailAdmin() {
     fetchMarket();
   }, [marketId]);
 
-  const handleResolve = async (outcome: 'yes' | 'no') => {
-    if (!marketId || !market) return;
+  // Update time remaining every second
+  useEffect(() => {
+    if (!market?.closeAt || market.status !== 'open') return;
 
-    try {
-      setResolving(true);
-      await marketAdminServices.resolveMarket(marketId, { outcome });
-      toast.success(`Market resolved as "${outcome.toUpperCase()}"`, {
-        description: 'All bets have been settled and payouts distributed.',
-      });
+    const updateTime = () => {
+      const now = Date.now();
+      const closeTime = new Date(market.closeAt).getTime();
+      const diff = closeTime - now;
 
-      // Update local market state
-      setMarket({
-        ...market,
-        status: 'resolved',
-      });
-    } catch (err: any) {
-      console.error(err);
-      toast.error('Failed to resolve market', {
-        description: err?.response?.data?.message || 'Please try again.',
-      });
-    } finally {
-      setResolving(false);
-    }
-  };
+      if (diff <= 0) {
+        setTimeRemaining('Closed');
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setTimeRemaining(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+      } else if (hours > 0) {
+        setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
+      } else if (minutes > 0) {
+        setTimeRemaining(`${minutes}m ${seconds}s`);
+      } else {
+        setTimeRemaining(`${seconds}s`);
+      }
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+
+    return () => clearInterval(interval);
+  }, [market?.closeAt, market?.status]);
 
   const handleBack = () => {
     navigate('/market');
+  };
+
+  const handleBetClick = (choice: 'yes' | 'no') => {
+    if (!user) {
+      toast.error('Please log in to place a bet');
+      return;
+    }
+
+    if (market?.isBetted) {
+      toast.error('You have already placed a bet on this market');
+      return;
+    }
+
+    setSelectedChoice(choice);
+    setModalOpen(true);
+  };
+
+  const handleBetPlaced = async () => {
+    // Refetch market data after bet is placed
+    if (!marketId) return;
+
+    try {
+      const data = await getMarketById(marketId);
+      setMarket(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleShareMarket = async () => {
+    const marketUrl = `${window.location.origin}/market/${marketId}`;
+
+    try {
+      await navigator.clipboard.writeText(marketUrl);
+      toast.success('Market link copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy link: ', error);
+      toast.error('Failed to copy link');
+    }
   };
 
   if (loading) {
@@ -131,24 +189,36 @@ export default function MarketDetailAdmin() {
     market.totalBets > 0
       ? (market.noPool * 100) / (market.yesPool + market.noPool)
       : 50;
+  const isOpen = market.status === 'open';
   const isResolved = market.status === 'resolved';
-  const canResolve = market.status === 'open' || market.status === 'end';
+  const canBet = isOpen && !market.isBetted && user;
 
   return (
     <div className="min-h-screen bg-background">
       <div className="w-full p-4 lg:p-6 space-y-6">
         {/* Back Button */}
-        <Button variant="ghost" onClick={handleBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Markets
-        </Button>
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" onClick={handleBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Markets
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareMarket}
+            className="gap-2"
+          >
+            <Share2 className="w-4 h-4" />
+            Share
+          </Button>
+        </div>
 
         {/* Market Detail Card */}
         <div className="max-w-4xl mx-auto">
           <Card className="overflow-hidden">
             <CardContent className="p-6 space-y-6">
               {/* Market Question */}
-              <div className="flex">
+              <div className="flex ">
                 <div className="w-16 h-16">
                   <ImageWithFallback
                     src={market.image?.path || market.imageUrl || ''}
@@ -176,7 +246,7 @@ export default function MarketDetailAdmin() {
                     )}
                   </div>
                 </div>
-                {(market.status === 'open' || market.status === 'end') && (
+                {isOpen && (
                   <div className="">
                     <Badge className="bg-red-500 text-white hover:bg-red-600 text-sm px-3 py-1 animate-pulse">
                       LIVE
@@ -184,6 +254,17 @@ export default function MarketDetailAdmin() {
                   </div>
                 )}
               </div>
+
+              {/* Time Remaining */}
+              {isOpen && timeRemaining && (
+                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted">
+                  <Clock className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Closes in</p>
+                    <p className="text-lg font-bold">{timeRemaining}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Pool Information */}
               <div className="space-y-3">
@@ -229,50 +310,61 @@ export default function MarketDetailAdmin() {
                 </p>
               </div>
 
-              {/* Resolve Buttons */}
-              {canResolve && (
+              {/* Betting Buttons */}
+              {isOpen && (
                 <div className="space-y-3">
                   <div className="border-t pt-4">
                     <h3 className="text-lg font-semibold mb-3">
-                      Resolve Market
+                      Place Your Prediction
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Choose the outcome to resolve this market. This action
-                      will distribute payouts to all winning placements.
+                      {canBet
+                        ? 'Choose your prediction and place your prediction.'
+                        : market.isBetted
+                        ? 'You have already placed a bet on this market.'
+                        : !user
+                        ? 'Please log in to place a bet.'
+                        : 'This market is not available for betting.'}
                     </p>
                   </div>
                   <div className="flex gap-4">
                     <Button
                       className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 text-lg"
-                      onClick={() => handleResolve('yes')}
-                      disabled={resolving}
+                      onClick={() => handleBetClick('yes')}
+                      disabled={!canBet}
                     >
-                      {resolving ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        'Resolve as YES'
-                      )}
+                      YES
                     </Button>
                     <Button
                       className="flex-1 bg-red-500 hover:bg-red-600 text-white h-12 text-lg"
-                      onClick={() => handleResolve('no')}
-                      disabled={resolving}
+                      onClick={() => handleBetClick('no')}
+                      disabled={!canBet}
                     >
-                      {resolving ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        'Resolve as NO'
-                      )}
+                      NO
                     </Button>
                   </div>
                 </div>
               )}
 
-              {/* Already Resolved Message */}
+              {/* Already Betted Message */}
+              {market.isBetted && isOpen && (
+                <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200">
+                  <p className="text-sm text-yellow-900 font-medium">
+                    ✓ You have already placed a bet on this market
+                  </p>
+                </div>
+              )}
+
+              {/* Resolved Message */}
               {isResolved && (
                 <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
                   <p className="text-sm text-blue-900 font-medium">
                     ✓ This market has been resolved
+                    {market.outcome && (
+                      <span className="ml-2 font-bold uppercase">
+                        Outcome: {market.outcome}
+                      </span>
+                    )}
                   </p>
                 </div>
               )}
@@ -280,6 +372,17 @@ export default function MarketDetailAdmin() {
           </Card>
         </div>
       </div>
+
+      {/* Betting Modal */}
+      <MarketModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={market.question}
+        choice={selectedChoice}
+        marketId={marketId}
+        onConfirm={() => setModalOpen(false)}
+        onBetPlaced={handleBetPlaced}
+      />
     </div>
   );
 }

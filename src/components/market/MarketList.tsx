@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Clock } from 'lucide-react';
+import { Clock, Share2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -383,6 +383,7 @@ const getTimeRemaining = (closeAt: string) => {
 
 const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
   const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
 
   const yesPercent =
     item.totalBets > 0
@@ -414,8 +415,28 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
     return () => clearInterval(interval);
   }, [item.closeAt, item.status]);
 
+  const handleShareMarket = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const marketUrl = `${window.location.origin}/market/${item.id}`;
+
+    try {
+      await navigator.clipboard.writeText(marketUrl);
+      toast.success('Market link copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy link: ', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleCardClick = () => {
+    navigate(`/market/${item.id}`);
+  };
+
   return (
-    <Card className="overflow-hidden transition-all duration-300 cursor-pointer">
+    <Card
+      className="overflow-hidden transition-all duration-300 cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardContent className="px-2">
         <div className="flex items-start justify-between gap-1 mt-3 mb-1">
           <div className="w-10 h-10 rounded">
@@ -465,14 +486,20 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
           <div className="flex items-center justify-between mt-2 gap-2">
             <Button
               className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs py-1"
-              onClick={() => onSelect('yes', item)}
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                onSelect('yes', item);
+              }}
               disabled={item.isBetted || !user}
             >
               Yes
             </Button>
             <Button
               className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs py-1"
-              onClick={() => onSelect('no', item)}
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                onSelect('no', item);
+              }}
               disabled={item.isBetted || !user}
             >
               No
@@ -481,12 +508,20 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
         )}
 
         {item.status === 'open' && (
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden h-10">
             <div className="mt-4 flex items-center gap-1.5">
               <Badge className="bg-red-500 text-white hover:bg-red-600 text-[10px] px-2 py-0 h-5 animate-pulse">
                 LIVE
               </Badge>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShareMarket}
+              className="absolute top-2 right-2 bg-background/50 hover:bg-background/70 p-1 rounded-full"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
           </div>
         )}
       </CardContent>
@@ -531,6 +566,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
   item,
   marketBet,
 }) => {
+  const navigate = useNavigate();
   const yesPercent =
     item.totalBets > 0
       ? (item.yesPool * 100) / (item.yesPool + item.noPool)
@@ -553,19 +589,46 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
     return () => clearInterval(interval);
   }, [item.closeAt]);
 
+  const handleShareMarket = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const marketUrl = `${window.location.origin}/market/${item.id}`;
+
+    try {
+      await navigator.clipboard.writeText(marketUrl);
+      toast.success('Market link copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy link: ', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleCardClick = () => {
+    navigate(`/market/${item.id}`);
+  };
+
   return (
-    <>
-      <Card className="overflow-hidden transition-all duration-300 cursor-pointer">
-        <div className="relative h-32 md:h-[200px]! overflow-hidden">
-          <div className="absolute top-2 right-2 z-10">
-            {getStatusBadge(item.status)}
-          </div>
-          <ImageWithFallback
-            src={item.image?.path || item.imageUrl || ''}
-            alt={item.question}
-            className="w-full h-full object-cover"
-          />
+    <Card
+      className="overflow-hidden transition-all duration-300 cursor-pointer"
+      onClick={handleCardClick}
+    >
+      <div className="relative h-32 md:h-[200px]! overflow-hidden">
+        <div className="absolute top-2 right-2 z-10 flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareMarket}
+            className="bg-background/50 hover:bg-background/70"
+          >
+            <Share2 className="w-4 h-4" />
+          </Button>
+          {getStatusBadge(item.status)}
         </div>
+        <ImageWithFallback
+          src={item.image?.path || item.imageUrl || ''}
+          alt={item.question}
+          className="w-full h-full object-cover"
+        />
+      </div>
 
         <CardContent className="p-2">
           <div className="flex items-start justify-between gap-1 mb-1">
@@ -629,7 +692,6 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
             </div>
           )}
         </CardContent>
-      </Card>
-    </>
+    </Card>
   );
 };

@@ -206,8 +206,8 @@ export default function MarketList({
 
   const handleSelect = (choice: MarketChoice, item: Market) => {
     setSelectedItem(item);
+    setSelectedChoice(choice);
     if (!isFromMarketPage) {
-      setSelectedChoice(choice);
       setModalOpen(true);
     } else {
       setIsOpenMarketAskModal(true);

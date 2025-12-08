@@ -23,6 +23,7 @@ import { ChatPage } from './components/ChatPage';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
+import MarketDetail from './components/market/MarketDetail';
 import MarketDetailAdmin from './components/market/MarketDetailAdmin';
 import MarketPage from './components/MarketPage';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
@@ -984,7 +985,11 @@ function AppContent() {
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               {user && (
                 <div className="flex-1 overflow-y-auto">
-                  <MarketDetailAdmin />
+                  {user.email && ADMIN_EMAILS.includes(user.email) ? (
+                    <MarketDetailAdmin />
+                  ) : (
+                    <MarketDetail />
+                  )}
                 </div>
               )}
               {commonDialogProps}

@@ -26,22 +26,22 @@ export default function CreateInviteCodeModal({
     prefix?: string;
   }) => Promise<void>;
 }) {
-  const [count, setCount] = useState(1);
+  const [count, setCount] = useState<string>('1');
   const [prefix, setPrefix] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
-    if (!count || count < 1) return;
+    if (!Number(count) || Number(count) < 1) return;
     setLoading(true);
 
     try {
       await onConfirm({
-        count,
+        count: Number(count),
         prefix: prefix || undefined,
       });
 
       onClose();
-      setCount(1);
+      setCount('1');
       setPrefix('');
     } catch (err: any) {
       toast.error('Failed to create invite code', {
@@ -81,7 +81,17 @@ export default function CreateInviteCodeModal({
               type="number"
               min={1}
               value={count}
-              onChange={(e) => setCount(Number(e.target.value))}
+              onChange={(e: any) => {
+                const v = e.target.value;
+
+                // allow empty string
+                if (v === '') return setCount('');
+
+                // allow only numbers
+                if (/^\d+$/.test(v)) {
+                  setCount(v);
+                }
+              }}
             />
           </div>
         </div>

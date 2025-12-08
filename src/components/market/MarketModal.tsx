@@ -14,6 +14,7 @@ import { Input } from '../ui/input';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { Info } from 'lucide-react';
+import clsx from 'clsx';
 
 interface MarketModalProps {
   open: boolean;
@@ -24,6 +25,8 @@ interface MarketModalProps {
   onConfirm: () => void;
   onBetPlaced: () => void;
 }
+
+const AUTO_OPTIONS = [10, 20, 50, 100];
 
 export function MarketModal({
   open,
@@ -36,22 +39,23 @@ export function MarketModal({
 }: MarketModalProps) {
   const user = useAuthStore((state) => state.user);
   const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser);
-  const [amount, setAmount] = useState<number>(0);
+  const [amount, setAmount] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   // Reset amount when modal opens
   useEffect(() => {
-    if (open) setAmount(0);
+    if (open) setAmount('');
   }, [open]);
 
   const handleConfirm = async () => {
-    if (!choice || amount <= 0 || !marketId) return;
+    const amountValue = Number(amount);
+    if (!choice || amountValue <= 0 || !marketId) return;
     if (!user) {
       toast.error('User not logged in');
       return;
     }
 
-    if (amount > user.xp) {
+    if (amountValue > user.xp) {
       toast.error('Insufficient XP to place this market');
       return;
     }
@@ -59,7 +63,10 @@ export function MarketModal({
     try {
       setLoading(true);
 
-      const bet = await placeBet(marketId, { prediction: choice, amount });
+      const bet = await placeBet(marketId, {
+        prediction: choice,
+        amount: amountValue,
+      });
 
       onBetPlaced();
 
@@ -73,7 +80,7 @@ export function MarketModal({
       toast.success(`Market placed: ${choice} ${amount} XP`);
     } finally {
       setLoading(false);
-      setAmount(0);
+      setAmount('');
     }
   };
 
@@ -112,16 +119,52 @@ export function MarketModal({
             type="number"
             className="w-full text-sm"
             value={amount}
-            onChange={(e: any) => setAmount(Number(e.target.value))}
+            onChange={(e: any) => {
+              const v = e.target.value;
+
+              // allow empty string
+              if (v === '') return setAmount('');
+
+              // allow only numbers
+              if (/^\d+$/.test(v)) {
+                setAmount(v);
+              }
+            }}
             min={0}
             max={user?.xp || undefined}
             placeholder={`Max: ${user?.xp ?? 0}`}
           />
-          {user && amount > user.xp && (
+          {user && Number(amount) > user.xp && (
             <p className="text-xs text-red-500 mt-1">
               Amount exceeds your available XP
             </p>
           )}
+          <div className="mt-2 flex items-center bg-primary dark:bg-input/30 rounded-3xl p-1 w-fit">
+            {AUTO_OPTIONS.map((v) => {
+              const disabled = !user || v > user.xp;
+
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  disabled={disabled}
+                  className={clsx(
+                    'px-3 py-1 rounded-3xl text-sm transition-all font-semibold text-white dark:text-black',
+                    disabled
+                      ? 'opacity-40 cursor-not-allowed'
+                      : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer'
+                  )}
+                  onClick={() => {
+                    if (!disabled) {
+                      setAmount(String(v));
+                    }
+                  }}
+                >
+                  {v}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <DialogFooter>
@@ -134,7 +177,11 @@ export function MarketModal({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={loading || amount <= 0 || (user && amount > user.xp)}
+            disabled={
+              loading ||
+              Number(amount) <= 0 ||
+              (user && Number(amount) > user.xp)
+            }
           >
             {loading ? 'Placing...' : 'Confirm'}
           </Button>

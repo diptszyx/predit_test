@@ -373,39 +373,28 @@ const MarketItem: React.FC<MarketItemProps> = ({
         className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg"
         onClick={() => onClick(item)}
       >
-        <div className="relative h-32 md:h-[200px]! overflow-hidden">
-          <ImageWithFallback
-            src={item.image?.path || item.imageUrl || ''}
-            alt={item.question}
-            className="w-full h-full object-cover"
-          />
-          {item.status === 'open' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e: Event) => {
-                e.stopPropagation();
-                setOpenUpdateMarket(true);
-              }}
-              className="absolute top-2 right-2 bg-background/50"
-            >
-              <Pen className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-
         <CardContent className="p-2">
           <div className="flex items-start justify-between gap-1 mb-1">
-            <h4 className="text-xs line-clamp-2 leading-tight flex-1">
-              {item.question}
-            </h4>
-            <Badge
-              variant={getStatusBadgeProps(item.status).variant}
-              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
+            <div className="w-10 h-10 rounded">
+              <ImageWithFallback
+                src={item.image?.path || item.imageUrl || ''}
+                alt={item.question}
+                className="w-full h-full object-cover rounded"
+              />
+            </div>
+            <div className="flex items-center flex-1 min-h-10">
+              <h4 className="text-xs line-clamp-2 leading-tight flex-1 font-bold px-1">
+                {item.question}
+              </h4>
+              <Badge
+                variant={getStatusBadgeProps(item.status).variant}
+                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
+                  getStatusBadgeProps(item.status).className
                 }`}
-            >
-              {item.status}
-            </Badge>
+              >
+                {item.status}
+              </Badge>
+            </div>
           </div>
 
           <div className="my-2">
@@ -457,6 +446,27 @@ const MarketItem: React.FC<MarketItemProps> = ({
                 className="flex-1 border border-green-600! text-green-600 hover:bg-green-600! hover:text-white"
               >
                 Resolve
+              </Button>
+            </div>
+          )}
+
+          {item.status === 'open' && (
+            <div className="relative overflow-hidden h-10">
+              <div className="mt-4 flex items-center gap-1.5">
+                <Badge className="bg-red-500 text-white hover:bg-red-600 text-[10px] px-2 py-0 h-5 animate-pulse">
+                  LIVE
+                </Badge>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e: Event) => {
+                  e.stopPropagation();
+                  setOpenUpdateMarket(true);
+                }}
+                className="absolute top-2 right-2 bg-background/white hover:bg-gray-800! p-1 rounded-full"
+              >
+                <Pen className="w-4 h-4" />
               </Button>
             </div>
           )}

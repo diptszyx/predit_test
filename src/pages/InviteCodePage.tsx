@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import CreateUserCodeModal from '../components/inviteCode/CreateUserCodeModal';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Checkbox } from '../components/ui/checkbox';
 import CreateInviteCodeModal from '../components/inviteCode/CreateInviteCodeModal';
+import ShareCodesModal from '../components/inviteCode/ShareCodesModal';
 import {
   Select,
   SelectContent,
@@ -36,6 +36,7 @@ export default function InviteCodePage() {
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
   const [openCreateUserCode, setOpenCreateUserCode] = useState(false);
+  const [openShareModal, setOpenShareModal] = useState(false);
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'all' | 'used' | 'unused'>('all');
@@ -46,8 +47,6 @@ export default function InviteCodePage() {
   const [total, setTotal] = useState(0);
 
   const [userWallet, setUserWallet] = useState('');
-  // Selected codes for sharing
-  const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
 
   const params = {
     search,
@@ -81,28 +80,12 @@ ${appUrl}
   };
 
   const handleShareOnX = () => {
-    if (selectedCodes.length === 0) {
-      toast.error('Please select at least one code to share');
-      return;
-    }
+    setOpenShareModal(true);
+  };
+
+  const handleConfirmShare = (selectedCodes: string[]) => {
     shareOnX(selectedCodes);
     toast.success('Opening X (Twitter) to share your invite codes!');
-  };
-
-  const handleSelectCode = (code: string, checked: boolean) => {
-    if (checked) {
-      setSelectedCodes((prev) => [...prev, code]);
-    } else {
-      setSelectedCodes((prev) => prev.filter((c) => c !== code));
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedCodes(codes.map((c) => c.code));
-    } else {
-      setSelectedCodes([]);
-    }
   };
 
   const refetch = useCallback(async () => {
@@ -127,10 +110,6 @@ ${appUrl}
   useEffect(() => {
     setPage(1);
   }, [search, status]);
-
-  useEffect(() => {
-    setSelectedCodes([]);
-  }, [page, search, status]);
 
   const totalPages = Math.ceil(total / pageSize);
 
@@ -241,11 +220,10 @@ ${appUrl}
         ) : (
           <Button
             onClick={handleShareOnX}
-            disabled={selectedCodes.length === 0}
             className="gap-2"
           >
             <Twitter className="w-4 h-4" />
-            Share on X {selectedCodes.length > 0 && `(${selectedCodes.length})`}
+            Share on X
           </Button>
         )}
       </div>
@@ -262,20 +240,17 @@ ${appUrl}
         onConfirm={handleConfirmCreateUserCode}
       />
 
+      <ShareCodesModal
+        open={openShareModal}
+        onClose={() => setOpenShareModal(false)}
+        codes={codes}
+        onConfirm={handleConfirmShare}
+      />
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/40">
-              {!isAdmin && (
-                <TableCell className="font-semibold w-12">
-                  <Checkbox
-                    checked={
-                      codes.length > 0 && selectedCodes.length === codes.length
-                    }
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableCell>
-              )}
               <TableCell className="font-semibold">Code</TableCell>
               <TableCell className="font-semibold">Referral Link</TableCell>
               <TableCell className="font-semibold">Status</TableCell>
@@ -286,11 +261,6 @@ ${appUrl}
             {loading &&
               [1, 2, 3].map((i) => (
                 <TableRow key={i}>
-                  {!isAdmin && (
-                    <TableCell>
-                      <Skeleton className="h-5 w-5" />
-                    </TableCell>
-                  )}
                   <TableCell>
                     <Skeleton className="h-5 w-32" />
                   </TableCell>
@@ -306,7 +276,7 @@ ${appUrl}
             {!loading && codes?.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={isAdmin ? 3 : 4}
+                  colSpan={3}
                   className="text-center py-6 text-muted-foreground"
                 >
                   No invite codes found
@@ -323,23 +293,23 @@ ${appUrl}
                     key={code.id}
                     className={idx % 2 === 0 ? 'bg-muted/20' : ''}
                   >
-                    {!isAdmin && (
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedCodes.includes(code.code)}
-                          onCheckedChange={(checked: boolean) =>
-                            handleSelectCode(code.code, checked)
-                          }
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {code.code}
+                        <Copy
+                          className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-foreground"
+                          onClick={() => handleCopyToClipboard(code.code)}
                         />
-                      </TableCell>
-                    )}
-                    <TableCell className="font-medium">{code.code}</TableCell>
-                    <TableCell className="flex items-center">
-                      {referralLink}
-                      <Copy
-                        className="h-3 w-3 ml-3 cursor-pointer"
-                        onClick={() => handleCopyToClipboard(referralLink)}
-                      />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <span className="truncate max-w-xs">{referralLink}</span>
+                        <Copy
+                          className="h-3 w-3 ml-3 cursor-pointer text-muted-foreground hover:text-foreground flex-shrink-0"
+                          onClick={() => handleCopyToClipboard(referralLink)}
+                        />
+                      </div>
                     </TableCell>
                     <TableCell>
                       {code.usedBy ? (

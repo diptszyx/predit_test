@@ -1,10 +1,15 @@
 import clsx from 'clsx';
-import { Clock } from 'lucide-react';
+import { Clock, Share2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ADMIN_EMAILS, ADMIN_IDS } from '../../constants/admin';
-import { getListMarket, getMyBets, Market, MarketBet } from '../../services/market.service';
+import {
+  getListMarket,
+  getMyBets,
+  Market,
+  MarketBet,
+} from '../../services/market.service';
 import useAuthStore from '../../store/auth.store';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Badge } from '../ui/badge';
@@ -24,18 +29,18 @@ export interface MarketItemProps {
 
 export interface MyBetMarketsProps {
   item: Market;
-  marketBet: MarketBet
+  marketBet: MarketBet;
 }
 
 const statusOptions: {
   label: string;
   value: 'open' | 'end' | 'resolved' | 'cancelled';
 }[] = [
-    { label: 'Open', value: 'open' },
-    { label: 'End', value: 'end' },
-    { label: 'Resolved', value: 'resolved' },
-    { label: 'Cancelled', value: 'cancelled' },
-  ];
+  { label: 'Open', value: 'open' },
+  { label: 'End', value: 'end' },
+  { label: 'Resolved', value: 'resolved' },
+  { label: 'Cancelled', value: 'cancelled' },
+];
 
 export default function MarketList({
   oracleId,
@@ -65,8 +70,8 @@ export default function MarketList({
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [isBetHistoryPage, setIsBetHistoryPage] = useState(false)
-  const [myBetHistory, setMyBetHistory] = useState<MarketBet[]>([])
+  const [isBetHistoryPage, setIsBetHistoryPage] = useState(false);
+  const [myBetHistory, setMyBetHistory] = useState<MarketBet[]>([]);
   const loadMoreBetHistoryRef = useRef<HTMLDivElement>(null);
   const [pageMyBetHistory, setPageMyBetHistory] = useState(1);
   const [hasMoreMyBetHistory, setHasMoreMyBetHistory] = useState(false);
@@ -98,7 +103,9 @@ export default function MarketList({
         page: pageNum,
         limit: 10,
       });
-      setMyBetHistory((prev) => (replace ? data.data : [...prev, ...data.data]));
+      setMyBetHistory((prev) =>
+        replace ? data.data : [...prev, ...data.data]
+      );
       setHasMoreMyBetHistory(data.meta.hasNextPage);
     } catch (err) {
       console.error(err);
@@ -116,7 +123,7 @@ export default function MarketList({
       (entries) => {
         const first = entries[0];
         if (first.isIntersecting && hasMoreMyBetHistory && !loading) {
-          setPageMyBetHistory(prev => prev + 1);
+          setPageMyBetHistory((prev) => prev + 1);
         }
       },
       { threshold: 1 }
@@ -248,9 +255,9 @@ export default function MarketList({
             size="sm"
             variant={statusFilter === status.value ? 'default' : 'outline'}
             onClick={() => {
-              setStatusFilter(status.value)
-              setMyBetHistory([])
-              setIsBetHistoryPage(false)
+              setStatusFilter(status.value);
+              setMyBetHistory([]);
+              setIsBetHistoryPage(false);
             }}
             className="min-w-[60px] text-xs"
             style={{
@@ -260,27 +267,24 @@ export default function MarketList({
             {status.label}
           </Button>
         ))}
-        {!isAdmin &&
+        {!isAdmin && (
           <Button
             variant={isBetHistoryPage ? 'default' : 'outline'}
             size="sm"
             onClick={() => {
-              fetchMyBets(1)
-              setStatusFilter(undefined)
-              setPageMyBetHistory(1)
-              setIsBetHistoryPage(true)
+              fetchMyBets(1);
+              setStatusFilter(undefined);
+              setPageMyBetHistory(1);
+              setIsBetHistoryPage(true);
             }}
             className="capitalize text-xs"
           >
             My Placed
           </Button>
-        }
+        )}
       </div>
 
-      <div
-        className="h-full pb-10"
-        style={{ overflow: 'auto' }}
-      >
+      <div className="h-full pb-10" style={{ overflow: 'auto' }}>
         {/* Market list */}
         <div className="p-3 space-y-3">
           <div
@@ -290,34 +294,28 @@ export default function MarketList({
                 isFromMarketPage,
             })}
           >
-            {!isBetHistoryPage && markets.map((item) => (
-              <MarketItem
-                key={item.id}
-                item={item}
-                onSelect={handleSelect}
-              />
-            ))}
+            {!isBetHistoryPage &&
+              markets.map((item) => (
+                <MarketItem key={item.id} item={item} onSelect={handleSelect} />
+              ))}
 
-            {
-              myBetHistory.length > 0 && myBetHistory.map((item) => (
-                <MyBetsHistoryItem key={item.id} item={item.market} marketBet={item} />
+            {myBetHistory.length > 0 &&
+              myBetHistory.map((item) => (
+                <MyBetsHistoryItem
+                  key={item.id}
+                  item={item.market}
+                  marketBet={item}
+                />
               ))}
             {/* Infinite scroll trigger */}
-            {
-              hasMoreMyBetHistory &&
-              <div
-                ref={loadMoreBetHistoryRef}
-                className="h-10"
-              />
-            }
+            {hasMoreMyBetHistory && (
+              <div ref={loadMoreBetHistoryRef} className="h-10" />
+            )}
 
             {(loading || !user?.appliedInviteCode) && (
               <>
                 {[1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="space-y-2"
-                  >
+                  <div key={i} className="space-y-2">
                     <Skeleton className="h-20 w-full rounded-lg" />
                     <Skeleton className="h-3 w-full" />
                     <Skeleton className="h-2 w-2/3" />
@@ -350,9 +348,10 @@ export default function MarketList({
             onConfirm={handleConfirmMarketAsk}
           />
 
-          {!loading
-            && user?.appliedInviteCode
-            && (markets.length === 0 || (myBetHistory.length === 0 && isBetHistoryPage)) && (
+          {!loading &&
+            user?.appliedInviteCode &&
+            (markets.length === 0 ||
+              (myBetHistory.length === 0 && isBetHistoryPage)) && (
               <p className="text-center text-xs text-muted-foreground py-8">
                 No markets available
               </p>
@@ -384,6 +383,7 @@ const getTimeRemaining = (closeAt: string) => {
 
 const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
   const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
 
   const yesPercent =
     item.totalBets > 0
@@ -415,23 +415,51 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
     return () => clearInterval(interval);
   }, [item.closeAt, item.status]);
 
-  return (
-    <Card className="overflow-hidden transition-all duration-300 cursor-pointer">
-      <div className="relative h-32 md:h-[200px]! overflow-hidden">
-        <div className="absolute top-2 right-2 z-10">
-          {getStatusBadge(item.status)}
-        </div>
-        <ImageWithFallback
-          src={item.image?.path || item.imageUrl || '/placeholder.png'}
-          alt={item.question}
-          className="w-full h-full object-cover"
-        />
-      </div>
+  const handleShareMarket = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const marketUrl = `${window.location.origin}/market/${item.id}`;
 
+    try {
+      await navigator.clipboard.writeText(marketUrl);
+      toast.success('Market link copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy link: ', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleCardClick = () => {
+    navigate(`/market/${item.id}`);
+  };
+
+  return (
+    <Card
+      className="overflow-hidden transition-all duration-300 cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardContent className="px-2">
-        <h4 className="text-xs mb-1 line-clamp-2 leading-tight">
-          {item.question}
-        </h4>
+        <div className="flex items-start justify-between gap-1 mt-3 mb-1">
+          <div className="w-10 h-10 rounded">
+            <ImageWithFallback
+              src={item.image?.path || item.imageUrl || ''}
+              alt={item.question}
+              className="w-full h-full object-cover rounded"
+            />
+          </div>
+          <div className="flex items-center flex-1 min-h-10">
+            <h4 className="text-xs mb-1 line-clamp-2 leading-tight px-1 font-bold">
+              {item.question}
+            </h4>
+            <Badge
+              variant={getStatusBadgeProps(item.status).variant}
+              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
+                getStatusBadgeProps(item.status).className
+              }`}
+            >
+              {item.status}
+            </Badge>
+          </div>
+        </div>
 
         {item.status === 'open' && timeLeft && (
           <p className="text-xs text-muted-foreground mb-2">
@@ -449,14 +477,8 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
             </p>
           </div>
           <div className="w-full h-2 rounded-full overflow-hidden flex">
-            <div
-              className="bg-green-500"
-              style={{ width: `${yesPercent}%` }}
-            />
-            <div
-              className="bg-red-500"
-              style={{ width: `${noPercent}%` }}
-            />
+            <div className="bg-green-500" style={{ width: `${yesPercent}%` }} />
+            <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
           </div>
         </div>
 
@@ -464,17 +486,41 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
           <div className="flex items-center justify-between mt-2 gap-2">
             <Button
               className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs py-1"
-              onClick={() => onSelect('yes', item)}
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                onSelect('yes', item);
+              }}
               disabled={item.isBetted || !user}
             >
               Yes
             </Button>
             <Button
               className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs py-1"
-              onClick={() => onSelect('no', item)}
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                onSelect('no', item);
+              }}
               disabled={item.isBetted || !user}
             >
               No
+            </Button>
+          </div>
+        )}
+
+        {item.status === 'open' && (
+          <div className="relative overflow-hidden h-10">
+            <div className="mt-4 flex items-center gap-1.5">
+              <Badge className="bg-red-500 text-white hover:bg-red-600 text-[10px] px-2 py-0 h-5 animate-pulse">
+                LIVE
+              </Badge>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShareMarket}
+              className="absolute top-2 right-2 bg-background/50 hover:bg-background/70 p-1 rounded-full"
+            >
+              <Share2 className="w-4 h-4" />
             </Button>
           </div>
         )}
@@ -518,8 +564,9 @@ const getStatusBadge = (status: 'open' | 'end' | 'resolved' | 'cancelled') => {
 
 const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
   item,
-  marketBet
+  marketBet,
 }) => {
+  const navigate = useNavigate();
   const yesPercent =
     item.totalBets > 0
       ? (item.yesPool * 100) / (item.yesPool + item.noPool)
@@ -542,37 +589,62 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
     return () => clearInterval(interval);
   }, [item.closeAt]);
 
+  const handleShareMarket = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const marketUrl = `${window.location.origin}/market/${item.id}`;
+
+    try {
+      await navigator.clipboard.writeText(marketUrl);
+      toast.success('Market link copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy link: ', error);
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleCardClick = () => {
+    navigate(`/market/${item.id}`);
+  };
+
   return (
-    <>
-      <Card
-        className="overflow-hidden transition-all duration-300 cursor-pointer"
-      >
-        <div className="relative h-32 md:h-[200px]! overflow-hidden">
-          <div className="absolute top-2 right-2 z-10">
-            {getStatusBadge(item.status)}
-          </div>
-          <ImageWithFallback
-            src={item.image?.path || item.imageUrl || ''}
-            alt={item.question}
-            className="w-full h-full object-cover"
-          />
+    <Card
+      className="overflow-hidden transition-all duration-300 cursor-pointer"
+      onClick={handleCardClick}
+    >
+      <div className="relative h-32 md:h-[200px]! overflow-hidden">
+        <div className="absolute top-2 right-2 z-10 flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareMarket}
+            className="bg-background/50 hover:bg-background/70"
+          >
+            <Share2 className="w-4 h-4" />
+          </Button>
+          {getStatusBadge(item.status)}
         </div>
+        <ImageWithFallback
+          src={item.image?.path || item.imageUrl || ''}
+          alt={item.question}
+          className="w-full h-full object-cover"
+        />
+      </div>
 
         <CardContent className="p-2">
           <div className="flex items-start justify-between gap-1 mb-1">
             <h4 className="text-xs line-clamp-2 leading-tight flex-1 font-normal">
               {item.question}
             </h4>
-            {
-              item.outcome &&
+            {item.outcome && (
               <Badge
                 variant={getStatusBadgeProps(item.outcome).variant}
-                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.outcome).className
-                  }`}
+                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
+                  getStatusBadgeProps(item.outcome).className
+                }`}
               >
                 {item.outcome}
               </Badge>
-            }
+            )}
           </div>
 
           <div className="my-2">
@@ -602,18 +674,24 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
           )}
 
           {item.status === 'resolved' ? (
-            <div className={`border rounded-md p-2 space-y-2 mt-5 text-xs capitalize text-center text-white ${marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'} `}>
+            <div
+              className={`border rounded-md p-2 space-y-2 mt-5 text-xs capitalize text-center text-white ${
+                marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'
+              } `}
+            >
               {marketBet.status}
             </div>
           ) : (
-            <div className='border rounded-md p-2 mt-5 bg-slate-500 shadow-xs text-white'>
+            <div className="border rounded-md p-2 mt-5 bg-slate-500 shadow-xs text-white">
               <p className="text-xs">
-                Prediction: <span className={`font-semibold capitalize`}>{marketBet.prediction}</span>
+                Prediction:{' '}
+                <span className={`font-semibold capitalize`}>
+                  {marketBet.prediction}
+                </span>
               </p>
             </div>
           )}
         </CardContent>
-      </Card>
-    </>
+    </Card>
   );
 };

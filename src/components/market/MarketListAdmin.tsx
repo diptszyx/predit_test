@@ -147,7 +147,7 @@ export default function MarketListAdmin({
           </div>
         )}
         {markets.length === 0 ? (
-          <p className="text-center text-gray-500 py-8 col-span-4">
+          <p className="text-center text-gray-500 py-8 col-span-4 text-xs text-muted-foreground">
             No markets found
           </p>
         ) : (
@@ -281,12 +281,13 @@ const MarketItem: React.FC<MarketItemProps> = ({
   const handleDeleteMarket = async () => {
     try {
       const data = await marketAdminServices.deleteMarket(item.id);
-      if (data === 204) {
+      if (data.status === 204) {
         toast.success('Delete market successfully!');
         setOpenConfirmCancel(false);
         onRefetch(); // Refetch the market list
       }
     } catch (error) {
+      toast.error('Cannot delete a market with existing bets')
       console.error('Failed to delete market: ', error);
     }
   };
@@ -504,47 +505,49 @@ const MarketItem: React.FC<MarketItemProps> = ({
             </div>
           )}
 
-          {item.status === 'open' && (
-            <div className="relative overflow-hidden h-10">
-              <div className="mt-4 flex items-center gap-1.5">
-                <Badge className="bg-red-500 text-white hover:bg-red-600 text-[10px] px-2 py-0 h-5 animate-pulse">
-                  LIVE
-                </Badge>
+          <div className='flex items-center gap-2 mt-4 '>
+            {item.status === 'open' && (
+              <div className="relative overflow-hidden h-10 flex items-center  flex-1 justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Badge className="bg-red-500 text-white hover:bg-red-600 text-[10px] px-2 py-0 h-5 animate-pulse">
+                    LIVE
+                  </Badge>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleShareMarket}
+                    className="bg-background/50 hover:bg-accent/50 p-1 rounded-full"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e: Event) => {
+                      e.stopPropagation();
+                      setOpenUpdateMarket(true);
+                    }}
+                    className="bg-background/white hover:bg-accent/50 p-1 rounded-full"
+                  >
+                    <Pen className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="absolute top-2 right-2 flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShareMarket}
-                  className="bg-background/50 hover:bg-accent/50 p-1 rounded-full"
-                >
-                  <Share2 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e: Event) => {
-                    e.stopPropagation();
-                    setOpenUpdateMarket(true);
-                  }}
-                  className="bg-background/white hover:bg-accent/50 p-1 rounded-full"
-                >
-                  <Pen className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e: Event) => {
-                    e.stopPropagation();
-                    setOpenDeleteMarket(true);
-                  }}
-                  className="bg-background/white hover:bg-accent/50 p-1 rounded-full"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e: Event) => {
+                e.stopPropagation();
+                setOpenDeleteMarket(true);
+              }}
+              className="bg-background/white hover:bg-accent/50 p-1 rounded-full ml-auto"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </>

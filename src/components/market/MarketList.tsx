@@ -3,7 +3,7 @@ import { Clock, Share2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ADMIN_EMAILS } from '../../constants/admin';
+import { ADMIN_EMAILS, ADMIN_IDS } from '../../constants/admin';
 import {
   getListMarket,
   getMyBets,
@@ -662,7 +662,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
         </div>
 
         {item.status === 'open' && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+          <div className="flex items-center gap-1 text-xs text-gray-600 my-2">
             <Clock className="w-3 h-3" />
             <span>Closes in {timeRemaining}</span>
           </div>
@@ -690,14 +690,14 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
         {item.status === 'resolved' ? (
           <>
             <div
-              className={`border rounded-md p-2 space-y-2 mt-5 mb-3 text-xs capitalize text-center text-white ${marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'
+              className={`border rounded-md p-2 space-y-2 mt-5 mb-3 text-xs capitalize font-semibold text-center text-white ${marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'
                 } `}
             >
               {marketBet.status}
             </div>
             {marketBet.payout && marketBet.status === 'won' &&
               <p className='text-xs text-gray-500'>
-                You received: <span className={`font-semibold`}>{marketBet.payout}XP</span>
+                Reward claimed: <span className={`font-semibold`}>{marketBet.payout}XP</span>
               </p>}
           </>
         ) : (
@@ -711,7 +711,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
               </p>
             </div>
             <p className='text-xs text-gray-500'>
-              Your share: <span className={`font-semibold`}>{sharesRatioDisplay}%</span> — You may receive
+              Your share: <span className={`font-semibold`}>{sharesRatioDisplay}%</span> — Potential reward:
               <span className={`font-semibold`}> {xpWillReceive}XP</span>
             </p>
           </>

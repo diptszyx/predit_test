@@ -562,16 +562,9 @@ export function ChatPage({
 
     setSuggestedQuestions(generateSuggestedQuestions(aiAgent, trimmedInput));
 
-    // Create a temporary assistant message for streaming
+    // Prepare assistant message ID but don't create message yet
     const assistantMessageId = (Date.now() + 1).toString();
-    const assistantMessage: ChatMessage = {
-      id: assistantMessageId,
-      sender: 'assistant',
-      content: '',
-      createdAt: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, assistantMessage]);
+    let messageCreated = false;
 
     try {
       await messageService.sendMessageStream(trimmedInput, aiAgent.id, {
@@ -591,14 +584,29 @@ export function ChatPage({
           setThinkingTokens(tokens);
         },
         onContent: (content) => {
-          // Handle streaming content
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMessageId
-                ? { ...msg, content: msg.content + content }
-                : msg
-            )
-          );
+          // Hide thinking indicator when content starts
+          setThinkingTokens(0);
+
+          // Create assistant message only on first content chunk
+          if (!messageCreated) {
+            messageCreated = true;
+            const assistantMessage: ChatMessage = {
+              id: assistantMessageId,
+              sender: 'assistant',
+              content: content,
+              createdAt: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+          } else {
+            // Append content to existing message
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? { ...msg, content: msg.content + content }
+                  : msg
+              )
+            );
+          }
         },
         onComplete: (data) => {
           // Handle completion with usage stats and citations
@@ -963,31 +971,37 @@ export function ChatPage({
                             </div>
                           )}
                           <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
-                            {messages.map((message, index) => (
-                              <div key={message.id}>
-                                <div
-                                  className={`flex ${message.sender === 'user'
-                                    ? 'justify-end max-w-[94vw]'
-                                    : 'justify-start'
-                                    }`}
-                                >
+                            {messages.map((message, index) => {
+                              const isLastMessage = index === messages.length - 1;
+
+                              return (
+                                <div key={message.id}>
                                   <div
-                                    className={`max-w-[65%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
-                                      ? 'bg-blue-600 text-white backdrop-blur-sm'
-                                      : `backdrop-blur-md border border-border`
+                                    className={`flex ${message.sender === 'user'
+                                      ? 'justify-end max-w-[94vw]'
+                                      : 'justify-start'
                                       }`}
                                   >
-                                    {message.sender === 'assistant' ? (
-                                      <div className="text-xs sm:text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs">
-                                        <Markdown text={message.content} />
-                                      </div>
-                                    ) : (
-                                      <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
-                                        {message.content}
-                                      </p>
-                                    )}
+                                    <div
+                                      className={`max-w-[65%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
+                                        ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                        : `backdrop-blur-md border border-border`
+                                        }`}
+                                    >
+                                      {message.sender === 'assistant' ? (
+                                        <div className="text-xs sm:text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs">
+                                          <Markdown
+                                            text={message.content}
+                                            showCharts={!isLoading || !isLastMessage}
+                                          />
+                                        </div>
+                                      ) : (
+                                        <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                                          {message.content}
+                                        </p>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
                                 <span
                                   className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
                                     ? 'text-right max-w-[94vw]'
@@ -1037,44 +1051,41 @@ export function ChatPage({
                                       </div>
                                     </div>
                                   )}
-                              </div>
-                            ))}
-                            {isLoading &&
-                              messages.length > 0 &&
-                              messages[messages.length - 1].content === '' && (
-                                <div className="flex justify-start">
-                                  <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
-                                    <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
-                                        <ImageWithFallback
-                                          src={aiAgent.image}
-                                          alt={aiAgent.name}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      </div>
-                                      <span className="text-xs text-foreground">
-                                        {thinkingTokens > 0
-                                          ? `${aiAgent.name} is thinking... (${thinkingTokens} tokens)`
-                                          : `${aiAgent.name} is typing...`}
-                                      </span>
-                                    </div>
-                                    <div className="flex gap-1">
-                                      <div
-                                        className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                        style={{ animationDelay: '0ms' }}
-                                      />
-                                      <div
-                                        className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                        style={{ animationDelay: '150ms' }}
-                                      />
-                                      <div
-                                        className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                        style={{ animationDelay: '300ms' }}
+                                </div>
+                              );
+                            })}
+                            {isLoading && thinkingTokens > 0 && (
+                              <div className="flex justify-start">
+                                <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
+                                      <ImageWithFallback
+                                        src={aiAgent.image}
+                                        alt={aiAgent.name}
+                                        className="w-full h-full object-cover"
                                       />
                                     </div>
+                                    <span className="text-xs text-foreground">
+                                      {aiAgent.name} is thinking... ({thinkingTokens} tokens)
+                                    </span>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <div
+                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                      style={{ animationDelay: '0ms' }}
+                                    />
+                                    <div
+                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                      style={{ animationDelay: '150ms' }}
+                                    />
+                                    <div
+                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                      style={{ animationDelay: '300ms' }}
+                                    />
                                   </div>
                                 </div>
-                              )}
+                              </div>
+                            )}
                             <div ref={messagesEndRef} />
                           </div>
                         </ScrollArea>

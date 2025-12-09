@@ -1,12 +1,17 @@
 import copy from 'copy-to-clipboard';
 import { Clipboard } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { atomOneDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import remarkGfm from 'remark-gfm';
 import { twMerge } from 'tailwind-merge';
 
 import { toast } from 'sonner';
+import {
+  extractChartSymbols,
+  mapToTradingViewSymbol,
+} from '../../utils/chartUtils';
+import { TradingViewChart } from './TradingViewChart';
 
 const SAMPLE_MARKDOWN = `This is a fake response generated without calling OpenAI API.
 This is a fake response generated without calling OpenAI API.
@@ -73,90 +78,136 @@ Bottom line: This is a fake response.`;
 
 interface MarkdownProps {
   text: string;
+  showCharts?: boolean;
 }
 
-const Markdown = ({ text }: MarkdownProps) => {
+const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
   const handleCopy = (textCode: string) => {
     copy(textCode);
     toast.success('Copied to clipboard!');
   };
 
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        code({ node, className, children, ...props }) {
-          const match = /language-(\w+)/.exec(className || '');
+  // Extract chart symbols and split content
+  const chartSymbols = showCharts ? extractChartSymbols(text) : [];
 
-          return match ? (
-            <div>
-              <div className="flex w-full justify-end bg-white/5 p-2 rounded-t-md">
-                <button
-                  onClick={() =>
-                    handleCopy(String(children).replace(/\n$/, ''))
-                  }
-                >
-                  <Clipboard className="text-white/20 w-4 h-4" />
-                </button>
-              </div>
-              <SyntaxHighlighter language={match[1]} style={atomOneDark}>
-                {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
-            </div>
-          ) : (
-            <code
-              {...props}
-              className={twMerge(
-                className,
-                `bg-neutral-700 px-1 rounded font-semibold`
-              )}
+  // Process text to split charts from content
+  const renderContent = () => {
+    if (!showCharts || chartSymbols.length === 0) {
+      return (
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={markdownComponents}
+        >
+          {text}
+        </ReactMarkdown>
+      );
+    }
+
+    // Split text by chart placeholders
+    const parts = text.split(/\[insert_chart_(\w+)\]/g);
+    const elements: JSX.Element[] = [];
+
+    for (let i = 0; i < parts.length; i++) {
+      // Add text content
+      if (parts[i] && i % 2 === 0) {
+        elements.push(
+          <ReactMarkdown
+            key={`text-${i}`}
+            remarkPlugins={[remarkGfm]}
+            components={markdownComponents}
+          >
+            {parts[i]}
+          </ReactMarkdown>
+        );
+      }
+      // Add chart for captured symbol
+      else if (parts[i] && i % 2 === 1) {
+        const symbol = parts[i];
+        const tradingViewSymbol = mapToTradingViewSymbol(symbol);
+        elements.push(
+          <TradingViewChart
+            key={`chart-${i}-${symbol}`}
+            symbol={tradingViewSymbol}
+            height={350}
+          />
+        );
+      }
+    }
+
+    return <>{elements}</>;
+  };
+
+  const markdownComponents = {
+    code({ node, className, children, ...props }: any) {
+      const match = /language-(\w+)/.exec(className || '');
+
+      return match ? (
+        <div>
+          <div className="flex w-full justify-end bg-white/5 p-2 rounded-t-md">
+            <button
+              onClick={() => handleCopy(String(children).replace(/\n$/, ''))}
             >
-              {children}
-            </code>
-          );
-        },
-        h3: ({ node, ...props }) => (
-          <h3 className="text-xl">{props.children}</h3>
-        ),
-        a: ({ node, ...props }) => (
-          <a href={props.href} target="_blank" className="text-blue-400">
-            {props.children}
-          </a>
-        ),
-        thead: ({ node, ...props }) => (
-          <thead className="bg-background" {...props} />
-        ), // Render thead
-        tbody: ({ node, ...props }) => <tbody {...props} />, // Render tbody
-        tr: ({ node, ...props }) => <tr className="bg-background" {...props} />, // Render table row
-        th: ({ node, ...props }) => (
-          <th
-            className="text-sm font-medium px-6 py-4 text-left border"
-            {...props}
-          />
-        ), // Render table header
-        td: ({ node, ...props }) => (
-          <td
-            className="text-sm font-light px-6 py-4 whitespace-nowrap border"
-            {...props}
-          />
-        ), // Render table data
-        ol: ({ node, ...props }) => (
-          <ol className="list-decimal ml-4">{props.children}</ol>
-        ),
-        ul: ({ node, ...props }) => (
-          <ul className="list-disc ml-4">{props.children}</ul>
-        ),
-        li: ({ node, ...props }) => <li className="mb-2">{props.children}</li>,
-        blockquote: ({ node, ...props }) => (
-          <blockquote className="pl-3 border-l-4 border-neutral-500">
-            {props.children}
-          </blockquote>
-        ),
-      }}
-    >
-      {text}
-    </ReactMarkdown>
-  );
+              <Clipboard className="text-white/20 w-4 h-4" />
+            </button>
+          </div>
+          <SyntaxHighlighter language={match[1]} style={atomOneDark}>
+            {String(children).replace(/\n$/, '')}
+          </SyntaxHighlighter>
+        </div>
+      ) : (
+        <code
+          {...props}
+          className={twMerge(
+            className,
+            `bg-neutral-700 px-1 rounded font-semibold`
+          )}
+        >
+          {children}
+        </code>
+      );
+    },
+    h3: ({ node, ...props }: any) => (
+      <h3 className="text-xl">{props.children}</h3>
+    ),
+    a: ({ node, ...props }: any) => (
+      <a href={props.href} target="_blank" className="text-blue-400">
+        {props.children}
+      </a>
+    ),
+    thead: ({ node, ...props }: any) => (
+      <thead className="bg-background" {...props} />
+    ),
+    tbody: ({ node, ...props }: any) => <tbody {...props} />,
+    tr: ({ node, ...props }: any) => (
+      <tr className="bg-background" {...props} />
+    ),
+    th: ({ node, ...props }: any) => (
+      <th
+        className="text-sm font-medium px-6 py-4 text-left border"
+        {...props}
+      />
+    ),
+    td: ({ node, ...props }: any) => (
+      <td
+        className="text-sm font-light px-6 py-4 whitespace-nowrap border"
+        {...props}
+      />
+    ),
+    ol: ({ node, ...props }: any) => (
+      <ol className="list-decimal ml-4">{props.children}</ol>
+    ),
+    ul: ({ node, ...props }: any) => (
+      <ul className="list-disc ml-4">{props.children}</ul>
+    ),
+    li: ({ node, ...props }: any) => <li className="mb-2">{props.children}</li>,
+    blockquote: ({ node, ...props }: any) => (
+      <blockquote className="pl-3 border-l-4 border-neutral-500">
+        {props.children}
+      </blockquote>
+    ),
+  };
+
+  return <div>{renderContent()}</div>;
 };
 
 export default Markdown;

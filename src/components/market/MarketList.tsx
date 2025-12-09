@@ -688,12 +688,18 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
         </div>
 
         {item.status === 'resolved' ? (
-          <div
-            className={`border rounded-md p-2 space-y-2 mt-5 text-xs capitalize text-center text-white ${marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'
-              } `}
-          >
-            {marketBet.status}
-          </div>
+          <>
+            <div
+              className={`border rounded-md p-2 space-y-2 mt-5 mb-3 text-xs capitalize text-center text-white ${marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'
+                } `}
+            >
+              {marketBet.status}
+            </div>
+            {marketBet.payout && marketBet.status === 'won' &&
+              <p className='text-xs text-gray-500'>
+                You received: <span className={`font-semibold`}>{marketBet.payout}XP</span>
+              </p>}
+          </>
         ) : (
           <>
             <div className="border rounded-md p-2 mt-5 mb-3 bg-slate-500 shadow-xs text-white">
@@ -704,7 +710,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
                 </span>
               </p>
             </div>
-            <p className='text-xs text-gray-600'>
+            <p className='text-xs text-gray-500'>
               Your share: <span className={`font-semibold`}>{sharesRatioDisplay}%</span> — You may receive
               <span className={`font-semibold`}> {xpWillReceive}XP</span>
             </p>

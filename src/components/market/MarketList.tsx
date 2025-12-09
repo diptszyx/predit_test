@@ -36,11 +36,11 @@ const statusOptions: {
   label: string;
   value: 'open' | 'end' | 'resolved' | 'cancelled';
 }[] = [
-  { label: 'Open', value: 'open' },
-  { label: 'End', value: 'end' },
-  { label: 'Resolved', value: 'resolved' },
-  { label: 'Cancelled', value: 'cancelled' },
-];
+    { label: 'Open', value: 'open' },
+    { label: 'End', value: 'end' },
+    { label: 'Resolved', value: 'resolved' },
+    { label: 'Cancelled', value: 'cancelled' },
+  ];
 
 export default function MarketList({
   oracleId,
@@ -452,9 +452,8 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
             </h4>
             <Badge
               variant={getStatusBadgeProps(item.status).variant}
-              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
-                getStatusBadgeProps(item.status).className
-              }`}
+              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
+                }`}
             >
               {item.status}
             </Badge>
@@ -567,14 +566,23 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
   marketBet,
 }) => {
   const navigate = useNavigate();
+  const totalPool = item.yesPool + item.noPool;
   const yesPercent =
     item.totalBets > 0
-      ? (item.yesPool * 100) / (item.yesPool + item.noPool)
+      ? (item.yesPool * 100) / (totalPool)
       : 50;
   const noPercent =
     item.totalBets > 0
-      ? (item.noPool * 100) / (item.yesPool + item.noPool)
+      ? (item.noPool * 100) / (totalPool)
       : 50;
+
+  const getPoolByPrediction = (prediction: string) => prediction === "yes" ? item.yesPool : item.noPool;
+  const poolOfSide = getPoolByPrediction(marketBet.prediction);
+
+  const sharesRatio = marketBet.amount / poolOfSide
+  const sharesRatioDisplay = Math.round(sharesRatio * 100);
+  const reward = sharesRatio * totalPool;
+  const xpWillReceive = Math.round(marketBet.amount + reward);
 
   const [timeRemaining, setTimeRemaining] = useState(
     getTimeRemaining(item.closeAt)
@@ -611,78 +619,90 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
       className="overflow-hidden transition-all duration-300 cursor-pointer"
       onClick={handleCardClick}
     >
-      <div className="relative h-32 md:h-[200px]! overflow-hidden">
-        <div className="absolute top-2 right-2 z-10 flex gap-2">
+      <CardContent className="p-2">
+        <div className='flex items-center justify-between'>
+          <Badge
+            variant={getStatusBadgeProps(item.status).variant}
+            className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
+              }`}
+          >
+            {item.status}
+          </Badge>
           <Button
             variant="outline"
             size="sm"
             onClick={handleShareMarket}
-            className="bg-background/50 hover:bg-background/70"
+            className="bg-background/50 hover:bg-background/70 p-1 rounded-full"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-3 h-3" />
           </Button>
-          {getStatusBadge(item.status)}
         </div>
-        <ImageWithFallback
-          src={item.image?.path || item.imageUrl || ''}
-          alt={item.question}
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-        <CardContent className="p-2">
-          <div className="flex items-start justify-between gap-1 mb-1">
-            <h4 className="text-xs line-clamp-2 leading-tight flex-1 font-normal">
+        <div className="flex items-start justify-between gap-1 mt-3 mb-1">
+          <div className="w-10 h-10 rounded">
+            <ImageWithFallback
+              src={item.image?.path || item.imageUrl || ''}
+              alt={item.question}
+              className="w-full h-full object-cover rounded"
+            />
+          </div>
+          <div className="flex items-center flex-1 min-h-10">
+            <h4 className="text-xs mb-1 line-clamp-2 leading-tight px-1 font-bold">
               {item.question}
             </h4>
             {item.outcome && (
               <Badge
                 variant={getStatusBadgeProps(item.outcome).variant}
-                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
-                  getStatusBadgeProps(item.outcome).className
-                }`}
+                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.outcome).className
+                  }`}
               >
                 {item.outcome}
               </Badge>
             )}
           </div>
+        </div>
 
-          <div className="my-2">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium text-green-600">
-                {yesPercent.toFixed(0)}%
-              </p>
-              <p className="text-xs font-medium text-red-600">
-                {noPercent.toFixed(0)}%
-              </p>
-            </div>
+        {item.status === 'open' && (
+          <div className="flex items-center gap-1 text-xs text-gray-600 my-2">
+            <Clock className="w-3 h-3" />
+            <span>Closes in {timeRemaining}</span>
+          </div>
+        )}
 
-            <div className="w-full h-2 rounded-full overflow-hidden flex">
-              <div
-                className="bg-green-500"
-                style={{ width: `${yesPercent}%` }}
-              />
-              <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
-            </div>
+        <div className="my-2">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-medium text-green-600">
+              {yesPercent.toFixed(0)}%
+            </p>
+            <p className="text-xs font-medium text-red-600">
+              {noPercent.toFixed(0)}%
+            </p>
           </div>
 
-          {item.status === 'open' && (
-            <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
-              <Clock className="w-3 h-3" />
-              <span>Closes in {timeRemaining}</span>
-            </div>
-          )}
-
-          {item.status === 'resolved' ? (
+          <div className="w-full h-2 rounded-full overflow-hidden flex">
             <div
-              className={`border rounded-md p-2 space-y-2 mt-5 text-xs capitalize text-center text-white ${
-                marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'
-              } `}
+              className="bg-green-500"
+              style={{ width: `${yesPercent}%` }}
+            />
+            <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
+          </div>
+        </div>
+
+        {item.status === 'resolved' ? (
+          <>
+            <div
+              className={`border rounded-md p-2 space-y-2 mt-5 mb-3 text-xs capitalize font-semibold text-center text-white ${marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'
+                } `}
             >
               {marketBet.status}
             </div>
-          ) : (
-            <div className="border rounded-md p-2 mt-5 bg-slate-500 shadow-xs text-white">
+            {marketBet.payout && marketBet.status === 'won' &&
+              <p className='text-xs text-gray-500'>
+                Reward claimed: <span className={`font-semibold`}>{marketBet.payout}XP</span>
+              </p>}
+          </>
+        ) : (
+          <>
+            <div className="border rounded-md p-2 mt-5 mb-3 bg-slate-500 shadow-xs text-white">
               <p className="text-xs">
                 Prediction:{' '}
                 <span className={`font-semibold capitalize`}>
@@ -690,8 +710,13 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
                 </span>
               </p>
             </div>
-          )}
-        </CardContent>
+            <p className='text-xs text-gray-500'>
+              Your share: <span className={`font-semibold`}>{sharesRatioDisplay}%</span> — Potential reward:
+              <span className={`font-semibold`}> {xpWillReceive}XP</span>
+            </p>
+          </>
+        )}
+      </CardContent>
     </Card>
   );
 };

@@ -1,4 +1,4 @@
-import { CircleAlert, Clock, Loader2, Pen, Share2 } from 'lucide-react';
+import { CircleAlert, Clock, Loader2, Pen, Share2, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -251,6 +251,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
   const [openConfirmCancel, setOpenConfirmCancel] = useState(false);
   const [openMarketResult, setOpenMarketResult] = useState(false);
   const [openUpdateMarket, setOpenUpdateMarket] = useState(false);
+  const [openDeleteMarket, setOpenDeleteMarket] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(
     getTimeRemaining(item.closeAt)
   );
@@ -274,6 +275,19 @@ const MarketItem: React.FC<MarketItemProps> = ({
       }
     } catch (error) {
       console.error('Failed to cancel market: ', error);
+    }
+  };
+
+  const handleDeleteMarket = async () => {
+    try {
+      const data = await marketAdminServices.deleteMarket(item.id);
+      if (data === 204) {
+        toast.success('Delete market successfully!');
+        setOpenConfirmCancel(false);
+        onRefetch(); // Refetch the market list
+      }
+    } catch (error) {
+      console.error('Failed to delete market: ', error);
     }
   };
 
@@ -382,6 +396,34 @@ const MarketItem: React.FC<MarketItemProps> = ({
         onSuccess={handleUpdateSuccess}
       />
 
+      {/* Confirm delete */}
+      <AlertDialog open={openDeleteMarket} onOpenChange={setOpenDeleteMarket}>
+        <AlertDialogContent className="max-w-md mx-0 sm:mx-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <CircleAlert className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+              Confirm Delete Market
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                Are you sure you want to delete this market?
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="w-full sm:w-auto">
+              Maybe Later
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMarket}
+              className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto"
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Card
         className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg"
         onClick={() => onClick(item)}
@@ -401,9 +443,8 @@ const MarketItem: React.FC<MarketItemProps> = ({
               </h4>
               <Badge
                 variant={getStatusBadgeProps(item.status).variant}
-                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
-                  getStatusBadgeProps(item.status).className
-                }`}
+                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
+                  }`}
               >
                 {item.status}
               </Badge>
@@ -475,7 +516,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={handleShareMarket}
-                  className="bg-background/50 hover:bg-background/70 p-1 rounded-full"
+                  className="bg-background/50 hover:bg-accent/50 p-1 rounded-full"
                 >
                   <Share2 className="w-4 h-4" />
                 </Button>
@@ -486,9 +527,20 @@ const MarketItem: React.FC<MarketItemProps> = ({
                     e.stopPropagation();
                     setOpenUpdateMarket(true);
                   }}
-                  className="bg-background/white hover:bg-gray-800! p-1 rounded-full"
+                  className="bg-background/white hover:bg-accent/50 p-1 rounded-full"
                 >
                   <Pen className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e: Event) => {
+                    e.stopPropagation();
+                    setOpenDeleteMarket(true);
+                  }}
+                  className="bg-background/white hover:bg-accent/50 p-1 rounded-full"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>

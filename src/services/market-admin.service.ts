@@ -78,7 +78,7 @@ export const marketAdminServices = {
 
   deleteMarket: async (id: string) => {
     const response = await apiClient.delete(`/market-admin/${id}`);
-    return response.data;
+    return response.status;
   },
 
   getMarketBets: async (id: string, params?: QueryMarketBetsParams) => {

@@ -280,6 +280,7 @@ function AppContent() {
       void (async () => {
         try {
           const authenticatedUser = await authenticateWithToken(oauthToken);
+          handleInviteCodeAutoApply();
 
           toast.success(
             isNewUser ? 'Welcome to Predit Market!' : 'Signed in successfully.',
@@ -329,7 +330,7 @@ function AppContent() {
   };
 
   const handleSocialConnect = () => {
-    handleInviteCodeAutoApply();
+    // handleInviteCodeAutoApply();
   };
 
   const handleInviteCodeAutoApply = async () => {
@@ -337,10 +338,10 @@ function AppContent() {
     if (!inviteCode) return;
 
     try {
-      if(user?.appliedInviteCode) {
+      if (user?.appliedInviteCode) {
         return toast.success(`You're applied code before`, {
-        description: 'Welcome to Predict Market of Predictions!',
-      });
+          description: 'Welcome to Predict Market of Predictions!',
+        });
       }
       await inviteCodeService.applyCode(inviteCode);
 

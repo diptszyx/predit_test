@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
-import { ADMIN_EMAILS } from '../constants/admin';
+import { ADMIN_EMAILS, ADMIN_IDS } from '../constants/admin';
 import { copyToClipboard } from '../lib/clipboardUtils';
 import { InviteCode, inviteCodeService } from '../services/invite-code.service';
 import useAuthStore from '../store/auth.store';
@@ -30,7 +30,8 @@ import { Twitter } from 'lucide-react';
 export default function InviteCodePage() {
   const appUrl = `${import.meta.env.VITE_APP_URL}`;
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  // const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = user?.email ? ADMIN_IDS.includes(user.id) : false;
 
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,7 +130,7 @@ ${appUrl}
         `Created ${count} invite code${count > 1 ? 's' : ''} successfully!`
       );
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Something when wrong';
+      const message = err?.response?.data?.errors?.prefix || 'Something when wrong';
       throw new Error(message);
     }
   };
@@ -153,14 +154,14 @@ ${appUrl}
     }
   };
 
-  const handleCopyToClipboard = async (text?: string) => {
+  const handleCopyToClipboard = async (text?: string, copyFrom = 'Code') => {
     if (!text) return;
     const success = await copyToClipboard(text);
     if (success) {
-      toast.success('Referral link copied to clipboard!');
+      toast.success(`${copyFrom} copied to clipboard!`);
     } else {
       toast.error('Unable to copy automatically', {
-        description: 'Please copy the link manually',
+        description: `Please copy the ${copyFrom} manually`,
       });
     }
   };
@@ -307,7 +308,7 @@ ${appUrl}
                         <span className="truncate max-w-xs">{referralLink}</span>
                         <Copy
                           className="h-3 w-3 ml-3 cursor-pointer text-muted-foreground hover:text-foreground flex-shrink-0"
-                          onClick={() => handleCopyToClipboard(referralLink)}
+                          onClick={() => handleCopyToClipboard(referralLink, "Referral link")}
                         />
                       </div>
                     </TableCell>

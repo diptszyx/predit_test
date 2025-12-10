@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -30,6 +31,12 @@ export default function CreateUserCodeModal({
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
+    if (!appWallet) {
+      toast.error('Failed to create user invite code', {
+        description: "User's wallet address should not be empty",
+      });
+      return
+    }
     setLoading(true);
 
     try {
@@ -42,7 +49,7 @@ export default function CreateUserCodeModal({
       setPrefix('');
       setAppWallet('')
     } catch (err: any) {
-      toast.error('Failed to create invite code', {
+      toast.error('Failed to create user invite code', {
         description: err?.message,
       });
     } finally {
@@ -60,9 +67,10 @@ export default function CreateUserCodeModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create User Code</DialogTitle>
+          <DialogDescription>Prefix must be 2–5 uppercase letters (A–Z).</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
+        <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">User's wallet address <span className='text-red-500'>*</span></label>
             <Input
@@ -80,7 +88,7 @@ export default function CreateUserCodeModal({
               type="text"
               value={prefix}
               onChange={(e) => setPrefix(e.target.value)}
-              placeholder="default: DEH"
+              placeholder="Default: DEH"
               className="mt-1"
             />
           </div>

@@ -313,7 +313,6 @@ function AppContent() {
 
   const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);
-    toast.success(`Connected with ${walletType}!`);
 
     handleInviteCodeAutoApply();
 
@@ -338,6 +337,11 @@ function AppContent() {
     if (!inviteCode) return;
 
     try {
+      if(user?.appliedInviteCode) {
+        return toast.success(`You're applied code before`, {
+        description: 'Welcome to Predict Market of Predictions!',
+      });
+      }
       await inviteCodeService.applyCode(inviteCode);
 
       toast.success('🎉 Bonus applied! +300 XP', {

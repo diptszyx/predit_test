@@ -248,39 +248,22 @@ function AppContent() {
     }
   }, [darkMode]);
 
-  // Check for invite code, referral code or OAuth token in URL
+  // Check for invite code, invite code or OAuth token in URL
   useEffect(() => {
     const inviteCodeFromUrl = searchParams.get('invitecode');
     const oauthToken = searchParams.get('token');
     const isNewUser = searchParams.get('isNew') === 'true';
     const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
 
-    // Handle invite code from URL
-    if (inviteCodeFromUrl && user && !user.appliedInviteCode && !isAdmin) {
-      // Clean URL params
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete('invitecode');
-      const newUrl = newSearchParams.toString()
-        ? `${location.pathname}?${newSearchParams.toString()}`
-        : location.pathname;
-      window.history.replaceState({}, '', newUrl);
-
-      // Auto-apply the invite code
-      void (async () => {
-        try {
-          await inviteCodeService.applyCode(inviteCodeFromUrl);
-          await fetchCurrentUser();
-
-          toast.success('🎉 Bonus applied! +300 XP', {
-            description: 'Welcome to Predict Market of Predictions!',
-          });
-
-          navigate('/');
-        } catch (err) {
-          console.error('Failed to auto-apply invite code:', err);
-          toast.error('Invalid or expired invite code.');
-        }
-      })();
+    if (inviteCodeFromUrl && !isAdmin) {
+      sessionStorage.setItem('pendingInviteCode', inviteCodeFromUrl);
+      if (user?.id) {
+        handleInviteCodeAutoApply();
+      } else {
+        toast.info('Invite code detected! Sign up to get your bonus.', {
+          description: "You'll earn 300 XP when you create your account!",
+        });
+      }
     }
 
     // Handle OAuth token
@@ -325,14 +308,14 @@ function AppContent() {
         }
       })();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);
     toast.success(`Connected with ${walletType}!`);
 
-    // handleRefAutoApply();
+    handleInviteCodeAutoApply();
 
     const createdAt = new Date(user.createdAt).getTime();
     const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
@@ -347,28 +330,29 @@ function AppContent() {
   };
 
   const handleSocialConnect = () => {
-    // handleRefAutoApply();
+    handleInviteCodeAutoApply();
   };
 
-  // const handleRefAutoApply = async () => {
-  //   const referralCode = sessionStorage.getItem('pendingReferralCode');
-  //   if (!referralCode) return;
+  const handleInviteCodeAutoApply = async () => {
+    const inviteCode = sessionStorage.getItem('pendingInviteCode');
+    if (!inviteCode) return;
 
-  //   try {
-  //     await apiClient.post('/auth/redeem-referral', {
-  //       referralCode,
-  //     });
+    try {
+      await inviteCodeService.applyCode(inviteCode);
 
-  //     toast.success('🎉 Referral bonus applied! +300 XP', {
-  //       description: 'Welcome to Predit Market of Predictions!',
-  //     });
-  //   } catch (err: any) {
-  //     toast.error(err?.response?.data?.message ?? 'Failed to apply referral');
-  //   } finally {
-  //     sessionStorage.removeItem('pendingReferralCode');
-  //     fetchCurrentUser();
-  //   }
-  // };
+      toast.success('🎉 Bonus applied! +300 XP', {
+        description: 'Welcome to Predict Market of Predictions!',
+      });
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ?? 'Failed to apply invite code'
+      );
+    } finally {
+      sessionStorage.removeItem('pendingInviteCode');
+      fetchCurrentUser();
+      navigate('/');
+    }
+  };
 
   const handleWalletDisconnect = () => {
     logout();

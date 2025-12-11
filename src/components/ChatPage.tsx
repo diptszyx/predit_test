@@ -32,6 +32,7 @@ import {
 } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Skeleton } from './ui/skeleton';
+import TextareaAutosize from 'react-textarea-autosize';
 
 import clsx from 'clsx';
 import { motion } from 'motion/react';
@@ -60,6 +61,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import MarketList from './market/MarketList';
 import { Topic, topicServices } from '../services/topic-admin.service';
 import Markdown from './chat/Markdown';
+import { Textarea } from './ui/textarea';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -1002,17 +1004,17 @@ export function ChatPage({
                                       )}
                                     </div>
                                   </div>
-                                <span
-                                  className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
-                                    ? 'text-right max-w-[94vw]'
-                                    : 'text-left'
-                                    }`}
-                                >
-                                  {formatTime(message.createdAt)}
-                                </span>
+                                  <span
+                                    className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
+                                      ? 'text-right max-w-[94vw]'
+                                      : 'text-left'
+                                      }`}
+                                  >
+                                    {formatTime(message.createdAt)}
+                                  </span>
 
-                                {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
-                                {/* {message.sender === "assistant"
+                                  {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
+                                  {/* {message.sender === "assistant"
                               && message.suggestedQuestions && index === messages.length - 1 && !isLoading &&
                               (
                               <div className="flex justify-start mt-2 sm:mt-3">
@@ -1029,28 +1031,28 @@ export function ChatPage({
                                 </div>
                               </div>
                             )} */}
-                                {message.sender === 'assistant' &&
-                                  suggestedQuestions &&
-                                  index === messages.length - 1 &&
-                                  !isLoading && (
-                                    <div className="flex justify-start mt-2 sm:mt-3">
-                                      <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
-                                        {suggestedQuestions.map(
-                                          (question, qIndex) => (
-                                            <button
-                                              key={qIndex}
-                                              onClick={() =>
-                                                handleSend(question)
-                                              }
-                                              className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left cursor-pointer"
-                                            >
-                                              {question}
-                                            </button>
-                                          )
-                                        )}
+                                  {message.sender === 'assistant' &&
+                                    suggestedQuestions &&
+                                    index === messages.length - 1 &&
+                                    !isLoading && (
+                                      <div className="flex justify-start mt-2 sm:mt-3">
+                                        <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
+                                          {suggestedQuestions.map(
+                                            (question, qIndex) => (
+                                              <button
+                                                key={qIndex}
+                                                onClick={() =>
+                                                  handleSend(question)
+                                                }
+                                                className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left cursor-pointer"
+                                              >
+                                                {question}
+                                              </button>
+                                            )
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  )}
+                                    )}
                                 </div>
                               );
                             })}
@@ -1179,7 +1181,7 @@ export function ChatPage({
 
                           <div className="flex gap-1.5 sm:gap-2">
                             <div
-                              className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-11 cursor-pointer relative"
+                              className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-16 cursor-pointer relative"
                               onClick={() => {
                                 if (!user) {
                                   setSignInDialogOpen(true);
@@ -1192,14 +1194,16 @@ export function ChatPage({
                                   Sign in to chat
                                 </span>
                               ) : (
-                                <input
-                                  type="text"
+                                <TextareaAutosize
                                   value={input}
                                   onChange={(e) => setInput(e.target.value)}
-                                  onKeyPress={handleKeyPress}
-                                  className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm"
+                                  onKeyDown={handleKeyPress}
+                                  className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm
+                                  leading-normal mr-9 resize-none"
                                   placeholder="I want a prediction on..."
                                   disabled={isLoading}
+                                  maxRows={2}
+                                  minRows={1}
                                 />
                               )}
 

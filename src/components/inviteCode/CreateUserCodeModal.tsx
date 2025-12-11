@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -30,6 +31,12 @@ export default function CreateUserCodeModal({
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
+    if (!appWallet) {
+      toast.error('Failed to create user invite code', {
+        description: "User's wallet address should not be empty",
+      });
+      return;
+    }
     setLoading(true);
 
     try {
@@ -40,9 +47,9 @@ export default function CreateUserCodeModal({
 
       onClose();
       setPrefix('');
-      setAppWallet('')
+      setAppWallet('');
     } catch (err: any) {
-      toast.error('Failed to create invite code', {
+      toast.error('Failed to create user invite code', {
         description: err?.message,
       });
     } finally {
@@ -62,9 +69,11 @@ export default function CreateUserCodeModal({
           <DialogTitle>Create User Code</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
+        <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">User's wallet address <span className='text-red-500'>*</span></label>
+            <label className="text-sm font-medium">
+              User's wallet address <span className="text-red-500">*</span>
+            </label>
             <Input
               type="text"
               value={appWallet}
@@ -75,28 +84,27 @@ export default function CreateUserCodeModal({
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2">Prefix (optional)</label>
+            <label className="text-sm font-medium mb-2">
+              Prefix (optional)
+            </label>
+            <p className="text-[12px] text-gray-500">
+              Prefix must be 2–5 uppercase letters (A–Z).
+            </p>
             <Input
               type="text"
               value={prefix}
-              onChange={(e) => setPrefix(e.target.value)}
-              placeholder="default: DEH"
+              onChange={(e) => setPrefix(e.target.value.toUpperCase())}
+              placeholder="Default: DEH"
               className="mt-1"
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-          >
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            disabled={loading}
-            onClick={handleCreate}
-          >
+          <Button disabled={loading} onClick={handleCreate}>
             {loading ? 'Creating...' : 'Create'}
           </Button>
         </DialogFooter>

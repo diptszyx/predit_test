@@ -88,6 +88,34 @@
       </div>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Chatwoot Script -->
+    <script>
+      var host = window.location.hostname;
+      if (host !== 'predit.market') {
+        return;
+      }
+      window.chatwootSettings = {
+        position: "right",
+        type: "standard",
+        launcherTitle: "Chat with us"
+      };
+
+      (function (d, t) {
+        var BASE_URL = "https://app.chatwoot.com";
+        var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+        g.src = BASE_URL + "/packs/js/sdk.js";
+        g.async = true;
+        s.parentNode.insertBefore(g, s);
+        g.onload = function () {
+          window.chatwootSDK.run({
+            websiteToken: "eyCsavC3a7F3DtKehH94Uv2i",
+            baseUrl: BASE_URL,
+          });
+        };
+      })(document, "script");
+    </script>
+    <!-- End Chatwoot Script -->
   </body>
 
 </html>

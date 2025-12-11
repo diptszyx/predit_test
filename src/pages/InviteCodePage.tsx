@@ -31,8 +31,7 @@ import { ethers } from 'ethers';
 export default function InviteCodePage() {
   const appUrl = `${import.meta.env.VITE_APP_URL}`;
   const user = useAuthStore((state) => state.user);
-  // const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
-  const isAdmin = user?.email ? ADMIN_IDS.includes(user.id) : false;
+  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
 
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [loading, setLoading] = useState(true);

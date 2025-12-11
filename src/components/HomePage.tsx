@@ -16,7 +16,7 @@ import { Link } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-
+import TextareaAutosize from 'react-textarea-autosize';
 interface HomePageProps {
   onGetStarted: () => void;
   onExplorePredictions: (prompt?: string) => void;
@@ -107,6 +107,13 @@ export function HomePage({
       setIsLoading(false);
       onExplorePredictions(query);
     }, 800);
+  };
+
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as any);
+    }
   };
 
   const handlePromptClick = (promptText: string) => {
@@ -202,7 +209,7 @@ export function HomePage({
                 }}
               >
                 <div
-                  className={`relative transition-all duration-150 ease-out ${isFocused ? 'scale-[1.01]' : ''
+                  className={`relative transition-all duration-150 ease-out flex items-center ${isFocused ? 'scale-[1.01]' : ''
                     }`}
                   style={{
                     height: 'clamp(56px, 8vw, 72px)',
@@ -215,20 +222,23 @@ export function HomePage({
                     padding: '0 20px',
                   }}
                 >
-                  <input
+                  <TextareaAutosize
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value.slice(0, 500))}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
+                    onKeyDown={handleTextareaKeyDown}
                     placeholder="Ask a question to get started…"
                     disabled={isLoading}
                     aria-label="Ask a market question"
-                    className="w-full h-full bg-transparent border-0 outline-none pr-16 text-[16px]"
+                    className="w-full h-full bg-transparent border-0 outline-none pr-16 text-[16px] scrollbar-hide resize-none"
                     style={{
                       color: '#ccc',
                       caretColor: '#3b82f6',
                     }}
+                    maxRows={2}
+                    minRows={1}
                   />
 
                   <button

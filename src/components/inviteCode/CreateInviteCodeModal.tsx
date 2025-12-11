@@ -34,10 +34,10 @@ export default function CreateInviteCodeModal({
   const handleCreate = async () => {
     if (!Number(count) || Number(count) < 1) {
       toast.error('Failed to create invite code', {
-        description: "You must generate at least 1 code.",
+        description: 'You must generate at least 1 code.',
       });
-      return
-    };
+      return;
+    }
     setLoading(true);
 
     try {
@@ -68,16 +68,18 @@ export default function CreateInviteCodeModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Invite Codes</DialogTitle>
-          <DialogDescription>Prefix must be 2–5 uppercase letters (A–Z).</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">Prefix (optional)</label>
+            <p className="text-[12px] text-gray-500">
+              Prefix must be 2–5 uppercase letters (A–Z).
+            </p>
             <Input
               type="text"
               value={prefix}
-              onChange={(e) => setPrefix(e.target.value)}
+              onChange={(e) => setPrefix(e.target.value.toUpperCase())}
               placeholder="Default: DEH"
               className="mt-1"
             />
@@ -106,16 +108,10 @@ export default function CreateInviteCodeModal({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-          >
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            disabled={loading}
-            onClick={handleCreate}
-          >
+          <Button disabled={loading} onClick={handleCreate}>
             {loading ? 'Creating...' : 'Create'}
           </Button>
         </DialogFooter>

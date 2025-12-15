@@ -114,7 +114,7 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
       const res = await newsService.deleteNewsById(selected.id)
       if (res === 204) {
         loadArticles(true)
-        toast.success("Delete news successfully")
+        toast.success("News deleted successfully")
       }
     } catch (error) {
       console.log("Failed to delete news: ", error)

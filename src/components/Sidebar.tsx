@@ -7,6 +7,7 @@ import {
   Crown,
   Flame,
   Home,
+  LineChart,
   LogOut,
   MessageCircle,
   MessageSquare,
@@ -97,6 +98,12 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     id: 'market',
     label: 'Market',
     icon: ShoppingCart,
+    requiresAuth: true,
+  },
+  {
+    id: 'polymarket',
+    label: 'Polymarket',
+    icon: LineChart,
     requiresAuth: true,
   },
   {

@@ -1,12 +1,17 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import { News, newsService } from '../services/news.service';
+import { CircleAlert, Trash } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { ADMIN_EMAILS, ADMIN_IDS } from '../constants/admin';
 import { timeAgo } from '../lib/date';
 import { removeBrokenImages } from '../lib/htmlUtil';
-import { Skeleton } from './ui/skeleton';
+import { News, newsService } from '../services/news.service';
 import { Topic, topicServices } from '../services/topic-admin.service';
+import useAuthStore from '../store/auth.store';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Skeleton } from './ui/skeleton';
 
 interface HotTakesPageProps {
   onArticleClick: (article: News) => void;
@@ -16,6 +21,8 @@ interface HotTakesPageProps {
 const PAGE_SIZE = 12;
 
 export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
   const [articles, setArticles] = useState<News[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -28,6 +35,9 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
   const pageWrapper = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadingMoreRef = useRef(false);
+
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [selected, setSelected] = useState<News | null>(null);
 
   // Load articles
   const loadArticles = async (reset = false) => {
@@ -94,11 +104,56 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
     return () => observer.disconnect();
   }, [hasMore, loading, loadArticles]);
 
+  const handleDelete = async () => {
+    if (!selected) {
+      toast.error("Something wrong to delete this news")
+      return
+    };
+
+    try {
+      const res = await newsService.deleteNewsById(selected.id)
+      if (res === 204) {
+        loadArticles(true)
+        toast.success("News deleted successfully")
+      }
+    } catch (error) {
+      console.log("Failed to delete news: ", error)
+    } finally {
+      setOpenDeleteConfirm(false)
+      setSelected(null)
+    }
+  }
+
   return (
     <div
       className="flex-1 overflow-y-auto"
       ref={pageWrapper}
     >
+      <Dialog open={openDeleteConfirm} onOpenChange={setOpenDeleteConfirm}>
+        <DialogContent className="max-w-2xl border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <CircleAlert className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+              Confirm Delete News
+            </DialogTitle>
+            <DialogDescription className="space-y-4 text-sm leading-relaxed">
+              <p>
+                Are you sure you want to delete this news?
+              </p>
+              <p className="text-sm">
+                <span className="text-muted-foreground">Title:</span>{' '}
+                <span className="font-medium text-foreground">
+                  {selected?.title}
+                </span>
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setOpenDeleteConfirm(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-6">
           {/* Header */}
@@ -124,23 +179,23 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
 
               {isLoadingTopicList
                 ? Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton
-                      key={i}
-                      className="h-8 w-20 rounded"
-                    />
-                  ))
+                  <Skeleton
+                    key={i}
+                    className="h-8 w-20 rounded"
+                  />
+                ))
                 : topicList.map((topic) => (
-                    <Button
-                      key={topic.id}
-                      size="sm"
-                      variant={topicFilter === topic.id ? 'default' : 'outline'}
-                      onClick={() => setTopicFilter(topic.id)}
-                      className="min-w-[60px] text-xs"
-                      style={{ padding: '4px 12px' }}
-                    >
-                      {topic.name}
-                    </Button>
-                  ))}
+                  <Button
+                    key={topic.id}
+                    size="sm"
+                    variant={topicFilter === topic.id ? 'default' : 'outline'}
+                    onClick={() => setTopicFilter(topic.id)}
+                    className="min-w-[60px] text-xs"
+                    style={{ padding: '4px 12px' }}
+                  >
+                    {topic.name}
+                  </Button>
+                ))}
             </div>
           </div>
 
@@ -183,6 +238,23 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
                       __html: removeBrokenImages(article.content),
                     }}
                   />
+
+                  {isAdmin &&
+                    <div className='text-right'>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={(e: Event) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setOpenDeleteConfirm(true)
+                          setSelected(article)
+                        }}
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  }
                 </div>
               </div>
             ))}

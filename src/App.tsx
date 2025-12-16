@@ -954,11 +954,7 @@ function AppContent() {
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               {user && (
                 <div className="flex-1 overflow-y-auto">
-                  {user.email && ADMIN_EMAILS.includes(user.email) ? (
-                    <MarketDetailAdmin />
-                  ) : (
-                    <MarketDetail />
-                  )}
+                  <MarketDetail />
                 </div>
               )}
               {commonDialogProps}

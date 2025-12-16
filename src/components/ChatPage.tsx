@@ -37,7 +37,7 @@ import TextareaAutosize from 'react-textarea-autosize';
 import clsx from 'clsx';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
-import { timeAgo } from '../lib/date';
+import { formatTime, timeAgo } from '../lib/date';
 import type { User } from '../lib/types';
 import { ChatMessage, messageService } from '../services/message.service';
 import { News, newsService } from '../services/news.service';
@@ -646,15 +646,6 @@ export function ChatPage({
       handleSend(input);
     }
   };
-
-  function formatTime(isoString: string) {
-    return new Date(isoString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Ho_Chi_Minh',
-    });
-  }
 
   const handleLike = async () => {
     if (!hasLiked) {

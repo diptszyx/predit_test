@@ -4,11 +4,13 @@ import CreateUpdateMarketModal from './CreateMarket';
 import MarketListAdmin from './market/MarketListAdmin';
 import { Button } from './ui/button';
 import useAuthStore from '../store/auth.store';
-import { ADMIN_EMAILS } from '../constants/admin';
+import { ADMIN_EMAILS, ADMIN_IDS } from '../constants/admin';
 import MarketList from './market/MarketList';
 
 const MarketPage = () => {
   const user = useAuthStore((state) => state.user);
+  // const isAdmin =
+  //   user && user.email ? ADMIN_IDS.includes(user.id) : false;
   const isAdmin =
     user && user.email ? ADMIN_EMAILS.includes(user.email) : false;
   const [openCreate, setOpenCreate] = useState(false);
@@ -40,7 +42,7 @@ const MarketPage = () => {
         {isAdmin ? (
           <MarketListAdmin onRefetchReady={handleRefetchReady} />
         ) : (
-          <MarketList isFromMarketPage/>
+          <MarketList isFromMarketPage />
         )}
       </div>
     </div>

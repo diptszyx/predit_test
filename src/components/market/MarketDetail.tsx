@@ -1,16 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import clsx from 'clsx';
+import { ArrowLeft, ArrowRight, Crown, Info, Loader2, MessageSquare, ShoppingCart } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Card, CardContent } from '../ui/card';
-import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { Button } from '../ui/button';
-import { Skeleton } from '../ui/skeleton';
-import { ArrowLeft, Clock, Share2 } from 'lucide-react';
-import { Market, getMarketById } from '../../services/market.service';
+import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
-import { MarketModal } from './MarketModal';
+import { MAX_PREDICTIONS_PER_DAY, questionsByAIAgent } from '../../constants/prediction';
+import { formatTime } from '../../lib/date';
+import { Market, getMarketById } from '../../services/market.service';
+import { ChatMessage } from '../../services/message.service';
+import { OracleEntity } from '../../services/oracles.service';
 import useAuthStore from '../../store/auth.store';
-import { Badge } from '../ui/badge';
-import { getStatusBadgeProps } from './MarketListAdmin';
+import Markdown from '../chat/Markdown';
+import { DisclaimerDialog } from '../DisclaimerDialog';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { SubscriptionManagementDialog } from '../SubscriptionManagementDialog';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { ScrollArea } from '../ui/scroll-area';
+import { Skeleton } from '../ui/skeleton';
+import MarketInfoModal from './MarketInfoModal';
+import MarketList from './MarketList';
+import { MarketModal } from './MarketModal';
+
+interface MarketDetailProps {
+  // aiAgent: OracleEntity
+  // setAIAgent: (id: string) => void
+}
+
+const tabs = [
+  { id: 'chat', label: 'Chat' },
+  { id: 'market', label: 'Market' },
+];
 
 export default function MarketDetail() {
   const navigate = useNavigate();
@@ -25,68 +46,40 @@ export default function MarketDetail() {
   const [selectedChoice, setSelectedChoice] = useState<'yes' | 'no' | null>(
     null
   );
-  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [aiAgent, setAIAgent] = useState<OracleEntity>()
+  const [currentTab, setCurrentTab] = useState<string>('chat');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
+  const [marketInfoOpen, setMarketInfoOpen] = useState(false)
+
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [thinkingTokens, setThinkingTokens] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>();
+
+  const fetchMarket = async () => {
+    if (!marketId) return;
+
+    try {
+      const data = await getMarketById(marketId);
+      setMarket(data);
+      setAIAgent(data.oracle)
+      setSuggestedQuestions(generateSuggestedQuestions(data.oracle, ''))
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load market details.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchMarket = async () => {
-      if (!marketId) return;
-
-      try {
-        setLoading(true);
-        const data = await getMarketById(marketId);
-        setMarket(data);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to load market details.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchMarket();
   }, [marketId]);
-
-  // Update time remaining every second
-  useEffect(() => {
-    if (!market?.closeAt || market.status !== 'open') return;
-
-    const updateTime = () => {
-      const now = Date.now();
-      const closeTime = new Date(market.closeAt).getTime();
-      const diff = closeTime - now;
-
-      if (diff <= 0) {
-        setTimeRemaining('Closed');
-        return;
-      }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(
-        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-      );
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      if (days > 0) {
-        setTimeRemaining(`${days}d ${hours}h ${minutes}m ${seconds}s`);
-      } else if (hours > 0) {
-        setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
-      } else if (minutes > 0) {
-        setTimeRemaining(`${minutes}m ${seconds}s`);
-      } else {
-        setTimeRemaining(`${seconds}s`);
-      }
-    };
-
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-
-    return () => clearInterval(interval);
-  }, [market?.closeAt, market?.status]);
-
-  const handleBack = () => {
-    navigate('/market');
-  };
 
   const handleBetClick = (choice: 'yes' | 'no') => {
     if (!user) {
@@ -115,30 +108,63 @@ export default function MarketDetail() {
     }
   };
 
-  const handleShareMarket = async () => {
-    const marketUrl = `${window.location.origin}/market/${marketId}`;
+  const handleBack = () => {
+    navigate('/market');
+  };
 
-    try {
-      await navigator.clipboard.writeText(marketUrl);
-      toast.success('Market link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link: ', error);
-      toast.error('Failed to copy link');
+  // Generate suggested follow-up questions based on AI agent specialty
+  function generateSuggestedQuestions(
+    aiAgentData: OracleEntity,
+    userMessage: string
+  ): string[] {
+    const agentKeys = [aiAgentData.id, 'crypto-crystal', 'crypto'];
+    const selectedAgentKey =
+      agentKeys[Math.floor(Math.random() * agentKeys.length)];
+
+    // Get questions for this AI agent or use defaults
+    const aiAgentQuestions = questionsByAIAgent[selectedAgentKey] || [
+      [
+        `What's your prediction for ${aiAgentData.type.split(' ')[0]}?`,
+        `What trends do you see in ${aiAgentData.type.split(' ')[0]}?`,
+        `What should I know about ${aiAgentData.type.split(' ')[0]}?`,
+      ],
+      [
+        `Any bold predictions for this year?`,
+        `What's your hot take?`,
+        `What are you most excited about?`,
+      ],
+      [
+        `What's the biggest risk right now?`,
+        `What's being overlooked?`,
+        `What should people pay attention to?`,
+      ],
+    ];
+
+    // Randomly select one set of 3 questions
+    const randomSet =
+      aiAgentQuestions[Math.floor(Math.random() * aiAgentQuestions.length)];
+    return randomSet;
+  }
+
+  const handleSend = async (messageToSend?: string) => {
+
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(input);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="w-full p-4 lg:p-6 space-y-6">
-          <Button variant="ghost" onClick={handleBack} disabled>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Markets
-          </Button>
-          <div className="max-w-4xl mx-auto">
-            <Card className="overflow-hidden">
+      <div className="min-h-screen bg-background flex h-dvh overflow-hidden">
+        <div className='flex-1'>
+          <div className="flex items-start justify-between gap-2">
+            <div className="max-w-4xl mx-auto flex-1">
               <Skeleton className="h-64 md:h-96 w-full rounded-none" />
-              <CardContent className="p-6 space-y-4">
+              <div className="p-6 space-y-4">
                 <Skeleton className="h-8 w-3/4" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-2/3" />
@@ -153,22 +179,21 @@ export default function MarketDetail() {
                   <Skeleton className="h-12 flex-1" />
                   <Skeleton className="h-12 flex-1" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+            <div className='hidden sm:block w-full h-full lg:w-80'>
+              <Skeleton className="h-[98vh] w-full rounded-none" />
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error || !market) {
+  if (error || !market || !aiAgent) {
     return (
       <div className="min-h-screen bg-background">
         <div className="w-full p-4 lg:p-6 space-y-6">
-          <Button variant="ghost" onClick={handleBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Markets
-          </Button>
           <div className="max-w-4xl mx-auto">
             <Card className="p-6">
               <p className="text-red-500 text-center">
@@ -181,195 +206,420 @@ export default function MarketDetail() {
     );
   }
 
-  const yesPercent =
-    market.totalBets > 0
-      ? (market.yesPool * 100) / (market.yesPool + market.noPool)
-      : 50;
-  const noPercent =
-    market.totalBets > 0
-      ? (market.noPool * 100) / (market.yesPool + market.noPool)
-      : 50;
-  const isOpen = market.status === 'open';
-  const isResolved = market.status === 'resolved';
-  const canBet = isOpen && !market.isBetted && user;
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="w-full p-4 lg:p-6 space-y-6">
-        {/* Back Button */}
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={handleBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Markets
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleShareMarket}
-            className="gap-2"
-          >
-            <Share2 className="w-4 h-4" />
-            Share
-          </Button>
-        </div>
-
-        {/* Market Detail Card */}
-        <div className="max-w-4xl mx-auto">
-          <Card className="overflow-hidden">
-            <CardContent className="p-6 space-y-6">
-              {/* Market Question */}
-              <div className="flex ">
-                <div className="w-16 h-16">
-                  <ImageWithFallback
-                    src={market.image?.path || market.imageUrl || ''}
-                    alt={market.question}
-                    className="w-full h-full object-cover rounded"
-                  />
-                </div>
-                <div className="flex-1 ml-4 gap-1">
-                  <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                    {market.question}
-                  </h1>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Badge
-                      variant={getStatusBadgeProps(market.status).variant}
-                      className={`capitalize ${
-                        getStatusBadgeProps(market.status).className
-                      }`}
-                    >
-                      {market.status}
-                    </Badge>
-                    {market.oracle && (
-                      <span className="px-2 py-1 rounded-md bg-muted">
-                        Oracle: {market.oracle.name}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {isOpen && (
-                  <div className="">
-                    <Badge className="bg-red-500 text-white hover:bg-red-600 text-sm px-3 py-1 animate-pulse">
-                      LIVE
-                    </Badge>
-                  </div>
-                )}
-              </div>
-
-              {/* Time Remaining */}
-              {isOpen && timeRemaining && (
-                <div className="flex items-center gap-2 p-4 rounded-lg bg-muted">
-                  <Clock className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Closes in</p>
-                    <p className="text-lg font-bold">{timeRemaining}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Pool Information */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm">
-                    <p className="text-muted-foreground">YES</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {market.yesPool} XP ({yesPercent.toFixed(0)}%)
-                    </p>
-                  </div>
-                  <div className="text-sm text-right">
-                    <p className="text-muted-foreground">NO</p>
-                    <p className="text-2xl font-bold text-red-600">
-                      {market.noPool} XP ({noPercent.toFixed(0)}%)
-                    </p>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="w-full h-4 rounded-full overflow-hidden flex">
-                  <div
-                    className="bg-green-500 flex items-center justify-center text-xs text-white font-medium"
-                    style={{ width: `${yesPercent}%` }}
+    <div className="min-h-screen bg-background flex h-dvh overflow-hidden">
+      <div className='flex-1 overflow-y-auto'>
+        <div className="w-full h-full">
+          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-0 gap-4 w-full">
+            {/* Chat Section - Center with max width */}
+            <div className="w-full h-full lg:flex-1 space-y-0 flex flex-col">
+              {/* Oracle mobile header tab */}
+              <div className="lg:hidden fixed top-0 left-0 right-0 z-10">
+                <Card
+                  className="border-border bg-background/80 backdrop-blur-md"
+                  style={{
+                    borderRadius: '0px',
+                  }}
+                >
+                  <CardContent
+                    className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
+                    style={{
+                      borderRadius: '0px',
+                      padding: '16px 8px',
+                    }}
                   >
-                    {yesPercent > 10 && `${yesPercent.toFixed(0)}%`}
-                  </div>
-                  <div
-                    className="bg-red-500 flex items-center justify-center text-xs text-white font-medium"
-                    style={{ width: `${noPercent}%` }}
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Button variant="ghost" onClick={handleBack}>
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
+                        <ImageWithFallback
+                          src={aiAgent.image}
+                          alt={aiAgent.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-sm sm:text-base md:text-lg truncate">
+                          {aiAgent.name}
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          {aiAgent.type}
+                        </CardDescription>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setMarketInfoOpen(true)}
+                        className="lg:hidden text-white hover:text-white shrink-0 bg-blue-600 hover:bg-blue-700! h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
+                      >
+                        <Info className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
+                          Info
+                        </span>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card
+                  className={clsx(
+                    'border-border bg-background/80 backdrop-blur-md'
+                  )}
+                  style={{
+                    borderRadius: '0px',
+                  }}
+                >
+                  <CardContent
+                    className="border-b border-border bg-card/80 backdrop-blur-md rounded-xl flex items-center"
+                    style={{
+                      borderRadius: '0px',
+                      padding: 0,
+                    }}
                   >
-                    {noPercent > 10 && `${noPercent.toFixed(0)}%`}
-                  </div>
-                </div>
+                    {tabs.map((tab) => (
+                      <div
+                        key={tab.id}
+                        className={clsx(
+                          'relative flex-1 p-2 py-4 sm:p-3 flex items-center justify-center text-base font-medium cursor-pointer transition-opacity',
+                          currentTab === tab.id
+                            ? 'opacity-100'
+                            : 'opacity-50 hover:opacity-80'
+                        )}
+                        onClick={() => setCurrentTab(tab.id)}
+                      >
+                        {tab.label}
+                        {currentTab === tab.id && (
+                          <motion.div
+                            layoutId="underline"
+                            className="absolute bottom-0 h-0.5 dark:bg-white bg-black w-full"
+                            transition={{
+                              type: 'spring',
+                              stiffness: 300,
+                              damping: 30,
+                            }}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
               </div>
-
-              {/* Total Participants */}
-              <div className="p-4 rounded-lg bg-muted">
-                <p className="text-sm text-muted-foreground">
-                  Total Participants
-                </p>
-                <p className="text-xl font-bold">
-                  {market.totalBets} Participants
-                </p>
-              </div>
-
-              {/* Betting Buttons */}
-              {isOpen && (
-                <div className="space-y-3">
-                  <div className="border-t pt-4">
-                    <h3 className="text-lg font-semibold mb-3">
-                      Place Your Prediction
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {canBet
-                        ? 'Choose your prediction and place your prediction.'
-                        : market.isBetted
-                        ? 'You have already placed a bet on this market.'
-                        : !user
-                        ? 'Please log in to place a bet.'
-                        : 'This market is not available for betting.'}
-                    </p>
-                  </div>
-                  <div className="flex gap-4">
-                    <Button
-                      className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 text-lg"
-                      onClick={() => handleBetClick('yes')}
-                      disabled={!canBet}
+              {currentTab === 'chat' && (
+                <>
+                  {/* Oracle Header - Above conversation box */}
+                  <Card
+                    className="border-border bg-background/80 backdrop-blur-md hidden md:block!"
+                    style={{
+                      borderRadius: '0px',
+                    }}
+                  >
+                    <CardContent
+                      className="p-2 sm:p-3 md:p-4 border-b border-border bg-card/80 backdrop-blur-md rounded-xl"
+                      style={{
+                        borderRadius: '0px',
+                        padding: '14px 8px',
+                      }}
                     >
-                      YES
-                    </Button>
-                    <Button
-                      className="flex-1 bg-red-500 hover:bg-red-600 text-white h-12 text-lg"
-                      onClick={() => handleBetClick('no')}
-                      disabled={!canBet}
-                    >
-                      NO
-                    </Button>
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <Button variant="ghost" onClick={handleBack}>
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
+                          <ImageWithFallback
+                            src={aiAgent.image}
+                            alt={aiAgent.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-sm sm:text-base md:text-lg truncate">
+                            {aiAgent.name}
+                          </CardTitle>
+                          <CardDescription className="text-xs">
+                            {aiAgent.type}
+                          </CardDescription>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setMarketInfoOpen(true)}
+                          className="text-white hover:text-white shrink-0 bg-blue-600 hover:bg-blue-700! h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
+                        >
+                          <Info className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  {/* Chat Container with Background */}
+                  <div className="relative sm:h-[calc(100vh-16rem)] flex-1 overflow-hidden mt-[130px] md:mt-0!">
+                    {/* Background Color */}
+                    <div className="absolute inset-0 bg-card/50" />
+                    {/* Chat Interface - Full Height */}
+                    <div className="absolute inset-0 flex flex-col pointer-events-none">
+                      {/* Messages Area - Scrollable with transparent background */}
+                      <div className="flex-1 overflow-hidden pointer-events-auto rounded-none border-r">
+                        <ScrollArea className="h-full p-2 sm:p-3 md:p-4 bg-muted/80">
+                          {(!user || messages.length === 0) && (
+                            <div className="flex flex-col items-center justify-center my-12 px-4 text-center">
+                              <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mb-4">
+                                <MessageSquare className="w-8 h-8 text-blue-600" />
+                              </div>
+                              <h3 className="text-lg font-semibold mb-2">
+                                Start a New Conversation
+                              </h3>
+                              <p className="text-sm text-muted-foreground max-w-md">
+                                Ask {aiAgent.name} anything. Get predictions,
+                                insights, and expert analysis on{' '}
+                                {aiAgent.type.split(' ')[0]}.
+                              </p>
+                            </div>
+                          )}
+                          <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
+                            {messages.map((message, index) => {
+                              const isLastMessage = index === messages.length - 1;
+                              return (
+                                <div key={message.id}>
+                                  <div
+                                    className={`flex ${message.sender === 'user'
+                                      ? 'justify-end max-w-[94vw]'
+                                      : 'justify-start'
+                                      }`}
+                                  >
+                                    <div
+                                      className={`max-w-[65%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
+                                        ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                        : `backdrop-blur-md border border-border`
+                                        }`}
+                                    >
+                                      {message.sender === 'assistant' ? (
+                                        <div className="text-xs sm:text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs">
+                                          <Markdown
+                                            text={message.content}
+                                            showCharts={!isLoading || !isLastMessage}
+                                          />
+                                        </div>
+                                      ) : (
+                                        <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                                          {message.content}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
+                                      ? 'text-right max-w-[94vw]'
+                                      : 'text-left'
+                                      }`}
+                                  >
+                                    {formatTime(message.createdAt)}
+                                  </span>
+                                  {message.sender === 'assistant' &&
+                                    suggestedQuestions &&
+                                    index === messages.length - 1 &&
+                                    !isLoading && (
+                                      <div className="flex justify-start mt-2 sm:mt-3">
+                                        <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
+                                          {suggestedQuestions.map(
+                                            (question, qIndex) => (
+                                              <button
+                                                key={qIndex}
+                                                onClick={() =>
+                                                  // handleSend(question)
+                                                  console.log("")
+                                                }
+                                                className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left cursor-pointer"
+                                              >
+                                                {question}
+                                              </button>
+                                            )
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                </div>
+                              );
+                            })}
+                            {isLoading && thinkingTokens > 0 && (
+                              <div className="flex justify-start">
+                                <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border shrink-0">
+                                      <ImageWithFallback
+                                        src={aiAgent.image}
+                                        alt={aiAgent.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                    <span className="text-xs text-foreground">
+                                      {aiAgent.name} is thinking... ({thinkingTokens} tokens)
+                                    </span>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <div
+                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                      style={{ animationDelay: '0ms' }}
+                                    />
+                                    <div
+                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                      style={{ animationDelay: '150ms' }}
+                                    />
+                                    <div
+                                      className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                      style={{ animationDelay: '300ms' }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            <div ref={messagesEndRef} />
+                          </div>
+                        </ScrollArea>
+                      </div>
+                      {/* Input Section - Fixed at top with semi-transparent background */}
+                      <div className="p-2 sm:p-3 md:p-4 backdrop-blur-xl pointer-events-auto bg-card/90 border-r">
+                        <div className="max-w-4xl mx-auto">
+                          {/* Daily Prediction Limit Counter for Free Users */}
+                          {user?.id &&
+                            !user?.isPro &&
+                            (() => {
+                              return (
+                                <div className="mb-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <MessageSquare className="w-4 h-4" />
+                                      <span>
+                                        {user.restTodayPredictionCount}/{MAX_PREDICTIONS_PER_DAY} {' '}
+                                        messages remaining today
+                                      </span>
+                                    </div>
+                                    {user.restTodayPredictionCount <= 2 && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() =>
+                                          setSubscriptionDialogOpen(true)
+                                        }
+                                        className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs shrink-0 cursor-pointer"
+                                      >
+                                        <Crown className="w-3 h-3 mr-1" />
+                                        Upgrade
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          <div className="flex gap-1.5 sm:gap-2">
+                            <div
+                              className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-16 cursor-pointer relative"
+                            >
+                              {/* Input Field */}
+                              {!user ? (
+                                <span className="flex-1 text-muted-foreground text-sm">
+                                  Sign in to chat
+                                </span>
+                              ) : (
+                                <TextareaAutosize
+                                  value={input}
+                                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
+                                  onKeyDown={handleKeyPress}
+                                  className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm
+                                    leading-normal mr-9 resize-none"
+                                  placeholder="I want a prediction on..."
+                                  disabled={isLoading}
+                                  maxRows={2}
+                                  minRows={1}
+                                />
+                              )}
+                              {/* Circular Submit Button - Matching Home Page */}
+                              <button
+                                // onClick={() => handleSend(input)}
+                                disabled={!input.trim() || isLoading || !user}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed group shrink-0 shadow-sm cursor-pointer hover:scale-105"
+                                style={{
+                                  width: '40px',
+                                  height: '40px',
+                                  background: 'rgba(59, 130, 246, 0.25)',
+                                  backdropFilter: 'blur(4px)',
+                                  border: '1px solid rgba(59, 130, 246, 0.25)',
+                                  boxShadow:
+                                    '0 2px 4px rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.15)',
+                                }}
+                              >
+                                {isLoading ? (
+                                  <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
+                                ) : (
+                                  <ArrowRight
+                                    className="w-5 h-5 mx-auto text-blue-500 transition-transform duration-150 group-hover:translate-x-0.5"
+                                    style={{
+                                      filter:
+                                        'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25))',
+                                    }}
+                                  />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1.5 sm:mt-2 text-center mx-auto">
+                          AI agents can make mistakes. Check{' '}
+                          <button
+                            onClick={() => setDisclaimerDialogOpen(true)}
+                            className="text-blue-400 hover:text-blue-300 underline transition-colors cursor-pointer"
+                          >
+                            Disclaimer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                </>
+              )}
+              {currentTab === 'market' && (
+                <div className="lg:hidden w-full space-y-3 pt-[130px] h-full">
+                  {/* Market Section */}
+                  <Card
+                    className="border-border h-full"
+                    style={{ borderRadius: 0 }}
+                  >
+                    <CardHeader className="border-b border-border pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>Markets</span>
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        Latest market from {aiAgent.name}
+                      </p>
+                    </CardHeader>
+                    <MarketList oracleId={aiAgent.id} />
+                  </Card>
                 </div>
               )}
+            </div>
 
-              {/* Already Betted Message */}
-              {market.isBetted && isOpen && (
-                <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200">
-                  <p className="text-sm text-yellow-900 font-medium">
-                    ✓ You have already placed a bet on this market
+            {/* Market */}
+            <div className="hidden lg:block w-full h-full lg:w-80">
+              <Card
+                className="border-border overflow-hidden mb-3"
+                style={{
+                  height: '100vh',
+                  borderTopLeftRadius: 0,
+                  borderTopRightRadius: 0,
+                  gap: 0,
+                }}
+              >
+                <CardHeader className="border-b border-border pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Markets</span>
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Latest market from {aiAgent.name}
                   </p>
-                </div>
-              )}
-
-              {/* Resolved Message */}
-              {isResolved && (
-                <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
-                  <p className="text-sm text-blue-900 font-medium">
-                    ✓ This market has been resolved
-                    {market.outcome && (
-                      <span className="ml-2 font-bold uppercase">
-                        Outcome: {market.outcome}
-                      </span>
-                    )}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <MarketList oracleId={aiAgent.id} />
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -382,6 +632,26 @@ export default function MarketDetail() {
         marketId={marketId}
         onConfirm={() => setModalOpen(false)}
         onBetPlaced={handleBetPlaced}
+      />
+
+      <MarketInfoModal
+        open={marketInfoOpen}
+        onOpenChange={setMarketInfoOpen}
+        market={market}
+        handleBetClick={handleBetClick}
+        fetchMarket={fetchMarket}
+      />
+
+      {/* Disclaimer Dialog */}
+      <DisclaimerDialog
+        open={disclaimerDialogOpen}
+        onOpenChange={setDisclaimerDialogOpen}
+      />
+
+      <SubscriptionManagementDialog
+        open={subscriptionDialogOpen}
+        onOpenChange={setSubscriptionDialogOpen}
+        isUserPro={user?.isPro}
       />
     </div>
   );

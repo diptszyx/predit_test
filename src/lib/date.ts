@@ -10,17 +10,26 @@ export function timeAgo(timestamp: string | Date): string {
 
   if (days > 1) {
     // More than 1 day, show dd-mm-yyyy
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   } else if (days === 1) {
-    return '1 day ago';
+    return "1 day ago";
   } else if (hours >= 1) {
-    return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    return `${hours} hour${hours > 1 ? "s" : ""} ago`;
   } else if (minutes >= 1) {
-    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
   } else {
-    return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
+    return `${seconds} second${seconds !== 1 ? "s" : ""} ago`;
   }
+}
+
+export function formatTime(isoString: string) {
+  return new Date(isoString).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
 }

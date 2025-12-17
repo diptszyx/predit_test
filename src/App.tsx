@@ -26,6 +26,8 @@ import { LeaderboardPage } from './components/LeaderboardPage';
 import MarketDetail from './components/market/MarketDetail';
 import MarketDetailAdmin from './components/market/MarketDetailAdmin';
 import MarketPage from './components/MarketPage';
+import PolymarketPage from './components/PolymarketPage';
+import PolymarketDetail from './components/polymarket/PolymarketDetail';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { SettingsPage } from './components/SettingsPage';
 import { SharedPredictionPage } from './components/SharedPredictionPage';
@@ -112,9 +114,11 @@ function AppContent() {
     if (path === '/oracles') return 'oracles';
     if (path.startsWith('/prediction/')) return 'shared-prediction';
     if (path === '/market') return 'market';
+    if (path === '/polymarket') return 'polymarket';
     if (path === '/topic') return 'topic';
     if (path === '/invites') return 'invites';
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
+    if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
     return 'home';
   };
 
@@ -156,6 +160,9 @@ function AppContent() {
         break;
       case 'market':
         navigate('/market');
+        break;
+      case 'polymarket':
+        navigate('/polymarket');
         break;
       case 'topic':
         navigate('/topic');
@@ -424,10 +431,7 @@ function AppContent() {
         open={privacyDialogOpen}
         onOpenChange={setPrivacyDialogOpen}
       />
-      <TermsOfUse
-        open={termsDialogOpen}
-        onOpenChange={setTermsDialogOpen}
-      />
+      <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
       <UserProfileDialog
         open={profileDialogOpen}
         onOpenChange={handleProfileDialogOpenChange}
@@ -466,14 +470,8 @@ function AppContent() {
                 property="og:description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
-              <meta
-                property="og:type"
-                content="website"
-              />
-              <meta
-                name="twitter:card"
-                content="summary_large_image"
-              />
+              <meta property="og:type" content="website" />
+              <meta name="twitter:card" content="summary_large_image" />
               <meta
                 name="twitter:title"
                 content="AI-Powered Market Predictions | Predit Market AI Oracles Platform"
@@ -482,10 +480,7 @@ function AppContent() {
                 name="twitter:description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
-              <link
-                rel="canonical"
-                href={window.location.origin}
-              />
+              <link rel="canonical" href={window.location.origin} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <div className="flex-1 overflow-y-auto">
@@ -541,10 +536,7 @@ function AppContent() {
                 property="og:description"
                 content="Chat with specialized AI oracle agents for expert market predictions and insights."
               />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/chat`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/chat`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -819,10 +811,7 @@ function AppContent() {
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               {user && (
                 <div className="flex-1 overflow-y-auto">
-                  <SettingsPage
-                    onBack={() => navigate('/chat')}
-                    user={user}
-                  />
+                  <SettingsPage onBack={() => navigate('/chat')} user={user} />
                 </div>
               )}
               {commonDialogProps}
@@ -908,10 +897,7 @@ function AppContent() {
                 name="description"
                 content="Create and manage prediction markets powered by AI Oracles."
               />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/market`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/market`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -936,10 +922,7 @@ function AppContent() {
                 name="description"
                 content="Create and manage topics powered by AI Oracles."
               />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/topic`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/topic`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -965,10 +948,7 @@ function AppContent() {
                 name="description"
                 content="View and manage prediction market details."
               />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/market`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/market`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -979,6 +959,64 @@ function AppContent() {
                   ) : (
                     <MarketDetail />
                   )}
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* Polymarket List Page */}
+      <Route
+        path="/polymarket"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Polymarket - Real-World Prediction Markets</title>
+              <meta
+                name="description"
+                content="Trade on real-world events with Polymarket markets. Get the best odds on politics, crypto, sports and more."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/polymarket`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <PolymarketPage />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* Polymarket Detail Page */}
+      <Route
+        path="/polymarket/:id"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Market Details - Polymarket</title>
+              <meta
+                name="description"
+                content="View market details and place trades on Polymarket."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/polymarket`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <PolymarketDetail />
                 </div>
               )}
               {commonDialogProps}

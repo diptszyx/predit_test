@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from './ui/table';
+import PolygonBalanceCard from './polymarket/BalanceCard';
 
 const PolymarketPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -191,7 +192,7 @@ const PolymarketPage = () => {
         className="cursor-pointer hover:shadow-lg transition-shadow"
         onClick={() => handleMarketClick(market)}
       >
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="p-4 flex flex-col space-y-3 h-full">
           {market.image && (
             <div className="w-full h-40 rounded-md overflow-hidden bg-muted">
               <img
@@ -202,8 +203,8 @@ const PolymarketPage = () => {
             </div>
           )}
 
-          <div className="space-y-2">
-            <h3 className="font-semibold text-lg line-clamp-2">
+          <div className="space-y-2 flex-1 flex flex-col">
+            <h3 className="font-semibold text-lg line-clamp-2 flex-1">
               {market.question}
             </h3>
 
@@ -217,7 +218,11 @@ const PolymarketPage = () => {
           {market.tags && market.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {market.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="text-xs"
+                >
                   {tag}
                 </Badge>
               ))}
@@ -280,6 +285,8 @@ const PolymarketPage = () => {
           </p>
         </div>
 
+        <PolygonBalanceCard />
+
         <Tabs
           value={activeTab}
           onValueChange={(v: string) => setActiveTab(v as any)}
@@ -293,7 +300,10 @@ const PolymarketPage = () => {
           </TabsList>
 
           {/* Markets Tab */}
-          <TabsContent value="markets" className="mt-6 space-y-6">
+          <TabsContent
+            value="markets"
+            className="mt-6 space-y-6"
+          >
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -350,11 +360,17 @@ const PolymarketPage = () => {
           </TabsContent>
 
           {/* My Orders Tab */}
-          <TabsContent value="orders" className="mt-6">
+          <TabsContent
+            value="orders"
+            className="mt-6"
+          >
             {loading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-20 w-full" />
+                  <Skeleton
+                    key={i}
+                    className="h-20 w-full"
+                  />
                 ))}
               </div>
             ) : orders.length === 0 ? (
@@ -444,11 +460,17 @@ const PolymarketPage = () => {
           </TabsContent>
 
           {/* Trade History Tab */}
-          <TabsContent value="trades" className="mt-6">
+          <TabsContent
+            value="trades"
+            className="mt-6"
+          >
             {loading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-20 w-full" />
+                  <Skeleton
+                    key={i}
+                    className="h-20 w-full"
+                  />
                 ))}
               </div>
             ) : trades.length === 0 ? (

@@ -12,6 +12,8 @@ import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Alert, AlertDescription } from '../ui/alert';
 import ConfirmWithdrawModal from './ConfirmWithdrawModal';
+import { withdrawUsdc } from '../../services/polymarket.service';
+import { toast } from 'sonner';
 
 interface Props {
   open: boolean;
@@ -30,10 +32,8 @@ export default function WithdrawModal({
   const [amount, setAmount] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const hasDefaultWallet = Boolean(user?.walletAddress);
-
   useEffect(() => {
-    if (user?.walletAddress) {
+    if (user?.walletAddress && user.walletAddress.startsWith('0x')) {
       setWalletAddress(user.walletAddress);
     } else {
       setWalletAddress('');
@@ -135,7 +135,11 @@ export default function WithdrawModal({
             </Button>
 
             <Button
-              disabled={!walletAddress || !isValidAmount}
+              disabled={
+                !walletAddress ||
+                !isValidAmount ||
+                !walletAddress.startsWith('0x')
+              }
               onClick={() => setConfirmOpen(true)}
             >
               Withdraw
@@ -150,10 +154,16 @@ export default function WithdrawModal({
         onOpenChange={setConfirmOpen}
         walletAddress={walletAddress}
         amount={amount}
-        onConfirm={() => {
-          setConfirmOpen(false);
-          onOpenChange(false);
-          // 👉 CALL withdraw API here
+        onConfirm={async () => {
+          try {
+            await withdrawUsdc(amount, walletAddress);
+            toast.success('Withdraw request submitted');
+            setConfirmOpen(false);
+            onOpenChange(false);
+          } catch (err) {
+            console.error(err);
+            alert('Withdraw failed');
+          }
         }}
       />
     </>

@@ -80,6 +80,12 @@ export interface PolymarketResponse<T> {
   meta: PaginationMeta;
 }
 
+export interface EstimateGasResponse {
+  totalGasPol: string;
+  totalGasUsdc: string;
+  needTopup: boolean;
+}
+
 // Get list of binary markets (Yes/No)
 export const getPolymarkets = async (params?: QueryMarketsParams) => {
   const response = await apiClient.get<PolymarketResponse<PolymarketMarket>>(
@@ -173,5 +179,23 @@ export const getTokenBalance = async (tokenId: string) => {
     decimals: number;
     tokenID: string;
   }>(`/polymarket/balance/token/${tokenId}`);
+  return response.data;
+};
+
+export const estimateWithdrawGas = async () => {
+  const response = await apiClient.get<EstimateGasResponse>(
+    '/polymarket/estimate-gas'
+  );
+  return response.data;
+};
+
+export const withdrawUsdc = async (amountUsdc: string, toAddress: string) => {
+  const response = await apiClient.post<{
+    txHash: string;
+  }>('/polymarket/withdraw', {
+    amountUsdc,
+    toAddress,
+  });
+
   return response.data;
 };

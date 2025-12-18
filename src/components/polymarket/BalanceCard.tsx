@@ -6,7 +6,6 @@ import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import DepositModal from './DepositModal';
 import { getUSDCBalance } from '../../services/polymarket.service';
-import useAuthStore from '../../store/auth.store';
 import clsx from 'clsx';
 import WithdrawModal from './WithdrawModal';
 
@@ -101,7 +100,10 @@ const PolygonBalanceCard = () => {
       <WithdrawModal
         maxAmount={Number(balance)}
         open={withdrawOpen}
-        onOpenChange={setWithdrawOpen}
+        onOpenChange={(open) => {
+          setWithdrawOpen(open);
+          if (!open) fetchBalance();
+        }}
       />
     </>
   );

@@ -1,3 +1,5 @@
+import { OracleEntity } from "../services/oracles.service";
+
 export const MAX_PREDICTIONS_PER_DAY = 30;
 
 export const questionsByAIAgent: Record<string, string[][]> = {
@@ -138,3 +140,35 @@ export const questionsByAIAgent: Record<string, string[][]> = {
     ],
   ],
 };
+
+export function generateSuggestedQuestions(
+  aiAgentData: OracleEntity
+): string[] {
+  const agentKeys = [aiAgentData.id, "crypto-crystal", "crypto"];
+  const selectedAgentKey =
+    agentKeys[Math.floor(Math.random() * agentKeys.length)];
+
+  // Get questions for this AI agent or use defaults
+  const aiAgentQuestions = questionsByAIAgent[selectedAgentKey] || [
+    [
+      `What's your prediction for ${aiAgentData.type.split(" ")[0]}?`,
+      `What trends do you see in ${aiAgentData.type.split(" ")[0]}?`,
+      `What should I know about ${aiAgentData.type.split(" ")[0]}?`,
+    ],
+    [
+      `Any bold predictions for this year?`,
+      `What's your hot take?`,
+      `What are you most excited about?`,
+    ],
+    [
+      `What's the biggest risk right now?`,
+      `What's being overlooked?`,
+      `What should people pay attention to?`,
+    ],
+  ];
+
+  // Randomly select one set of 3 questions
+  const randomSet =
+    aiAgentQuestions[Math.floor(Math.random() * aiAgentQuestions.length)];
+  return randomSet;
+}

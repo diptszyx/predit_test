@@ -5,13 +5,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
-import { MAX_PREDICTIONS_PER_DAY, questionsByAIAgent } from '../../constants/prediction';
+import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
 import { formatTime } from '../../lib/date';
-import { Market, getMarketById } from '../../services/market.service';
+import { User } from '../../lib/types';
+import { getMarketMessages, MarketMessage, sendMarketMessageStream } from '../../services/market-messages.service';
+import { getMarketById, Market } from '../../services/market.service';
 import { ChatMessage } from '../../services/message.service';
 import { OracleEntity } from '../../services/oracles.service';
 import useAuthStore from '../../store/auth.store';
 import Markdown from '../chat/Markdown';
+import DailyLimitReachDialog from '../dialog/DailyLimitReachDialog';
 import { DisclaimerDialog } from '../DisclaimerDialog';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { SubscriptionManagementDialog } from '../SubscriptionManagementDialog';
@@ -24,8 +27,7 @@ import MarketList from './MarketList';
 import { MarketModal } from './MarketModal';
 
 interface MarketDetailProps {
-  // aiAgent: OracleEntity
-  // setAIAgent: (id: string) => void
+  updateUser?: (updates: Partial<User>) => void;
 }
 
 const tabs = [
@@ -33,8 +35,9 @@ const tabs = [
   { id: 'market', label: 'Market' },
 ];
 
-export default function MarketDetail() {
+export default function MarketDetail({ updateUser }: MarketDetailProps) {
   const navigate = useNavigate();
+  const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
   const user = useAuthStore((state) => state.user);
   const { marketId } = useParams<{
     marketId: string;
@@ -48,10 +51,12 @@ export default function MarketDetail() {
   );
   const [aiAgent, setAIAgent] = useState<OracleEntity>()
   const [currentTab, setCurrentTab] = useState<string>('chat');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<MarketMessage[]>([]);
+  const [userMessageCount, setUserMessageCount] = useState(0);
 
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
+  const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false);
   const [marketInfoOpen, setMarketInfoOpen] = useState(false)
 
   const [input, setInput] = useState('');
@@ -60,6 +65,14 @@ export default function MarketDetail() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>();
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, marketId]);
 
   const fetchMarket = async () => {
     if (!marketId) return;
@@ -77,9 +90,25 @@ export default function MarketDetail() {
     }
   };
 
+  const fetchMessages = async () => {
+    if (!marketId) return
+
+    try {
+      const data = await getMarketMessages(marketId)
+      if (data) {
+        setMessages(data.reverse())
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   useEffect(() => {
     fetchMarket();
+    fetchMessages()
   }, [marketId]);
+
+
 
   const handleBetClick = (choice: 'yes' | 'no') => {
     if (!user) {
@@ -112,42 +141,142 @@ export default function MarketDetail() {
     navigate('/market');
   };
 
-  // Generate suggested follow-up questions based on AI agent specialty
-  function generateSuggestedQuestions(
-    aiAgentData: OracleEntity,
-    userMessage: string
-  ): string[] {
-    const agentKeys = [aiAgentData.id, 'crypto-crystal', 'crypto'];
-    const selectedAgentKey =
-      agentKeys[Math.floor(Math.random() * agentKeys.length)];
-
-    // Get questions for this AI agent or use defaults
-    const aiAgentQuestions = questionsByAIAgent[selectedAgentKey] || [
-      [
-        `What's your prediction for ${aiAgentData.type.split(' ')[0]}?`,
-        `What trends do you see in ${aiAgentData.type.split(' ')[0]}?`,
-        `What should I know about ${aiAgentData.type.split(' ')[0]}?`,
-      ],
-      [
-        `Any bold predictions for this year?`,
-        `What's your hot take?`,
-        `What are you most excited about?`,
-      ],
-      [
-        `What's the biggest risk right now?`,
-        `What's being overlooked?`,
-        `What should people pay attention to?`,
-      ],
-    ];
-
-    // Randomly select one set of 3 questions
-    const randomSet =
-      aiAgentQuestions[Math.floor(Math.random() * aiAgentQuestions.length)];
-    return randomSet;
+  function incrementDailyPredictions() {
+    if (user && updateUser && !user.isPro) {
+      const currentUsed = user.totalPredictions || 0;
+      const remaining = user.restTodayPredictionCount || 0;
+      updateUser({
+        totalPredictions: currentUsed + 1,
+        restTodayPredictionCount: remaining - 1,
+      });
+    }
   }
 
-  const handleSend = async (messageToSend?: string) => {
+  const bufferRef = useRef("");
+  const flushTimer = useRef<number | null>(null);
 
+  const flushBuffer = (assistantMessageId: string) => {
+    if (!bufferRef.current) return;
+
+    const chunk = bufferRef.current;
+    bufferRef.current = "";
+
+    setMessages(prev =>
+      prev.map(msg =>
+        msg.id === assistantMessageId
+          ? { ...msg, content: msg.content + chunk }
+          : msg
+      )
+    );
+  };
+
+  const onStreamContent = (content: string, assistantMessageId: string) => {
+    bufferRef.current += content;
+
+    if (!flushTimer.current) {
+      flushTimer.current = window.setTimeout(() => {
+        flushTimer.current = null;
+        flushBuffer(assistantMessageId);
+      }, 50);
+    }
+  };
+
+  const handleSend = async (messageToSend?: string) => {
+    const trimmedInput = messageToSend || input.trim();
+    if (!user || !trimmedInput || isLoading) return;
+
+    // Increment user message count
+    const newMessageCount = userMessageCount + 1;
+    setUserMessageCount(newMessageCount);
+
+    if (
+      user?.id &&
+      !user?.isPro &&
+      (user?.restTodayPredictionCount || 0) <= 0
+    ) {
+      setLimitReachedDialogOpen(true);
+      setInput('');
+      return;
+    }
+
+    // Increment daily prediction count if this is a prediction
+    if (!user.isPro) {
+      incrementDailyPredictions();
+
+      const restTodayPredictionCount = (user.restTodayPredictionCount || 0) - 1;
+
+      if (restTodayPredictionCount === 0 && !user.isPro) {
+        setTimeout(() => {
+          setLimitReachedDialogOpen(true);
+        }, 2000);
+      }
+    }
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      sender: 'user',
+      content: `${trimmedInput}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+    setThinkingTokens(0);
+
+    setSuggestedQuestions(generateSuggestedQuestions(aiAgent));
+
+    const assistantMessageId = (Date.now() + 1).toString();
+    let messageCreated = false;
+
+    try {
+      await sendMarketMessageStream(trimmedInput, marketId, {
+        onMetadata: (metadata) => {
+          // Handle metadata (userMessage and xpReward)
+          if (metadata.xpReward.milestone) {
+            toast.success(
+              `🎯 Prediction Milestone Reached! +${metadata.xpReward.milestone?.xp} XP earned.`
+            );
+          }
+        },
+        onSession: (id) => { },
+        onThinking: (tokens) => {
+          setThinkingTokens(tokens);
+        },
+        onContent: (content) => {
+          setThinkingTokens(0);
+
+          if (!messageCreated) {
+            messageCreated = true;
+            setMessages(prev => [
+              ...prev,
+              { id: assistantMessageId, sender: 'assistant', content: '', createdAt: new Date().toISOString() }
+            ]);
+          }
+
+          onStreamContent(content, assistantMessageId);
+        },
+        onComplete: (data) => {
+
+        },
+        onDone: () => {
+          setIsLoading(false);
+          setThinkingTokens(0);
+          fetchUser();
+        },
+        onError: (error) => {
+          console.error('Error streaming message:', error);
+          toast.error('Failed to send message. Please try again.');
+          setIsLoading(false);
+          setThinkingTokens(0);
+        },
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message. Please try again.');
+      setIsLoading(false);
+      setThinkingTokens(0);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -424,8 +553,7 @@ export default function MarketDetail() {
                                               <button
                                                 key={qIndex}
                                                 onClick={() =>
-                                                  // handleSend(question)
-                                                  console.log("")
+                                                  handleSend(question)
                                                 }
                                                 className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left cursor-pointer"
                                               >
@@ -532,7 +660,7 @@ export default function MarketDetail() {
                               )}
                               {/* Circular Submit Button - Matching Home Page */}
                               <button
-                                // onClick={() => handleSend(input)}
+                                onClick={() => handleSend(input)}
                                 disabled={!input.trim() || isLoading || !user}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed group shrink-0 shadow-sm cursor-pointer hover:scale-105"
                                 style={{
@@ -652,6 +780,12 @@ export default function MarketDetail() {
         open={subscriptionDialogOpen}
         onOpenChange={setSubscriptionDialogOpen}
         isUserPro={user?.isPro}
+      />
+
+      <DailyLimitReachDialog
+        open={limitReachedDialogOpen}
+        onChange={setLimitReachedDialogOpen}
+        setSubscriptionDialogOpen={setSubscriptionDialogOpen}
       />
     </div>
   );

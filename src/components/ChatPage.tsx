@@ -56,12 +56,13 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
-import { MAX_PREDICTIONS_PER_DAY, questionsByAIAgent } from '../constants/prediction';
+import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY, questionsByAIAgent } from '../constants/prediction';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import MarketList from './market/MarketList';
 import { Topic, topicServices } from '../services/topic-admin.service';
 import Markdown from './chat/Markdown';
 import { Textarea } from './ui/textarea';
+import DailyLimitReachDialog from './dialog/DailyLimitReachDialog';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -176,7 +177,7 @@ export function ChatPage({
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
   const [shareAIAgentDialogOpen, setShareAIAgentDialogOpen] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>(
-    generateSuggestedQuestions(aiAgent, '')
+    generateSuggestedQuestions(aiAgent)
   );
 
   // Rating flash functionality
@@ -432,9 +433,35 @@ export function ChatPage({
   //   subscriptionDialogOpen,
   // ]);
 
-  // Helper function to detect if a message is asking for a prediction
 
-  // Helper function to check and reset daily predictions
+  const bufferRef = useRef("");
+  const flushTimer = useRef<number | null>(null);
+
+  const flushBuffer = (assistantMessageId: string) => {
+    if (!bufferRef.current) return;
+
+    const chunk = bufferRef.current;
+    bufferRef.current = "";
+
+    setMessages(prev =>
+      prev.map(msg =>
+        msg.id === assistantMessageId
+          ? { ...msg, content: msg.content + chunk }
+          : msg
+      )
+    );
+  };
+
+  const onStreamContent = (content: string, assistantMessageId: string) => {
+    bufferRef.current += content;
+
+    if (!flushTimer.current) {
+      flushTimer.current = window.setTimeout(() => {
+        flushTimer.current = null;
+        flushBuffer(assistantMessageId);
+      }, 50);
+    }
+  };
 
   // Increment daily prediction count
   function incrementDailyPredictions() {
@@ -446,52 +473,6 @@ export function ChatPage({
         restTodayPredictionCount: remaining - 1,
       });
     }
-  }
-
-  // Helper function to count lines in text
-
-  // Helper function to check and reset daily line limit
-
-  // Increment daily line count
-
-  // Generate welcome message based on AI agent
-
-  // Mock Grok API call with personality-driven responses
-
-  // AI agent-specific response generator
-
-  // Generate suggested follow-up questions based on AI agent specialty
-  function generateSuggestedQuestions(
-    aiAgentData: OracleEntity,
-    userMessage: string
-  ): string[] {
-    const agentKeys = [aiAgentData.id, 'crypto-crystal', 'crypto'];
-    const selectedAgentKey =
-      agentKeys[Math.floor(Math.random() * agentKeys.length)];
-
-    // Get questions for this AI agent or use defaults
-    const aiAgentQuestions = questionsByAIAgent[selectedAgentKey] || [
-      [
-        `What's your prediction for ${aiAgentData.type.split(' ')[0]}?`,
-        `What trends do you see in ${aiAgentData.type.split(' ')[0]}?`,
-        `What should I know about ${aiAgentData.type.split(' ')[0]}?`,
-      ],
-      [
-        `Any bold predictions for this year?`,
-        `What's your hot take?`,
-        `What are you most excited about?`,
-      ],
-      [
-        `What's the biggest risk right now?`,
-        `What's being overlooked?`,
-        `What should people pay attention to?`,
-      ],
-    ];
-
-    // Randomly select one set of 3 questions
-    const randomSet =
-      aiAgentQuestions[Math.floor(Math.random() * aiAgentQuestions.length)];
-    return randomSet;
   }
 
   const handleArticleClick = async (slug: string) => {
@@ -562,7 +543,7 @@ export function ChatPage({
     setThinkingTokens(0);
     setCitations([]);
 
-    setSuggestedQuestions(generateSuggestedQuestions(aiAgent, trimmedInput));
+    setSuggestedQuestions(generateSuggestedQuestions(aiAgent));
 
     // Prepare assistant message ID but don't create message yet
     const assistantMessageId = (Date.now() + 1).toString();
@@ -586,29 +567,17 @@ export function ChatPage({
           setThinkingTokens(tokens);
         },
         onContent: (content) => {
-          // Hide thinking indicator when content starts
           setThinkingTokens(0);
 
-          // Create assistant message only on first content chunk
           if (!messageCreated) {
             messageCreated = true;
-            const assistantMessage: ChatMessage = {
-              id: assistantMessageId,
-              sender: 'assistant',
-              content: content,
-              createdAt: new Date().toISOString(),
-            };
-            setMessages((prev) => [...prev, assistantMessage]);
-          } else {
-            // Append content to existing message
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId
-                  ? { ...msg, content: msg.content + content }
-                  : msg
-              )
-            );
+            setMessages(prev => [
+              ...prev,
+              { id: assistantMessageId, sender: 'assistant', content: '', createdAt: new Date().toISOString() }
+            ]);
           }
+
+          onStreamContent(content, assistantMessageId);
         },
         onComplete: (data) => {
           // Handle completion with usage stats and citations
@@ -1422,171 +1391,11 @@ export function ChatPage({
           }}
         />
 
-        {/* Daily Limit Reached Dialog */}
-        <AlertDialog
+        <DailyLimitReachDialog
           open={limitReachedDialogOpen}
-          onOpenChange={setLimitReachedDialogOpen}
-        >
-          <AlertDialogContent className="max-w-md sm:mx-auto">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
-                Daily Limit Reached
-              </AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div className="space-y-4">
-                  {limitReachedType === 'textline' ? (
-                    <>
-                      <p className="text-sm">
-                        You've used all <strong>100 free text lines</strong> for
-                        today. Your limit resets tomorrow!
-                      </p>
-                      <div className="p-3 sm:p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageSquare className="w-4 h-4 text-orange-400" />
-                          <p className="text-xs sm:text-sm font-medium text-foreground">
-                            Current Usage
-                          </p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Free tier: 100 text lines per day
-                        </p>
-                        <div className="w-full bg-black/30 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full"
-                            style={{ width: '100%' }}
-                          />
-                        </div>
-                        <p className="text-xs text-orange-400 mt-1 text-center">
-                          100/100 lines used
-                        </p>
-                      </div>
-                    </>
-                  ) : limitReachedType === 'total-predictions' ? (
-                    <>
-                      <p className="text-sm">
-                        You've used all <strong>5 free predictions</strong> on
-                        the Basic tier. Upgrade to Pro to continue making
-                        unlimited predictions!
-                      </p>
-                      <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Sparkles className="w-4 h-4 text-blue-400" />
-                          <p className="text-xs sm:text-sm font-medium text-foreground">
-                            Free Tier Limit Reached
-                          </p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Basic tier: 5 total predictions
-                        </p>
-                        <div className="w-full bg-black/30 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                            style={{ width: '100%' }}
-                          />
-                        </div>
-                        <p className="text-xs text-blue-400 mt-1 text-center">
-                          5/5 predictions used
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm">
-                        You've used all <strong>5 free predictions</strong> for
-                        today. Your limit resets tomorrow!
-                      </p>
-                      <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Sparkles className="w-4 h-4 text-blue-400" />
-                          <p className="text-xs sm:text-sm font-medium text-foreground">
-                            Current Usage
-                          </p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Free tier: 5 predictions per day
-                        </p>
-                        <div className="w-full bg-black/30 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                            style={{ width: '100%' }}
-                          />
-                        </div>
-                        <p className="text-xs text-blue-400 mt-1 text-center">
-                          5/5 predictions used
-                        </p>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-                      <p className="text-xs sm:text-sm font-medium text-foreground">
-                        Upgrade to Pro
-                      </p>
-                    </div>
-                    <ul className="text-xs sm:text-sm space-y-2 text-muted-foreground">
-                      <li className="flex items-center gap-2">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span>
-                          <strong>Unlimited</strong> predictions
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span>
-                          <strong>2x XP</strong> multiplier on all actions
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span>
-                          <strong className="text-yellow-400">
-                            +1,500 XP bonus
-                          </strong>{' '}
-                          when you subscribe
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span>Priority AI responses</span>
-                      </li>
-                    </ul>
-                    <div className="mt-3 pt-3 border-t border-blue-500/20">
-                      <p className="text-xs text-center">
-                        <span className="line-through text-muted-foreground">
-                          $19.99/mo
-                        </span>
-                        <span className="ml-2 text-base sm:text-lg font-semibold text-blue-400">
-                          $4.99/mo
-                        </span>
-                        <span className="ml-2 text-xs text-green-400">
-                          75% OFF
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-              <AlertDialogCancel className="w-full sm:w-auto">
-                Maybe Later
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  setLimitReachedDialogOpen(false);
-                  setSubscriptionDialogOpen(true);
-                }}
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 w-full sm:w-auto"
-              >
-                <Crown className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                Upgrade Now
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          onChange={setLimitReachedDialogOpen}
+          setSubscriptionDialogOpen={setSubscriptionDialogOpen}
+        />
 
         {/* Share Prediction Dialog */}
         {lastPrediction && (

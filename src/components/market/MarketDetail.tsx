@@ -177,7 +177,7 @@ export default function MarketDetail({ updateUser }: MarketDetailProps) {
       flushTimer.current = window.setTimeout(() => {
         flushTimer.current = null;
         flushBuffer(assistantMessageId);
-      }, 50);
+      }, 100);
     }
   };
 

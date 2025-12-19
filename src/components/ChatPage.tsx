@@ -433,36 +433,6 @@ export function ChatPage({
   //   subscriptionDialogOpen,
   // ]);
 
-
-  const bufferRef = useRef("");
-  const flushTimer = useRef<number | null>(null);
-
-  const flushBuffer = (assistantMessageId: string) => {
-    if (!bufferRef.current) return;
-
-    const chunk = bufferRef.current;
-    bufferRef.current = "";
-
-    setMessages(prev =>
-      prev.map(msg =>
-        msg.id === assistantMessageId
-          ? { ...msg, content: msg.content + chunk }
-          : msg
-      )
-    );
-  };
-
-  const onStreamContent = (content: string, assistantMessageId: string) => {
-    bufferRef.current += content;
-
-    if (!flushTimer.current) {
-      flushTimer.current = window.setTimeout(() => {
-        flushTimer.current = null;
-        flushBuffer(assistantMessageId);
-      }, 50);
-    }
-  };
-
   // Increment daily prediction count
   function incrementDailyPredictions() {
     if (user && updateUser && !user.isPro) {
@@ -567,17 +537,29 @@ export function ChatPage({
           setThinkingTokens(tokens);
         },
         onContent: (content) => {
+          // Hide thinking indicator when content starts
           setThinkingTokens(0);
 
+          // Create assistant message only on first content chunk
           if (!messageCreated) {
             messageCreated = true;
-            setMessages(prev => [
-              ...prev,
-              { id: assistantMessageId, sender: 'assistant', content: '', createdAt: new Date().toISOString() }
-            ]);
+            const assistantMessage: ChatMessage = {
+              id: assistantMessageId,
+              sender: 'assistant',
+              content: content,
+              createdAt: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+          } else {
+            // Append content to existing message
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? { ...msg, content: msg.content + content }
+                  : msg
+              )
+            );
           }
-
-          onStreamContent(content, assistantMessageId);
         },
         onComplete: (data) => {
           // Handle completion with usage stats and citations

@@ -1,7 +1,7 @@
 import { Clock, Loader2, Share2, UsersRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { ADMIN_EMAILS, ADMIN_IDS } from '../../constants/admin'
+import { ADMIN_EMAILS } from '../../constants/admin'
 import { marketAdminServices } from '../../services/market-admin.service'
 import { Market } from '../../services/market.service'
 import useAuthStore from '../../store/auth.store'
@@ -21,8 +21,6 @@ interface MarketInfoModal {
 
 const MarketInfoModal = ({ open, onOpenChange, market, handleBetClick, fetchMarket }: MarketInfoModal) => {
   const user = useAuthStore((state) => state.user);
-  // const isAdmin =
-  //   user && user.email ? ADMIN_IDS.includes(user.id) : false;
   const isAdmin =
     user && user.email ? ADMIN_EMAILS.includes(user.email) : false;
   const [timeRemaining, setTimeRemaining] = useState<string>('');

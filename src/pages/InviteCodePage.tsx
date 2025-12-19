@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
-import { ADMIN_EMAILS, ADMIN_IDS } from '../constants/admin';
+import { ADMIN_EMAILS } from '../constants/admin';
 import { copyToClipboard } from '../lib/clipboardUtils';
 import { InviteCode, inviteCodeService } from '../services/invite-code.service';
 import useAuthStore from '../store/auth.store';
@@ -194,9 +194,8 @@ ${appUrl}
           </Select>
 
           <Input
-            placeholder={`Search by code${
-              isAdmin ? ', wallet address' : ''
-            }...`}
+            placeholder={`Search by code${isAdmin ? ', wallet address' : ''
+              }...`}
             className="flex-1"
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {

@@ -5,6 +5,7 @@ import {
   ChevronUp,
   Copy,
   Crown,
+  Ellipsis,
   Flame,
   Home,
   LineChart,
@@ -34,6 +35,10 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { copyToClipboard } from '../lib/clipboardUtils';
 import { toast } from 'sonner';
+import { useWalletStore } from '../store/wallet.store';
+import BalanceModal from './wallet/BalanceModal';
+import Usdc from './wallet/icon/Usdc';
+import useAuthStore from '../store/auth.store';
 
 interface SidebarProps {
   currentPage: string;
@@ -114,13 +119,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(isAdmin
     ? [
-      {
-        id: 'topic',
-        label: 'Topic',
-        icon: BookType,
-        requiresAuth: true,
-      },
-    ]
+        {
+          id: 'topic',
+          label: 'Topic',
+          icon: BookType,
+          requiresAuth: true,
+        },
+      ]
     : []),
 ];
 
@@ -179,7 +184,7 @@ export function Sidebar({
               if (item.id === 'chat') {
                 return {
                   ...item,
-                  children: data.data
+                  children: data.data,
                 };
               }
               return item;
@@ -226,7 +231,7 @@ export function Sidebar({
       toast.success('Wallet address copied to clipboard!');
     } else {
       toast.error('Unable to copy automatically', {
-        description: 'Please copy the address manually'
+        description: 'Please copy the address manually',
       });
     }
   };
@@ -288,10 +293,11 @@ export function Sidebar({
             >
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${isActiveParent
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
+                className={`w-full justify-start ${
+                  isActiveParent
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                }`}
                 onClick={handleItemClick}
               >
                 <Icon className="w-4 h-4 mr-3" />
@@ -317,10 +323,11 @@ export function Sidebar({
                         key={child.name}
                         variant="ghost"
                         size="sm"
-                        className={`w-full justify-start text-[12.5px] ${isActiveChild
-                          ? 'bg-accent text-accent-foreground'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                          }`}
+                        className={`w-full justify-start text-[12.5px] ${
+                          isActiveChild
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                        }`}
                         onClick={() => {
                           setSelectedAIAgent(child);
                           localStorage.setItem('deor-currentOracle', child.id);
@@ -373,7 +380,11 @@ export function Sidebar({
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 aria-label={social.label}
               >
-                <ImageWithFallback src={social.icon} alt={social.label} className='w-5 h-5' />
+                <ImageWithFallback
+                  src={social.icon}
+                  alt={social.label}
+                  className="w-5 h-5"
+                />
               </a>
             );
           })}
@@ -437,22 +448,33 @@ export function Sidebar({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {user.email || <p className='flex items-center font-medium'>
-                      {shortenAddress(user?.appWallet || '')}
-                      <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
-                    </p>}
+                    {user.email || (
+                      <p className="flex items-center font-medium">
+                        {shortenAddress(user?.appWallet || '')}
+                        <Copy
+                          className="w-3 h-3 ml-2 cursor-pointer"
+                          onClick={() => handleCopyToClipboard(user?.appWallet)}
+                        />
+                      </p>
+                    )}
                   </p>
 
-                  {user.email ?
+                  {user.email ? (
                     <p className="text-xs text-muted-foreground flex items-center">
                       {shortenAddress(user?.appWallet || '')}
-                      <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
-                    </p> : ''}
+                      <Copy
+                        className="w-3 h-3 ml-2 cursor-pointer"
+                        onClick={() => handleCopyToClipboard(user?.appWallet)}
+                      />
+                    </p>
+                  ) : (
+                    ''
+                  )}
                 </div>
               </div>
 
               {/* User Stats */}
-              <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-3 text-xs mb-2">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-primary" />
                   <span className="font-medium">
@@ -475,6 +497,8 @@ export function Sidebar({
                   </Badge>
                 )}
               </div>
+
+              <Balance />
             </div>
 
             {/* Action Buttons */}
@@ -598,10 +622,11 @@ export function Sidebar({
                 >
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${isActiveParent
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                      }`}
+                    className={`w-full justify-start ${
+                      isActiveParent
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
                     onClick={handleItemClick}
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -631,10 +656,11 @@ export function Sidebar({
                             key={child.name}
                             variant="ghost"
                             size="sm"
-                            className={`w-full justify-start text-[12.5px] ${isActiveChild
-                              ? 'bg-accent text-accent-foreground'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                              }`}
+                            className={`w-full justify-start text-[12.5px] ${
+                              isActiveChild
+                                ? 'bg-accent text-accent-foreground'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                            }`}
                             onClick={() => {
                               setSelectedAIAgent(child);
                               localStorage.setItem(
@@ -683,7 +709,11 @@ export function Sidebar({
                     className="text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={social.label}
                   >
-                    <ImageWithFallback src={social.icon} alt={social.label} className='w-5 h-5' />
+                    <ImageWithFallback
+                      src={social.icon}
+                      alt={social.label}
+                      className="w-5 h-5"
+                    />
                   </a>
                 );
               })}
@@ -744,22 +774,37 @@ export function Sidebar({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
-                        {user.email || <p className='flex items-center font-medium'>
-                          {shortenAddress(user?.appWallet || '')}
-                          <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
-                        </p>}
+                        {user.email || (
+                          <p className="flex items-center font-medium">
+                            {shortenAddress(user?.appWallet || '')}
+                            <Copy
+                              className="w-3 h-3 ml-2 cursor-pointer"
+                              onClick={() =>
+                                handleCopyToClipboard(user?.appWallet)
+                              }
+                            />
+                          </p>
+                        )}
                       </p>
 
-                      {user.email ?
+                      {user.email ? (
                         <p className="text-xs text-muted-foreground flex items-center">
                           {shortenAddress(user?.appWallet || '')}
-                          <Copy className="w-3 h-3 ml-2 cursor-pointer" onClick={() => handleCopyToClipboard(user?.appWallet)} />
-                        </p> : ''}
+                          <Copy
+                            className="w-3 h-3 ml-2 cursor-pointer"
+                            onClick={() =>
+                              handleCopyToClipboard(user?.appWallet)
+                            }
+                          />
+                        </p>
+                      ) : (
+                        ''
+                      )}
                     </div>
                   </div>
 
                   {/* User Stats */}
-                  <div className="flex items-center gap-3 text-xs">
+                  <div className="flex items-center gap-3 text-xs mb-2">
                     <div className="flex items-center gap-1">
                       <Zap className="w-3 h-3 text-primary" />
                       <span className="font-medium">
@@ -782,6 +827,8 @@ export function Sidebar({
                       </Badge>
                     )}
                   </div>
+
+                  <Balance />
                 </div>
 
                 {/* Action Buttons */}
@@ -821,3 +868,31 @@ export function Sidebar({
     </>
   );
 }
+
+const Balance = () => {
+  const { usdcBalance, fetchUSDCBalance, loadingBalance } = useWalletStore();
+  const user = useAuthStore();
+  const [isOpenWalletModal, setIsOpenWalletModal] = useState(false);
+
+  useEffect(() => {
+    fetchUSDCBalance();
+  }, [user]);
+  return (
+    <div className="flex items-center gap-1">
+      <Usdc />
+      <div
+        className="flex items-center gap-1 hover:opacity-80 cursor-pointer"
+        onClick={() => setIsOpenWalletModal(true)}
+      >
+        <p className="text-green-500 font-medium text-xs">
+          {loadingBalance ? '-' : usdcBalance}
+        </p>
+        <Ellipsis className="size-3" />
+      </div>
+      <BalanceModal
+        onOpenChange={setIsOpenWalletModal}
+        open={isOpenWalletModal}
+      />
+    </div>
+  );
+};

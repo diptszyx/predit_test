@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import {
   getPolymarketById,
   getTokenBalance,
-  getUSDCBalance,
   placePolymarketOrder,
   PolymarketMarket,
 } from '../../services/polymarket.service';
@@ -17,11 +16,13 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { useWalletStore } from '../../store/wallet.store';
 
 const PolymarketDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const { usdcBalance, fetchUSDCBalance } = useWalletStore();
 
   const [market, setMarket] = useState<PolymarketMarket | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +31,6 @@ const PolymarketDetail = () => {
   const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>('Yes');
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
   const [amount, setAmount] = useState('');
-  const [usdcBalance, setUsdcBalance] = useState<string>('0');
   const [yesTokenBalance, setYesTokenBalance] = useState<string>('0');
   const [noTokenBalance, setNoTokenBalance] = useState<string>('0');
   const [loadingBalances, setLoadingBalances] = useState(false);
@@ -72,8 +72,7 @@ const PolymarketDetail = () => {
       setLoadingBalances(true);
 
       // Fetch USDC balance
-      const usdcData = await getUSDCBalance();
-      setUsdcBalance(usdcData.formatted || usdcData.balance || '0');
+      fetchUSDCBalance();
 
       // Fetch token balances for Yes and No tokens
       const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
@@ -316,7 +315,10 @@ const PolymarketDetail = () => {
                     {market.tags && market.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {market.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary">
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                          >
                             {tag}
                           </Badge>
                         ))}

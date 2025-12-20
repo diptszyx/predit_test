@@ -2,20 +2,15 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
   getTokenBalance,
-  getUSDCBalance,
   placePolymarketOrder,
   PolymarketMarket,
 } from '../../services/polymarket.service';
 import useAuthStore from '../../store/auth.store';
 import { Button } from '../ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { useWalletStore } from '../../store/wallet.store';
 
 interface TradeModalProps {
   open: boolean;
@@ -33,13 +28,13 @@ const TradeModal = ({
   onTradeSuccess,
 }: TradeModalProps) => {
   const user = useAuthStore((state) => state.user);
+  const { usdcBalance, fetchUSDCBalance } = useWalletStore();
 
   const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>(
     initialOutcome
   );
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
   const [amount, setAmount] = useState('');
-  const [usdcBalance, setUsdcBalance] = useState<string>('0');
   const [yesTokenBalance, setYesTokenBalance] = useState<string>('0');
   const [noTokenBalance, setNoTokenBalance] = useState<string>('0');
   const [loadingBalances, setLoadingBalances] = useState(false);
@@ -71,8 +66,7 @@ const TradeModal = ({
       setLoadingBalances(true);
 
       // Fetch USDC balance
-      const usdcData = await getUSDCBalance();
-      setUsdcBalance(usdcData.formatted || usdcData.balance || '0');
+      fetchUSDCBalance();
 
       // Fetch token balances for Yes and No tokens
       const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
@@ -219,7 +213,10 @@ const TradeModal = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{market.question}</DialogTitle>
@@ -244,9 +241,7 @@ const TradeModal = ({
                 variant={selectedOutcome === 'No' ? 'default' : 'outline'}
                 onClick={() => setSelectedOutcome('No')}
                 className={
-                  selectedOutcome === 'No'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : ''
+                  selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''
                 }
               >
                 NO
@@ -371,4 +366,3 @@ const TradeModal = ({
 };
 
 export default TradeModal;
-

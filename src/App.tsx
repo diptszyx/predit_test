@@ -46,6 +46,7 @@ import { inviteCodeService } from './services/invite-code.service';
 import useAuthStore from './store/auth.store';
 import InviteCodePage from './pages/InviteCodePage';
 import InviteCodeGuard from './components/guard/InviteCodeGuard';
+import { useWalletStore } from './store/wallet.store';
 
 export default function App() {
   return (
@@ -58,6 +59,7 @@ export default function App() {
 }
 
 function AppContent() {
+  const resetWalletStore = useWalletStore((state) => state.resetWallet);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -369,6 +371,7 @@ function AppContent() {
   const handleWalletDisconnect = () => {
     logout();
     closeProfileDialog();
+    resetWalletStore();
     navigate('/');
     toast.info('Wallet disconnected');
   };
@@ -431,7 +434,10 @@ function AppContent() {
         open={privacyDialogOpen}
         onOpenChange={setPrivacyDialogOpen}
       />
-      <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
+      <TermsOfUse
+        open={termsDialogOpen}
+        onOpenChange={setTermsDialogOpen}
+      />
       <UserProfileDialog
         open={profileDialogOpen}
         onOpenChange={handleProfileDialogOpenChange}
@@ -470,8 +476,14 @@ function AppContent() {
                 property="og:description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
-              <meta property="og:type" content="website" />
-              <meta name="twitter:card" content="summary_large_image" />
+              <meta
+                property="og:type"
+                content="website"
+              />
+              <meta
+                name="twitter:card"
+                content="summary_large_image"
+              />
               <meta
                 name="twitter:title"
                 content="AI-Powered Market Predictions | Predit Market AI Oracles Platform"
@@ -480,7 +492,10 @@ function AppContent() {
                 name="twitter:description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
-              <link rel="canonical" href={window.location.origin} />
+              <link
+                rel="canonical"
+                href={window.location.origin}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <div className="flex-1 overflow-y-auto">
@@ -536,7 +551,10 @@ function AppContent() {
                 property="og:description"
                 content="Chat with specialized AI oracle agents for expert market predictions and insights."
               />
-              <link rel="canonical" href={`${window.location.origin}/chat`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/chat`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -811,7 +829,10 @@ function AppContent() {
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               {user && (
                 <div className="flex-1 overflow-y-auto">
-                  <SettingsPage onBack={() => navigate('/chat')} user={user} />
+                  <SettingsPage
+                    onBack={() => navigate('/chat')}
+                    user={user}
+                  />
                 </div>
               )}
               {commonDialogProps}
@@ -897,7 +918,10 @@ function AppContent() {
                 name="description"
                 content="Create and manage prediction markets powered by AI Oracles."
               />
-              <link rel="canonical" href={`${window.location.origin}/market`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/market`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -922,7 +946,10 @@ function AppContent() {
                 name="description"
                 content="Create and manage topics powered by AI Oracles."
               />
-              <link rel="canonical" href={`${window.location.origin}/topic`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/topic`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -948,7 +975,10 @@ function AppContent() {
                 name="description"
                 content="View and manage prediction market details."
               />
-              <link rel="canonical" href={`${window.location.origin}/market`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/market`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>

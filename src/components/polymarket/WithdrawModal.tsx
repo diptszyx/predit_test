@@ -56,7 +56,10 @@ export default function WithdrawModal({
         open={open}
         onOpenChange={onOpenChange}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent
+          className="sm:max-w-md"
+          style={{ zIndex: 999999 }}
+        >
           <DialogHeader>
             <DialogTitle>Withdraw USDC</DialogTitle>
             <DialogDescription>

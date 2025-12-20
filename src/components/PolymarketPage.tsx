@@ -27,7 +27,6 @@ import {
   TableHeader,
   TableRow,
 } from './ui/table';
-import PolygonBalanceCard from './polymarket/BalanceCard';
 
 const PolymarketPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -284,8 +283,6 @@ const PolymarketPage = () => {
             Trade on real-world events with Polymarket markets
           </p>
         </div>
-
-        <PolygonBalanceCard />
 
         <Tabs
           value={activeTab}

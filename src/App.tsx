@@ -20,13 +20,14 @@ import { useXP } from './lib/useXP';
 import { AIAgentCard } from './components/AIAgentCard';
 import { ArticleDetailPage } from './components/ArticleDetailPage';
 import { ChatPage } from './components/ChatPage';
+import InviteCodeGuard from './components/guard/InviteCodeGuard';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
 import MarketDetail from './components/market/MarketDetail';
 import MarketPage from './components/MarketPage';
-import PolymarketPage from './components/PolymarketPage';
 import PolymarketDetail from './components/polymarket/PolymarketDetail';
+import PolymarketPage from './components/PolymarketPage';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { SettingsPage } from './components/SettingsPage';
 import { SharedPredictionPage } from './components/SharedPredictionPage';
@@ -39,12 +40,12 @@ import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { ADMIN_EMAILS } from './constants/admin';
 import { shortenAddress } from './lib/address';
+import InviteCodePage from './pages/InviteCodePage';
+import XpHistoryPage from './pages/XpHistoryPage';
+import { inviteCodeService } from './services/invite-code.service';
 import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
-import { inviteCodeService } from './services/invite-code.service';
 import useAuthStore from './store/auth.store';
-import InviteCodePage from './pages/InviteCodePage';
-import InviteCodeGuard from './components/guard/InviteCodeGuard';
 import { useWalletStore } from './store/wallet.store';
 
 export default function App() {
@@ -118,6 +119,7 @@ function AppContent() {
     if (path === '/polymarket') return 'polymarket';
     if (path === '/topic') return 'topic';
     if (path === '/invites') return 'invites';
+    if (path === '/xp-history') return 'xpHistory';
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
     if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
     return 'home';
@@ -170,6 +172,9 @@ function AppContent() {
         break;
       case 'invites':
         navigate('/invites');
+        break;
+      case 'xpHistory':
+        navigate('/xp-history');
         break;
       default:
         navigate('/');
@@ -399,6 +404,7 @@ function AppContent() {
     onWalletDisconnect: handleWalletDisconnect,
     shortenAddress,
     onOpenSettings: () => navigate('/settings'),
+    onOpenXPHistory: () => navigate('/xp-history'),
     onSetPendingNavigation: setPendingNavigation,
     onOpenXPInfo: () => setXPInfoDialogOpen(true),
     darkMode,
@@ -1090,6 +1096,52 @@ function AppContent() {
               <div className="flex-1 overflow-y-auto">
                 <main className="container mx-auto px-4 py-8">
                   <InviteCodePage />
+                </main>
+              </div>
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* XP history page */}
+      <Route
+        path="/xp-history"
+        element={
+          <div className="flex h-dvh bg-background overflow-hidden">
+            <Helmet>
+              <title>XP History | Predit Market AI</title>
+
+              <meta
+                name="description"
+                content="View your XP history including earned and spent experience points across all activities and events."
+              />
+
+              <meta
+                name="keywords"
+                content="XP history, experience points, XP activity, XP transactions, user progression"
+              />
+
+              <meta
+                property="og:title"
+                content="XP History | Experience Activity"
+              />
+
+              <meta
+                property="og:description"
+                content="Track your earned and spent XP from different activities and events."
+              />
+
+              <link
+                rel="canonical"
+                href={`https://predit.market/xp-history`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <div className="flex-1 overflow-y-auto">
+                <main className="container mx-auto px-4 py-8">
+                  <XpHistoryPage />
                 </main>
               </div>
               {commonDialogProps}

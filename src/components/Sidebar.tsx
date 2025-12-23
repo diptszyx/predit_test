@@ -7,6 +7,7 @@ import {
   Crown,
   Ellipsis,
   Flame,
+  History,
   Home,
   LineChart,
   LogOut,
@@ -49,6 +50,7 @@ interface SidebarProps {
   shortenAddress: (address: string) => string;
   onSetPendingNavigation: (page: string | null) => void;
   onOpenSettings: () => void;
+  onOpenXPHistory: () => void
   onOpenXPInfo?: () => void;
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
@@ -156,6 +158,7 @@ export function Sidebar({
   shortenAddress,
   onSetPendingNavigation,
   onOpenSettings,
+  onOpenXPHistory,
   onOpenXPInfo,
   darkMode = true,
   onToggleDarkMode,
@@ -516,6 +519,15 @@ export function Sidebar({
                 variant="ghost"
                 size="sm"
                 className="w-full justify-start text-muted-foreground hover:text-foreground"
+                onClick={onOpenXPHistory}
+              >
+                <History className="w-4 h-4 mr-3" />
+                XP History
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-muted-foreground hover:text-foreground"
                 onClick={onWalletDisconnect}
               >
                 <LogOut className="w-4 h-4 mr-3" />
@@ -841,6 +853,15 @@ export function Sidebar({
                   >
                     <Settings className="w-4 h-4 mr-3" />
                     Settings
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-muted-foreground hover:text-foreground"
+                    onClick={onOpenXPHistory}
+                  >
+                    <History className="w-4 h-4 mr-3" />
+                    XP History
                   </Button>
                   <Button
                     variant="ghost"

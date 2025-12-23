@@ -174,6 +174,14 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
         {props.children}
       </a>
     ),
+    table: ({ node, ...props }: any) => (
+      <div className="w-72 md:w-custom-128 overflow-x-auto my-3 mx-auto">
+        <table
+          className="w-full border-collapse"
+          {...props}
+        />
+      </div>
+    ),
     thead: ({ node, ...props }: any) => (
       <thead className="bg-background" {...props} />
     ),
@@ -183,13 +191,13 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
     ),
     th: ({ node, ...props }: any) => (
       <th
-        className="text-sm font-medium px-6 py-4 text-left border"
+        className="text-sm font-medium px-4 py-3 text-left border"
         {...props}
       />
     ),
     td: ({ node, ...props }: any) => (
       <td
-        className="text-sm font-light px-6 py-4 whitespace-nowrap border"
+        className="text-sm font-light px-4 py-3 whitespace-nowrap border"
         {...props}
       />
     ),
@@ -199,7 +207,7 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
     ul: ({ node, ...props }: any) => (
       <ul className="list-disc ml-4">{props.children}</ul>
     ),
-    li: ({ node, ...props }: any) => <li className="mb-2">{props.children}</li>,
+    li: ({ node, ...props }: any) => <li className="my-2">{props.children}</li>,
     blockquote: ({ node, ...props }: any) => (
       <blockquote className="pl-3 border-l-4 border-neutral-500">
         {props.children}

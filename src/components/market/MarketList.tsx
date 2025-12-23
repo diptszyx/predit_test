@@ -3,7 +3,7 @@ import { Clock, Share2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ADMIN_EMAILS, ADMIN_IDS } from '../../constants/admin';
+import { ADMIN_EMAILS } from '../../constants/admin';
 import {
   getListMarket,
   getMyBets,
@@ -695,10 +695,13 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
             >
               {marketBet.status}
             </div>
-            {marketBet.payout && marketBet.status === 'won' &&
+            {marketBet.status === 'won' ?
               <p className='text-xs text-gray-500'>
                 Reward claimed: <span className={`font-semibold`}>{marketBet.payout}XP</span>
-              </p>}
+              </p> : <p className='text-xs text-gray-500'>
+                Lost amount: <span className='font-semibold'>{marketBet.amount}XP</span>
+              </p>
+            }
           </>
         ) : (
           <>

@@ -1,7 +1,7 @@
 import { CircleAlert, Trash } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { ADMIN_EMAILS, ADMIN_IDS } from '../constants/admin';
+import { ADMIN_EMAILS } from '../constants/admin';
 import { timeAgo } from '../lib/date';
 import { removeBrokenImages } from '../lib/htmlUtil';
 import { News, newsService } from '../services/news.service';

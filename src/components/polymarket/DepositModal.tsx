@@ -33,7 +33,10 @@ const DepositModal = ({ open, onOpenChange }: Props) => {
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="sm:max-w-md bg-zinc-950 text-white border border-zinc-800">
+      <DialogContent
+        className="sm:max-w-md bg-zinc-950 text-white border border-zinc-800"
+        style={{ zIndex: 999999 }}
+      >
         <DialogHeader>
           <DialogTitle className="text-white">
             Deposit USDC.e (Polygon)

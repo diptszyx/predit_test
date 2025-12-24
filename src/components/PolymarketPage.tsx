@@ -1,7 +1,8 @@
-import { ChevronLeft, ChevronRight, Clock, TrendingUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, MessageSquare, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { createPolyMarketChat } from '../services/polymarket-message.service';
 import {
   cancelPolymarketOrder,
   getMyPolymarketOrders,
@@ -18,7 +19,6 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Skeleton } from './ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import {
   Table,
   TableBody,
@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from './ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 const PolymarketPage = () => {
   const user = useAuthStore((state) => state.user);
@@ -124,6 +125,21 @@ const PolymarketPage = () => {
 
   const handleMarketClick = (market: PolymarketMarket) => {
     navigate(`/polymarket/${market.id}`);
+  };
+
+  const handleMarketChat = async (market: PolymarketMarket) => {
+    if (!market.isMessaged) {
+      try {
+        const data = await createPolyMarketChat(market.id)
+        if (data)
+          navigate(`/polymarket/${market.id}/chat/${data.id}`);
+      } catch (error) {
+        console.log('error', error)
+        toast.error('Something wrong with chat polymarket')
+      }
+    } else {
+      navigate(`/polymarket/${market.id}/chat/${market.chatId}`);
+    }
   };
 
   const handleTradeClick = (
@@ -264,10 +280,18 @@ const PolymarketPage = () => {
               <TrendingUp className="w-4 h-4" />
               <span>{formatVolume(market.volume)}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <span>{formatDate(market.endDate)}</span>
+            <div className="flex items-center gap-3">
+              <div className='flex items-center gap-1'>
+                <Clock className="w-4 h-4" />
+                <span>{formatDate(market.endDate)}</span>
+              </div>
+              <MessageSquare className='w-4 h-4 cursor-pointer'
+                onClick={(e: Event) => {
+                  e.stopPropagation()
+                  handleMarketChat(market)
+                }} />
             </div>
+
           </div>
         </CardContent>
       </Card>

@@ -26,6 +26,7 @@ import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
 import MarketDetail from './components/market/MarketDetail';
 import MarketPage from './components/MarketPage';
+import PolymarketChatPage from './components/polymarket/PolymarketChatPage';
 import PolymarketDetail from './components/polymarket/PolymarketDetail';
 import PolymarketPage from './components/PolymarketPage';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
@@ -122,6 +123,7 @@ function AppContent() {
     if (path === '/xp-history') return 'xpHistory';
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
     if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
+    if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/)) return 'polymarket-chat'
     return 'home';
   };
 
@@ -175,6 +177,9 @@ function AppContent() {
         break;
       case 'xpHistory':
         navigate('/xp-history');
+        break;
+      case 'polymarket-chat':
+        navigate('/polymarket/chat');
         break;
       default:
         navigate('/');
@@ -235,7 +240,6 @@ function AppContent() {
     (async () => {
       try {
         const data = await oraclesServices.getAllOracles();
-
         if (data?.data) setListOracles(data.data);
 
         if (currentPage === 'chat') {
@@ -1048,6 +1052,35 @@ function AppContent() {
               {user && (
                 <div className="flex-1 overflow-y-auto">
                   <PolymarketDetail />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* Polymarket Detail Page */}
+      <Route
+        path="/polymarket/:marketId/chat/:chatId"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Polymarket Chat - Polymarket</title>
+              <meta
+                name="description"
+                content="View market details and place trades on Polymarket."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/polymarket/chat`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <PolymarketChatPage />
                 </div>
               )}
               {commonDialogProps}

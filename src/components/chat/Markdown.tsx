@@ -142,7 +142,7 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
       const match = /language-(\w+)/.exec(className || '');
 
       return match ? (
-        <div>
+        <div className="w-72 md:w-custom-128 overflow-x-auto my-3 mx-auto">
           <div className="flex w-full justify-end bg-white/5 p-2 rounded-t-md">
             <button
               onClick={() => handleCopy(String(children).replace(/\n$/, ''))}

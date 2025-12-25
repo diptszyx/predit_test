@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Clock, MessageSquare, TrendingUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -162,10 +162,6 @@ const PolymarketPage = () => {
     }
   };
 
-  const formatPrice = (price: string) => {
-    return `${(parseFloat(price) * 100).toFixed(2)}%`;
-  };
-
   const formatVolume = (volume: string) => {
     const vol = parseFloat(volume);
     if (vol >= 1000000) {
@@ -199,99 +195,111 @@ const PolymarketPage = () => {
 
   const renderMarketCard = (market: PolymarketMarket) => {
     const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
-    const noToken = market.tokens.find((t) => t.outcome === 'No');
+
+    const yesPrice = yesToken ? parseFloat(yesToken.price) * 100 : 50;
+
+    // Calculate semicircle progress (0-180 degrees)
+    const progressDegree = (yesPrice / 100) * 180;
 
     return (
       <Card
         key={market.id}
-        className="cursor-pointer hover:shadow-lg transition-shadow"
+        className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg bg-background border-background/50"
         onClick={() => handleMarketClick(market)}
       >
-        <CardContent className="p-4 flex flex-col space-y-3 h-full">
-          {market.image && (
-            <div className="w-full h-40 rounded-md overflow-hidden bg-muted">
-              <img
-                src={market.image}
-                alt={market.question}
-                className="w-full h-full object-cover"
-              />
+        <CardContent className="p-4">
+          {/* Header with image, question, and percentage */}
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0">
+              {market.image && (
+                <img
+                  src={market.image}
+                  alt={market.question}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
-          )}
-
-          <div className="space-y-2 flex-1 flex flex-col">
-            <h3 className="font-semibold text-lg line-clamp-2 flex-1">
-              {market.question}
-            </h3>
-
-            {market.description && (
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {market.description}
-              </p>
-            )}
+            <div className="flex-1 flex items-start justify-between gap-2">
+              <h4 className="text-sm font-medium text-white line-clamp-2 leading-snug">
+                {market.question}
+              </h4>
+              <div className="flex flex-col items-center flex-shrink-0">
+                {/* Semicircle Progress Bar */}
+                <div className="relative w-24 h-12 mb-1">
+                  <svg
+                    className="w-full h-full"
+                    viewBox="0 0 100 50"
+                    style={{ overflow: 'visible' }}
+                  >
+                    {/* Background semicircle */}
+                    <path
+                      d="M 10 50 A 40 40 0 0 1 90 50"
+                      fill="none"
+                      stroke={`#4a5565`}
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                    />
+                    {/* Progress semicircle */}
+                    <path
+                      d="M 10 50 A 40 40 0 0 1 90 50"
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray={`${progressDegree * 1.396} 251.2`}
+                      style={{ transition: 'stroke-dasharray 0.3s ease' }}
+                    />
+                  </svg>
+                </div>
+                <div className="text-3xl font-bold text-gray-400 leading-none">
+                  {yesPrice.toFixed(0)}%
+                </div>
+                <div className="text-xs text-gray-400">chance</div>
+              </div>
+            </div>
           </div>
 
-          {market.tags && market.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {market.tags.map((tag) => (
-                <Badge
-                  key={tag}
-                  variant="secondary"
-                  className="text-xs"
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
+          {/* Yes/No Buttons */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
             <Button
-              variant="outline"
-              className="p-3 h-auto rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900"
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                handleTradeClick(e, market, 'Yes')
-              }
+              className="h-10 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-lg font-semibold border border-green-600/30 rounded-lg"
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.stopPropagation();
+                handleTradeClick(e, market, 'Yes');
+              }}
             >
-              <div className="w-full text-left">
-                <div className="text-xs text-muted-foreground mb-1">YES</div>
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {yesToken ? formatPrice(yesToken.price) : 'N/A'}
-                </div>
-              </div>
+              Yes
             </Button>
             <Button
-              variant="outline"
-              className="p-3 h-auto rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900"
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                handleTradeClick(e, market, 'No')
-              }
+              className="h-10 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-lg font-semibold border border-red-600/30 rounded-lg"
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.stopPropagation();
+                handleTradeClick(e, market, 'No');
+              }}
             >
-              <div className="w-full text-left">
-                <div className="text-xs text-muted-foreground mb-1">NO</div>
-                <div className="text-lg font-bold text-red-600 dark:text-red-400">
-                  {noToken ? formatPrice(noToken.price) : 'N/A'}
-                </div>
-              </div>
+              No
             </Button>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t">
-            <div className="flex items-center gap-1">
-              <TrendingUp className="w-4 h-4" />
-              <span>{formatVolume(market.volume)}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className='flex items-center gap-1'>
-                <Clock className="w-4 h-4" />
-                <span>{formatDate(market.endDate)}</span>
-              </div>
-              <MessageSquare className='w-4 h-4 cursor-pointer'
-                onClick={(e: Event) => {
-                  e.stopPropagation()
-                  handleMarketChat(market)
-                }} />
+          {/* Footer with volume and close date */}
+          <div className="flex items-center justify-between text-sm text-gray-400 gap-4">
+            <div className="flex items-center justify-between flex-1">
+              <span className="font-medium">
+                {formatVolume(market.volume)} Vol.
+              </span>
+              {market.endDate && (
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  <span>{formatDate(market.endDate)}</span>
+                </div>
+              )}
             </div>
 
+            <MessageSquare className='w-4 h-4 cursor-pointer'
+              onClick={(e: Event) => {
+                e.stopPropagation()
+                handleMarketChat(market)
+              }} />
           </div>
         </CardContent>
       </Card>
@@ -321,10 +329,7 @@ const PolymarketPage = () => {
           </TabsList>
 
           {/* Markets Tab */}
-          <TabsContent
-            value="markets"
-            className="mt-6 space-y-6"
-          >
+          <TabsContent value="markets" className="mt-6 space-y-6">
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -381,17 +386,11 @@ const PolymarketPage = () => {
           </TabsContent>
 
           {/* My Orders Tab */}
-          <TabsContent
-            value="orders"
-            className="mt-6"
-          >
+          <TabsContent value="orders" className="mt-6">
             {loading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-20 w-full"
-                  />
+                  <Skeleton key={i} className="h-20 w-full" />
                 ))}
               </div>
             ) : orders.length === 0 ? (
@@ -481,17 +480,11 @@ const PolymarketPage = () => {
           </TabsContent>
 
           {/* Trade History Tab */}
-          <TabsContent
-            value="trades"
-            className="mt-6"
-          >
+          <TabsContent value="trades" className="mt-6">
             {loading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-20 w-full"
-                  />
+                  <Skeleton key={i} className="h-20 w-full" />
                 ))}
               </div>
             ) : trades.length === 0 ? (

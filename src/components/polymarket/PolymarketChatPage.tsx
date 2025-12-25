@@ -72,17 +72,13 @@ const PolymarketChatPage = () => {
   useEffect(() => {
     if (!marketId || !chatId) return;
 
-    fetchMessages()
     fetchMarket()
+    fetchMessages()
   }, [marketId, chatId]);
 
   useEffect(() => {
-    if (loading) return;
-    if (!market) return;
-    if (currentTab !== "chat") return;
-
     scrollToBottom()
-  }, [messages, loading, market, currentTab]);
+  }, [messages]);
 
   const fetchMarket = async () => {
     if (!marketId) return;
@@ -100,7 +96,6 @@ const PolymarketChatPage = () => {
 
   const fetchMessages = async () => {
     try {
-      setLoading(true);
       const oracleList = await oraclesServices.getAllOracles();
       if (!oracleList) return
 
@@ -112,11 +107,8 @@ const PolymarketChatPage = () => {
         const data = await messageService.loadMessages(aiAgent.id, chatId)
         if (data) setMessages(data.reverse());
       }
-
     } catch (error) {
       console.error('Error fetching messages:', error);
-    } finally {
-      setLoading(false)
     }
   }
 

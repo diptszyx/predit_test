@@ -296,48 +296,6 @@ const PolymarketDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <Card>
-                <CardContent className="p-6 space-y-4">
-                  {market.image && (
-                    <div className="w-full h-64 rounded-lg overflow-hidden bg-muted">
-                      <img
-                        src={market.image}
-                        alt={market.question}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-3">
-                    <h1 className="text-2xl lg:text-3xl font-bold">
-                      {market.question}
-                    </h1>
-
-                    {market.tags && market.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {market.tags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-
-                    {market.description && (
-                      <div className="pt-4">
-                        <h3 className="font-semibold mb-2">Description</h3>
-                        <p className="text-muted-foreground whitespace-pre-wrap">
-                          {market.description}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
                 <CardHeader>
                   <CardTitle>Market Statistics</CardTitle>
                 </CardHeader>
@@ -367,6 +325,45 @@ const PolymarketDetail = () => {
                         {market.id.slice(0, 8)}...
                       </p>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  {market.image && (
+                    <div className="w-full h-64 rounded-lg overflow-hidden bg-muted">
+                      <img
+                        src={market.image}
+                        alt={market.question}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <h1 className="text-2xl lg:text-3xl font-bold">
+                      {market.question}
+                    </h1>
+
+                    {market.tags && market.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {market.tags.map((tag) => (
+                          <Badge key={tag} variant="secondary">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {market.description && (
+                      <div className="pt-4">
+                        <h3 className="font-semibold mb-2">Description</h3>
+                        <p className="text-muted-foreground whitespace-pre-wrap">
+                          {market.description}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -1,4 +1,4 @@
-import apiClient from '../lib/axios';
+import apiClient from "../lib/axios";
 
 export interface PolymarketToken {
   token_id: string;
@@ -19,6 +19,8 @@ export interface PolymarketMarket {
   tags?: string[];
   image?: string;
   tokens: PolymarketToken[];
+  isMessaged: boolean;
+  chatId: string | null;
 }
 
 export interface PolymarketOrder {
@@ -26,7 +28,7 @@ export interface PolymarketOrder {
   orderID?: string;
   market?: string;
   asset_id?: string;
-  side: 'BUY' | 'SELL';
+  side: "BUY" | "SELL";
   size?: string;
   price?: string;
   status?: string;
@@ -38,7 +40,7 @@ export interface PolymarketTrade {
   id: string;
   market: string;
   asset_id: string;
-  side: 'BUY' | 'SELL';
+  side: "BUY" | "SELL";
   size: string;
   price: string;
   fee_rate_bps: string;
@@ -51,7 +53,7 @@ export interface PolymarketTrade {
 export interface PlaceOrderDto {
   tokenID: string;
   amount: number;
-  side: 'BUY' | 'SELL';
+  side: "BUY" | "SELL";
   price?: number;
 }
 
@@ -89,7 +91,7 @@ export interface EstimateGasResponse {
 // Get list of binary markets (Yes/No)
 export const getPolymarkets = async (params?: QueryMarketsParams) => {
   const response = await apiClient.get<PolymarketResponse<PolymarketMarket>>(
-    '/polymarket/markets',
+    "/polymarket/markets",
     { params }
   );
   return response.data;
@@ -106,7 +108,7 @@ export const getPolymarketById = async (id: string) => {
 // Place a trade order
 export const placePolymarketOrder = async (order: PlaceOrderDto) => {
   const response = await apiClient.post<PolymarketOrder>(
-    '/polymarket/orders',
+    "/polymarket/orders",
     order
   );
   return response.data;
@@ -114,7 +116,7 @@ export const placePolymarketOrder = async (order: PlaceOrderDto) => {
 
 // Get user's open orders
 export const getMyPolymarketOrders = async () => {
-  const response = await apiClient.get<PolymarketOrder[]>('/polymarket/orders');
+  const response = await apiClient.get<PolymarketOrder[]>("/polymarket/orders");
   return response.data;
 };
 
@@ -139,14 +141,14 @@ export const cancelAllPolymarketOrders = async () => {
   const response = await apiClient.post<{
     success: boolean;
     canceled_count: number;
-  }>('/polymarket/orders/cancel-all');
+  }>("/polymarket/orders/cancel-all");
   return response.data;
 };
 
 // Get trade history
 export const getPolymarketTrades = async (params?: QueryTradesParams) => {
   const response = await apiClient.get<PolymarketTrade[]>(
-    '/polymarket/trades',
+    "/polymarket/trades",
     { params }
   );
   return response.data;
@@ -157,7 +159,7 @@ export const deployPolymarketWallet = async () => {
   const response = await apiClient.post<{
     proxyAddress: string;
     transactionHash: string;
-  }>('/polymarket/deploy-wallet');
+  }>("/polymarket/deploy-wallet");
   return response.data;
 };
 
@@ -167,7 +169,7 @@ export const getUSDCBalance = async () => {
     balance: string;
     formatted: string;
     decimals: number;
-  }>('/polymarket/balance/usdc');
+  }>("/polymarket/balance/usdc");
   return response.data;
 };
 
@@ -184,7 +186,7 @@ export const getTokenBalance = async (tokenId: string) => {
 
 export const estimateWithdrawGas = async () => {
   const response = await apiClient.get<EstimateGasResponse>(
-    '/polymarket/estimate-gas'
+    "/polymarket/estimate-gas"
   );
   return response.data;
 };
@@ -192,7 +194,7 @@ export const estimateWithdrawGas = async () => {
 export const withdrawUsdc = async (amountUsdc: string, toAddress: string) => {
   const response = await apiClient.post<{
     txHash: string;
-  }>('/polymarket/withdraw', {
+  }>("/polymarket/withdraw", {
     amountUsdc,
     toAddress,
   });

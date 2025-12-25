@@ -59,7 +59,8 @@ export const messageService = {
   sendMessageStream: async (
     message: string,
     oracleId: string,
-    callbacks: StreamCallbacks
+    callbacks: StreamCallbacks,
+    chatId?: string
   ) => {
     try {
       const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
@@ -74,6 +75,7 @@ export const messageService = {
           body: JSON.stringify({
             content: message,
             oracleId: oracleId,
+            chatId: chatId,
           }),
         }
       );
@@ -156,10 +158,10 @@ export const messageService = {
     }
   },
 
-  loadMessages: async (oracleId: string) => {
+  loadMessages: async (oracleId: string, chatId?: string) => {
     try {
       const { data } = await apiClient.get<ChatMessage[]>("/messages", {
-        params: { oracleId },
+        params: { oracleId, chatId },
       });
 
       return data;

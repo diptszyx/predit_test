@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ArrowLeft, ArrowRight, Crown, Info, Loader2, MessageSquare, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Crown, Loader2, MessageSquare } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -7,110 +7,61 @@ import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
 import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
 import { formatTime } from '../../lib/date';
-import { User } from '../../lib/types';
-import { getMarketMessages, MarketMessage, sendMarketMessageStream } from '../../services/market-messages.service';
-import { getMarketById, Market } from '../../services/market.service';
-import { ChatMessage } from '../../services/message.service';
-import { OracleEntity } from '../../services/oracles.service';
+import { ChatMessage, messageService } from '../../services/message.service';
+import { OracleEntity, oraclesServices } from '../../services/oracles.service';
+import { getPolymarketById, getTokenBalance, placePolymarketOrder, PolymarketMarket } from '../../services/polymarket.service';
 import useAuthStore from '../../store/auth.store';
+import { useWalletStore } from '../../store/wallet.store';
+import { DisclaimerDialog } from '../DisclaimerDialog';
+import { SubscriptionManagementDialog } from '../SubscriptionManagementDialog';
 import Markdown from '../chat/Markdown';
 import DailyLimitReachDialog from '../dialog/DailyLimitReachDialog';
-import { DisclaimerDialog } from '../DisclaimerDialog';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { SubscriptionManagementDialog } from '../SubscriptionManagementDialog';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 import { ScrollArea } from '../ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
-import MarketInfoModal from './MarketInfoModal';
-import MarketList from './MarketList';
-import { MarketModal } from './MarketModal';
-
-interface MarketDetailProps {
-}
 
 const tabs = [
   { id: 'chat', label: 'Chat' },
-  { id: 'market', label: 'Market' },
+  { id: 'trade', label: 'Trade' },
 ];
 
-export default function MarketDetail() {
+interface PolymarketChatPage {
+}
+
+const PolymarketChatPage = () => {
   const navigate = useNavigate();
-  const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
-  const user = useAuthStore((state) => state.user);
-  const { marketId } = useParams<{
-    marketId: string;
-  }>();
-  const [market, setMarket] = useState<Market | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedChoice, setSelectedChoice] = useState<'yes' | 'no' | null>(
-    null
-  );
+  const user = useAuthStore((state) => state.user)
+  const fetchUser = useAuthStore((state) => state.fetchCurrentUser)
   const [aiAgent, setAIAgent] = useState<OracleEntity>()
-  const [currentTab, setCurrentTab] = useState<string>('chat');
-  const [messages, setMessages] = useState<MarketMessage[]>([]);
-  const [userMessageCount, setUserMessageCount] = useState(0);
 
-  const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
-  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
-  const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false);
-  const [marketInfoOpen, setMarketInfoOpen] = useState(false)
+  const { marketId, chatId } = useParams()
+  const [market, setMarket] = useState<PolymarketMarket | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [thinkingTokens, setThinkingTokens] = useState(0);
+  const [currentTab, setCurrentTab] = useState<string>('chat')
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [userMessageCount, setUserMessageCount] = useState(0)
+
+  const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false)
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false)
+  const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false)
+
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [thinkingTokens, setThinkingTokens] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>();
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, marketId]);
-
-  const fetchMarket = async () => {
-    if (!marketId) return;
-
-    try {
-      const data = await getMarketById(marketId);
-      setMarket(data);
-      setAIAgent(data.oracle)
-      setSuggestedQuestions(generateSuggestedQuestions(data.oracle))
-    } catch (err) {
-      console.error(err);
-      setError('Failed to load market details.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMessages = async () => {
-    if (!marketId) return
-
-    try {
-      const data = await getMarketMessages(marketId)
-      if (data) {
-        setMessages(data.reverse())
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  useEffect(() => {
-    if (marketId) {
-      fetchMarket();
-      fetchMessages()
-    }
-  }, [marketId]);
-
-  useEffect(() => {
-    if (market && market.status === 'open') {
+    if (market) {
       setInput(market.question)
       setTimeout(() => {
         handleSend(market.question)
@@ -118,35 +69,51 @@ export default function MarketDetail() {
     }
   }, [market])
 
-  const handleBetClick = (choice: 'yes' | 'no') => {
-    if (!user) {
-      toast.error('Please log in to place a bet');
-      return;
-    }
+  useEffect(() => {
+    if (!marketId || !chatId) return;
 
-    if (market?.isBetted) {
-      toast.error('You have already placed a bet on this market');
-      return;
-    }
+    fetchMarket()
+    fetchMessages()
+  }, [marketId, chatId]);
 
-    setSelectedChoice(choice);
-    setModalOpen(true);
-  };
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages]);
 
-  const handleBetPlaced = async () => {
-    // Refetch market data after bet is placed
+  const fetchMarket = async () => {
     if (!marketId) return;
-
     try {
-      const data = await getMarketById(marketId);
+      setLoading(true);
+      const data = await getPolymarketById(marketId);
       setMarket(data);
     } catch (err) {
       console.error(err);
+      toast.error('Failed to load market details');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const fetchMessages = async () => {
+    try {
+      const oracleList = await oraclesServices.getAllOracles();
+      if (!oracleList) return
+
+      if (oracleList?.data) {
+        setAIAgent(oracleList.data[0]);
+        const aiAgent = oracleList.data[0]
+
+        setSuggestedQuestions(generateSuggestedQuestions(aiAgent))
+        const data = await messageService.loadMessages(aiAgent.id, chatId)
+        if (data) setMessages(data.reverse());
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  }
+
   const handleBack = () => {
-    navigate('/market');
+    navigate('/polymarket');
   };
 
   const bufferRef = useRef("");
@@ -225,7 +192,7 @@ export default function MarketDetail() {
     let messageCreated = false;
 
     try {
-      await sendMarketMessageStream(trimmedInput, marketId, {
+      await messageService.sendMessageStream(trimmedInput, aiAgent.id, {
         onMetadata: (metadata) => {
           // Handle metadata (userMessage and xpReward)
           if (metadata.xpReward.milestone) {
@@ -265,7 +232,7 @@ export default function MarketDetail() {
           setIsLoading(false);
           setThinkingTokens(0);
         },
-      });
+      }, chatId);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
@@ -314,14 +281,14 @@ export default function MarketDetail() {
     );
   }
 
-  if (error || !market || !aiAgent) {
+  if (!market || !aiAgent) {
     return (
       <div className="min-h-screen bg-background">
         <div className="w-full p-4 lg:p-6 space-y-6">
           <div className="max-w-4xl mx-auto">
             <Card className="p-6">
               <p className="text-red-500 text-center">
-                {error || 'Market not found'}
+                Market not found
               </p>
             </Card>
           </div>
@@ -371,17 +338,6 @@ export default function MarketDetail() {
                           {aiAgent.type}
                         </CardDescription>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setMarketInfoOpen(true)}
-                        className="lg:hidden text-white hover:text-white shrink-0 bg-blue-600 hover:bg-blue-700! h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                      >
-                        <Info className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
-                          Info
-                        </span>
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -463,14 +419,6 @@ export default function MarketDetail() {
                             {aiAgent.type}
                           </CardDescription>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setMarketInfoOpen(true)}
-                          className="text-white hover:text-white shrink-0 bg-blue-600 hover:bg-blue-700! h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                        >
-                          <Info className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -697,73 +645,21 @@ export default function MarketDetail() {
                   </div>
                 </>
               )}
-              {currentTab === 'market' && (
+
+              {currentTab === 'trade' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px] h-full">
-                  {/* Market Section */}
-                  <Card
-                    className="border-border h-full"
-                    style={{ borderRadius: 0 }}
-                  >
-                    <CardHeader className="border-b border-border pb-3">
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <ShoppingCart className="w-4 h-4" />
-                        <span>Markets</span>
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground">
-                        Latest market from {aiAgent.name}
-                      </p>
-                    </CardHeader>
-                    <MarketList oracleId={aiAgent.id} />
-                  </Card>
+                  <TradeSidebar market={market} />
                 </div>
               )}
             </div>
 
-            {/* Market */}
+            {/* Trade */}
             <div className="hidden lg:block w-full h-full lg:w-80">
-              <Card
-                className="border-border overflow-hidden mb-3"
-                style={{
-                  height: '100vh',
-                  borderTopLeftRadius: 0,
-                  borderTopRightRadius: 0,
-                  gap: 0,
-                }}
-              >
-                <CardHeader className="border-b border-border pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>Markets</span>
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground">
-                    Latest market from {aiAgent.name}
-                  </p>
-                </CardHeader>
-                <MarketList oracleId={aiAgent.id} />
-              </Card>
+              <TradeSidebar market={market} />
             </div>
           </div>
         </div>
       </div>
-
-      {/* Betting Modal */}
-      <MarketModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={market.question}
-        choice={selectedChoice}
-        marketId={marketId}
-        onConfirm={() => setModalOpen(false)}
-        onBetPlaced={handleBetPlaced}
-      />
-
-      <MarketInfoModal
-        open={marketInfoOpen}
-        onOpenChange={setMarketInfoOpen}
-        market={market}
-        handleBetClick={handleBetClick}
-        fetchMarket={fetchMarket}
-      />
 
       {/* Disclaimer Dialog */}
       <DisclaimerDialog
@@ -783,5 +679,374 @@ export default function MarketDetail() {
         setSubscriptionDialogOpen={setSubscriptionDialogOpen}
       />
     </div>
-  );
+  )
 }
+
+interface TradeSidebarProps {
+  market: PolymarketMarket
+}
+
+const TradeSidebar = ({ market }: TradeSidebarProps) => {
+  const user = useAuthStore((state) => state.user);
+  const { usdcBalance, fetchUSDCBalance } = useWalletStore();
+  const [trading, setTrading] = useState(false);
+
+  const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>('Yes');
+  const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [amount, setAmount] = useState('');
+  const [yesTokenBalance, setYesTokenBalance] = useState<string>('0');
+  const [noTokenBalance, setNoTokenBalance] = useState<string>('0');
+  const [loadingBalances, setLoadingBalances] = useState(false);
+
+  useEffect(() => {
+    if (market && user) {
+      fetchBalances();
+    }
+  }, [market, user]);
+
+  // Reset amount when outcome or side changes
+  useEffect(() => {
+    setAmount('');
+  }, [selectedOutcome, tradeSide]);
+
+  const fetchBalances = async () => {
+    if (!market || !user) return;
+    try {
+      setLoadingBalances(true);
+
+      // Fetch USDC balance
+      fetchUSDCBalance();
+
+      // Fetch token balances for Yes and No tokens
+      const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
+      const noToken = market.tokens.find((t) => t.outcome === 'No');
+
+      if (yesToken) {
+        try {
+          const yesBalanceData = await getTokenBalance(yesToken.token_id);
+          setYesTokenBalance(
+            yesBalanceData.formatted || yesBalanceData.balance || '0'
+          );
+        } catch (err) {
+          console.error('Failed to fetch Yes token balance:', err);
+          setYesTokenBalance('0');
+        }
+      }
+
+      if (noToken) {
+        try {
+          const noBalanceData = await getTokenBalance(noToken.token_id);
+          setNoTokenBalance(
+            noBalanceData.formatted || noBalanceData.balance || '0'
+          );
+        } catch (err) {
+          console.error('Failed to fetch No token balance:', err);
+          setNoTokenBalance('0');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch balances:', err);
+    } finally {
+      setLoadingBalances(false);
+    }
+  };
+
+  const handleMaxAmount = () => {
+    if (!market) return;
+
+    const selectedToken = market.tokens.find(
+      (t) => t.outcome === selectedOutcome
+    );
+    if (!selectedToken) return;
+
+    // For BUY: use USDC balance
+    // For SELL: use token balance
+    if (tradeSide === 'BUY') {
+      const maxAmount = parseFloat(usdcBalance);
+      if (maxAmount > 0) {
+        setAmount(maxAmount.toString());
+      }
+    } else {
+      const balance =
+        selectedOutcome === 'Yes' ? yesTokenBalance : noTokenBalance;
+      const maxAmount = parseFloat(balance);
+      if (maxAmount > 0) {
+        setAmount(maxAmount.toString());
+      }
+    }
+  };
+
+  // Check if balance is sufficient
+  const isBalanceSufficient = () => {
+    if (!amount || parseFloat(amount) <= 0) return true; // No validation needed if amount is empty
+    const amountValue = parseFloat(amount);
+
+    if (tradeSide === 'BUY') {
+      return amountValue <= parseFloat(usdcBalance);
+    } else {
+      const balance =
+        selectedOutcome === 'Yes' ? yesTokenBalance : noTokenBalance;
+      return amountValue <= parseFloat(balance);
+    }
+  };
+
+  // Get insufficient balance error message
+  const getBalanceError = () => {
+    if (!amount || parseFloat(amount) <= 0) return null;
+    if (isBalanceSufficient()) return null;
+
+    if (tradeSide === 'BUY') {
+      return `Insufficient USDC balance. Available: ${usdcBalance}`;
+    } else {
+      const balance =
+        selectedOutcome === 'Yes' ? yesTokenBalance : noTokenBalance;
+      return `Insufficient token balance. Available: ${balance} tokens`;
+    }
+  };
+
+  const handleTrade = async () => {
+    if (!market || !amount || parseFloat(amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    // Validate minimum amount for BUY orders
+    if (tradeSide === 'BUY' && parseFloat(amount) < 1) {
+      toast.error('Minimum amount for buying is 1');
+      return;
+    }
+
+    // Validate sufficient balance (button should be disabled, but check as safety)
+    if (!isBalanceSufficient()) {
+      return; // Error is already shown as text below input
+    }
+
+    if (!user) {
+      toast.error('Please login to trade');
+      return;
+    }
+
+    const selectedToken = market.tokens.find(
+      (t) => t.outcome === selectedOutcome
+    );
+    if (!selectedToken) {
+      toast.error('Token not found');
+      return;
+    }
+
+    try {
+      setTrading(true);
+      const orderData: any = {
+        tokenID: selectedToken.token_id,
+        amount: parseFloat(amount),
+        side: tradeSide,
+      };
+
+      await placePolymarketOrder(orderData);
+      toast.success(`${tradeSide} order placed successfully`);
+      setAmount('');
+      // Refresh balances after successful trade
+      // Add a small delay to ensure backend has processed the transaction
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await fetchBalances();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to place order');
+    } finally {
+      setTrading(false);
+    }
+  };
+
+  const formatPrice = (price: string) => {
+    return `${(parseFloat(price) * 100).toFixed(2)}%`;
+  };
+
+  const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
+  const noToken = market.tokens.find((t) => t.outcome === 'No');
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Current Prices</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+            <div className="flex justify-between items-center">
+              <span className="font-semibold">YES</span>
+              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {yesToken ? formatPrice(yesToken.price) : 'N/A'}
+              </span>
+            </div>
+          </div>
+          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
+            <div className="flex justify-between items-center">
+              <span className="font-semibold">NO</span>
+              <span className="text-2xl font-bold text-red-600 dark:text-red-400">
+                {noToken ? formatPrice(noToken.price) : 'N/A'}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card
+        className="border-border"
+      >
+        <CardHeader>
+          <CardTitle>Trade</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Outcome</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={
+                  selectedOutcome === 'Yes' ? 'default' : 'outline'
+                }
+                onClick={() => setSelectedOutcome('Yes')}
+                className={
+                  selectedOutcome === 'Yes'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : ''
+                }
+              >
+                YES
+              </Button>
+              <Button
+                variant={
+                  selectedOutcome === 'No' ? 'default' : 'outline'
+                }
+                onClick={() => setSelectedOutcome('No')}
+                className={
+                  selectedOutcome === 'No'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : ''
+                }
+              >
+                NO
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Side</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={tradeSide === 'BUY' ? 'default' : 'outline'}
+                onClick={() => setTradeSide('BUY')}
+                className={
+                  tradeSide === 'BUY'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : ''
+                }
+              >
+                BUY
+              </Button>
+              <Button
+                variant={tradeSide === 'SELL' ? 'default' : 'outline'}
+                onClick={() => setTradeSide('SELL')}
+                className={
+                  tradeSide === 'SELL'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : ''
+                }
+              >
+                SELL
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Amount</Label>
+              {user && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleMaxAmount}
+                  disabled={
+                    loadingBalances ||
+                    (tradeSide === 'BUY'
+                      ? parseFloat(usdcBalance) <= 0
+                      : parseFloat(
+                        selectedOutcome === 'Yes'
+                          ? yesTokenBalance
+                          : noTokenBalance
+                      ) <= 0)
+                  }
+                  title={
+                    tradeSide === 'BUY'
+                      ? 'Set max USDC for buying'
+                      : 'Set max token balance for selling'
+                  }
+                >
+                  Max
+                </Button>
+              )}
+            </div>
+            <Input
+              type="number"
+              placeholder="Enter amount"
+              value={amount}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setAmount(e.target.value)
+              }
+              min={tradeSide === 'BUY' ? '1' : '0'}
+              step="0.01"
+              className={getBalanceError() ? 'border-destructive' : ''}
+            />
+            {getBalanceError() && (
+              <p className="text-xs text-destructive text-red-500">
+                {getBalanceError()}
+              </p>
+            )}
+            {user && !getBalanceError() && (
+              <div className="text-xs text-muted-foreground">
+                {tradeSide === 'BUY' ? (
+                  <span>USDC Balance: {usdcBalance} (Min: 1)</span>
+                ) : (
+                  <span>
+                    Token Balance:{' '}
+                    {selectedOutcome === 'Yes'
+                      ? yesTokenBalance
+                      : noTokenBalance}{' '}
+                    tokens
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <Button
+            onClick={handleTrade}
+            disabled={
+              trading ||
+              !user ||
+              !amount ||
+              parseFloat(amount) <= 0 ||
+              (tradeSide === 'BUY' && parseFloat(amount) < 1) ||
+              !isBalanceSufficient()
+            }
+            className={
+              tradeSide === 'BUY'
+                ? 'w-full bg-green-600 hover:bg-green-700'
+                : 'w-full bg-red-600 hover:bg-red-700'
+            }
+          >
+            {trading ? 'Processing...' : 'Confirm'}
+          </Button>
+
+          {!user && (
+            <p className="text-xs text-center text-muted-foreground">
+              Please login to trade
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default PolymarketChatPage

@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, TrendingUp } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -9,14 +9,13 @@ import {
   PolymarketMarket,
 } from '../../services/polymarket.service';
 import useAuthStore from '../../store/auth.store';
+import { useWalletStore } from '../../store/wallet.store';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { useWalletStore } from '../../store/wallet.store';
 
 const PolymarketDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -215,8 +214,6 @@ const PolymarketDetail = () => {
   };
 
   const formatPrice = (price: string) => {
-    console.log('formatting price:', price);
-
     return `${(parseFloat(price) * 100).toFixed(2)}%`;
   };
 
@@ -272,13 +269,8 @@ const PolymarketDetail = () => {
     );
   }
 
-  console.log('market tokens:', market.tokens);
-
   const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
-  console.log('yesToken:', yesToken);
-
   const noToken = market.tokens.find((t) => t.outcome === 'No');
-  console.log('noToken:', noToken);
 
   return (
     <div className="min-h-screen bg-background">
@@ -473,10 +465,10 @@ const PolymarketDetail = () => {
                             (tradeSide === 'BUY'
                               ? parseFloat(usdcBalance) <= 0
                               : parseFloat(
-                                  selectedOutcome === 'Yes'
-                                    ? yesTokenBalance
-                                    : noTokenBalance
-                                ) <= 0)
+                                selectedOutcome === 'Yes'
+                                  ? yesTokenBalance
+                                  : noTokenBalance
+                              ) <= 0)
                           }
                           title={
                             tradeSide === 'BUY'

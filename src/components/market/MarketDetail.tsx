@@ -2,12 +2,12 @@ import clsx from 'clsx';
 import { ArrowLeft, ArrowRight, Crown, Info, Loader2, MessageSquare, ShoppingCart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
+import { IS_MESSAGED } from '../../constants/params';
 import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
 import { formatTime } from '../../lib/date';
-import { User } from '../../lib/types';
 import { getMarketMessages, MarketMessage, sendMarketMessageStream } from '../../services/market-messages.service';
 import { getMarketById, Market } from '../../services/market.service';
 import { ChatMessage } from '../../services/message.service';
@@ -36,6 +36,7 @@ const tabs = [
 
 export default function MarketDetail() {
   const navigate = useNavigate();
+  const location = useLocation();
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
   const user = useAuthStore((state) => state.user);
   const { marketId } = useParams<{
@@ -65,6 +66,10 @@ export default function MarketDetail() {
 
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>();
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const params = urlParams.get(IS_MESSAGED);
+  const isMessaged = params === 'true' ? true : false
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -72,6 +77,34 @@ export default function MarketDetail() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, marketId]);
+
+  useEffect(() => {
+    if (marketId) {
+      fetchMarket();
+      fetchMessages()
+    }
+  }, [marketId]);
+
+  useEffect(() => {
+    if (market
+      && market.status === 'open'
+      && !isMessaged) {
+      setInput(market.question)
+      setTimeout(() => {
+        handleSend(market.question)
+      }, 1000)
+    }
+  }, [market])
+
+  useEffect(() => {
+    setTimeout(() => {
+      clearParams()
+    }, 1500)
+  }, [marketId])
+
+  const clearParams = () => {
+    navigate(location.pathname, { replace: true });
+  };
 
   const fetchMarket = async () => {
     if (!marketId) return;
@@ -101,22 +134,6 @@ export default function MarketDetail() {
       console.error(error);
     }
   }
-
-  useEffect(() => {
-    if (marketId) {
-      fetchMarket();
-      fetchMessages()
-    }
-  }, [marketId]);
-
-  useEffect(() => {
-    if (market && market.status === 'open') {
-      setInput(market.question)
-      setTimeout(() => {
-        handleSend(market.question)
-      }, 2000)
-    }
-  }, [market])
 
   const handleBetClick = (choice: 'yes' | 'no') => {
     if (!user) {

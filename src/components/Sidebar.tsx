@@ -103,7 +103,7 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   {
     id: 'market',
-    label: 'Market',
+    label: 'Predit Market',
     icon: ShoppingCart,
     requiresAuth: true,
   },
@@ -121,13 +121,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(isAdmin
     ? [
-        {
-          id: 'topic',
-          label: 'Topic',
-          icon: BookType,
-          requiresAuth: true,
-        },
-      ]
+      {
+        id: 'topic',
+        label: 'Topic',
+        icon: BookType,
+        requiresAuth: true,
+      },
+    ]
     : []),
 ];
 
@@ -296,11 +296,10 @@ export function Sidebar({
             >
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${
-                  isActiveParent
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                }`}
+                className={`w-full justify-start ${isActiveParent
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  }`}
                 onClick={handleItemClick}
               >
                 <Icon className="w-4 h-4 mr-3" />
@@ -326,11 +325,10 @@ export function Sidebar({
                         key={child.name}
                         variant="ghost"
                         size="sm"
-                        className={`w-full justify-start text-[12.5px] ${
-                          isActiveChild
-                            ? 'bg-accent text-accent-foreground'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                        }`}
+                        className={`w-full justify-start text-[12.5px] ${isActiveChild
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                          }`}
                         onClick={() => {
                           setSelectedAIAgent(child);
                           localStorage.setItem('deor-currentOracle', child.id);
@@ -634,11 +632,10 @@ export function Sidebar({
                 >
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${
-                      isActiveParent
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                    }`}
+                    className={`w-full justify-start ${isActiveParent
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                      }`}
                     onClick={handleItemClick}
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -668,11 +665,10 @@ export function Sidebar({
                             key={child.name}
                             variant="ghost"
                             size="sm"
-                            className={`w-full justify-start text-[12.5px] ${
-                              isActiveChild
-                                ? 'bg-accent text-accent-foreground'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                            }`}
+                            className={`w-full justify-start text-[12.5px] ${isActiveChild
+                              ? 'bg-accent text-accent-foreground'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                              }`}
                             onClick={() => {
                               setSelectedAIAgent(child);
                               localStorage.setItem(

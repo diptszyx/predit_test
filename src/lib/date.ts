@@ -33,3 +33,28 @@ export function formatTime(isoString: string) {
     timeZone: "Asia/Ho_Chi_Minh",
   });
 }
+
+export const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+export const formatDateTime = (timestamp: number) => {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+export const today = new Date().toLocaleDateString("en-US", {
+  month: "long",
+  day: "numeric",
+});

@@ -1,7 +1,9 @@
-import { Clock, Loader2, Share2, UsersRound } from 'lucide-react'
+import { Clock, Loader2, Share2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { ADMIN_EMAILS } from '../../constants/admin'
+import { arcLength } from '../../constants/ui'
+import { formatDate } from '../../lib/date'
 import { marketAdminServices } from '../../services/market-admin.service'
 import { Market } from '../../services/market.service'
 import useAuthStore from '../../store/auth.store'
@@ -67,6 +69,8 @@ const MarketInfoModal = ({ open, onOpenChange, market, handleBetClick, fetchMark
     market.totalBets > 0
       ? (market.noPool * 100) / (market.yesPool + market.noPool)
       : 50;
+  const progressLength = (yesPercent / 100) * arcLength;
+
   const isOpen = market.status === 'open';
   const isResolved = market.status === 'resolved';
   const canBet = isOpen && !market.isBetted && user;
@@ -112,56 +116,81 @@ const MarketInfoModal = ({ open, onOpenChange, market, handleBetClick, fetchMark
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle></DialogTitle>
         </DialogHeader>
         {/* Market Question */}
-        <div className="flex ">
-          <div className="w-14 h-14">
+        <div className='flex items-center justify-between'>
+          <Badge
+            variant={getStatusBadgeProps(market.status).variant}
+            className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(market.status).className
+              }`}
+          >
+            {market.status}
+          </Badge>
+        </div>
+        <div className="flex">
+          <div className="w-16 h-16">
             <ImageWithFallback
               src={market.image?.path || market.imageUrl || ''}
               alt={market.question}
               className="w-full h-full object-cover rounded"
             />
           </div>
-          <div className="flex-1 ml-4 gap-1">
-            <h1 className="text-lg font-bold mb-2">
-              {market.question}
-            </h1>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Badge
-                variant={getStatusBadgeProps(market.status).variant}
-                className={`capitalize text-xs ${getStatusBadgeProps(market.status).className
-                  }`}
-              >
-                {market.status}
-              </Badge>
-              {market.oracle && (
-                <span className="px-2 py-1 rounded-md bg-muted text-xs">
-                  Oracle: {market.oracle.name}
-                </span>
-              )}
-            </div>
-          </div>
-          <div>
-            {isOpen && (
-              <div className="">
-                <Badge className="bg-red-500 text-white hover:bg-red-600 text-xs px-3 py-1 animate-pulse">
-                  LIVE
-                </Badge>
+          <div className="flex flex-1 ml-4 gap-1 items-start justify-between">
+            <div>
+              <h1 className="text-base font-bold mb-1">
+                {market.question}
+              </h1>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                {market.outcome && (
+                  <Badge
+                    variant={getStatusBadgeProps(market.outcome).variant}
+                    className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(market.outcome).className
+                      }`}
+                  >
+                    Outcome: {market.outcome}
+                  </Badge>
+                )}
               </div>
-            )}
-            <div className='text-right'>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShareMarket}
-                className={`gap-2 ${isOpen && 'mt-2'}`}
-              >
-                <Share2 className="w-2 h-2" />
-                {/* Share */}
-              </Button>
+
+            </div>
+            <div className="flex flex-col items-center flex-shrink-0">
+              {/* Semicircle Progress Bar */}
+              <div className="relative w-24 h-12 mb-1">
+                <svg
+                  className="w-full h-full"
+                  viewBox="0 0 100 50"
+                  style={{ overflow: 'visible' }}
+                >
+                  {/* Background semicircle */}
+                  <path
+                    d="M 10 50 A 40 40 0 0 1 90 50"
+                    fill="none"
+                    stroke={`#4a5565`}
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
+                  {/* Progress semicircle */}
+                  <path
+                    d="M 10 50 A 40 40 0 0 1 90 50"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={`${progressLength} ${arcLength}`}
+                    style={{ transition: 'stroke-dasharray 0.3s ease' }}
+                  />
+                </svg>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 text-2xl font-bold text-gray-400 leading-none">
+                  {yesPercent.toFixed(0)}%
+                </div>
+              </div>
+              {market.status === 'open' ?
+                <div className="text-xs text-gray-400">chance</div> :
+                <div className="text-xs text-gray-400">Yes</div>
+              }
             </div>
           </div>
         </div>
@@ -177,52 +206,23 @@ const MarketInfoModal = ({ open, onOpenChange, market, handleBetClick, fetchMark
           </div>
         )}
 
-        {/* Pool Information */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="text-xs">
-              <p className="text-muted-foreground">Yes</p>
-              <p className="text-xl font-bold text-green-600">
-                {market.yesPool} XP ({yesPercent.toFixed(0)}%)
-              </p>
+        <p className="text-xs text-muted-foreground line-clamp-4   leading-relaxed">{market.description}</p>
+
+        <div className="flex items-center justify-between text-sm text-gray-500 gap-4">
+          <div className="flex items-center justify-between flex-1">
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              <span>{market.totalParticipants}</span>
             </div>
-            <div className="text-xs text-right">
-              <p className="text-muted-foreground">No</p>
-              <p className="text-xl font-bold text-red-600">
-                {market.noPool} XP ({noPercent.toFixed(0)}%)
-              </p>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{formatDate(market.closeAt)}</span>
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="w-full h-4 rounded-full overflow-hidden flex">
-            <div
-              className="bg-green-500 flex items-center justify-center text-xs text-white font-medium"
-              style={{ width: `${yesPercent}%` }}
-            >
-              {yesPercent > 10 && `${yesPercent.toFixed(0)}%`}
-            </div>
-            <div
-              className="bg-red-500 flex items-center justify-center text-xs text-white font-medium"
-              style={{ width: `${noPercent}%` }}
-            >
-              {noPercent > 10 && `${noPercent.toFixed(0)}%`}
-            </div>
-          </div>
+          <Share2 className="w-4 h-4" onClick={handleShareMarket} />
         </div>
 
-        {/* Total Participants */}
-        <div className="flex items-center gap-4 p-3 rounded-lg bg-muted">
-          <UsersRound className="w-5 h-5 text-muted-foreground" />
-          <div>
-            <p className="text-xs text-muted-foreground">
-              Participants
-            </p>
-            <p className="text-base font-semibold">
-              {market.totalBets}
-            </p>
-          </div>
-        </div>
         {isAdmin ? <>
           {/* Resolve Buttons */}
           {canResolve && (

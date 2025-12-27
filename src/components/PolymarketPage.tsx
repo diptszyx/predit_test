@@ -2,7 +2,6 @@ import { ChevronLeft, ChevronRight, CircleAlert, CircleFadingPlus, Clock, Messag
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ADMIN_EMAILS } from '../constants/admin';
 import { IS_MESSAGED } from '../constants/params';
 import { POLYMARKET_SORT_OPTIONS, PolymarketSortOptionId } from '../constants/search-options';
 import { arcLength } from '../constants/ui';
@@ -20,6 +19,7 @@ import {
   PolymarketTrade
 } from '../services/polymarket.service';
 import useAuthStore from '../store/auth.store';
+import { checkIsAdmin } from '../utils/isAdmin';
 import CreatePolymarketModal from './polymarket/CreatePolymarketModal';
 import TradeModal from './polymarket/TradeModal';
 import { Badge } from './ui/badge';
@@ -41,7 +41,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 const PolymarketPage = () => {
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = checkIsAdmin(user)
   const navigate = useNavigate();
 
   const [markets, setMarkets] = useState<PolymarketMarket[]>([]);
@@ -213,7 +213,7 @@ const PolymarketPage = () => {
   };
 
   const renderMarketCard = (market: PolymarketMarket) => {
-    const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
+    const yesToken = market.tokens.find((t) => t.outcome === 'Yes' || t.outcome === 'Up');
 
     const yesPrice = yesToken ? parseFloat(yesToken.price) * 100 : 50;
     const progressLength = (yesPrice / 100) * arcLength;

@@ -1,7 +1,7 @@
 import { CircleFadingPlus } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { ADMIN_EMAILS } from '../constants/admin';
 import useAuthStore from '../store/auth.store';
+import { checkIsAdmin } from '../utils/isAdmin';
 import CreateUpdateMarketModal from './CreateMarket';
 import MarketList from './market/MarketList';
 import MarketListAdmin from './market/MarketListAdmin';
@@ -9,8 +9,7 @@ import { Button } from './ui/button';
 
 const MarketPage = () => {
   const user = useAuthStore((state) => state.user);
-  const isAdmin =
-    user && user.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = checkIsAdmin(user)
   const [openCreate, setOpenCreate] = useState(false);
   const refetchRef = useRef<(() => void) | null>(null);
 

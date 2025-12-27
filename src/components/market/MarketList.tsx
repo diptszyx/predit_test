@@ -3,7 +3,6 @@ import { Clock, Share2, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ADMIN_EMAILS, ADMIN_IDS } from '../../constants/admin';
 import { IS_MESSAGED } from '../../constants/params';
 import { arcLength } from '../../constants/ui';
 import { formatDate } from '../../lib/date';
@@ -14,6 +13,7 @@ import {
   MarketBet,
 } from '../../services/market.service';
 import useAuthStore from '../../store/auth.store';
+import { checkIsAdmin } from '../../utils/isAdmin';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -56,7 +56,7 @@ export default function MarketList({
 }) {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
-  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = checkIsAdmin(user)
 
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(false);

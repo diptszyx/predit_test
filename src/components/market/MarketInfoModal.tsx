@@ -1,12 +1,12 @@
 import { Clock, Loader2, Share2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { ADMIN_EMAILS } from '../../constants/admin'
 import { arcLength } from '../../constants/ui'
 import { formatDate } from '../../lib/date'
 import { marketAdminServices } from '../../services/market-admin.service'
 import { Market } from '../../services/market.service'
 import useAuthStore from '../../store/auth.store'
+import { checkIsAdmin } from '../../utils/isAdmin'
 import { ImageWithFallback } from '../figma/ImageWithFallback'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -23,8 +23,7 @@ interface MarketInfoModal {
 
 const MarketInfoModal = ({ open, onOpenChange, market, handleBetClick, fetchMarket }: MarketInfoModal) => {
   const user = useAuthStore((state) => state.user);
-  const isAdmin =
-    user && user.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = checkIsAdmin(user)
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [resolving, setResolving] = useState(false);
 

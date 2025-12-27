@@ -1,12 +1,12 @@
 import { CircleAlert, Trash } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { ADMIN_EMAILS } from '../constants/admin';
 import { timeAgo } from '../lib/date';
 import { removeBrokenImages } from '../lib/htmlUtil';
 import { News, newsService } from '../services/news.service';
 import { Topic, topicServices } from '../services/topic-admin.service';
 import useAuthStore from '../store/auth.store';
+import { checkIsAdmin } from '../utils/isAdmin';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -22,7 +22,7 @@ const PAGE_SIZE = 12;
 
 export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = checkIsAdmin(user)
   const [articles, setArticles] = useState<News[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);

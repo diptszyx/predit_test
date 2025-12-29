@@ -1,3 +1,4 @@
+import { today } from "../lib/date";
 import { OracleEntity } from "../services/oracles.service";
 
 export const MAX_PREDICTIONS_PER_DAY = 30;
@@ -8,6 +9,11 @@ export const questionsByAIAgent: Record<string, string[][]> = {
       "What's your Bitcoin price prediction for 2026?",
       "Which altcoins are undervalued right now?",
       "Will we see another crypto winter?",
+    ],
+    [
+      `What’s the most bullish DeFi signal right now?`,
+      `Is DeFi still undervalued this cycle?`,
+      `DeFi Tokens Up or Down — ${today}, end of day`,
     ],
     [
       "How will regulation affect crypto markets?",
@@ -36,6 +42,11 @@ export const questionsByAIAgent: Record<string, string[][]> = {
       "How to avoid rug pulls?",
       "Best strategy for meme coin trading?",
     ],
+    [
+      `Are meme coins back this cycle?`,
+      `Which meme coin has the strongest momentum?`,
+      `Meme Coins Up or Down — ${today}, end of day`,
+    ],
   ],
   "crypto-crystal": [
     [
@@ -44,9 +55,19 @@ export const questionsByAIAgent: Record<string, string[][]> = {
       "Will we see another crypto winter?",
     ],
     [
+      `Which altcoin sector could outperform next?`,
+      `What altcoin trend is being overlooked?`,
+      `Altcoins Up or Down — ${today}, end of day`,
+    ],
+    [
       "How will regulation affect crypto markets?",
       "What's the next big trend in DeFi?",
       "Which Layer 2 solutions will dominate?",
+    ],
+    [
+      `Are NFTs preparing for a comeback?`,
+      `What’s misunderstood about the NFT market?`,
+      `NFT Market Up or Down — ${today}, end of day`,
     ],
     [
       "What do you think about Ethereum's future?",
@@ -144,26 +165,36 @@ export const questionsByAIAgent: Record<string, string[][]> = {
 export function generateSuggestedQuestions(
   aiAgentData: OracleEntity
 ): string[] {
-  const agentKeys = [aiAgentData.id, "crypto-crystal", "crypto"];
+  const agentKeys = [aiAgentData.id, "crypto-crystal", "crypto", "meme-coins"];
   const selectedAgentKey =
     agentKeys[Math.floor(Math.random() * agentKeys.length)];
 
   // Get questions for this AI agent or use defaults
   const aiAgentQuestions = questionsByAIAgent[selectedAgentKey] || [
     [
+      "Will SOL close green for the day?",
+      "Will BNB outperform BTC today?",
+      `Solana price on ${today}?`,
+    ],
+    [
       `What's your prediction for ${aiAgentData.type.split(" ")[0]}?`,
       `What trends do you see in ${aiAgentData.type.split(" ")[0]}?`,
       `What should I know about ${aiAgentData.type.split(" ")[0]}?`,
     ],
     [
-      `Any bold predictions for this year?`,
-      `What's your hot take?`,
-      `What are you most excited about?`,
+      `Any bold predictions for Bitcoin this week?`,
+      `What’s the biggest BTC risk right now?`,
+      `Ethereum Up or Down - ${today}, 11:55AM-12:00PM ET`,
     ],
     [
-      `What's the biggest risk right now?`,
-      `What's being overlooked?`,
-      `What should people pay attention to?`,
+      `Bitcoin Up or Down - ${today}, 11:45AM-12:00PM ET`,
+      `What altcoin trend is being overlooked?`,
+      `What’s the strongest ETH narrative right now?`,
+    ],
+    [
+      `What does funding say about market sentiment?`,
+      `Is leverage too high right now?`,
+      `Funding Rates Up or Down — ${today}, next hour`,
     ],
   ];
 

@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import useAuthStore from '../../store/auth.store';
-import { Button } from '../ui/button';
 import { User } from 'lucide-react';
-import { Input } from '../ui/input';
-import { inviteCodeService } from '../../services/invite-code.service';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { ADMIN_EMAILS } from '../../constants/admin';
+import { inviteCodeService } from '../../services/invite-code.service';
+import useAuthStore from '../../store/auth.store';
+import { checkIsAdmin } from '../../utils/isAdmin';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 
 interface Props {
   onOpenWalletDialog: () => void;
@@ -33,7 +33,7 @@ const SOCIAL_LINKS = [
 export default function NotHaveInviteCode({ onOpenWalletDialog }: Props) {
   const user = useAuthStore((state) => state.user);
   const refetchUser = useAuthStore((state) => state.fetchCurrentUser);
-  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = checkIsAdmin(user)
 
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);

@@ -1,9 +1,11 @@
 import clsx from 'clsx';
-import { Clock, Share2 } from 'lucide-react';
+import { Clock, Share2, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ADMIN_EMAILS } from '../../constants/admin';
+import { IS_MESSAGED } from '../../constants/params';
+import { arcLength } from '../../constants/ui';
+import { formatDate } from '../../lib/date';
 import {
   getListMarket,
   getMyBets,
@@ -11,6 +13,7 @@ import {
   MarketBet,
 } from '../../services/market.service';
 import useAuthStore from '../../store/auth.store';
+import { checkIsAdmin } from '../../utils/isAdmin';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -25,11 +28,13 @@ export type MarketChoice = 'yes' | 'no' | null;
 export interface MarketItemProps {
   item: Market;
   onSelect: (choice: MarketChoice, item: Market) => void;
+  isFromMarketPage?: boolean
 }
 
 export interface MyBetMarketsProps {
   item: Market;
   marketBet: MarketBet;
+  isFromMarketPage?: boolean
 }
 
 const statusOptions: {
@@ -51,7 +56,7 @@ export default function MarketList({
 }) {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
-  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = checkIsAdmin(user)
 
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(false);
@@ -290,13 +295,13 @@ export default function MarketList({
           <div
             className={clsx({
               'grid grid-cols-1 gap-3': !isFromMarketPage,
-              'relative grid grid-cols-2 md:grid-cols-4 gap-3':
+              'relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3':
                 isFromMarketPage,
             })}
           >
             {!isBetHistoryPage &&
               markets.map((item) => (
-                <MarketItem key={item.id} item={item} onSelect={handleSelect} />
+                <MarketItem key={item.id} item={item} onSelect={handleSelect} isFromMarketPage={isFromMarketPage} />
               ))}
 
             {myBetHistory.length > 0 &&
@@ -305,6 +310,7 @@ export default function MarketList({
                   key={item.id}
                   item={item.market}
                   marketBet={item}
+                  isFromMarketPage={isFromMarketPage}
                 />
               ))}
             {/* Infinite scroll trigger */}
@@ -381,7 +387,7 @@ const getTimeRemaining = (closeAt: string) => {
   return `${seconds}s`;
 };
 
-const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
+const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPage }) => {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
@@ -393,6 +399,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
     item.totalBets > 0
       ? (item.noPool * 100) / (item.yesPool + item.noPool)
       : 50;
+  const progressLength = (yesPercent / 100) * arcLength;
 
   const [timeLeft, setTimeLeft] = useState<string>('');
 
@@ -429,7 +436,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
   };
 
   const handleCardClick = () => {
-    navigate(`/market/${item.id}`);
+    navigate(`/market/${item.id}?${IS_MESSAGED}=${item.isMessaged}`);
   };
 
   return (
@@ -438,25 +445,65 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
       onClick={handleCardClick}
     >
       <CardContent className="px-2">
-        <div className="flex items-start justify-between gap-1 mt-3 mb-1">
-          <div className="w-10 h-10 rounded">
+        <div className="flex items-start justify-between gap-3 mt-3 mb-1">
+          <div className={`${isFromMarketPage ? 'w-16 h-16' : 'w-12 h-12'} rounded-md overflow-hidden`}>
             <ImageWithFallback
               src={item.image?.path || item.imageUrl || ''}
               alt={item.question}
               className="w-full h-full object-cover rounded"
             />
           </div>
-          <div className="flex items-center flex-1 min-h-10">
-            <h4 className="text-xs mb-1 line-clamp-2 leading-tight px-1 font-bold">
-              {item.question}
-            </h4>
-            <Badge
-              variant={getStatusBadgeProps(item.status).variant}
-              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
-                }`}
-            >
-              {item.status}
-            </Badge>
+          <div className="flex-1 flex items-start justify-between gap-2">
+            <div>
+              <h4 className={`${isFromMarketPage ? 'text-sm line-clamp-2' : 'text-xs line-clamp-3'} font-medium line-clamp-2 leading-snug`}>
+                {item.question}
+              </h4>
+              {item.outcome && (
+                <Badge
+                  variant={getStatusBadgeProps(item.outcome).variant}
+                  className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.outcome).className
+                    }`}
+                >
+                  Outcome: {item.outcome}
+                </Badge>
+              )}
+            </div>
+            <div className="flex flex-col items-center flex-shrink-0">
+              {/* Semicircle Progress Bar */}
+              <div className="relative w-24 h-12 mb-1">
+                <svg
+                  className="w-full h-full"
+                  viewBox="0 0 100 50"
+                  style={{ overflow: 'visible' }}
+                >
+                  {/* Background semicircle */}
+                  <path
+                    d="M 10 50 A 40 40 0 0 1 90 50"
+                    fill="none"
+                    stroke={`#4a5565`}
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
+                  {/* Progress semicircle */}
+                  <path
+                    d="M 10 50 A 40 40 0 0 1 90 50"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={`${progressLength} ${arcLength}`}
+                    style={{ transition: 'stroke-dasharray 0.3s ease' }}
+                  />
+                </svg>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 text-2xl font-bold text-gray-400 leading-none">
+                  {yesPercent.toFixed(0)}%
+                </div>
+              </div>
+              {item.status === 'open' ?
+                <div className="text-xs text-gray-400">chance</div> :
+                <div className="text-xs text-gray-400">Yes</div>
+              }
+            </div>
           </div>
         </div>
 
@@ -466,25 +513,10 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
           </p>
         )}
 
-        <div className="my-2">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs font-medium text-green-600">
-              {yesPercent.toFixed(0)}%
-            </p>
-            <p className="text-xs font-medium text-red-600">
-              {noPercent.toFixed(0)}%
-            </p>
-          </div>
-          <div className="w-full h-2 rounded-full overflow-hidden flex">
-            <div className="bg-green-500" style={{ width: `${yesPercent}%` }} />
-            <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
-          </div>
-        </div>
-
         {item.status === 'open' && (
-          <div className="flex items-center justify-between mt-2 gap-2">
+          <div className="grid grid-cols-2 gap-3 mt-6 mb-4">
             <Button
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs py-1"
+              className="h-10 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-lg font-semibold border border-green-600/30 rounded-lg"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onSelect('yes', item);
@@ -494,7 +526,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
               Yes
             </Button>
             <Button
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs py-1"
+              className="h-10 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-lg font-semibold border border-red-600/30 rounded-lg"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 onSelect('no', item);
@@ -506,64 +538,29 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect }) => {
           </div>
         )}
 
-        {item.status === 'open' && (
-          <div className="relative overflow-hidden h-10">
-            <div className="mt-4 flex items-center gap-1.5">
-              <Badge className="bg-red-500 text-white hover:bg-red-600 text-[10px] px-2 py-0 h-5 animate-pulse">
-                LIVE
-              </Badge>
+        <div className="flex items-center justify-between text-sm text-gray-500 gap-4 mt-5">
+          <div className="flex items-center justify-between flex-1">
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              <span>{item.totalParticipants}</span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShareMarket}
-              className="absolute top-2 right-2 bg-background/50 hover:bg-background/70 p-1 rounded-full"
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{formatDate(item.closeAt)}</span>
+            </div>
           </div>
-        )}
+
+          <Share2 className="w-4 h-4" onClick={handleShareMarket} />
+        </div>
       </CardContent>
     </Card>
   );
 };
 
-const getStatusBadge = (status: 'open' | 'end' | 'resolved' | 'cancelled') => {
-  const baseClasses =
-    'text-xs font-bold px-2 py-0.5 rounded-xl backdrop-blur-sm';
-  switch (status) {
-    case 'open':
-      return (
-        <Badge className={`${baseClasses} bg-green-500/50 text-green-800`}>
-          Open
-        </Badge>
-      );
-    case 'end':
-      return (
-        <Badge className={`${baseClasses} bg-yellow-500/50 text-yellow-800`}>
-          End
-        </Badge>
-      );
-    case 'resolved':
-      return (
-        <Badge className={`${baseClasses} bg-blue-500/50 text-blue-800`}>
-          Resolved
-        </Badge>
-      );
-    case 'cancelled':
-      return (
-        <Badge className={`${baseClasses} bg-red-500/50 text-red-800`}>
-          Cancelled
-        </Badge>
-      );
-    default:
-      return null;
-  }
-};
-
 const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
   item,
   marketBet,
+  isFromMarketPage
 }) => {
   const navigate = useNavigate();
   const totalPool = item.yesPool + item.noPool;
@@ -575,6 +572,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
     item.totalBets > 0
       ? (item.noPool * 100) / (totalPool)
       : 50;
+  const progressLength = (yesPercent / 100) * arcLength;
 
   const getPoolByPrediction = (prediction: string) => prediction === "yes" ? item.yesPool : item.noPool;
   const poolOfSide = getPoolByPrediction(marketBet.prediction);
@@ -611,7 +609,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
   };
 
   const handleCardClick = () => {
-    navigate(`/market/${item.id}`);
+    navigate(`/market/${item.id}?${IS_MESSAGED}=${item.isMessaged}`);
   };
 
   return (
@@ -628,97 +626,148 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
           >
             {item.status}
           </Badge>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleShareMarket}
-            className="bg-background/50 hover:bg-background/70 p-1 rounded-full"
-          >
-            <Share2 className="w-3 h-3" />
-          </Button>
+
+          {item.status === 'resolved' ? (
+            <>
+              <div
+                className={`border rounded-md px-1.5 py-0 h-5 text-[10px] capitalize font-semibold text-center text-white ${marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'
+                  } `}
+              >
+                {marketBet.status}
+              </div>
+            </>
+          ) : <>
+            <div className="border rounded-md px-1.5 py-0 bg-slate-500/60 shadow-xs text-white">
+              <p className="text-[10px]">
+                <span className={`font-semibold capitalize`}>
+                  {marketBet.prediction}
+                </span>
+              </p>
+            </div>
+          </>}
         </div>
-        <div className="flex items-start justify-between gap-1 mt-3 mb-1">
-          <div className="w-10 h-10 rounded">
+        <div className="flex items-start justify-between gap-3 mt-4 mb-1">
+          <div className={`${isFromMarketPage ? 'w-16 h-16' : 'w-12 h-12'} rounded-md overflow-hidden`}>
             <ImageWithFallback
               src={item.image?.path || item.imageUrl || ''}
               alt={item.question}
               className="w-full h-full object-cover rounded"
             />
           </div>
-          <div className="flex items-center flex-1 min-h-10">
-            <h4 className="text-xs mb-1 line-clamp-2 leading-tight px-1 font-bold">
-              {item.question}
-            </h4>
-            {item.outcome && (
-              <Badge
-                variant={getStatusBadgeProps(item.outcome).variant}
-                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.outcome).className
-                  }`}
-              >
-                {item.outcome}
-              </Badge>
-            )}
+          <div className="flex-1 flex items-start justify-between gap-2">
+            <div>
+              <h4 className={`${isFromMarketPage ? 'text-sm line-clamp-2' : 'text-xs line-clamp-3'} font-medium line-clamp-2 leading-snug`}>
+                {item.question}
+              </h4>
+              {item.outcome && (
+                <Badge
+                  variant={getStatusBadgeProps(item.outcome).variant}
+                  className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.outcome).className
+                    }`}
+                >
+                  Outcome: {item.outcome}
+                </Badge>
+              )}
+            </div>
+            <div className="flex flex-col items-center flex-shrink-0">
+              {/* Semicircle Progress Bar */}
+              <div className="relative w-24 h-12 mb-1">
+                <svg
+                  className="w-full h-full"
+                  viewBox="0 0 100 50"
+                  style={{ overflow: 'visible' }}
+                >
+                  {/* Background semicircle */}
+                  <path
+                    d="M 10 50 A 40 40 0 0 1 90 50"
+                    fill="none"
+                    stroke={`#4a5565`}
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
+                  {/* Progress semicircle */}
+                  <path
+                    d="M 10 50 A 40 40 0 0 1 90 50"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={`${progressLength} ${arcLength}`}
+                    style={{ transition: 'stroke-dasharray 0.3s ease' }}
+                  />
+                </svg>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 text-2xl font-bold text-gray-400 leading-none">
+                  {yesPercent.toFixed(0)}%
+                </div>
+              </div>
+              {item.status === 'open' &&
+                <div className="text-xs text-gray-400">chance</div>
+              }
+            </div>
           </div>
         </div>
 
         {item.status === 'open' && (
-          <div className="flex items-center gap-1 text-xs text-gray-600 my-2">
+          <div className="flex items-center gap-1 text-xs text-gray-500 my-2">
             <Clock className="w-3 h-3" />
             <span>Closes in {timeRemaining}</span>
           </div>
         )}
 
-        <div className="my-2">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs font-medium text-green-600">
-              {yesPercent.toFixed(0)}%
-            </p>
-            <p className="text-xs font-medium text-red-600">
-              {noPercent.toFixed(0)}%
-            </p>
+        <div className="grid grid-cols-2 gap-3 mt-6 mb-4">
+          <div
+            className="group h-10 flex items-center justify-center
+             bg-green-600/20 hover:bg-green-700/80
+             text-green-400 hover:text-white text-lg font-semibold
+             border border-green-600/30 rounded-lg
+             transition-all"
+          >
+            <span className="group-hover:hidden">Yes</span>
+            <span className="hidden group-hover:block">{yesPercent.toFixed(0)}%</span>
           </div>
-
-          <div className="w-full h-2 rounded-full overflow-hidden flex">
-            <div
-              className="bg-green-500"
-              style={{ width: `${yesPercent}%` }}
-            />
-            <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
+          <div
+            className="group h-10 flex items-center justify-center
+             bg-red-600/20 hover:bg-red-700/80
+             text-red-400 hover:text-white text-lg font-semibold
+             border border-red-600/30 rounded-lg
+             transition-all"
+          >
+            <span className="group-hover:hidden">No</span>
+            <span className="hidden group-hover:block">{noPercent.toFixed(0)}%</span>
           </div>
         </div>
 
-        {item.status === 'resolved' ? (
+        {item.status !== 'resolved' ? (
           <>
-            <div
-              className={`border rounded-md p-2 space-y-2 mt-5 mb-3 text-xs capitalize font-semibold text-center text-white ${marketBet.status === 'won' ? 'bg-green-500' : 'bg-red-500'
-                } `}
-            >
-              {marketBet.status}
-            </div>
-            {marketBet.status === 'won' ?
-              <p className='text-xs text-gray-500'>
-                Reward claimed: <span className={`font-semibold`}>{marketBet.payout}XP</span>
-              </p> : <p className='text-xs text-gray-500'>
-                Lost amount: <span className='font-semibold'>{marketBet.amount}XP</span>
-              </p>
-            }
-          </>
-        ) : (
-          <>
-            <div className="border rounded-md p-2 mt-5 mb-3 bg-slate-500 shadow-xs text-white">
-              <p className="text-xs">
-                Prediction:{' '}
-                <span className={`font-semibold capitalize`}>
-                  {marketBet.prediction}
-                </span>
-              </p>
-            </div>
             <p className='text-xs text-gray-500'>
               Your share: <span className={`font-semibold`}>{sharesRatioDisplay}%</span> — Potential reward:
               <span className={`font-semibold`}> {xpWillReceive}XP</span>
             </p>
           </>
-        )}
+        ) : <>
+          {marketBet.status === 'won' ?
+            <p className='text-xs text-gray-500'>
+              Reward claimed: <span className={`font-semibold`}>{marketBet.payout}XP</span>
+            </p> : <p className='text-xs text-gray-500'>
+              Lost amount: <span className='font-semibold'>{marketBet.amount}XP</span>
+            </p>
+          }
+        </>}
+
+        <div className="flex items-center justify-between text-sm text-gray-500 gap-4 mt-3">
+          <div className="flex items-center justify-between flex-1">
+            <div className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              <span>{item.totalParticipants}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{formatDate(item.closeAt)}</span>
+            </div>
+          </div>
+
+          <Share2 className="w-4 h-4" onClick={handleShareMarket} />
+        </div>
       </CardContent>
     </Card>
   );

@@ -57,9 +57,13 @@ export interface PlaceOrderDto {
   price?: number;
 }
 
+export type PolymarketApiSortBy = "volume" | "liquidity" | "endDate";
+export type PolymarketSortOrder = "asc" | "desc";
 export interface QueryMarketsParams {
   limit?: number;
   offset?: number;
+  sortBy?: PolymarketApiSortBy;
+  sortOrder?: PolymarketSortOrder;
 }
 
 export interface QueryTradesParams {
@@ -198,6 +202,20 @@ export const withdrawUsdc = async (amountUsdc: string, toAddress: string) => {
     amountUsdc,
     toAddress,
   });
+
+  return response.data;
+};
+
+export const createPolyMarketAdmin = async (marketId: string) => {
+  const response = await apiClient.post("/polymarket/admin/add", {
+    marketId,
+  });
+
+  return response.data;
+};
+
+export const deletePolymarketAdmin = async (marketId: string) => {
+  const response = await apiClient.delete(`polymarket/admin/${marketId}`);
 
   return response.data;
 };

@@ -39,7 +39,6 @@ import TopicPage from './components/topic/TopicPage';
 import UserProfileDialog from './components/UserProfileDialog';
 import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
-import { ADMIN_EMAILS } from './constants/admin';
 import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
 import XpHistoryPage from './pages/XpHistoryPage';
@@ -48,6 +47,7 @@ import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
 import { useWalletStore } from './store/wallet.store';
+import { checkIsAdmin } from './utils/isAdmin';
 
 export default function App() {
   return (
@@ -270,7 +270,7 @@ function AppContent() {
     const inviteCodeFromUrl = searchParams.get('invitecode');
     const oauthToken = searchParams.get('token');
     const isNewUser = searchParams.get('isNew') === 'true';
-    const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+    const isAdmin = checkIsAdmin(user)
 
     if (inviteCodeFromUrl && !isAdmin) {
       sessionStorage.setItem('pendingInviteCode', inviteCodeFromUrl);
@@ -415,7 +415,7 @@ function AppContent() {
     onToggleDarkMode: () => setDarkMode(!darkMode),
     selectedAIAgent: selectedAIAgent,
     setSelectedAIAgent: setSelectedAIAgent,
-    isAdmin: user && user.email ? ADMIN_EMAILS.includes(user.email) : false,
+    isAdmin: checkIsAdmin(user),
   };
 
   const commonDialogProps = (

@@ -23,6 +23,7 @@ export interface Market {
   isBetted: boolean;
   createdAt?: string;
   updatedAt?: string;
+  isMessaged?: boolean;
 }
 
 export interface MarketBet {

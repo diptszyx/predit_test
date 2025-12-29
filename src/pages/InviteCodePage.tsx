@@ -1,10 +1,12 @@
-import { Copy } from 'lucide-react';
+import { ethers } from 'ethers';
+import { Copy, Twitter } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import CreateInviteCodeModal from '../components/inviteCode/CreateInviteCodeModal';
 import CreateUserCodeModal from '../components/inviteCode/CreateUserCodeModal';
+import ShareCodesModal from '../components/inviteCode/ShareCodesModal';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import CreateInviteCodeModal from '../components/inviteCode/CreateInviteCodeModal';
-import ShareCodesModal from '../components/inviteCode/ShareCodesModal';
 import {
   Select,
   SelectContent,
@@ -20,18 +22,15 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
-import { ADMIN_EMAILS } from '../constants/admin';
 import { copyToClipboard } from '../lib/clipboardUtils';
 import { InviteCode, inviteCodeService } from '../services/invite-code.service';
 import useAuthStore from '../store/auth.store';
-import { toast } from 'sonner';
-import { Twitter } from 'lucide-react';
-import { ethers } from 'ethers';
+import { checkIsAdmin } from '../utils/isAdmin';
 
 export default function InviteCodePage() {
   const appUrl = `${import.meta.env.VITE_APP_URL}`;
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = checkIsAdmin(user)
 
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [loading, setLoading] = useState(true);

@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { ArrowLeft, ArrowRight, Crown, Loader2, MessageSquare } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
 import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
@@ -23,6 +23,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { ScrollArea } from '../ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
+import { IS_MESSAGED } from '../../constants/params';
 
 const tabs = [
   { id: 'chat', label: 'Chat' },
@@ -34,6 +35,11 @@ interface PolymarketChatPage {
 
 const PolymarketChatPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const urlParams = new URLSearchParams(window.location.search);
+  const params = urlParams.get(IS_MESSAGED);
+  const isMessaged = params === 'true' ? true : false
+
   const user = useAuthStore((state) => state.user)
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser)
   const [aiAgent, setAIAgent] = useState<OracleEntity>()
@@ -61,13 +67,23 @@ const PolymarketChatPage = () => {
   };
 
   useEffect(() => {
-    if (market) {
+    scrollToBottom()
+  }, [messages]);
+
+  useEffect(() => {
+    if (market && !isMessaged) {
       setInput(market.question)
       setTimeout(() => {
         handleSend(market.question)
-      }, 2000)
+      }, 1000)
     }
   }, [market])
+
+  useEffect(() => {
+    setTimeout(() => {
+      clearParams()
+    }, 1500)
+  }, [])
 
   useEffect(() => {
     if (!marketId || !chatId) return;
@@ -76,9 +92,9 @@ const PolymarketChatPage = () => {
     fetchMessages()
   }, [marketId, chatId]);
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages]);
+  const clearParams = () => {
+    navigate(location.pathname, { replace: true });
+  };
 
   const fetchMarket = async () => {
     if (!marketId) return;

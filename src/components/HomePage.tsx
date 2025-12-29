@@ -17,6 +17,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import TextareaAutosize from 'react-textarea-autosize';
+import { today } from '../lib/date';
 interface HomePageProps {
   onGetStarted: () => void;
   onExplorePredictions: (prompt?: string) => void;
@@ -72,19 +73,19 @@ const BENEFITS = [
 const SUGGESTED_PROMPTS = [
   {
     icon: TrendingUp,
-    text: 'What are the hottest themes in stocks to invest now?',
+    text: `Ethereum Up or Down - ${today}, 5:40AM-5:45AM ET`,
   },
   {
     icon: Users,
-    text: 'Top investors of Shopify (SHOP)?',
+    text: 'Will Bitmine announce that it holds more than 5M ETH before 2027?',
   },
   {
     icon: Sparkles,
-    text: "What's the latest in Bitcoin ETFs?",
+    text: "Rainbow FDV above $200M one day after launch?",
   },
   {
     icon: Brain,
-    text: 'Fundamental analysis of Bittensor (TAO)',
+    text: 'Will Based Polymarket revenue hit $2M before 2027?',
   },
 ];
 
@@ -318,7 +319,7 @@ export function HomePage({
                         <p
                           className="line-clamp-2"
                           style={{
-                            fontSize: 'clamp(14px, 1.5vw, 17px)',
+                            fontSize: '14px',
                             lineHeight: '1.4',
                             color: '#bfdbfe',
                             fontWeight: 400,

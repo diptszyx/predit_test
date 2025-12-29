@@ -1,23 +1,32 @@
-import { ChevronLeft, ChevronRight, Clock, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CircleAlert, CircleFadingPlus, Clock, MessageSquare, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { IS_MESSAGED } from '../constants/params';
+import { POLYMARKET_SORT_OPTIONS, PolymarketSortOptionId } from '../constants/search-options';
+import { arcLength } from '../constants/ui';
+import { formatDate, formatDateTime } from '../lib/date';
 import { createPolyMarketChat } from '../services/polymarket-message.service';
 import {
   cancelPolymarketOrder,
+  deletePolymarketAdmin,
   getMyPolymarketOrders,
   getPolymarkets,
   getPolymarketTrades,
   PaginationMeta,
   PolymarketMarket,
   PolymarketOrder,
-  PolymarketTrade,
+  PolymarketTrade
 } from '../services/polymarket.service';
 import useAuthStore from '../store/auth.store';
+import { checkIsAdmin } from '../utils/isAdmin';
+import CreatePolymarketModal from './polymarket/CreatePolymarketModal';
 import TradeModal from './polymarket/TradeModal';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Skeleton } from './ui/skeleton';
 import {
   Table,
@@ -28,9 +37,11 @@ import {
   TableRow,
 } from './ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 const PolymarketPage = () => {
   const user = useAuthStore((state) => state.user);
+  const isAdmin = checkIsAdmin(user)
   const navigate = useNavigate();
 
   const [markets, setMarkets] = useState<PolymarketMarket[]>([]);
@@ -58,6 +69,10 @@ const PolymarketPage = () => {
   );
   const itemsPerPage = 20;
 
+  const [sortOptionId, setSortOptionId] = useState<PolymarketSortOptionId | undefined>(undefined);
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [openCreate, setOpenCreate] = useState(false);
+
   useEffect(() => {
     if (activeTab === 'markets') {
       fetchMarkets();
@@ -66,13 +81,20 @@ const PolymarketPage = () => {
     } else if (activeTab === 'trades') {
       fetchTrades();
     }
-  }, [activeTab, currentPage]);
+  }, [activeTab, currentPage, sortOptionId]);
 
   const fetchMarkets = async () => {
     try {
       setLoading(true);
       const offset = (currentPage - 1) * itemsPerPage;
-      const response = await getPolymarkets({ limit: itemsPerPage, offset });
+      const sort = sortOptionId ? POLYMARKET_SORT_OPTIONS[sortOptionId] : undefined;
+
+      const response = await getPolymarkets({
+        limit: itemsPerPage,
+        offset,
+        ...(sort ? { sortBy: sort.sortBy, sortOrder: sort.sortOrder } : {}),
+      });
+
       setMarkets(response.data);
       setPaginationMeta(response.meta);
     } catch (err) {
@@ -132,13 +154,13 @@ const PolymarketPage = () => {
       try {
         const data = await createPolyMarketChat(market.id)
         if (data)
-          navigate(`/polymarket/${market.id}/chat/${data.id}`);
+          navigate(`/polymarket/${market.id}/chat/${data.id}?${IS_MESSAGED}=${market.isMessaged}`);
       } catch (error) {
         console.log('error', error)
         toast.error('Something wrong with chat polymarket')
       }
     } else {
-      navigate(`/polymarket/${market.id}/chat/${market.chatId}`);
+      navigate(`/polymarket/${market.id}/chat/${market.chatId}?${IS_MESSAGED}=${market.isMessaged}`);
     }
   };
 
@@ -162,6 +184,23 @@ const PolymarketPage = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!selectedMarket) return;
+
+    try {
+      setLoading(true);
+      await deletePolymarketAdmin(selectedMarket.id);
+      toast.success('Market deleted successfully');
+      fetchMarkets()
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to delete Polymarket market');
+    } finally {
+      setLoading(false);
+      setOpenDeleteConfirm(false)
+    }
+  }
+
   const formatVolume = (volume: string) => {
     const vol = parseFloat(volume);
     if (vol >= 1000000) {
@@ -173,34 +212,11 @@ const PolymarketPage = () => {
     return `$${vol.toFixed(0)}`;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const formatDateTime = (timestamp: number) => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   const renderMarketCard = (market: PolymarketMarket) => {
-    const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
+    const yesToken = market.tokens.find((t) => t.outcome === 'Yes' || t.outcome === 'Up');
 
     const yesPrice = yesToken ? parseFloat(yesToken.price) * 100 : 50;
-
-    // Calculate semicircle progress (0-180 degrees)
-    const progressDegree = (yesPrice / 100) * 180;
-
+    const progressLength = (yesPrice / 100) * arcLength;
     return (
       <Card
         key={market.id}
@@ -220,7 +236,7 @@ const PolymarketPage = () => {
               )}
             </div>
             <div className="flex-1 flex items-start justify-between gap-2">
-              <h4 className="text-sm font-medium text-white line-clamp-2 leading-snug">
+              <h4 className="text-sm font-medium line-clamp-2 leading-snug">
                 {market.question}
               </h4>
               <div className="flex flex-col items-center flex-shrink-0">
@@ -246,13 +262,13 @@ const PolymarketPage = () => {
                       stroke="#10b981"
                       strokeWidth="8"
                       strokeLinecap="round"
-                      strokeDasharray={`${progressDegree * 1.396} 251.2`}
+                      strokeDasharray={`${progressLength} ${arcLength}`}
                       style={{ transition: 'stroke-dasharray 0.3s ease' }}
                     />
                   </svg>
-                </div>
-                <div className="text-3xl font-bold text-gray-400 leading-none">
-                  {yesPrice.toFixed(0)}%
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 text-2xl font-bold text-gray-400 leading-none">
+                    {yesPrice.toFixed(0)}%
+                  </div>
                 </div>
                 <div className="text-xs text-gray-400">chance</div>
               </div>
@@ -260,7 +276,7 @@ const PolymarketPage = () => {
           </div>
 
           {/* Yes/No Buttons */}
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3 mt-6 mb-4">
             <Button
               className="h-10 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-lg font-semibold border border-green-600/30 rounded-lg"
               onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
@@ -294,13 +310,35 @@ const PolymarketPage = () => {
                 </div>
               )}
             </div>
-
-            <MessageSquare className='w-4 h-4 cursor-pointer'
-              onClick={(e: Event) => {
-                e.stopPropagation()
-                handleMarketChat(market)
-              }} />
+            <Tooltip>
+              <TooltipTrigger>
+                <MessageSquare className='w-4 h-4 cursor-pointer'
+                  onClick={(e: Event) => {
+                    e.stopPropagation()
+                    handleMarketChat(market)
+                  }} />
+              </TooltipTrigger>
+              <TooltipContent>
+                Chat with this market
+              </TooltipContent>
+            </Tooltip>
           </div>
+          {isAdmin &&
+            <div className='text-right mt-5'>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={(e: Event) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setOpenDeleteConfirm(true)
+                  setSelectedMarket(market)
+                }}
+              >
+                <Trash className="w-4 h-4" />
+              </Button>
+            </div>
+          }
         </CardContent>
       </Card>
     );
@@ -321,12 +359,42 @@ const PolymarketPage = () => {
           onValueChange={(v: string) => setActiveTab(v as any)}
           className="w-full"
         >
-          <TabsList>
-            <TabsTrigger value="markets">Markets</TabsTrigger>
-            {/* TODO: Add my orders tab if limit place order */}
-            {/* <TabsTrigger value="orders">My Orders</TabsTrigger> */}
-            <TabsTrigger value="trades">Trade History</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between">
+            <TabsList>
+              <TabsTrigger value="markets">Markets</TabsTrigger>
+              {/* TODO: Add my orders tab if limit place order */}
+              {/* <TabsTrigger value="orders">My Orders</TabsTrigger> */}
+              <TabsTrigger value="trades">Trade History</TabsTrigger>
+            </TabsList>
+
+            <div className="flex items-center gap-3">
+              <Select
+                value={sortOptionId ?? ''}
+                onValueChange={(v: string) => {
+                  setSortOptionId(v as PolymarketSortOptionId)
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-52">
+                  <SelectValue placeholder="Sort By" />
+                </SelectTrigger>
+
+                <SelectContent className="bg-background">
+                  {Object.entries(POLYMARKET_SORT_OPTIONS).map(([key, { label }]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {isAdmin &&
+                <Button variant="outline" onClick={() => setOpenCreate(true)}>
+                  <CircleFadingPlus />
+                </Button>
+              }
+            </div>
+          </div>
 
           {/* Markets Tab */}
           <TabsContent value="markets" className="mt-6 space-y-6">
@@ -567,6 +635,33 @@ const PolymarketPage = () => {
           />
         )}
       </div>
+      <Dialog open={openDeleteConfirm} onOpenChange={setOpenDeleteConfirm}>
+        <DialogContent className="max-w-2xl border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-foreground">
+              <CircleAlert className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+              Confirm Delete Market
+            </DialogTitle>
+            <DialogDescription className="space-y-4 text-sm leading-relaxed">
+              <p>
+                Are you sure you want to delete this market?
+              </p>
+              <p className="text-sm">
+                <span className="text-muted-foreground">Title:</span>{' '}
+                <span className="font-medium text-foreground">
+                  {selectedMarket?.question}
+                </span>
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setOpenDeleteConfirm(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => handleDelete()}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <CreatePolymarketModal open={openCreate} onOpenChange={setOpenCreate} onSuccess={fetchMarkets} />
     </div>
   );
 };

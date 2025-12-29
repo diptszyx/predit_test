@@ -5,19 +5,18 @@ import {
   CheckCircle2,
   ChevronRight,
   Loader2,
-  Sparkles,
   Target,
   TrendingUp,
   Users,
-  Zap,
+  Zap
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
+import TextareaAutosize from 'react-textarea-autosize';
+import { getRandomPromptHomepage, SUGGESTED_PROMPTS_HOMEPAGE } from '../constants/prediction';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import TextareaAutosize from 'react-textarea-autosize';
-import { today } from '../lib/date';
 interface HomePageProps {
   onGetStarted: () => void;
   onExplorePredictions: (prompt?: string) => void;
@@ -70,24 +69,7 @@ const BENEFITS = [
   'Track your prediction history and accuracy',
 ];
 
-const SUGGESTED_PROMPTS = [
-  {
-    icon: TrendingUp,
-    text: `Ethereum Up or Down - ${today}, 5:40AM-5:45AM ET`,
-  },
-  {
-    icon: Users,
-    text: 'Will Bitmine announce that it holds more than 5M ETH before 2027?',
-  },
-  {
-    icon: Sparkles,
-    text: "Rainbow FDV above $200M one day after launch?",
-  },
-  {
-    icon: Brain,
-    text: 'Will Based Polymarket revenue hit $2M before 2027?',
-  },
-];
+const SUGGESTED_PROMPTS = getRandomPromptHomepage(SUGGESTED_PROMPTS_HOMEPAGE)
 
 export function HomePage({
   onGetStarted,
@@ -204,7 +186,7 @@ export function HomePage({
                 role="search"
                 className="mx-auto"
                 style={{
-                  maxWidth: '980px',
+                  maxWidth: '1000px',
                   width: '100%',
                   paddingTop: '8px',
                 }}
@@ -274,11 +256,11 @@ export function HomePage({
               <div
                 className="mx-auto"
                 style={{
-                  maxWidth: '980px',
+                  maxWidth: '1000px',
                   paddingTop: '8px',
                 }}
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {SUGGESTED_PROMPTS.map((prompt, index) => (
                     <button
                       key={index}
@@ -286,7 +268,7 @@ export function HomePage({
                       className="group text-left transition-all duration-150 ease-out cursor-pointer"
                       style={{
                         borderRadius: '14px',
-                        padding: '20px',
+                        padding: '15px',
                         background: 'rgba(15, 23, 27, 0.7)',
                         backdropFilter: 'blur(8px)',
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',

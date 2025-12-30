@@ -84,7 +84,7 @@ interface MarkdownProps {
 const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
   const handleCopy = (textCode: string) => {
     copy(textCode);
-    toast.success('Copied to clipboard!');
+    toast.success('Code copied to clipboard!');
   };
 
   // Extract chart symbols and split content
@@ -138,6 +138,7 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
   };
 
   const markdownComponents = {
+    // Code
     code({ node, className, children, ...props }: any) {
       const match = /language-(\w+)/.exec(className || '');
 
@@ -145,6 +146,7 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
         <div className="w-72 md:w-custom-128 overflow-x-auto my-3 mx-auto">
           <div className="flex w-full justify-end bg-white/5 p-2 rounded-t-md">
             <button
+              className='cursor-pointer'
               onClick={() => handleCopy(String(children).replace(/\n$/, ''))}
             >
               <Clipboard className="text-white/20 w-4 h-4" />
@@ -166,14 +168,56 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
         </code>
       );
     },
-    h3: ({ node, ...props }: any) => (
-      <h3 className="text-xl">{props.children}</h3>
+    pre: ({ node, ...props }: any) => (
+      <pre className="my-3 p-3 rounded overflow-x-auto bg-neutral-900" {...props} />
     ),
+
+    // Headings
+    h1: ({ node, ...props }: any) => (
+      <h1 className="text-2xl font-semibold mt-4 mb-2" {...props} />
+    ),
+    h2: ({ node, ...props }: any) => (
+      <h2 className="text-xl font-semibold mt-4 mb-2" {...props} />
+    ),
+    h3: ({ node, ...props }: any) => (
+      <h3 className="text-lg font-semibold mt-3 mb-2" {...props} />
+    ),
+    h4: ({ node, ...props }: any) => (
+      <h4 className="text-base font-semibold mt-3 mb-1" {...props} />
+    ),
+    h5: ({ node, ...props }: any) => (
+      <h5 className="text-sm font-semibold mt-2 mb-1" {...props} />
+    ),
+    h6: ({ node, ...props }: any) => (
+      <h6 className="text-sm font-medium mt-2 mb-1" {...props} />
+    ),
+
+    // Text
+    p: ({ node, ...props }: any) => (
+      <p className="leading-7 my-2" {...props} />
+    ),
+    strong: ({ node, ...props }: any) => (
+      <strong className="font-semibold" {...props} />
+    ),
+    em: ({ node, ...props }: any) => <em className="italic" {...props} />,
+    del: ({ node, ...props }: any) => (
+      <del className="line-through opacity-80" {...props} />
+    ),
+    br: ({ node, ...props }: any) => <br {...props} />,
+
+    // Links
     a: ({ node, ...props }: any) => (
-      <a href={props.href} target="_blank" className="text-blue-400">
+      <a
+        href={props.href}
+        target="_blank"
+        rel="noreferrer"
+        className="text-blue-400 hover:underline underline-offset-2"
+      >
         {props.children}
       </a>
     ),
+
+    // Table
     table: ({ node, ...props }: any) => (
       <div className="w-72 md:w-custom-128 overflow-x-auto my-3 mx-auto">
         <table
@@ -201,17 +245,29 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
         {...props}
       />
     ),
+
+    // Lists
     ol: ({ node, ...props }: any) => (
-      <ol className="list-decimal ml-4">{props.children}</ol>
+      <ol className="list-decimal ml-5 my-2" {...props} />
     ),
     ul: ({ node, ...props }: any) => (
-      <ul className="list-disc ml-4">{props.children}</ul>
+      <ul className="list-disc ml-5 my-2" {...props} />
     ),
-    li: ({ node, ...props }: any) => <li className="my-2">{props.children}</li>,
+    li: ({ node, ...props }: any) => (
+      <li className="my-1" {...props} />
+    ),
+
+    // Blockquote
     blockquote: ({ node, ...props }: any) => (
-      <blockquote className="pl-3 border-l-4 border-neutral-500">
-        {props.children}
-      </blockquote>
+      <blockquote
+        className="pl-3 border-l-4 border-neutral-500 my-2 opacity-90"
+        {...props}
+      />
+    ),
+
+    // Horizontal rule
+    hr: ({ node, ...props }: any) => (
+      <hr className="my-4 border-neutral-700" {...props} />
     ),
   };
 

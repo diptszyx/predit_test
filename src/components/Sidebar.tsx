@@ -50,7 +50,7 @@ interface SidebarProps {
   shortenAddress: (address: string) => string;
   onSetPendingNavigation: (page: string | null) => void;
   onOpenSettings: () => void;
-  onOpenXPHistory: () => void
+  onOpenXPHistory: () => void;
   onOpenXPInfo?: () => void;
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
@@ -109,13 +109,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(import.meta.env.VITE_POLYMARKET_ENABLE === 'true'
     ? [
-      {
-        id: 'polymarket',
-        label: 'Polymarket',
-        icon: LineChart,
-        requiresAuth: true,
-      },
-    ]
+        {
+          id: 'polymarket',
+          label: 'Polymarket',
+          icon: LineChart,
+          requiresAuth: true,
+        },
+      ]
     : []),
   {
     id: 'invites',
@@ -125,13 +125,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(isAdmin
     ? [
-      {
-        id: 'topic',
-        label: 'Topic',
-        icon: BookType,
-        requiresAuth: true,
-      },
-    ]
+        {
+          id: 'topic',
+          label: 'Topic',
+          icon: BookType,
+          requiresAuth: true,
+        },
+      ]
     : []),
 ];
 
@@ -170,6 +170,7 @@ export function Sidebar({
   setSelectedAIAgent,
   isAdmin = false,
 }: SidebarProps) {
+  const polymarketEnabled = import.meta.env.VITE_POLYMARKET_ENABLE === 'true';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(
     currentPage === 'chat' ? 'chat' : null
@@ -294,16 +295,14 @@ export function Sidebar({
           };
 
           return (
-            <div
-              key={item.id}
-              className="w-full"
-            >
+            <div key={item.id} className="w-full">
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${isActiveParent
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
+                className={`w-full justify-start ${
+                  isActiveParent
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                }`}
                 onClick={handleItemClick}
               >
                 <Icon className="w-4 h-4 mr-3" />
@@ -329,10 +328,11 @@ export function Sidebar({
                         key={child.name}
                         variant="ghost"
                         size="sm"
-                        className={`w-full justify-start text-[12.5px] ${isActiveChild
-                          ? 'bg-accent text-accent-foreground'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                          }`}
+                        className={`w-full justify-start text-[12.5px] ${
+                          isActiveChild
+                            ? 'bg-accent text-accent-foreground'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                        }`}
                         onClick={() => {
                           setSelectedAIAgent(child);
                           localStorage.setItem('deor-currentOracle', child.id);
@@ -502,8 +502,7 @@ export function Sidebar({
                   </Badge>
                 )}
               </div>
-
-              <Balance />
+              {polymarketEnabled && <Balance />}
             </div>
 
             {/* Action Buttons */}
@@ -538,10 +537,7 @@ export function Sidebar({
             </div>
           </div>
         ) : (
-          <Button
-            className="w-full"
-            onClick={onOpenWalletDialog}
-          >
+          <Button className="w-full" onClick={onOpenWalletDialog}>
             <User className="w-4 h-4 mr-2" />
             Sign In
           </Button>
@@ -630,16 +626,14 @@ export function Sidebar({
               };
 
               return (
-                <div
-                  key={item.id}
-                  className="w-full"
-                >
+                <div key={item.id} className="w-full">
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${isActiveParent
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                      }`}
+                    className={`w-full justify-start ${
+                      isActiveParent
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
                     onClick={handleItemClick}
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -669,10 +663,11 @@ export function Sidebar({
                             key={child.name}
                             variant="ghost"
                             size="sm"
-                            className={`w-full justify-start text-[12.5px] ${isActiveChild
-                              ? 'bg-accent text-accent-foreground'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                              }`}
+                            className={`w-full justify-start text-[12.5px] ${
+                              isActiveChild
+                                ? 'bg-accent text-accent-foreground'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                            }`}
                             onClick={() => {
                               setSelectedAIAgent(child);
                               localStorage.setItem(
@@ -840,7 +835,7 @@ export function Sidebar({
                     )}
                   </div>
 
-                  <Balance />
+                  {polymarketEnabled && <Balance />}
                 </div>
 
                 {/* Action Buttons */}
@@ -875,10 +870,7 @@ export function Sidebar({
                 </div>
               </div>
             ) : (
-              <Button
-                className="w-full"
-                onClick={onOpenWalletDialog}
-              >
+              <Button className="w-full" onClick={onOpenWalletDialog}>
                 <User className="w-4 h-4 mr-2" />
                 Sign In
               </Button>

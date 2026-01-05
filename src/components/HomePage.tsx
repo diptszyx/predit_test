@@ -5,18 +5,18 @@ import {
   CheckCircle2,
   ChevronRight,
   Loader2,
-  Sparkles,
   Target,
   TrendingUp,
   Users,
-  Zap,
+  Zap
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
+import TextareaAutosize from 'react-textarea-autosize';
+import { getRandomPromptHomepage, SUGGESTED_PROMPTS_HOMEPAGE } from '../constants/prediction';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-
 interface HomePageProps {
   onGetStarted: () => void;
   onExplorePredictions: (prompt?: string) => void;
@@ -69,24 +69,7 @@ const BENEFITS = [
   'Track your prediction history and accuracy',
 ];
 
-const SUGGESTED_PROMPTS = [
-  {
-    icon: TrendingUp,
-    text: 'What are the hottest themes in stocks to invest now?',
-  },
-  {
-    icon: Users,
-    text: 'Top investors of Shopify (SHOP)?',
-  },
-  {
-    icon: Sparkles,
-    text: "What's the latest in Bitcoin ETFs?",
-  },
-  {
-    icon: Brain,
-    text: 'Fundamental analysis of Bittensor (TAO)',
-  },
-];
+const SUGGESTED_PROMPTS = getRandomPromptHomepage(SUGGESTED_PROMPTS_HOMEPAGE)
 
 export function HomePage({
   onGetStarted,
@@ -107,6 +90,13 @@ export function HomePage({
       setIsLoading(false);
       onExplorePredictions(query);
     }, 800);
+  };
+
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as any);
+    }
   };
 
   const handlePromptClick = (promptText: string) => {
@@ -196,13 +186,13 @@ export function HomePage({
                 role="search"
                 className="mx-auto"
                 style={{
-                  maxWidth: '980px',
+                  maxWidth: '1000px',
                   width: '100%',
                   paddingTop: '8px',
                 }}
               >
                 <div
-                  className={`relative transition-all duration-150 ease-out ${isFocused ? 'scale-[1.01]' : ''
+                  className={`relative transition-all duration-150 ease-out flex items-center ${isFocused ? 'scale-[1.01]' : ''
                     }`}
                   style={{
                     height: 'clamp(56px, 8vw, 72px)',
@@ -215,20 +205,23 @@ export function HomePage({
                     padding: '0 20px',
                   }}
                 >
-                  <input
+                  <TextareaAutosize
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value.slice(0, 500))}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
+                    onKeyDown={handleTextareaKeyDown}
                     placeholder="Ask a question to get started…"
                     disabled={isLoading}
                     aria-label="Ask a market question"
-                    className="w-full h-full bg-transparent border-0 outline-none pr-16 text-[16px]"
+                    className="w-full h-full bg-transparent border-0 outline-none pr-16 text-[16px] scrollbar-hide resize-none"
                     style={{
                       color: '#ccc',
                       caretColor: '#3b82f6',
                     }}
+                    maxRows={2}
+                    minRows={1}
                   />
 
                   <button
@@ -263,11 +256,11 @@ export function HomePage({
               <div
                 className="mx-auto"
                 style={{
-                  maxWidth: '980px',
+                  maxWidth: '1000px',
                   paddingTop: '8px',
                 }}
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {SUGGESTED_PROMPTS.map((prompt, index) => (
                     <button
                       key={index}
@@ -275,7 +268,7 @@ export function HomePage({
                       className="group text-left transition-all duration-150 ease-out cursor-pointer"
                       style={{
                         borderRadius: '14px',
-                        padding: '20px',
+                        padding: '15px',
                         background: 'rgba(15, 23, 27, 0.7)',
                         backdropFilter: 'blur(8px)',
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
@@ -308,7 +301,7 @@ export function HomePage({
                         <p
                           className="line-clamp-2"
                           style={{
-                            fontSize: 'clamp(14px, 1.5vw, 17px)',
+                            fontSize: '14px',
                             lineHeight: '1.4',
                             color: '#bfdbfe',
                             fontWeight: 400,

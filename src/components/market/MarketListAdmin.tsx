@@ -1,7 +1,9 @@
-import { CircleAlert, Clock, Loader2, Pen, Share2, Trash2 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { CircleAlert, Clock, Loader2, Pen, Share2, Trash2, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { IS_MESSAGED } from '../../constants/params';
+import { arcLength } from '../../constants/ui';
 import { marketAdminServices } from '../../services/market-admin.service';
 import { Market } from '../../services/market.service';
 import CreateUpdateMarketModal from '../CreateMarket';
@@ -27,6 +29,7 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { Skeleton } from '../ui/skeleton';
+import { formatDate } from '../../lib/date';
 
 export interface MarketItemProps {
   item: Market;
@@ -89,7 +92,7 @@ export default function MarketListAdmin({
   }, [onRefetchReady]);
 
   const handleMarketClick = (item: Market) => {
-    navigate(`/market/${item.id}`);
+    navigate(`/market/${item.id}?${IS_MESSAGED}=${item.isMessaged}`);
   };
 
   const handleRefetch = () => {
@@ -140,7 +143,7 @@ export default function MarketListAdmin({
       {error && <p className="text-red-500 text-center py-2">{error}</p>}
 
       {/* Markets Grid */}
-      <div className="relative grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {fetching && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
             <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
@@ -247,6 +250,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
     item.totalBets > 0
       ? (item.noPool * 100) / (item.yesPool + item.noPool)
       : 50;
+  const progressLength = (yesPercent / 100) * arcLength;
 
   const [openConfirmCancel, setOpenConfirmCancel] = useState(false);
   const [openMarketResult, setOpenMarketResult] = useState(false);
@@ -430,44 +434,71 @@ const MarketItem: React.FC<MarketItemProps> = ({
         onClick={() => onClick(item)}
       >
         <CardContent className="p-2">
-          <div className="flex items-start justify-between gap-1 mb-1">
-            <div className="w-10 h-10 rounded">
+          <div className='flex items-center justify-between'>
+            <Badge
+              variant={getStatusBadgeProps(item.status).variant}
+              className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
+                }`}
+            >
+              {item.status}
+            </Badge>
+          </div>
+          <div className="flex items-start justify-between gap-3 mt-3 mb-1">
+            <div className="w-16 h-16 rounded-md overflow-hidden">
               <ImageWithFallback
                 src={item.image?.path || item.imageUrl || ''}
                 alt={item.question}
                 className="w-full h-full object-cover rounded"
               />
             </div>
-            <div className="flex items-center flex-1 min-h-10">
-              <h4 className="text-xs line-clamp-2 leading-tight flex-1 font-bold px-1">
-                {item.question}
-              </h4>
-              <Badge
-                variant={getStatusBadgeProps(item.status).variant}
-                className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.status).className
-                  }`}
-              >
-                {item.status}
-              </Badge>
-            </div>
-          </div>
+            <div className="flex flex-1 min-h-10 justify-between">
+              <div>
+                <h4 className="text-[13px] line-clamp-2 leading-tight flex-1 font-bold px-1 mb-2">
+                  {item.question}
+                </h4>
+                {item.outcome && (
+                  <Badge
+                    variant={getStatusBadgeProps(item.outcome).variant}
+                    className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(item.outcome).className
+                      }`}
+                  >
+                    Outcome: {item.outcome}
+                  </Badge>
+                )}
+              </div>
 
-          <div className="my-2">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium text-green-600">
-                {yesPercent.toFixed(0)}%
-              </p>
-              <p className="text-xs font-medium text-red-600">
-                {noPercent.toFixed(0)}%
-              </p>
-            </div>
-
-            <div className="w-full h-2 rounded-full overflow-hidden flex">
-              <div
-                className="bg-green-500"
-                style={{ width: `${yesPercent}%` }}
-              />
-              <div className="bg-red-500" style={{ width: `${noPercent}%` }} />
+              <div className="flex flex-col items-center flex-shrink-0">
+                {/* Semicircle Progress Bar */}
+                <div className="relative w-24 h-12 mb-1">
+                  <svg
+                    className="w-full h-full"
+                    viewBox="0 0 100 50"
+                    style={{ overflow: 'visible' }}
+                  >
+                    {/* Background semicircle */}
+                    <path
+                      d="M 10 50 A 40 40 0 0 1 90 50"
+                      fill="none"
+                      stroke={`#4a5565`}
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                    />
+                    {/* Progress semicircle */}
+                    <path
+                      d="M 10 50 A 40 40 0 0 1 90 50"
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray={`${progressLength} ${arcLength}`}
+                      style={{ transition: 'stroke-dasharray 0.3s ease' }}
+                    />
+                  </svg>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 text-2xl font-bold text-gray-400 leading-none">
+                    {yesPercent.toFixed(0)}%
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -478,7 +509,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
             </div>
           )}
 
-          {item.status === 'open' && (
+          {(item.status === 'open' || item.status === 'end') && (
             <div className="flex gap-2 mt-4">
               <Button
                 variant="outline"
@@ -505,37 +536,36 @@ const MarketItem: React.FC<MarketItemProps> = ({
             </div>
           )}
 
-          <div className='flex items-center gap-2 mt-4 '>
-            {item.status === 'open' && (
-              <div className="relative overflow-hidden h-10 flex items-center  flex-1 justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Badge className="bg-red-500 text-white hover:bg-red-600 text-[10px] px-2 py-0 h-5 animate-pulse">
-                    LIVE
-                  </Badge>
+          <div className='flex items-center gap-2 mt-4 text-xs text-gray-500'>
+            <div className='flex items-center justify-between flex-1'>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  <span>{item.totalParticipants}</span>
                 </div>
-                <div className="flex gap-2 items-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleShareMarket}
-                    className="bg-background/50 hover:bg-accent/50 p-1 rounded-full"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e: Event) => {
-                      e.stopPropagation();
-                      setOpenUpdateMarket(true);
-                    }}
-                    className="bg-background/white hover:bg-accent/50 p-1 rounded-full"
-                  >
-                    <Pen className="w-4 h-4" />
-                  </Button>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  <span>{formatDate(item.closeAt)}</span>
                 </div>
               </div>
-            )}
+              {item.status === 'open' && (
+                <div className="relative overflow-hidden h-10 flex items-center">
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e: Event) => {
+                        e.stopPropagation();
+                        setOpenUpdateMarket(true);
+                      }}
+                      className="bg-background/white hover:bg-accent/50 p-1 rounded-full"
+                    >
+                      <Pen className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -546,6 +576,14 @@ const MarketItem: React.FC<MarketItemProps> = ({
               className="bg-background/white hover:bg-accent/50 p-1 rounded-full ml-auto"
             >
               <Trash2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShareMarket}
+              className="bg-background/50 hover:bg-accent/50 p-1 rounded-full"
+            >
+              <Share2 className="w-4 h-4" />
             </Button>
           </div>
         </CardContent>

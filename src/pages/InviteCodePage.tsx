@@ -1,10 +1,12 @@
-import { Copy } from 'lucide-react';
+import { ethers } from 'ethers';
+import { Copy, Twitter } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import CreateInviteCodeModal from '../components/inviteCode/CreateInviteCodeModal';
 import CreateUserCodeModal from '../components/inviteCode/CreateUserCodeModal';
+import ShareCodesModal from '../components/inviteCode/ShareCodesModal';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import CreateInviteCodeModal from '../components/inviteCode/CreateInviteCodeModal';
-import ShareCodesModal from '../components/inviteCode/ShareCodesModal';
 import {
   Select,
   SelectContent,
@@ -20,17 +22,15 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
-import { ADMIN_EMAILS } from '../constants/admin';
 import { copyToClipboard } from '../lib/clipboardUtils';
 import { InviteCode, inviteCodeService } from '../services/invite-code.service';
 import useAuthStore from '../store/auth.store';
-import { toast } from 'sonner';
-import { Twitter } from 'lucide-react';
+import { checkIsAdmin } from '../utils/isAdmin';
 
 export default function InviteCodePage() {
   const appUrl = `${import.meta.env.VITE_APP_URL}`;
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+  const isAdmin = checkIsAdmin(user)
 
   const [codes, setCodes] = useState<InviteCode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,16 +45,6 @@ export default function InviteCodePage() {
   const pageSize = 10;
 
   const [total, setTotal] = useState(0);
-
-  const [userWallet, setUserWallet] = useState('');
-
-  const params = {
-    search,
-    status: status === 'all' ? undefined : status,
-    page,
-    limit: pageSize,
-    appWallet: userWallet,
-  };
 
   const shareOnX = (codesToShare: string[]) => {
     // Format codes: 4 codes per line
@@ -91,9 +81,19 @@ ${appUrl}
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
+      const isWalletSearch = ethers.isAddress(search) && isAdmin;
+
+      const requestParams = {
+        page,
+        limit: pageSize,
+        status: status === 'all' ? undefined : status,
+        search: isWalletSearch ? '' : String(search).trim(),
+        appWallet: isWalletSearch ? search.trim() : '',
+      };
+
       const res = await (isAdmin
-        ? inviteCodeService.getAll(params)
-        : inviteCodeService.getMyCode(params));
+        ? inviteCodeService.getAll(requestParams)
+        : inviteCodeService.getMyCode(requestParams));
       setCodes(res.data || []);
       setTotal(res.meta.total || 0);
     } catch (err) {
@@ -101,7 +101,7 @@ ${appUrl}
     } finally {
       setLoading(false);
     }
-  }, [search, status, page, userWallet]);
+  }, [search, status, page]);
 
   useEffect(() => {
     refetch();
@@ -129,7 +129,7 @@ ${appUrl}
         `Created ${count} invite code${count > 1 ? 's' : ''} successfully!`
       );
     } catch (err: any) {
-      const message = err?.response?.data?.message || 'Something when wrong';
+      const message = err?.response?.data?.errors?.prefix || 'Something when wrong';
       throw new Error(message);
     }
   };
@@ -153,14 +153,14 @@ ${appUrl}
     }
   };
 
-  const handleCopyToClipboard = async (text?: string) => {
+  const handleCopyToClipboard = async (text?: string, copyFrom = 'Code') => {
     if (!text) return;
     const success = await copyToClipboard(text);
     if (success) {
-      toast.success('Referral link copied to clipboard!');
+      toast.success(`${copyFrom} copied to clipboard!`);
     } else {
       toast.error('Unable to copy automatically', {
-        description: 'Please copy the link manually',
+        description: `Please copy the ${copyFrom} manually`,
       });
     }
   };
@@ -178,7 +178,10 @@ ${appUrl}
 
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-1">
-          <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+          <Select
+            value={status}
+            onValueChange={(v: any) => setStatus(v)}
+          >
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Filter status" />
             </SelectTrigger>
@@ -190,24 +193,14 @@ ${appUrl}
           </Select>
 
           <Input
-            placeholder="Search by code..."
+            placeholder={`Search by code${isAdmin ? ', wallet address' : ''
+              }...`}
             className="flex-1"
             value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setSearch(e.target.value)
-            }
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setSearch(e.target.value);
+            }}
           />
-
-          {isAdmin && (
-            <Input
-              placeholder="Search by user's wallet address..."
-              className="flex-1"
-              value={userWallet}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setUserWallet(e.target.value)
-              }
-            />
-          )}
         </div>
 
         {isAdmin ? (
@@ -304,10 +297,12 @@ ${appUrl}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center">
-                        <span className="truncate max-w-xs">{referralLink}</span>
+                        <span className="truncate max-w-xs">
+                          {referralLink}
+                        </span>
                         <Copy
                           className="h-3 w-3 ml-3 cursor-pointer text-muted-foreground hover:text-foreground flex-shrink-0"
-                          onClick={() => handleCopyToClipboard(referralLink)}
+                          onClick={() => handleCopyToClipboard(referralLink, "Referral link")}
                         />
                       </div>
                     </TableCell>

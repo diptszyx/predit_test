@@ -20,12 +20,15 @@ import { useXP } from './lib/useXP';
 import { AIAgentCard } from './components/AIAgentCard';
 import { ArticleDetailPage } from './components/ArticleDetailPage';
 import { ChatPage } from './components/ChatPage';
+import InviteCodeGuard from './components/guard/InviteCodeGuard';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
 import MarketDetail from './components/market/MarketDetail';
-import MarketDetailAdmin from './components/market/MarketDetailAdmin';
 import MarketPage from './components/MarketPage';
+import PolymarketChatPage from './components/polymarket/PolymarketChatPage';
+import PolymarketDetail from './components/polymarket/PolymarketDetail';
+import PolymarketPage from './components/PolymarketPage';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { SettingsPage } from './components/SettingsPage';
 import { SharedPredictionPage } from './components/SharedPredictionPage';
@@ -36,14 +39,15 @@ import TopicPage from './components/topic/TopicPage';
 import UserProfileDialog from './components/UserProfileDialog';
 import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
-import { ADMIN_EMAILS, ADMIN_IDS } from './constants/admin';
 import { shortenAddress } from './lib/address';
+import InviteCodePage from './pages/InviteCodePage';
+import XpHistoryPage from './pages/XpHistoryPage';
+import { inviteCodeService } from './services/invite-code.service';
 import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
-import { inviteCodeService } from './services/invite-code.service';
 import useAuthStore from './store/auth.store';
-import InviteCodePage from './pages/InviteCodePage';
-import InviteCodeGuard from './components/guard/InviteCodeGuard';
+import { useWalletStore } from './store/wallet.store';
+import { checkIsAdmin } from './utils/isAdmin';
 
 export default function App() {
   return (
@@ -56,6 +60,7 @@ export default function App() {
 }
 
 function AppContent() {
+  const resetWalletStore = useWalletStore((state) => state.resetWallet);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -112,9 +117,13 @@ function AppContent() {
     if (path === '/oracles') return 'oracles';
     if (path.startsWith('/prediction/')) return 'shared-prediction';
     if (path === '/market') return 'market';
+    if (path === '/polymarket') return 'polymarket';
     if (path === '/topic') return 'topic';
     if (path === '/invites') return 'invites';
+    if (path === '/xp-history') return 'xpHistory';
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
+    if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
+    if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/)) return 'polymarket-chat'
     return 'home';
   };
 
@@ -157,11 +166,20 @@ function AppContent() {
       case 'market':
         navigate('/market');
         break;
+      case 'polymarket':
+        navigate('/polymarket');
+        break;
       case 'topic':
         navigate('/topic');
         break;
       case 'invites':
         navigate('/invites');
+        break;
+      case 'xpHistory':
+        navigate('/xp-history');
+        break;
+      case 'polymarket-chat':
+        navigate('/polymarket/chat');
         break;
       default:
         navigate('/');
@@ -222,7 +240,6 @@ function AppContent() {
     (async () => {
       try {
         const data = await oraclesServices.getAllOracles();
-
         if (data?.data) setListOracles(data.data);
 
         if (currentPage === 'chat') {
@@ -248,39 +265,22 @@ function AppContent() {
     }
   }, [darkMode]);
 
-  // Check for invite code, referral code or OAuth token in URL
+  // Check for invite code, invite code or OAuth token in URL
   useEffect(() => {
     const inviteCodeFromUrl = searchParams.get('invitecode');
     const oauthToken = searchParams.get('token');
     const isNewUser = searchParams.get('isNew') === 'true';
-    const isAdmin = user?.email ? ADMIN_EMAILS.includes(user.email) : false;
+    const isAdmin = checkIsAdmin(user)
 
-    // Handle invite code from URL
-    if (inviteCodeFromUrl && user && !user.appliedInviteCode && !isAdmin) {
-      // Clean URL params
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete('invitecode');
-      const newUrl = newSearchParams.toString()
-        ? `${location.pathname}?${newSearchParams.toString()}`
-        : location.pathname;
-      window.history.replaceState({}, '', newUrl);
-
-      // Auto-apply the invite code
-      void (async () => {
-        try {
-          await inviteCodeService.applyCode(inviteCodeFromUrl);
-          await fetchCurrentUser();
-
-          toast.success('🎉 Bonus applied! +300 XP', {
-            description: 'Welcome to Predict Market of Predictions!',
-          });
-
-          navigate('/');
-        } catch (err) {
-          console.error('Failed to auto-apply invite code:', err);
-          toast.error('Invalid or expired invite code.');
-        }
-      })();
+    if (inviteCodeFromUrl && !isAdmin) {
+      sessionStorage.setItem('pendingInviteCode', inviteCodeFromUrl);
+      if (user?.id) {
+        handleInviteCodeAutoApply();
+      } else {
+        toast.info('Invite code detected! Sign up to get your bonus.', {
+          description: "You'll earn 300 XP when you create your account!",
+        });
+      }
     }
 
     // Handle OAuth token
@@ -297,6 +297,7 @@ function AppContent() {
       void (async () => {
         try {
           const authenticatedUser = await authenticateWithToken(oauthToken);
+          handleInviteCodeAutoApply();
 
           toast.success(
             isNewUser ? 'Welcome to Predit Market!' : 'Signed in successfully.',
@@ -325,14 +326,13 @@ function AppContent() {
         }
       })();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const handleWalletConnect = (walletType: WalletType, user: User) => {
     setWalletDialogOpen(false);
-    toast.success(`Connected with ${walletType}!`);
 
-    // handleRefAutoApply();
+    handleInviteCodeAutoApply();
 
     const createdAt = new Date(user.createdAt).getTime();
     const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
@@ -347,32 +347,39 @@ function AppContent() {
   };
 
   const handleSocialConnect = () => {
-    // handleRefAutoApply();
+    // handleInviteCodeAutoApply();
   };
 
-  // const handleRefAutoApply = async () => {
-  //   const referralCode = sessionStorage.getItem('pendingReferralCode');
-  //   if (!referralCode) return;
+  const handleInviteCodeAutoApply = async () => {
+    const inviteCode = sessionStorage.getItem('pendingInviteCode');
+    if (!inviteCode) return;
 
-  //   try {
-  //     await apiClient.post('/auth/redeem-referral', {
-  //       referralCode,
-  //     });
+    try {
+      if (user?.appliedInviteCode) {
+        return toast.success(`You're applied code before`, {
+          description: 'Welcome to Predict Market of Predictions!',
+        });
+      }
+      await inviteCodeService.applyCode(inviteCode);
 
-  //     toast.success('🎉 Referral bonus applied! +300 XP', {
-  //       description: 'Welcome to Predit Market of Predictions!',
-  //     });
-  //   } catch (err: any) {
-  //     toast.error(err?.response?.data?.message ?? 'Failed to apply referral');
-  //   } finally {
-  //     sessionStorage.removeItem('pendingReferralCode');
-  //     fetchCurrentUser();
-  //   }
-  // };
+      toast.success('🎉 Bonus applied! +300 XP', {
+        description: 'Welcome to Predict Market of Predictions!',
+      });
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ?? 'Failed to apply invite code'
+      );
+    } finally {
+      sessionStorage.removeItem('pendingInviteCode');
+      fetchCurrentUser();
+      navigate('/');
+    }
+  };
 
   const handleWalletDisconnect = () => {
     logout();
     closeProfileDialog();
+    resetWalletStore();
     navigate('/');
     toast.info('Wallet disconnected');
   };
@@ -401,13 +408,14 @@ function AppContent() {
     onWalletDisconnect: handleWalletDisconnect,
     shortenAddress,
     onOpenSettings: () => navigate('/settings'),
+    onOpenXPHistory: () => navigate('/xp-history'),
     onSetPendingNavigation: setPendingNavigation,
     onOpenXPInfo: () => setXPInfoDialogOpen(true),
     darkMode,
     onToggleDarkMode: () => setDarkMode(!darkMode),
     selectedAIAgent: selectedAIAgent,
     setSelectedAIAgent: setSelectedAIAgent,
-    isAdmin: user && user.email ? ADMIN_EMAILS.includes(user.email) : false,
+    isAdmin: checkIsAdmin(user),
   };
 
   const commonDialogProps = (
@@ -985,11 +993,94 @@ function AppContent() {
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               {user && (
                 <div className="flex-1 overflow-y-auto">
-                  {user.email && ADMIN_EMAILS.includes(user.email) ? (
-                    <MarketDetailAdmin />
-                  ) : (
-                    <MarketDetail />
-                  )}
+                  <MarketDetail />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* Polymarket List Page */}
+      <Route
+        path="/polymarket"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Polymarket - Real-World Prediction Markets</title>
+              <meta
+                name="description"
+                content="Trade on real-world events with Polymarket markets. Get the best odds on politics, crypto, sports and more."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/polymarket`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <PolymarketPage />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* Polymarket Detail Page */}
+      <Route
+        path="/polymarket/:id"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Market Details - Polymarket</title>
+              <meta
+                name="description"
+                content="View market details and place trades on Polymarket."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/polymarket`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <PolymarketDetail />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* Polymarket Detail Page */}
+      <Route
+        path="/polymarket/:marketId/chat/:chatId"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Polymarket Chat - Polymarket</title>
+              <meta
+                name="description"
+                content="View market details and place trades on Polymarket."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/polymarket/chat`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <PolymarketChatPage />
                 </div>
               )}
               {commonDialogProps}
@@ -1038,6 +1129,52 @@ function AppContent() {
               <div className="flex-1 overflow-y-auto">
                 <main className="container mx-auto px-4 py-8">
                   <InviteCodePage />
+                </main>
+              </div>
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* XP history page */}
+      <Route
+        path="/xp-history"
+        element={
+          <div className="flex h-dvh bg-background overflow-hidden">
+            <Helmet>
+              <title>XP History | Predit Market AI</title>
+
+              <meta
+                name="description"
+                content="View your XP history including earned and spent experience points across all activities and events."
+              />
+
+              <meta
+                name="keywords"
+                content="XP history, experience points, XP activity, XP transactions, user progression"
+              />
+
+              <meta
+                property="og:title"
+                content="XP History | Experience Activity"
+              />
+
+              <meta
+                property="og:description"
+                content="Track your earned and spent XP from different activities and events."
+              />
+
+              <link
+                rel="canonical"
+                href={`https://predit.market/xp-history`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <div className="flex-1 overflow-y-auto">
+                <main className="container mx-auto px-4 py-8">
+                  <XpHistoryPage />
                 </main>
               </div>
               {commonDialogProps}

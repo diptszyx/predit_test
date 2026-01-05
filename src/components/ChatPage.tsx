@@ -32,11 +32,12 @@ import {
 } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Skeleton } from './ui/skeleton';
+import TextareaAutosize from 'react-textarea-autosize';
 
 import clsx from 'clsx';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
-import { timeAgo } from '../lib/date';
+import { formatTime, timeAgo } from '../lib/date';
 import type { User } from '../lib/types';
 import { ChatMessage, messageService } from '../services/message.service';
 import { News, newsService } from '../services/news.service';
@@ -55,11 +56,13 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
-import { MAX_PREDICTIONS_PER_DAY, questionsByAIAgent } from '../constants/prediction';
+import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY, questionsByAIAgent } from '../constants/prediction';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import MarketList from './market/MarketList';
 import { Topic, topicServices } from '../services/topic-admin.service';
 import Markdown from './chat/Markdown';
+import { Textarea } from './ui/textarea';
+import DailyLimitReachDialog from './dialog/DailyLimitReachDialog';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -174,7 +177,7 @@ export function ChatPage({
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
   const [shareAIAgentDialogOpen, setShareAIAgentDialogOpen] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>(
-    generateSuggestedQuestions(aiAgent, '')
+    generateSuggestedQuestions(aiAgent)
   );
 
   // Rating flash functionality
@@ -430,10 +433,6 @@ export function ChatPage({
   //   subscriptionDialogOpen,
   // ]);
 
-  // Helper function to detect if a message is asking for a prediction
-
-  // Helper function to check and reset daily predictions
-
   // Increment daily prediction count
   function incrementDailyPredictions() {
     if (user && updateUser && !user.isPro) {
@@ -444,52 +443,6 @@ export function ChatPage({
         restTodayPredictionCount: remaining - 1,
       });
     }
-  }
-
-  // Helper function to count lines in text
-
-  // Helper function to check and reset daily line limit
-
-  // Increment daily line count
-
-  // Generate welcome message based on AI agent
-
-  // Mock Grok API call with personality-driven responses
-
-  // AI agent-specific response generator
-
-  // Generate suggested follow-up questions based on AI agent specialty
-  function generateSuggestedQuestions(
-    aiAgentData: OracleEntity,
-    userMessage: string
-  ): string[] {
-    const agentKeys = [aiAgentData.id, 'crypto-crystal', 'crypto'];
-    const selectedAgentKey =
-      agentKeys[Math.floor(Math.random() * agentKeys.length)];
-
-    // Get questions for this AI agent or use defaults
-    const aiAgentQuestions = questionsByAIAgent[selectedAgentKey] || [
-      [
-        `What's your prediction for ${aiAgentData.type.split(' ')[0]}?`,
-        `What trends do you see in ${aiAgentData.type.split(' ')[0]}?`,
-        `What should I know about ${aiAgentData.type.split(' ')[0]}?`,
-      ],
-      [
-        `Any bold predictions for this year?`,
-        `What's your hot take?`,
-        `What are you most excited about?`,
-      ],
-      [
-        `What's the biggest risk right now?`,
-        `What's being overlooked?`,
-        `What should people pay attention to?`,
-      ],
-    ];
-
-    // Randomly select one set of 3 questions
-    const randomSet =
-      aiAgentQuestions[Math.floor(Math.random() * aiAgentQuestions.length)];
-    return randomSet;
   }
 
   const handleArticleClick = async (slug: string) => {
@@ -560,7 +513,7 @@ export function ChatPage({
     setThinkingTokens(0);
     setCitations([]);
 
-    setSuggestedQuestions(generateSuggestedQuestions(aiAgent, trimmedInput));
+    setSuggestedQuestions(generateSuggestedQuestions(aiAgent));
 
     // Prepare assistant message ID but don't create message yet
     const assistantMessageId = (Date.now() + 1).toString();
@@ -644,15 +597,6 @@ export function ChatPage({
       handleSend(input);
     }
   };
-
-  function formatTime(isoString: string) {
-    return new Date(isoString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Ho_Chi_Minh',
-    });
-  }
 
   const handleLike = async () => {
     if (!hasLiked) {
@@ -983,7 +927,7 @@ export function ChatPage({
                                       }`}
                                   >
                                     <div
-                                      className={`max-w-[65%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
+                                      className={`max-w-[80%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
                                         ? 'bg-blue-600 text-white backdrop-blur-sm'
                                         : `backdrop-blur-md border border-border`
                                         }`}
@@ -1002,17 +946,17 @@ export function ChatPage({
                                       )}
                                     </div>
                                   </div>
-                                <span
-                                  className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
-                                    ? 'text-right max-w-[94vw]'
-                                    : 'text-left'
-                                    }`}
-                                >
-                                  {formatTime(message.createdAt)}
-                                </span>
+                                  <span
+                                    className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
+                                      ? 'text-right max-w-[94vw]'
+                                      : 'text-left'
+                                      }`}
+                                  >
+                                    {formatTime(message.createdAt)}
+                                  </span>
 
-                                {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
-                                {/* {message.sender === "assistant"
+                                  {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
+                                  {/* {message.sender === "assistant"
                               && message.suggestedQuestions && index === messages.length - 1 && !isLoading &&
                               (
                               <div className="flex justify-start mt-2 sm:mt-3">
@@ -1029,28 +973,28 @@ export function ChatPage({
                                 </div>
                               </div>
                             )} */}
-                                {message.sender === 'assistant' &&
-                                  suggestedQuestions &&
-                                  index === messages.length - 1 &&
-                                  !isLoading && (
-                                    <div className="flex justify-start mt-2 sm:mt-3">
-                                      <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
-                                        {suggestedQuestions.map(
-                                          (question, qIndex) => (
-                                            <button
-                                              key={qIndex}
-                                              onClick={() =>
-                                                handleSend(question)
-                                              }
-                                              className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left cursor-pointer"
-                                            >
-                                              {question}
-                                            </button>
-                                          )
-                                        )}
+                                  {message.sender === 'assistant' &&
+                                    suggestedQuestions &&
+                                    index === messages.length - 1 &&
+                                    !isLoading && (
+                                      <div className="flex justify-start mt-2 sm:mt-3">
+                                        <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
+                                          {suggestedQuestions.map(
+                                            (question, qIndex) => (
+                                              <button
+                                                key={qIndex}
+                                                onClick={() =>
+                                                  handleSend(question)
+                                                }
+                                                className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left cursor-pointer"
+                                              >
+                                                {question}
+                                              </button>
+                                            )
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  )}
+                                    )}
                                 </div>
                               );
                             })}
@@ -1179,7 +1123,7 @@ export function ChatPage({
 
                           <div className="flex gap-1.5 sm:gap-2">
                             <div
-                              className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-11 cursor-pointer relative"
+                              className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-16 cursor-pointer relative"
                               onClick={() => {
                                 if (!user) {
                                   setSignInDialogOpen(true);
@@ -1192,14 +1136,16 @@ export function ChatPage({
                                   Sign in to chat
                                 </span>
                               ) : (
-                                <input
-                                  type="text"
+                                <TextareaAutosize
                                   value={input}
                                   onChange={(e) => setInput(e.target.value)}
-                                  onKeyPress={handleKeyPress}
-                                  className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm"
+                                  onKeyDown={handleKeyPress}
+                                  className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm
+                                  leading-normal mr-9 resize-none"
                                   placeholder="I want a prediction on..."
                                   disabled={isLoading}
+                                  maxRows={2}
+                                  minRows={1}
                                 />
                               )}
 
@@ -1427,171 +1373,11 @@ export function ChatPage({
           }}
         />
 
-        {/* Daily Limit Reached Dialog */}
-        <AlertDialog
+        <DailyLimitReachDialog
           open={limitReachedDialogOpen}
-          onOpenChange={setLimitReachedDialogOpen}
-        >
-          <AlertDialogContent className="max-w-md sm:mx-auto">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
-                Daily Limit Reached
-              </AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div className="space-y-4">
-                  {limitReachedType === 'textline' ? (
-                    <>
-                      <p className="text-sm">
-                        You've used all <strong>100 free text lines</strong> for
-                        today. Your limit resets tomorrow!
-                      </p>
-                      <div className="p-3 sm:p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MessageSquare className="w-4 h-4 text-orange-400" />
-                          <p className="text-xs sm:text-sm font-medium text-foreground">
-                            Current Usage
-                          </p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Free tier: 100 text lines per day
-                        </p>
-                        <div className="w-full bg-black/30 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full"
-                            style={{ width: '100%' }}
-                          />
-                        </div>
-                        <p className="text-xs text-orange-400 mt-1 text-center">
-                          100/100 lines used
-                        </p>
-                      </div>
-                    </>
-                  ) : limitReachedType === 'total-predictions' ? (
-                    <>
-                      <p className="text-sm">
-                        You've used all <strong>5 free predictions</strong> on
-                        the Basic tier. Upgrade to Pro to continue making
-                        unlimited predictions!
-                      </p>
-                      <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Sparkles className="w-4 h-4 text-blue-400" />
-                          <p className="text-xs sm:text-sm font-medium text-foreground">
-                            Free Tier Limit Reached
-                          </p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Basic tier: 5 total predictions
-                        </p>
-                        <div className="w-full bg-black/30 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                            style={{ width: '100%' }}
-                          />
-                        </div>
-                        <p className="text-xs text-blue-400 mt-1 text-center">
-                          5/5 predictions used
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm">
-                        You've used all <strong>5 free predictions</strong> for
-                        today. Your limit resets tomorrow!
-                      </p>
-                      <div className="p-3 sm:p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Sparkles className="w-4 h-4 text-blue-400" />
-                          <p className="text-xs sm:text-sm font-medium text-foreground">
-                            Current Usage
-                          </p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Free tier: 5 predictions per day
-                        </p>
-                        <div className="w-full bg-black/30 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
-                            style={{ width: '100%' }}
-                          />
-                        </div>
-                        <p className="text-xs text-blue-400 mt-1 text-center">
-                          5/5 predictions used
-                        </p>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-                      <p className="text-xs sm:text-sm font-medium text-foreground">
-                        Upgrade to Pro
-                      </p>
-                    </div>
-                    <ul className="text-xs sm:text-sm space-y-2 text-muted-foreground">
-                      <li className="flex items-center gap-2">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span>
-                          <strong>Unlimited</strong> predictions
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span>
-                          <strong>2x XP</strong> multiplier on all actions
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span>
-                          <strong className="text-yellow-400">
-                            +1,500 XP bonus
-                          </strong>{' '}
-                          when you subscribe
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
-                        <span>Priority AI responses</span>
-                      </li>
-                    </ul>
-                    <div className="mt-3 pt-3 border-t border-blue-500/20">
-                      <p className="text-xs text-center">
-                        <span className="line-through text-muted-foreground">
-                          $19.99/mo
-                        </span>
-                        <span className="ml-2 text-base sm:text-lg font-semibold text-blue-400">
-                          $4.99/mo
-                        </span>
-                        <span className="ml-2 text-xs text-green-400">
-                          75% OFF
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-              <AlertDialogCancel className="w-full sm:w-auto">
-                Maybe Later
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  setLimitReachedDialogOpen(false);
-                  setSubscriptionDialogOpen(true);
-                }}
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 w-full sm:w-auto"
-              >
-                <Crown className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                Upgrade Now
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          onChange={setLimitReachedDialogOpen}
+          setSubscriptionDialogOpen={setSubscriptionDialogOpen}
+        />
 
         {/* Share Prediction Dialog */}
         {lastPrediction && (

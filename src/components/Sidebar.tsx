@@ -107,12 +107,16 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     icon: ShoppingCart,
     requiresAuth: true,
   },
-  {
-    id: 'polymarket',
-    label: 'Polymarket',
-    icon: LineChart,
-    requiresAuth: true,
-  },
+  ...(import.meta.env.VITE_POLYMARKET_ENABLE === 'true'
+    ? [
+      {
+        id: 'polymarket',
+        label: 'Polymarket',
+        icon: LineChart,
+        requiresAuth: true,
+      },
+    ]
+    : []),
   {
     id: 'invites',
     label: 'Invites',

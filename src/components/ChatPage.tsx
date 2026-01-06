@@ -218,7 +218,7 @@ export function ChatPage({
     if (user?.id) {
       fetchMessages();
     }
-  }, [user?.id]);
+  }, [user?.id, aiAgent.id]);
 
   // Send message from homepage
   useEffect(() => {

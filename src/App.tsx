@@ -137,16 +137,13 @@ function AppContent() {
         navigate('/');
         break;
       case 'chat':
-        // Navigate to chat with oracle if one is selected
-        if (selectedAIAgent) {
+        const savedOracleId = localStorage.getItem('deor-currentOracle');
+        if (savedOracleId) {
+          navigate(`/chat/${savedOracleId}`);
+        } else if (selectedAIAgent) {
           navigate(`/chat/${selectedAIAgent.id}`);
         } else {
-          const savedOracleId = localStorage.getItem('deor-currentOracle');
-          if (savedOracleId) {
-            navigate(`/chat/${savedOracleId}`);
-          } else {
-            navigate('/chat');
-          }
+          navigate('/chat');
         }
         break;
       case 'hotTakes':
@@ -1358,22 +1355,8 @@ function ChatWithOracleWrapper({
   const navigate = useNavigate();
   const { oracleId } = useParams();
 
-  // Load oracle from URL param if not already selected
-  useEffect(() => {
-    if (oracleId && listOracles.length > 0) {
-      const oracle = listOracles.find((o: OracleEntity) => o.id === oracleId);
-      if (oracle && (!selectedAIAgent || selectedAIAgent.id !== oracleId)) {
-        setSelectedAIAgent(oracle);
-        localStorage.setItem('deor-currentOracle', oracleId);
-      } else if (!oracle) {
-        // Oracle not found, redirect to chat selection
-        navigate('/chat');
-      }
-    }
-  }, [oracleId, listOracles, selectedAIAgent]);
-
   if (!selectedAIAgent) {
-    return null; // Wait for oracle to load
+    return null;
   }
 
   return (

@@ -74,7 +74,8 @@ export default function MarketDetail() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const params = urlParams.get(IS_MESSAGED);
-  const isMessaged = params === 'true' ? true : false
+  const isMessaged = params === 'true';
+  const hasParam = params !== null;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -92,14 +93,19 @@ export default function MarketDetail() {
   }, [marketId]);
 
   useEffect(() => {
-    if (market
-      && market.status === 'open'
-      && !isMessaged) {
-      setInput(market.question)
-      setTimeout(() => {
-        handleSend(market.question)
-      }, 1000)
+    if (
+      !market ||
+      market.status !== 'open' ||
+      !hasParam ||
+      isMessaged
+    ) {
+      return;
     }
+
+    setInput(market.question)
+    setTimeout(() => {
+      handleSend(market.question)
+    }, 1000)
   }, [market])
 
   useEffect(() => {

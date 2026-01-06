@@ -41,7 +41,8 @@ const PolymarketChatPage = () => {
   const location = useLocation();
   const urlParams = new URLSearchParams(window.location.search);
   const params = urlParams.get(IS_MESSAGED);
-  const isMessaged = params === 'true' ? true : false
+  const isMessaged = params === 'true';
+  const hasParam = params !== null;
 
   const user = useAuthStore((state) => state.user)
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser)
@@ -76,12 +77,18 @@ const PolymarketChatPage = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (market && !isMessaged) {
-      setInput(market.question)
-      setTimeout(() => {
-        handleSend(market.question)
-      }, 1000)
+    if (
+      !market ||
+      !hasParam ||
+      isMessaged
+    ) {
+      return;
     }
+
+    setInput(market.question)
+    setTimeout(() => {
+      handleSend(market.question)
+    }, 1000)
   }, [market])
 
   useEffect(() => {

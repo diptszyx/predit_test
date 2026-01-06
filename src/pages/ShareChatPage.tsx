@@ -56,6 +56,7 @@ const ShareChatPage = () => {
   useEffect(() => {
     if (!parsed || !parsed.type || !parsed.token) {
       setShareError(true);
+      setIsLoadingMessages(false)
       setMessages([]);
       return;
     }

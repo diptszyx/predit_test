@@ -11,35 +11,32 @@ import {
   Home,
   LineChart,
   LogOut,
-  MessageCircle,
   MessageSquare,
   Moon,
-  Send,
   Settings,
   ShoppingCart,
   Sparkles,
   Sun,
   Trophy,
-  Twitter,
   User,
   Users,
-  Zap,
+  Zap
 } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { truncateName } from '../lib/truncateName';
+import { copyToClipboard } from '../lib/clipboardUtils';
+import { truncateText } from '../lib/truncateText';
 import { User as UserType } from '../lib/types';
 import { OracleEntity, oraclesServices } from '../services/oracles.service';
+import useAuthStore from '../store/auth.store';
+import { useWalletStore } from '../store/wallet.store';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { copyToClipboard } from '../lib/clipboardUtils';
-import { toast } from 'sonner';
-import { useWalletStore } from '../store/wallet.store';
 import BalanceModal from './wallet/BalanceModal';
 import Usdc from './wallet/icon/Usdc';
-import useAuthStore from '../store/auth.store';
 
 interface SidebarProps {
   currentPage: string;
@@ -353,7 +350,7 @@ export function Sidebar({
                         ) : (
                           <></>
                         )}
-                        {truncateName(child.name)}
+                        {truncateText(child.name)}
                       </Button>
                     );
                   })}
@@ -691,7 +688,7 @@ export function Sidebar({
                             ) : (
                               <></>
                             )}
-                            {truncateName(child.name)}
+                            {truncateText(child.name)}
                           </Button>
                         );
                       })}

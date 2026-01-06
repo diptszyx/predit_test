@@ -1,6 +1,6 @@
 import { Info, Link as LinkIcon, Share } from "lucide-react";
 import { toast } from "sonner";
-import { truncateName } from "../lib/truncateName";
+import { truncateText } from "../lib/truncateText";
 import Markdown from "./chat/Markdown";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
@@ -65,14 +65,14 @@ export function ShareChatDialog({
             <div className="flex items-center gap-3">
               {sharePayload?.mode === 'reply' ?
                 <Markdown
-                  text={truncateName(sharePayload.message, 350)}
+                  text={truncateText(sharePayload.message, 350)}
                 /> : <>
                   <div className="relative max-h-[260px] overflow-hidden w-full">
                     <div className="space-y-4">
                       {/* User question bubble */}
                       <div className="flex justify-end">
                         <div className="max-w-[85%] rounded-2xl bg-primary text-primary-foreground px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap">
-                          {truncateName(sharePayload?.question, 100)}
+                          {truncateText(sharePayload?.question, 90)}
                         </div>
                       </div>
 
@@ -81,7 +81,7 @@ export function ShareChatDialog({
                         <div className="min-w-0 flex-1 max-w-[90%] ">
                           <div className="rounded-2xl bg-background/70 border border-border px-4 py-3 text-sm leading-relaxed">
                             <Markdown
-                              text={truncateName(sharePayload.answer, 200)}
+                              text={truncateText(sharePayload.answer, 200)}
                             />
                           </div>
                         </div>

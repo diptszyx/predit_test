@@ -1,7 +1,7 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
+import { Facebook, Link, Twitter } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "./ui/button";
-import { Link, Facebook, Twitter } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 
 interface SharePredictionDialogProps {
   open: boolean;
@@ -10,7 +10,6 @@ interface SharePredictionDialogProps {
   answer: string;
   aiAgentName: string;
   aiAgentAvatar: string;
-  aiAgentEmoji: string;
 }
 
 export function SharePredictionDialog({
@@ -20,7 +19,6 @@ export function SharePredictionDialog({
   answer,
   aiAgentName,
   aiAgentAvatar,
-  aiAgentEmoji,
 }: SharePredictionDialogProps) {
   // Generate a unique ID for this prediction
   const predictionId = btoa(`${aiAgentName}-${Date.now()}`).replace(/[/+=]/g, '');
@@ -41,7 +39,6 @@ export function SharePredictionDialog({
       answer,
       aiAgentName,
       aiAgentAvatar,
-      aiAgentEmoji,
       timestamp: new Date().toISOString(),
     };
     localStorage.setItem(`prediction-${predictionId}`, JSON.stringify(predictionData));

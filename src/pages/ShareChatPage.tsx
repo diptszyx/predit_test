@@ -7,6 +7,7 @@ import Markdown from "../components/chat/Markdown";
 import HotTakeChatPageList from "../components/hotTake/HotTakeChatPageList";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { ScrollArea } from "../components/ui/scroll-area";
+import { Skeleton } from "../components/ui/skeleton";
 import { News, newsService } from "../services/news.service";
 import { getSharedMessage, getShareMarketConversation, getShareMarketMessage, getShareOracleConversation, getSharePolymarketConversation, SharedMessageResponse, ShareType } from "../services/share-message.service";
 import { Topic, topicServices } from "../services/topic-admin.service";
@@ -40,7 +41,6 @@ const ShareChatPage = () => {
   const [currentTab, setCurrentTab] = useState<string>('chat');
   const [isLoadingMessages, setIsLoadingMessages] = useState(true)
   const [messages, setMessages] = useState<SharedMessageResponse[]>([]);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [topicFilter, setTopicFilter] = useState();
@@ -309,6 +309,11 @@ const ShareChatPage = () => {
                       {/* Messages Area - Scrollable with transparent background */}
                       <div className="flex-1 overflow-hidden pointer-events-auto rounded-none border-r">
                         <ScrollArea className="h-full p-2 sm:p-3 md:p-4 bg-muted/80">
+                          {isLoadingMessages && (
+                            <div className="px-2 py-4">
+                              <ChatSkeleton />
+                            </div>
+                          )}
                           {(!isLoadingMessages && (shareError || messages.length === 0)) && (
                             <div className="flex flex-col items-center justify-center my-12 px-4 text-center">
                               <div className="w-16 h-16 rounded-full bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mb-4">
@@ -434,5 +439,30 @@ const ShareChatPage = () => {
     </div>
   )
 }
+
+const ChatSkeleton = () => {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <div className="max-w-[75%] rounded-2xl border border-border bg-background/60 px-4 py-3">
+          <Skeleton className="h-7 w-32 mb-2 bg-gray-200/20" />
+          <Skeleton className="h-7 w-48 bg-gray-200/20" />
+        </div>
+      </div>
+
+      <div className="flex items-start gap-3 mt-2">
+        <div className="flex-1">
+          <div className="max-w-[85%] rounded-2xl border border-border bg-background/60 px-4 py-3 space-y-2">
+            <Skeleton className="h-14 w-full bg-gray-200/20" />
+            <Skeleton className="h-14 w-5/6 bg-gray-200/20" />
+            <Skeleton className="h-14 w-3/4 bg-gray-200/20" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
 export default ShareChatPage

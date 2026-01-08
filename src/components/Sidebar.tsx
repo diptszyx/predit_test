@@ -368,7 +368,7 @@ export function Sidebar({
                           }}
                         >
                           <MessageCircle className="w-4 h-4 mr-2" />
-                          <span className="truncate">{chat.firstMessage ?? `Chat ${chat.id.slice(0, 8)}...`}</span>
+                          <span className="truncate">{chat.firstMessage ?? `New Message`}</span>
                         </Button>
                       );
                     })}
@@ -695,11 +695,17 @@ export function Sidebar({
                               size="sm"
                               className={`w-full justify-start text-[12.5px] text-muted-foreground hover:text-foreground hover:bg-accent/50`}
                               onClick={() => {
-                                navigate(chat.polymarketId ? `/polymarket/${chat.polymarketId}/chat/${chat.id}` : `/chat/${chat.id}`);
+                                if (chat.polymarketId) {
+                                  return navigate(`/polymarket/${chat.polymarketId}/chat/${chat.id}`);
+                                } else if (chat.marketId) {
+                                  return navigate(`/market/${chat.marketId}`);
+                                } else {
+                                  return navigate(`/chat/${chat.id}`);
+                                }
                               }}
                             >
                               <MessageCircle className="w-4 h-4 mr-2" />
-                              <span className="truncate">{chat.firstMessage ?? `Chat ${chat.id.slice(0, 8)}...`}</span>
+                              <span className="truncate">{chat.firstMessage ?? `New Message`}</span>
                             </Button>
                           );
                         })}

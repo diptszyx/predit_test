@@ -7,6 +7,7 @@ export interface ChatEntity {
   createdAt: string;
   polymarketId: string;
   firstMessage: string;
+  marketId: string;
 }
 
 export interface MessageEntity {

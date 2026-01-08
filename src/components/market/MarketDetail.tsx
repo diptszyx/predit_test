@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
-import { IS_MESSAGED } from '../../constants/params';
 import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
 import { formatTime } from '../../lib/date';
 import { getMarketMessages, MarketMessage, sendMarketMessageStream } from '../../services/market-messages.service';
@@ -22,6 +21,14 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { Skeleton } from '../ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+import { oraclesServices } from '../../services/oracles.service';
 import MarketInfoModal from './MarketInfoModal';
 import MarketList from './MarketList';
 import { MarketModal } from './MarketModal';
@@ -42,6 +49,7 @@ export default function MarketDetail() {
   const { marketId } = useParams<{
     marketId: string;
   }>();
+  const [chatId, setChatId] = useState<string | null>(null);
   const [market, setMarket] = useState<Market | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +57,8 @@ export default function MarketDetail() {
   const [selectedChoice, setSelectedChoice] = useState<'yes' | 'no' | null>(
     null
   );
-  const [aiAgent, setAIAgent] = useState<OracleEntity>()
+  const [currentOracle, setCurrentOracle] = useState<OracleEntity>()
+  const [availableOracles, setAvailableOracles] = useState<OracleEntity[]>([])
   const [currentTab, setCurrentTab] = useState<string>('chat');
   const [messages, setMessages] = useState<MarketMessage[]>([]);
   const [userMessageCount, setUserMessageCount] = useState(0);
@@ -66,9 +75,7 @@ export default function MarketDetail() {
 
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>();
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const params = urlParams.get(IS_MESSAGED);
-  const isMessaged = params === 'true' ? true : false
+  const [isMessaged, setIsMessaged] = useState(true);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,30 +88,26 @@ export default function MarketDetail() {
   useEffect(() => {
     if (marketId) {
       fetchMarket();
-      fetchMessages()
     }
   }, [marketId]);
+
+  useEffect(() => {
+    if (chatId) {
+      fetchMessages()
+    }
+  }, [chatId]);
 
   useEffect(() => {
     if (market
       && market.status === 'open'
       && !isMessaged) {
+      setIsMessaged(true);
       setInput(market.question)
       setTimeout(() => {
         handleSend(market.question)
       }, 1000)
     }
-  }, [market])
-
-  useEffect(() => {
-    setTimeout(() => {
-      clearParams()
-    }, 1500)
-  }, [marketId])
-
-  const clearParams = () => {
-    navigate(location.pathname, { replace: true });
-  };
+  }, [market, isMessaged])
 
   const fetchMarket = async () => {
     if (!marketId) return;
@@ -112,8 +115,20 @@ export default function MarketDetail() {
     try {
       const data = await getMarketById(marketId);
       setMarket(data);
-      setAIAgent(data.oracle)
-      setSuggestedQuestions(generateSuggestedQuestions(data.oracle))
+      if (data.chatId) setChatId(data.chatId);
+
+      const oracleList = await oraclesServices.getAllOracles();
+      if (oracleList && oracleList.data) {
+        setAvailableOracles(oracleList.data);
+        if (!currentOracle) {
+          setCurrentOracle(data.oracle);
+          setSuggestedQuestions(generateSuggestedQuestions(data.oracle))
+        }
+      } else {
+        setCurrentOracle(data.oracle);
+        setSuggestedQuestions(generateSuggestedQuestions(data.oracle))
+      }
+
     } catch (err) {
       console.error(err);
       setError('Failed to load market details.');
@@ -123,12 +138,18 @@ export default function MarketDetail() {
   };
 
   const fetchMessages = async () => {
-    if (!marketId) return
+    if (!chatId) return
 
     try {
-      const data = await getMarketMessages(marketId)
-      if (data) {
+      const data = await getMarketMessages(chatId)
+      if (data && data.length > 0) {
         setMessages(data.reverse())
+        if (data[0]?.oracle) {
+          setCurrentOracle(data[0].oracle)
+        }
+        setIsMessaged(true);
+      } else {
+        setIsMessaged(false);
       }
     } catch (error) {
       console.error(error);
@@ -151,7 +172,6 @@ export default function MarketDetail() {
   };
 
   const handleBetPlaced = async () => {
-    // Refetch market data after bet is placed
     if (!marketId) return;
 
     try {
@@ -199,7 +219,6 @@ export default function MarketDetail() {
     const trimmedInput = messageToSend || input.trim();
     if (!user || !trimmedInput || isLoading) return;
 
-    // Increment user message count
     const newMessageCount = userMessageCount + 1;
     setUserMessageCount(newMessageCount);
 
@@ -213,7 +232,6 @@ export default function MarketDetail() {
       return;
     }
 
-    // Increment daily prediction count if this is a prediction
     if (!user.isPro) {
       const restTodayPredictionCount = (user.restTodayPredictionCount || 0) - 1;
 
@@ -236,15 +254,16 @@ export default function MarketDetail() {
     setIsLoading(true);
     setThinkingTokens(0);
 
-    setSuggestedQuestions(generateSuggestedQuestions(aiAgent));
+    setSuggestedQuestions(generateSuggestedQuestions(currentOracle));
 
     const assistantMessageId = (Date.now() + 1).toString();
     let messageCreated = false;
 
     try {
-      await sendMarketMessageStream(trimmedInput, marketId, {
+      if (!chatId) throw new Error("Chat ID is missing");
+
+      await sendMarketMessageStream(trimmedInput, chatId, {
         onMetadata: (metadata) => {
-          // Handle metadata (userMessage and xpReward)
           if (metadata.xpReward.milestone) {
             toast.success(
               `🎯 Prediction Milestone Reached! +${metadata.xpReward.milestone?.xp} XP earned.`
@@ -282,7 +301,7 @@ export default function MarketDetail() {
           setIsLoading(false);
           setThinkingTokens(0);
         },
-      });
+      }, currentOracle?.id);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
@@ -331,7 +350,7 @@ export default function MarketDetail() {
     );
   }
 
-  if (error || !market || !aiAgent) {
+  if (error || !market || !currentOracle) {
     return (
       <div className="min-h-screen bg-background">
         <div className="w-full p-4 lg:p-6 space-y-6">
@@ -375,17 +394,43 @@ export default function MarketDetail() {
                       </Button>
                       <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
                         <ImageWithFallback
-                          src={aiAgent.image}
-                          alt={aiAgent.name}
+                          src={currentOracle.image}
+                          alt={currentOracle.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-sm sm:text-base md:text-lg truncate">
-                          {aiAgent.name}
-                        </CardTitle>
+                        <Select
+                          value={currentOracle.id}
+                          onValueChange={(value: string) => {
+                            const selected = availableOracles.find((o) => o.id === value);
+                            if (selected) setCurrentOracle(selected);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue>
+                              {currentOracle.name}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableOracles.map((oracle) => (
+                              <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                                  <ImageWithFallback
+                                    src={oracle.image}
+                                    alt={oracle.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <span>
+                                  {oracle.name}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <CardDescription className="text-xs">
-                          {aiAgent.type}
+                          {currentOracle.type}
                         </CardDescription>
                       </div>
                       <Button
@@ -467,17 +512,43 @@ export default function MarketDetail() {
                         </Button>
                         <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
                           <ImageWithFallback
-                            src={aiAgent.image}
-                            alt={aiAgent.name}
+                            src={currentOracle.image}
+                            alt={currentOracle.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-sm sm:text-base md:text-lg truncate">
-                            {aiAgent.name}
-                          </CardTitle>
+                          <Select
+                            value={currentOracle.id}
+                            onValueChange={(value: string) => {
+                              const selected = availableOracles.find((o) => o.id === value);
+                              if (selected) setCurrentOracle(selected);
+                            }}
+                          >
+                            <SelectTrigger className="w-full h-auto p-0 text-sm sm:text-base md:text-lg border-none bg-transparent hover:bg-accent/50 focus:ring-0 shadow-none font-semibold justify-start">
+                              <SelectValue>
+                                {currentOracle.name}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableOracles.map((oracle) => (
+                                <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                                  <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                                    <ImageWithFallback
+                                      src={oracle.image}
+                                      alt={oracle.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <span>
+                                    {oracle.name}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <CardDescription className="text-xs">
-                            {aiAgent.type}
+                            {currentOracle.type}
                           </CardDescription>
                         </div>
                         <Button
@@ -509,9 +580,9 @@ export default function MarketDetail() {
                                 Start a New Conversation
                               </h3>
                               <p className="text-sm text-muted-foreground max-w-md">
-                                Ask {aiAgent.name} anything. Get predictions,
+                                Ask {currentOracle.name} anything. Get predictions,
                                 insights, and expert analysis on{' '}
-                                {aiAgent.type.split(' ')[0]}.
+                                {currentOracle.type.split(' ')[0]}.
                               </p>
                             </div>
                           )}
@@ -585,13 +656,13 @@ export default function MarketDetail() {
                                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                                     <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border shrink-0">
                                       <ImageWithFallback
-                                        src={aiAgent.image}
-                                        alt={aiAgent.name}
+                                        src={currentOracle.image}
+                                        alt={currentOracle.name}
                                         className="w-full h-full object-cover"
                                       />
                                     </div>
                                     <span className="text-xs text-foreground">
-                                      {aiAgent.name} is thinking... ({thinkingTokens} tokens)
+                                      {currentOracle.name} is thinking... ({thinkingTokens} tokens)
                                     </span>
                                   </div>
                                   <div className="flex gap-1">
@@ -727,10 +798,10 @@ export default function MarketDetail() {
                         <span>Markets</span>
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
-                        Latest market from {aiAgent.name}
+                        Latest market from {currentOracle.name}
                       </p>
                     </CardHeader>
-                    <MarketList oracleId={aiAgent.id} />
+                    <MarketList oracleId={currentOracle.id} />
                   </Card>
                 </div>
               )}
@@ -753,10 +824,10 @@ export default function MarketDetail() {
                     <span>Markets</span>
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
-                    Latest market from {aiAgent.name}
+                    Latest market from {currentOracle.name}
                   </p>
                 </CardHeader>
-                <MarketList oracleId={aiAgent.id} />
+                <MarketList oracleId={currentOracle.id} />
               </Card>
             </div>
           </div>

@@ -14,6 +14,7 @@ import {
   MessageCircle,
   MessageSquare,
   Moon,
+  Plus,
   Send,
   Settings,
   ShoppingCart,
@@ -40,6 +41,9 @@ import { useWalletStore } from '../store/wallet.store';
 import BalanceModal from './wallet/BalanceModal';
 import Usdc from './wallet/icon/Usdc';
 import useAuthStore from '../store/auth.store';
+import { chatService, ChatEntity } from '../services/chat.service';
+import { ScrollArea } from './ui/scroll-area';
+import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
   currentPage: string;
@@ -66,7 +70,7 @@ interface NavigationItem {
   requiresAuth: boolean;
   isExternalLink?: boolean;
   href?: string;
-  children?: OracleEntity[];
+  children?: any[];
 }
 
 const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
@@ -109,13 +113,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(import.meta.env.VITE_POLYMARKET_ENABLE === 'true'
     ? [
-        {
-          id: 'polymarket',
-          label: 'Polymarket',
-          icon: LineChart,
-          requiresAuth: true,
-        },
-      ]
+      {
+        id: 'polymarket',
+        label: 'Polymarket',
+        icon: LineChart,
+        requiresAuth: true,
+      },
+    ]
     : []),
   {
     id: 'invites',
@@ -125,13 +129,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(isAdmin
     ? [
-        {
-          id: 'topic',
-          label: 'Topic',
-          icon: BookType,
-          requiresAuth: true,
-        },
-      ]
+      {
+        id: 'topic',
+        label: 'Topic',
+        icon: BookType,
+        requiresAuth: true,
+      },
+    ]
     : []),
 ];
 
@@ -170,6 +174,7 @@ export function Sidebar({
   setSelectedAIAgent,
   isAdmin = false,
 }: SidebarProps) {
+  const navigate = useNavigate();
   const polymarketEnabled = import.meta.env.VITE_POLYMARKET_ENABLE === 'true';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(
@@ -178,32 +183,39 @@ export function Sidebar({
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>(
     getBaseNavigationItems(isAdmin)
   );
+  const [chats, setChats] = useState<ChatEntity[]>([]);
+  const [showAllChats, setShowAllChats] = useState(false);
   const isMobile = useIsMobile(1024); // Use custom hook with 1024px breakpoint
   const userLevel = user ? user.level : 1;
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await oraclesServices.getAllOracles();
+        const chatsData = user
+          ? await chatService.getChats({ limit: 100 })
+          : [];
 
-        if (data?.data) {
-          setNavigationItems(
-            getBaseNavigationItems(isAdmin).map((item) => {
-              if (item.id === 'chat') {
-                return {
-                  ...item,
-                  children: data.data,
-                };
-              }
-              return item;
-            })
-          );
+        if (chatsData?.length > 0) {
+          setChats(chatsData);
         }
+
+        const items = getBaseNavigationItems(isAdmin).map((item) => {
+          if (item.id === 'chat') {
+            return {
+              ...item,
+              // If user is logged in, show 'chat' section with its children set to chats
+              // We'll modify hasChildren check later or ensure children isn't empty if we want to show 'New Chat'
+              children: user ? !polymarketEnabled ? chatsData.filter(i => !i.polymarketId) : chatsData : [],
+            };
+          }
+          return item;
+        });
+        setNavigationItems(items);
       } catch (error) {
-        console.log('Failed to fetch all oracles', error);
+        console.log('Failed to fetch sidebar data', error);
       }
     })();
-  }, [isAdmin]);
+  }, [isAdmin, user]);
 
   // Close mobile menu when page changes
   useEffect(() => {
@@ -244,6 +256,19 @@ export function Sidebar({
     }
   };
 
+  const handleCreateNewChat = async () => {
+    try {
+      const newChat = await chatService.createChat();
+      if (newChat) {
+        setChats((prev) => [newChat, ...prev]);
+        navigate(`/chat/${newChat.id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create new chat:', error);
+    }
+    setIsMobileMenuOpen(false);
+  };
+
   // Mobile Sidebar Content (with close button)
   const MobileSidebarContent = () => (
     <>
@@ -278,7 +303,7 @@ export function Sidebar({
       <nav className="flex-1 p-4 space-y-1 min-h-[200px] overflow-y-auto scrollbar-hide">
         {navigationItems.map((item) => {
           const Icon = item.icon;
-          const hasChildren = !!item.children?.length;
+          const hasChildren = !!item.children?.length || (item.id === 'chat' && !!user);
           const isActiveParent = currentPage === item.id && !hasChildren;
 
           const handleItemClick = () => {
@@ -298,11 +323,10 @@ export function Sidebar({
             <div key={item.id} className="w-full">
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${
-                  isActiveParent
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                }`}
+                className={`w-full justify-start ${isActiveParent
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  }`}
                 onClick={handleItemClick}
               >
                 <Icon className="w-4 h-4 mr-3" />
@@ -318,49 +342,47 @@ export function Sidebar({
               {/* submenu */}
               {hasChildren && openSubmenu === item.id && (
                 <div className="mt-1 ml-3 flex flex-col gap-2">
-                  {item.children!.map((child) => {
-                    const isActiveChild =
-                      currentPage === item.id &&
-                      selectedAIAgent?.name === child.name;
-
-                    return (
-                      <Button
-                        key={child.name}
-                        variant="ghost"
-                        size="sm"
-                        className={`w-full justify-start text-[12.5px] ${
-                          isActiveChild
-                            ? 'bg-accent text-accent-foreground'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                        }`}
-                        onClick={() => {
-                          setSelectedAIAgent(child);
-                          localStorage.setItem('deor-currentOracle', child.id);
-                          if (user) {
-                            onNavigate('chat');
-                          } else if (item.requiresAuth) {
-                            onSetPendingNavigation('chat');
-                            onOpenWalletDialog();
-                          }
-                        }}
-                      >
-                        {child.image ? (
-                          <>
-                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full overflow-hidden border border-blue-500/30 mr-2">
-                              <ImageWithFallback
-                                src={child.image}
-                                alt={child.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          </>
-                        ) : (
-                          <></>
-                        )}
-                        {truncateName(child.name)}
-                      </Button>
-                    );
-                  })}
+                  {item.id === 'chat' && user && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start text-[12.5px] mb-1"
+                      onClick={handleCreateNewChat}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Chat
+                    </Button>
+                  )}
+                  <div className={`${showAllChats && item.id === 'chat' ? 'max-h-[300px] overflow-y-auto pr-2' : ''} flex flex-col gap-2`}>
+                    {((showAllChats && item.id === 'chat' ? item.children : (item.children && item.children.length > 0 ? item.children : [])?.slice(0, 5)) || []).map((child) => {
+                      const chat = child as ChatEntity;
+                      return (
+                        <Button
+                          key={chat.id}
+                          variant="ghost"
+                          size="sm"
+                          className={`w-full justify-start text-[12.5px] text-muted-foreground hover:text-foreground hover:bg-accent/50`}
+                          onClick={() => {
+                            onNavigate(`chat?chatId=${chat.id}`);
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          <span className="truncate">{chat.firstMessage ?? `Chat ${chat.id.slice(0, 8)}...`}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  {item.id === 'chat' && (item.children || []).length > 5 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-primary hover:text-primary/80 h-7"
+                      onClick={() => setShowAllChats(!showAllChats)}
+                    >
+                      {showAllChats ? 'Show Less' : `View More (${(item.children || []).length - 5} more)`}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -609,7 +631,7 @@ export function Sidebar({
           <nav className="flex-1 p-4 space-y-1 min-h-[200px] overflow-y-auto scrollbar-hide">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const hasChildren = !!item.children?.length;
+              const hasChildren = !!item.children?.length || (item.id === 'chat' && !!user);
               const isActiveParent = currentPage === item.id && !hasChildren;
 
               const handleItemClick = () => {
@@ -629,11 +651,10 @@ export function Sidebar({
                 <div key={item.id} className="w-full">
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${
-                      isActiveParent
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                    }`}
+                    className={`w-full justify-start ${isActiveParent
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                      }`}
                     onClick={handleItemClick}
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -653,47 +674,46 @@ export function Sidebar({
                   {/* submenu */}
                   {hasChildren && openSubmenu === item.id && (
                     <div className="mt-1 ml-3 flex flex-col gap-2">
-                      {item.children!.map((child) => {
-                        const isActiveChild =
-                          currentPage === item.id &&
-                          selectedAIAgent?.name === child.name;
-
-                        return (
-                          <Button
-                            key={child.name}
-                            variant="ghost"
-                            size="sm"
-                            className={`w-full justify-start text-[12.5px] ${
-                              isActiveChild
-                                ? 'bg-accent text-accent-foreground'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                            }`}
-                            onClick={() => {
-                              setSelectedAIAgent(child);
-                              localStorage.setItem(
-                                'deor-currentOracle',
-                                child.id
-                              );
-                              onNavigate('chat');
-                            }}
-                          >
-                            {child.image ? (
-                              <>
-                                <div className="w-3 h-3 md:w-6 md:h-6 rounded-full overflow-hidden border border-blue-500/30 mr-2">
-                                  <ImageWithFallback
-                                    src={child.image}
-                                    alt={child.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              </>
-                            ) : (
-                              <></>
-                            )}
-                            {truncateName(child.name)}
-                          </Button>
-                        );
-                      })}
+                      {item.id === 'chat' && user && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-[12.5px] mb-1"
+                          onClick={handleCreateNewChat}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          New Chat
+                        </Button>
+                      )}
+                      <div className={`${item.id === 'chat' ? 'max-h-[100px] overflow-y-auto pr-2 scrollbar-hide' : ''} flex flex-col gap-2`}>
+                        {((showAllChats && item.id === 'chat' ? item.children : (item?.children && item?.children?.length > 0 ? item.children : [])?.slice(0, 5)) || []).map((child) => {
+                          const chat = child as ChatEntity;
+                          return (
+                            <Button
+                              key={chat.id}
+                              variant="ghost"
+                              size="sm"
+                              className={`w-full justify-start text-[12.5px] text-muted-foreground hover:text-foreground hover:bg-accent/50`}
+                              onClick={() => {
+                                navigate(chat.polymarketId ? `/polymarket/${chat.polymarketId}/chat/${chat.id}` : `/chat/${chat.id}`);
+                              }}
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              <span className="truncate">{chat.firstMessage ?? `Chat ${chat.id.slice(0, 8)}...`}</span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      {item.id === 'chat' && (item.children || []).length > 5 && !showAllChats && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs text-muted-foreground font-bold opacity-80 hover:text-primary/80 h-7"
+                          onClick={() => setShowAllChats(!showAllChats)}
+                        >
+                          {`View More (${(item.children || []).length - 5} more)`}
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>

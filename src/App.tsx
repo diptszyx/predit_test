@@ -43,6 +43,7 @@ import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
 import XpHistoryPage from './pages/XpHistoryPage';
 import { inviteCodeService } from './services/invite-code.service';
+import { chatService } from './services/chat.service';
 import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
@@ -138,11 +139,15 @@ function AppContent() {
       case 'chat':
         // Navigate to chat with oracle if one is selected
         if (selectedAIAgent) {
-          navigate(`/chat/${selectedAIAgent.id}`);
+          chatService.createChat().then((newChat) => {
+            if (newChat) navigate(`/chat/${newChat.id}`);
+          });
         } else {
           const savedOracleId = localStorage.getItem('deor-currentOracle');
           if (savedOracleId) {
-            navigate(`/chat/${savedOracleId}`);
+            chatService.createChat().then((newChat) => {
+              if (newChat) navigate(`/chat/${newChat.id}`);
+            });
           } else {
             navigate('/chat');
           }
@@ -514,18 +519,22 @@ function AppContent() {
                   if (prompt) {
                     setInitialPrompt(prompt);
                   }
-                  if (!selectedAIAgent && listOracles.length > 0) {
-                    localStorage.setItem(
-                      'deor-currentOracle',
-                      listOracles[0].id
-                    );
-                    setSelectedAIAgent(listOracles[0]);
-                    navigate(`/chat/${listOracles[0].id}`);
-                  } else if (selectedAIAgent) {
-                    navigate(`/chat/${selectedAIAgent.id}`);
-                  } else {
-                    navigate('/chat');
-                  }
+                  const handlePredictionNav = async () => {
+                    let targetAgent = selectedAIAgent;
+                    if (!targetAgent && listOracles.length > 0) {
+                      targetAgent = listOracles[0];
+                      localStorage.setItem('deor-currentOracle', listOracles[0].id);
+                      setSelectedAIAgent(listOracles[0]);
+                    }
+
+                    if (targetAgent) {
+                      const newChat = await chatService.createChat();
+                      if (newChat) navigate(`/chat/${newChat.id}`);
+                    } else {
+                      navigate('/chat');
+                    }
+                  };
+                  handlePredictionNav();
                 }}
                 user={user}
               />
@@ -582,13 +591,14 @@ function AppContent() {
                       <AIAgentCard
                         key={aiAgent.id}
                         aiAgent={aiAgent}
-                        onClick={() => {
+                        onClick={async () => {
                           localStorage.setItem(
                             'deor-currentOracle',
                             aiAgent.id
                           );
                           setSelectedAIAgent(aiAgent);
-                          navigate(`/chat/${aiAgent.id}`);
+                          const newChat = await chatService.createChat();
+                          if (newChat) navigate(`/chat/${newChat.id}`);
                         }}
                       />
                     ))}
@@ -603,7 +613,7 @@ function AppContent() {
 
       {/* Chat Page - With Oracle */}
       <Route
-        path="/chat/:oracleId"
+        path="/chat/:chatId"
         element={
           <ChatWithOracleWrapper
             selectedAIAgent={selectedAIAgent}
@@ -1223,7 +1233,14 @@ function ArticleDetailWrapper({
           onBack={() => {
             if (previousPage === 'chat' && selectedAIAgent) {
               setPreviousPage(null);
-              navigate(`/chat/${selectedAIAgent}`);
+              // Create chat if returning to chat context
+              if (selectedAIAgent.id) {
+                chatService.createChat().then(newChat => {
+                  if (newChat) navigate(`/chat/${newChat.id}`);
+                });
+              } else {
+                navigate('/chat');
+              }
             } else if (previousPage === 'hotTakes') {
               setPreviousPage(null);
               navigate('/hot-takes');
@@ -1232,12 +1249,10 @@ function ArticleDetailWrapper({
               navigate('/');
             } else {
               setPreviousPage(null);
-              navigate(-1);
+              navigate(-1 as any);
             }
             setSelectedArticle(null);
           }}
-          aiAgentName={selectedAIAgent?.name}
-          aiAgentSpecialty={selectedAIAgent?.type}
           user={user}
           darkMode={darkMode}
           onToggleDarkMode={() => setDarkMode(!darkMode)}
@@ -1275,7 +1290,9 @@ function ArticleDetailWrapper({
               localStorage.setItem('deor-currentOracle', aiAgent.id);
               setArticleContext(selectedArticle);
               setPreviousPage('articleDetail');
-              navigate(`/chat/${aiAgent.id}`);
+              chatService.createChat().then(newChat => {
+                if (newChat) navigate(`/chat/${newChat.id}`);
+              });
             }
           }}
         />
@@ -1324,9 +1341,6 @@ function ChatWithOracleWrapper({
       if (oracle && (!selectedAIAgent || selectedAIAgent.id !== oracleId)) {
         setSelectedAIAgent(oracle);
         localStorage.setItem('deor-currentOracle', oracleId);
-      } else if (!oracle) {
-        // Oracle not found, redirect to chat selection
-        navigate('/chat');
       }
     }
   }, [oracleId, listOracles, selectedAIAgent]);

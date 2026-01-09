@@ -10,7 +10,7 @@ interface SharePredictionDialogProps {
   answer: string;
   aiAgentName: string;
   aiAgentAvatar: string;
-  aiAgentEmoji: string;
+  aiAgentEmoji?: string;
 }
 
 export function SharePredictionDialog({

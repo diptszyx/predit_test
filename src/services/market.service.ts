@@ -3,6 +3,7 @@ import { OracleEntity } from "./oracles.service";
 
 export interface Market {
   id: string;
+  chatId: string;
   question: string;
   description?: string;
   status: "open" | "end" | "resolved" | "cancelled";

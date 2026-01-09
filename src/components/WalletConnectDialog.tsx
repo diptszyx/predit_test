@@ -23,7 +23,7 @@ export type SocialProvider = 'google' | 'x';
 interface WalletConnectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConnect: (wallet: WalletType) => void;
+  onConnect: (wallet: WalletType, user: User) => void;
   onSocialConnect: (provider: SocialProvider) => void;
   onOpenPrivacy: () => void;
   onOpenTerms: () => void;

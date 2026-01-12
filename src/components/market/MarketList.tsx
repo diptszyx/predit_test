@@ -3,7 +3,6 @@ import { Clock, Share2, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { IS_MESSAGED } from '../../constants/params';
 import { arcLength } from '../../constants/ui';
 import { formatDate } from '../../lib/date';
 import {
@@ -436,7 +435,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
   };
 
   const handleCardClick = () => {
-    navigate(`/market/${item.id}?${IS_MESSAGED}=${item.isMessaged}`);
+    navigate(`/market/${item.id}`);
   };
 
   return (
@@ -609,7 +608,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
   };
 
   const handleCardClick = () => {
-    navigate(`/market/${item.id}?${IS_MESSAGED}=${item.isMessaged}`);
+    navigate(`/market/${item.id}`);
   };
 
   return (

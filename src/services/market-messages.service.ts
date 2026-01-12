@@ -1,5 +1,6 @@
 import apiClient, { AUTH_TOKEN_STORAGE_KEY } from "../lib/axios";
 import { StreamCallbacks } from "./message.service";
+import { OracleEntity } from "./oracles.service";
 
 export type MarketMessage = {
   id: string;
@@ -8,6 +9,8 @@ export type MarketMessage = {
   userId?: string;
   marketId?: string;
   createdAt: string;
+  oracleId?: string;
+  oracle?: OracleEntity;
 };
 
 export const getMarketMessages = async (marketId: string) => {
@@ -20,8 +23,9 @@ export const getMarketMessages = async (marketId: string) => {
 
 export const sendMarketMessageStream = async (
   message: string,
-  marketId: string,
-  callbacks: StreamCallbacks
+  chatId: string,
+  callbacks: StreamCallbacks,
+  oracleId?: string
 ) => {
   try {
     const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
@@ -35,7 +39,8 @@ export const sendMarketMessageStream = async (
         },
         body: JSON.stringify({
           content: message,
-          marketId: marketId,
+          chatId: chatId,
+          oracleId
         }),
       }
     );

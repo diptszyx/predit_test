@@ -2,12 +2,12 @@ import clsx from 'clsx';
 import { ArrowLeft, ArrowRight, Crown, Loader2, MessageSquare, Share } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
-import { IS_MESSAGED } from '../../constants/params';
 import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
 import { formatTime } from '../../lib/date';
+import { chatService } from '../../services/chat.service';
 import { ChatMessage, messageService } from '../../services/message.service';
 import { OracleEntity, oraclesServices } from '../../services/oracles.service';
 import { getPolymarketById, getTokenBalance, placePolymarketOrder, PolymarketMarket } from '../../services/polymarket.service';
@@ -25,6 +25,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { ScrollArea } from '../ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
@@ -38,15 +45,12 @@ interface PolymarketChatPage {
 
 const PolymarketChatPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const urlParams = new URLSearchParams(window.location.search);
-  const params = urlParams.get(IS_MESSAGED);
-  const isMessaged = params === 'true';
-  const hasParam = params !== null;
+  const [isMessaged, setIsMessaged] = useState(true);
 
   const user = useAuthStore((state) => state.user)
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser)
-  const [aiAgent, setAIAgent] = useState<OracleEntity>()
+  const [currentOracle, setCurrentOracle] = useState<OracleEntity>()
+  const [availableOracles, setAvailableOracles] = useState<OracleEntity[]>([])
 
   const { marketId, chatId } = useParams()
   const [market, setMarket] = useState<PolymarketMarket | null>(null)
@@ -77,25 +81,14 @@ const PolymarketChatPage = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (
-      !market ||
-      !hasParam ||
-      isMessaged
-    ) {
-      return;
+    if (market && !isMessaged) {
+      setIsMessaged(true);
+      setInput(market.question)
+      setTimeout(() => {
+        handleSend(market.question)
+      }, 1000)
     }
-
-    setInput(market.question)
-    setTimeout(() => {
-      handleSend(market.question)
-    }, 1000)
-  }, [market])
-
-  useEffect(() => {
-    setTimeout(() => {
-      clearParams()
-    }, 1500)
-  }, [])
+  }, [market, isMessaged])
 
   useEffect(() => {
     if (!marketId || !chatId) return;
@@ -104,9 +97,7 @@ const PolymarketChatPage = () => {
     fetchMessages()
   }, [marketId, chatId]);
 
-  const clearParams = () => {
-    navigate(location.pathname, { replace: true });
-  };
+
 
   const fetchMarket = async () => {
     if (!marketId) return;
@@ -125,15 +116,24 @@ const PolymarketChatPage = () => {
   const fetchMessages = async () => {
     try {
       const oracleList = await oraclesServices.getAllOracles();
-      if (!oracleList) return
+      if (!oracleList || !oracleList.data) return
 
-      if (oracleList?.data) {
-        setAIAgent(oracleList.data[0]);
-        const aiAgent = oracleList.data[0]
+      setAvailableOracles(oracleList.data);
 
-        setSuggestedQuestions(generateSuggestedQuestions(aiAgent))
-        const data = await messageService.loadMessages(aiAgent.id, chatId)
-        if (data) setMessages(data.reverse());
+      if (!currentOracle) {
+        setCurrentOracle(oracleList.data[0]);
+        setSuggestedQuestions(generateSuggestedQuestions(oracleList.data[0]))
+      }
+
+      if (chatId) {
+        const data = await chatService.getMessages(chatId)
+        if (data && data.length > 0) {
+          setMessages(data.reverse());
+          setCurrentOracle(data[data.length - 1].oracle)
+          setIsMessaged(true);
+        } else {
+          setIsMessaged(false);
+        }
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -214,13 +214,13 @@ const PolymarketChatPage = () => {
     setIsLoading(true);
     setThinkingTokens(0);
 
-    setSuggestedQuestions(generateSuggestedQuestions(aiAgent));
+    setSuggestedQuestions(generateSuggestedQuestions(currentOracle));
 
     const assistantMessageId = (Date.now() + 1).toString();
     let messageCreated = false;
 
     try {
-      await messageService.sendMessageStream(trimmedInput, aiAgent.id, {
+      await messageService.sendMessageStream(trimmedInput, currentOracle.id, {
         onMetadata: (metadata) => {
           // Handle metadata (userMessage and xpReward)
           if (metadata.xpReward.milestone) {
@@ -337,7 +337,7 @@ const PolymarketChatPage = () => {
     );
   }
 
-  if (!market || !aiAgent) {
+  if (!market || !currentOracle) {
     return (
       <div className="min-h-screen bg-background">
         <div className="w-full p-4 lg:p-6 space-y-6">
@@ -381,17 +381,43 @@ const PolymarketChatPage = () => {
                       </Button>
                       <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
                         <ImageWithFallback
-                          src={aiAgent.image}
-                          alt={aiAgent.name}
+                          src={currentOracle.image}
+                          alt={currentOracle.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-sm sm:text-base md:text-lg truncate">
-                          {aiAgent.name}
-                        </CardTitle>
+                        <Select
+                          value={currentOracle.id}
+                          onValueChange={(value: string) => {
+                            const selected = availableOracles.find((o) => o.id === value);
+                            if (selected) setCurrentOracle(selected);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue>
+                              {currentOracle.name}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableOracles.map((oracle) => (
+                              <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
+                                  <ImageWithFallback
+                                    src={oracle.image}
+                                    alt={oracle.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <span>
+                                  {oracle.name}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <CardDescription className="text-xs">
-                          {aiAgent.type}
+                          {currentOracle.type}
                         </CardDescription>
                       </div>
                       {messages.length !== 0 &&
@@ -481,17 +507,43 @@ const PolymarketChatPage = () => {
                         </Button>
                         <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
                           <ImageWithFallback
-                            src={aiAgent.image}
-                            alt={aiAgent.name}
+                            src={currentOracle.image}
+                            alt={currentOracle.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-sm sm:text-base md:text-lg truncate">
-                            {aiAgent.name}
-                          </CardTitle>
+                          <Select
+                            value={currentOracle.id}
+                            onValueChange={(value: string) => {
+                              const selected = availableOracles.find((o) => o.id === value);
+                              if (selected) setCurrentOracle(selected);
+                            }}
+                          >
+                            <SelectTrigger className="w-full h-auto p-0 text-sm sm:text-base md:text-lg border-none bg-transparent hover:bg-accent/50 focus:ring-0 shadow-none font-semibold justify-start">
+                              <SelectValue>
+                                {currentOracle.name}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableOracles.map((oracle) => (
+                                <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                                  <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
+                                    <ImageWithFallback
+                                      src={oracle.image}
+                                      alt={oracle.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <span>
+                                    {oracle.name}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <CardDescription className="text-xs">
-                            {aiAgent.type}
+                            {currentOracle.type}
                           </CardDescription>
                         </div>
                         {messages.length !== 0 &&
@@ -534,9 +586,9 @@ const PolymarketChatPage = () => {
                                 Start a New Conversation
                               </h3>
                               <p className="text-sm text-muted-foreground max-w-md">
-                                Ask {aiAgent.name} anything. Get predictions,
+                                Ask {currentOracle.name} anything. Get predictions,
                                 insights, and expert analysis on{' '}
-                                {aiAgent.type.split(' ')[0]}.
+                                {currentOracle.type.split(' ')[0]}.
                               </p>
                             </div>
                           )}
@@ -633,13 +685,13 @@ const PolymarketChatPage = () => {
                                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                                     <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border shrink-0">
                                       <ImageWithFallback
-                                        src={aiAgent.image}
-                                        alt={aiAgent.name}
+                                        src={currentOracle.image}
+                                        alt={currentOracle.name}
                                         className="w-full h-full object-cover"
                                       />
                                     </div>
                                     <span className="text-xs text-foreground">
-                                      {aiAgent.name} is thinking... ({thinkingTokens} tokens)
+                                      {currentOracle.name} is thinking... ({thinkingTokens} tokens)
                                     </span>
                                   </div>
                                   <div className="flex gap-1">

@@ -2,7 +2,6 @@ import { ChevronLeft, ChevronRight, CircleAlert, CircleFadingPlus, Clock, Messag
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { IS_MESSAGED } from '../constants/params';
 import { POLYMARKET_SORT_OPTIONS, PolymarketSortOptionId } from '../constants/search-options';
 import { arcLength } from '../constants/ui';
 import { formatDate, formatDateTime } from '../lib/date';
@@ -154,13 +153,13 @@ const PolymarketPage = () => {
       try {
         const data = await createPolyMarketChat(market.id)
         if (data)
-          navigate(`/polymarket/${market.id}/chat/${data.id}?${IS_MESSAGED}=${market.isMessaged}`);
+          navigate(`/polymarket/${market.id}/chat/${data.id}`);
       } catch (error) {
         console.log('error', error)
         toast.error('Something wrong with chat polymarket')
       }
     } else {
-      navigate(`/polymarket/${market.id}/chat/${market.chatId}?${IS_MESSAGED}=${market.isMessaged}`);
+      navigate(`/polymarket/${market.id}/chat/${market.chatId}`);
     }
   };
 

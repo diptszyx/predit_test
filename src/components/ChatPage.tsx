@@ -33,7 +33,7 @@ import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../constant
 import { formatTime } from '../lib/date';
 import type { User } from '../lib/types';
 import { chatService, MessageEntity } from '../services/chat.service';
-import { messageService } from '../services/message.service';
+import { ChatMessage, messageService } from '../services/message.service';
 import { News, newsService } from '../services/news.service';
 import { OracleEntity, oraclesServices } from '../services/oracles.service';
 import { Topic, topicServices } from '../services/topic-admin.service';
@@ -61,6 +61,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { createSharedMessageLink, createShareOracleConversationLink } from '../services/share-message.service';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -582,6 +584,34 @@ export function ChatPage({
 
   const formatLikes = (likes: number): string => {
     return likes.toString();
+  };
+
+  const onShare = async (isFullChat: boolean, message?: ChatMessage) => {
+    try {
+      if (isFullChat && messages && user) {
+        const data = await createShareOracleConversationLink(user.id, currentOracle.id)
+        setSharePayload({
+          mode: 'conversation',
+          question: messages[0].content,
+          answer: messages[1].content,
+          sharedLink: data.shareUrl
+        });
+      }
+      if (message) {
+        const data = await createSharedMessageLink(message.id)
+        if (data) {
+          setSharePayload({
+            mode: 'reply',
+            message: message.content,
+            sharedLink: data.shareUrl
+          });
+        }
+      }
+      setShareChatDialogOpen(true);
+    } catch (error) {
+      toast.error("Something went wrong while creating the share link. Please try again later.")
+      console.log('Failed to shared chat: ', error)
+    }
   };
 
   return (

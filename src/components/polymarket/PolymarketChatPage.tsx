@@ -1,18 +1,21 @@
 import clsx from 'clsx';
-import { ArrowLeft, ArrowRight, Crown, Loader2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Crown, Loader2, MessageSquare, Share } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
 import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
 import { formatTime } from '../../lib/date';
+import { chatService } from '../../services/chat.service';
 import { ChatMessage, messageService } from '../../services/message.service';
 import { OracleEntity, oraclesServices } from '../../services/oracles.service';
 import { getPolymarketById, getTokenBalance, placePolymarketOrder, PolymarketMarket } from '../../services/polymarket.service';
+import { createSharedMessageLink, createSharePolymarketConversationLink } from '../../services/share-message.service';
 import useAuthStore from '../../store/auth.store';
 import { useWalletStore } from '../../store/wallet.store';
 import { DisclaimerDialog } from '../DisclaimerDialog';
+import { ShareChatDialog, SharePayload } from '../ShareChatDialog';
 import { SubscriptionManagementDialog } from '../SubscriptionManagementDialog';
 import Markdown from '../chat/Markdown';
 import DailyLimitReachDialog from '../dialog/DailyLimitReachDialog';
@@ -22,8 +25,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { ScrollArea } from '../ui/scroll-area';
-import { Skeleton } from '../ui/skeleton';
-import { IS_MESSAGED } from '../../constants/params';
 import {
   Select,
   SelectContent,
@@ -31,7 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { chatService } from '../../services/chat.service';
+import { Skeleton } from '../ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 const tabs = [
   { id: 'chat', label: 'Chat' },
@@ -43,7 +45,6 @@ interface PolymarketChatPage {
 
 const PolymarketChatPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isMessaged, setIsMessaged] = useState(true);
 
   const user = useAuthStore((state) => state.user)
@@ -69,6 +70,8 @@ const PolymarketChatPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>()
 
+  const [shareChatDialogOpen, setShareChatDialogOpen] = useState(false);
+  const [sharePayload, setSharePayload] = useState<SharePayload | null>(null);
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -273,6 +276,34 @@ const PolymarketChatPage = () => {
     }
   };
 
+  const onShare = async (isFullChat: boolean, message?: ChatMessage) => {
+    try {
+      if (isFullChat && messages && user) {
+        const data = await createSharePolymarketConversationLink(chatId)
+        setSharePayload({
+          mode: 'conversation',
+          question: messages[0].content,
+          answer: messages[1].content,
+          sharedLink: data.shareUrl
+        });
+      }
+      if (message) {
+        const data = await createSharedMessageLink(message.id)
+        if (data) {
+          setSharePayload({
+            mode: 'reply',
+            message: message.content,
+            sharedLink: data.shareUrl
+          });
+        }
+      }
+      setShareChatDialogOpen(true);
+    } catch (error) {
+      toast.error("Something went wrong while creating the share link. Please try again later.")
+      console.log('Failed to shared chat: ', error)
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex h-dvh overflow-hidden">
@@ -371,7 +402,7 @@ const PolymarketChatPage = () => {
                           <SelectContent>
                             {availableOracles.map((oracle) => (
                               <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                                <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
                                   <ImageWithFallback
                                     src={oracle.image}
                                     alt={oracle.name}
@@ -389,6 +420,25 @@ const PolymarketChatPage = () => {
                           {currentOracle.type}
                         </CardDescription>
                       </div>
+                      {messages.length !== 0 &&
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <button
+                              onClick={() => onShare(true)}
+                              className="
+                            p-1.5 rounded-md
+                            hover:bg-gray-600/40
+                            transition-colors
+                          "
+                            >
+                              <Share className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Share
+                          </TooltipContent>
+                        </Tooltip>
+                      }
                     </div>
                   </CardContent>
                 </Card>
@@ -478,7 +528,7 @@ const PolymarketChatPage = () => {
                             <SelectContent>
                               {availableOracles.map((oracle) => (
                                 <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
-                                  <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                                  <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
                                     <ImageWithFallback
                                       src={oracle.image}
                                       alt={oracle.name}
@@ -496,6 +546,25 @@ const PolymarketChatPage = () => {
                             {currentOracle.type}
                           </CardDescription>
                         </div>
+                        {messages.length !== 0 &&
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <button
+                                onClick={() => onShare(true)}
+                                className="
+                            p-1.5 rounded-md
+                            hover:bg-gray-600/40
+                            transition-colors
+                          "
+                              >
+                                <Share className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Share
+                            </TooltipContent>
+                          </Tooltip>
+                        }
                       </div>
                     </CardContent>
                   </Card>
@@ -554,14 +623,37 @@ const PolymarketChatPage = () => {
                                       )}
                                     </div>
                                   </div>
-                                  <span
-                                    className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
-                                      ? 'text-right max-w-[94vw]'
-                                      : 'text-left'
-                                      }`}
-                                  >
-                                    {formatTime(message.createdAt)}
-                                  </span>
+                                  <div className={`text-xs mt-3 text-muted-foreground block ${message.sender === 'user'
+                                    ? 'text-right max-w-[94vw]'
+                                    : 'text-left'
+                                    }`}>
+                                    <span
+                                    >
+                                      {formatTime(message.createdAt)}
+                                    </span>
+                                    {message.sender === 'assistant' &&
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <button
+                                            onClick={() => {
+                                              onShare(false, message)
+                                            }}
+                                            className="
+                            p-1.5 rounded-md mx-2
+                            hover:bg-gray-600/20
+                            transition-colors cursor-pointer
+                          "
+                                          >
+                                            <Share className="w-4 h-3.5 cursor-pointer"
+                                            />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          Share
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    }
+                                  </div>
                                   {message.sender === 'assistant' &&
                                     suggestedQuestions &&
                                     index === messages.length - 1 &&
@@ -743,6 +835,15 @@ const PolymarketChatPage = () => {
         open={disclaimerDialogOpen}
         onOpenChange={setDisclaimerDialogOpen}
       />
+
+      {/* Share Chat Dialog */}
+      {sharePayload &&
+        <ShareChatDialog
+          open={shareChatDialogOpen}
+          onOpenChange={setShareChatDialogOpen}
+          sharePayload={sharePayload}
+        />
+      }
 
       <SubscriptionManagementDialog
         open={subscriptionDialogOpen}

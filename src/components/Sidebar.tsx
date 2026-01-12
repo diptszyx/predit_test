@@ -15,35 +15,31 @@ import {
   MessageSquare,
   Moon,
   Plus,
-  Send,
   Settings,
   ShoppingCart,
   Sparkles,
   Sun,
   Trophy,
-  Twitter,
   User,
   Users,
-  Zap,
+  Zap
 } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { truncateName } from '../lib/truncateName';
+import { copyToClipboard } from '../lib/clipboardUtils';
 import { User as UserType } from '../lib/types';
-import { OracleEntity, oraclesServices } from '../services/oracles.service';
+import { ChatEntity, chatService } from '../services/chat.service';
+import { OracleEntity } from '../services/oracles.service';
+import useAuthStore from '../store/auth.store';
+import { useWalletStore } from '../store/wallet.store';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { copyToClipboard } from '../lib/clipboardUtils';
-import { toast } from 'sonner';
-import { useWalletStore } from '../store/wallet.store';
 import BalanceModal from './wallet/BalanceModal';
 import Usdc from './wallet/icon/Usdc';
-import useAuthStore from '../store/auth.store';
-import { chatService, ChatEntity } from '../services/chat.service';
-import { ScrollArea } from './ui/scroll-area';
-import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
   currentPage: string;

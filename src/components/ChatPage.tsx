@@ -1,27 +1,20 @@
 import {
-  ArrowLeft,
   ArrowRight,
-  Check,
   Crown,
   Info,
   Loader2,
   Lock,
   MessageSquare,
-  Moon,
-  Plus,
+  Share,
   ShoppingCart,
-  Sparkles,
-  Star,
-  Sun,
-  ThumbsUp,
-  Zap,
+  Zap
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import TextareaAutosize from 'react-textarea-autosize';
 import { DisclaimerDialog } from './DisclaimerDialog';
-import { ShareAIAgentDialog } from './ShareAIAgentDialog';
+import { ShareChatDialog, SharePayload } from './ShareChatDialog';
 import { SharePredictionDialog } from './SharePredictionDialog';
 import { SubscriptionManagementDialog } from './SubscriptionManagementDialog';
-import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
   Card,
@@ -31,21 +24,26 @@ import {
   CardTitle,
 } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
-import { Skeleton } from './ui/skeleton';
-import TextareaAutosize from 'react-textarea-autosize';
 
 import clsx from 'clsx';
 import { motion } from 'motion/react';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { formatTime, timeAgo } from '../lib/date';
+import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../constants/prediction';
+import { formatTime } from '../lib/date';
 import type { User } from '../lib/types';
-import { ChatMessage, messageService } from '../services/message.service';
-import { News, newsService } from '../services/news.service';
 import { chatService, MessageEntity } from '../services/chat.service';
+import { messageService } from '../services/message.service';
+import { News, newsService } from '../services/news.service';
 import { OracleEntity, oraclesServices } from '../services/oracles.service';
+import { Topic, topicServices } from '../services/topic-admin.service';
 import useAuthStore from '../store/auth.store';
+import Markdown from './chat/Markdown';
+import DailyLimitReachDialog from './dialog/DailyLimitReachDialog';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
 import { InfoAgentDialog } from './InfoAgentDialog';
+import MarketList from './market/MarketList';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,14 +61,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
-import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
-import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY, questionsByAIAgent } from '../constants/prediction';
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import MarketList from './market/MarketList';
-import { Topic, topicServices } from '../services/topic-admin.service';
-import Markdown from './chat/Markdown';
-import { Textarea } from './ui/textarea';
-import DailyLimitReachDialog from './dialog/DailyLimitReachDialog';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -198,16 +188,15 @@ export function ChatPage({
     question: string;
     answer: string;
   } | null>(null);
+  const [shareChatDialogOpen, setShareChatDialogOpen] = useState(false);
+  const [sharePayload, setSharePayload] = useState<SharePayload | null>(null);
 
   // Disclaimer dialog
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
-  const [shareAIAgentDialogOpen, setShareAIAgentDialogOpen] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>(
     generateSuggestedQuestions(aiAgent)
   );
 
-  // Rating flash functionality
-  const [ratingFlashing, setRatingFlashing] = useState(false);
   const [currentTab, setCurrentTab] = useState<string>('chat');
   const [searchParams] = useSearchParams();
   const chatIdFromUrl = searchParams.get('chatId');
@@ -592,9 +581,6 @@ export function ChatPage({
   };
 
   const formatLikes = (likes: number): string => {
-    // if (likes >= 1000) {
-    //   return `${(likes / 1000).toFixed(1)}K`;
-    // }
     return likes.toString();
   };
 
@@ -620,11 +606,11 @@ export function ChatPage({
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
-          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4 w-full">
+          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-0 gap-4 w-full">
             {/* Chat Section - Center with max width */}
             <div className="w-full h-full lg:flex-1 space-y-0 flex flex-col">
               {/* Oracle mobile header tab */}
-              <div className="lg:hidden fixed top-0 left-0 right-0 z-[10]">
+              <div className="lg:hidden fixed top-0 left-0 right-0 z-10">
                 <Card
                   className="border-border bg-background/80 backdrop-blur-md"
                   style={{
@@ -639,7 +625,7 @@ export function ChatPage({
                     }}
                   >
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
                         <ImageWithFallback
                           src={currentOracle.image}
                           alt={currentOracle.name}
@@ -680,28 +666,42 @@ export function ChatPage({
                           {currentOracle.type}
                         </CardDescription>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setInfoDialogOpen(true)}
-                        className="lg:hidden text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700! h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                      >
-                        <Info className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <button
+                            onClick={() => setInfoDialogOpen(true)}
+                            className="
+    p-1.5 rounded-md
+    hover:bg-gray-600/40
+    transition-colors
+  "
+                          >
+                            <Info className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
                           Info
-                        </span>
-                      </Button>
-                      {/* <Button
-                        variant="ghost"
-                        size="sm"
-                        // onClick={() => setShareOracleDialogOpen(true)}
-                        className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                      >
-                        <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
-                          Share
-                        </span>
-                      </Button> */}
+                        </TooltipContent>
+                      </Tooltip>
+                      {messages.length !== 0 &&
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <button
+                              onClick={() => onShare(true)}
+                              className="
+    p-1.5 rounded-md
+    hover:bg-gray-600/40
+    transition-colors
+  "
+                            >
+                              <Share className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Share
+                          </TooltipContent>
+                        </Tooltip>
+                      }
                     </div>
                   </CardContent>
                 </Card>
@@ -736,7 +736,7 @@ export function ChatPage({
                         {currentTab === tab.id && (
                           <motion.div
                             layoutId="underline"
-                            className="absolute bottom-0 h-[2px] dark:bg-white bg-black w-full"
+                            className="absolute bottom-0 h-0.5 dark:bg-white bg-black w-full"
                             transition={{
                               type: 'spring',
                               stiffness: 300,
@@ -766,7 +766,7 @@ export function ChatPage({
                       }}
                     >
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
                           <ImageWithFallback
                             src={currentOracle.image}
                             alt={currentOracle.name}
@@ -807,25 +807,42 @@ export function ChatPage({
                             {currentOracle.type}
                           </CardDescription>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setInfoDialogOpen(true)}
-                          className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700! h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                        >
-                          <Info className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </Button>
-                        {/* <Button
-                          variant="ghost"
-                          size="sm"
-                          // onClick={() => setShareOracleDialogOpen(true)}
-                          className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                        >
-                          <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
-                            Share
-                          </span>
-                        </Button> */}
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <button
+                              onClick={() => setInfoDialogOpen(true)}
+                              className="
+    p-1.5 rounded-md
+    hover:bg-gray-600/40
+    transition-colors
+  "
+                            >
+                              <Info className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Info
+                          </TooltipContent>
+                        </Tooltip>
+                        {messages.length !== 0 &&
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <button
+                                onClick={() => onShare(true)}
+                                className="
+    p-1.5 rounded-md
+    hover:bg-gray-600/40
+    transition-colors
+  "
+                              >
+                                <Share className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Share
+                            </TooltipContent>
+                          </Tooltip>
+                        }
                       </div>
                     </CardContent>
                   </Card>
@@ -887,33 +904,38 @@ export function ChatPage({
                                       )}
                                     </div>
                                   </div>
-                                  <span
-                                    className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
-                                      ? 'text-right max-w-[94vw]'
-                                      : 'text-left'
-                                      }`}
-                                  >
-                                    {formatTime(message.createdAt)}
-                                  </span>
-
-                                  {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
-                                  {/* {message.sender === "assistant"
-                              && message.suggestedQuestions && index === messages.length - 1 && !isLoading &&
-                              (
-                              <div className="flex justify-start mt-2 sm:mt-3">
-                                <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
-                                  {message.suggestedQuestions.map((question, qIndex) => (
-                                    <button
-                                      key={qIndex}
-                                      onClick={() => handleSend(question)}
-                                      className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left"
+                                  <div className={`text-xs mt-3 text-muted-foreground block ${message.sender === 'user'
+                                    ? 'text-right max-w-[94vw]'
+                                    : 'text-left'
+                                    }`}>
+                                    <span
                                     >
-                                      {question}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )} */}
+                                      {formatTime(message.createdAt)}
+                                    </span>
+                                    {message.sender === 'assistant' &&
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <button
+                                            onClick={() => {
+                                              onShare(false, message)
+                                            }}
+                                            className="
+                            p-1.5 rounded-md mx-2
+                            hover:bg-gray-600/20
+                            transition-colors cursor-pointer
+                          "
+                                          >
+                                            <Share className="w-4 h-3.5"
+                                            />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          Share
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    }
+                                  </div>
+
                                   {message.sender === 'assistant' &&
                                     suggestedQuestions &&
                                     index === messages.length - 1 &&
@@ -1332,15 +1354,14 @@ export function ChatPage({
           />
         )}
 
-        {/* Share AI Agent Dialog */}
-        <ShareAIAgentDialog
-          open={shareAIAgentDialogOpen}
-          onOpenChange={setShareAIAgentDialogOpen}
-          aiAgentName={currentOracle.name}
-          aiAgentAvatar={currentOracle.image}
-          aiAgentTitle={currentOracle.name}
-          aiAgentId={currentOracle.id}
-        />
+        {/* Share Chat Dialog */}
+        {sharePayload &&
+          <ShareChatDialog
+            open={shareChatDialogOpen}
+            onOpenChange={setShareChatDialogOpen}
+            sharePayload={sharePayload}
+          />
+        }
 
         {/* Disclaimer Dialog */}
         <DisclaimerDialog

@@ -41,9 +41,10 @@ import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
+import ShareChatPage from './pages/ShareChatPage';
 import XpHistoryPage from './pages/XpHistoryPage';
-import { inviteCodeService } from './services/invite-code.service';
 import { chatService } from './services/chat.service';
+import { inviteCodeService } from './services/invite-code.service';
 import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
@@ -1192,6 +1193,46 @@ function AppContent() {
           </div>
         }
       />
+
+      {/* Share chat page */}
+      <Route
+        path="/share/*"
+        element={
+          <div className="flex h-dvh bg-background overflow-hidden">
+            <Helmet>
+              <title>Shared Chat | Predit Market AI</title>
+
+              <meta
+                name="description"
+                content="View a shared chat from Predit Market. Open the link to see the conversation content."
+              />
+
+              <meta
+                name="keywords"
+                content="shared chat, share link, conversation, ai chat, predit market"
+              />
+
+              {/* Open Graph */}
+              <meta property="og:type" content="website" />
+              <meta property="og:title" content={'Shared Chat | Predit Market AI'} />
+              <meta property="og:description" content={'View a shared chat from Predit Market. Open the link to see the conversation content.'} />
+
+              {/* Twitter */}
+              <meta name="twitter:card" content="summary" />
+              <meta name="twitter:title" content={'Shared Chat | Predit Market AI'} />
+              <meta name="twitter:description" content={'View a shared chat from Predit Market. Open the link to see the conversation content.'} />
+            </Helmet>
+
+            <Sidebar {...commonSidebarProps} />
+            <div className="flex-1 overflow-y-auto">
+              <main className="container mx-auto">
+                <ShareChatPage />
+              </main>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
     </Routes>
   );
 }
@@ -1346,7 +1387,7 @@ function ChatWithOracleWrapper({
   }, [oracleId, listOracles, selectedAIAgent]);
 
   if (!selectedAIAgent) {
-    return null; // Wait for oracle to load
+    return null;
   }
 
   return (

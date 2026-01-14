@@ -50,6 +50,8 @@ import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
 import { useWalletStore } from './store/wallet.store';
 import { checkIsAdmin } from './utils/isAdmin';
+import { MarketListPage } from './components/dflow/MarketListPage';
+import { MarketDetailPage } from './components/dflow/MarketDetailPage';
 
 export default function App() {
   return (
@@ -1228,6 +1230,38 @@ function AppContent() {
               <main className="container mx-auto">
                 <ShareChatPage />
               </main>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      {/* DFlow Market Pages */}
+      <Route
+        path="/dflow"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Dflow Markets</title>
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <div className="flex-1 overflow-y-auto">
+              <MarketListPage />
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+      <Route
+        path="/dflow/:id"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Dflow Market Detail</title>
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <div className="flex-1 overflow-y-auto">
+              <MarketDetailPage />
             </div>
             {commonDialogProps}
           </div>

@@ -18,6 +18,7 @@ import {
   Settings,
   ShoppingCart,
   Sparkles,
+  Store,
   Sun,
   Trophy,
   User,
@@ -113,6 +114,12 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
         id: 'polymarket',
         label: 'Polymarket',
         icon: LineChart,
+        requiresAuth: true,
+      },
+      {
+        id: 'dflow',
+        label: 'Dflow Market',
+        icon: Store,
         requiresAuth: true,
       },
     ]

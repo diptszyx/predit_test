@@ -2,8 +2,8 @@ import { CircleAlert, Clock, Loader2, Pen, Share2, Trash2, Users } from 'lucide-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { IS_MESSAGED } from '../../constants/params';
 import { arcLength } from '../../constants/ui';
+import { formatDate } from '../../lib/date';
 import { marketAdminServices } from '../../services/market-admin.service';
 import { Market } from '../../services/market.service';
 import CreateUpdateMarketModal from '../CreateMarket';
@@ -29,7 +29,6 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { Skeleton } from '../ui/skeleton';
-import { formatDate } from '../../lib/date';
 
 export interface MarketItemProps {
   item: Market;
@@ -92,7 +91,7 @@ export default function MarketListAdmin({
   }, [onRefetchReady]);
 
   const handleMarketClick = (item: Market) => {
-    navigate(`/market/${item.id}?${IS_MESSAGED}=${item.isMessaged}`);
+    navigate(`/market/${item.id}`);
   };
 
   const handleRefetch = () => {

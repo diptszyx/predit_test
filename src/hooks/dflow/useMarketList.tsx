@@ -9,6 +9,8 @@ export interface MarketSummary {
   yesMint: string;
   noMint: string;
   volume: number;
+  chatId: string;
+  id: string;
 }
 
 export const useMarketList = ({
@@ -53,6 +55,8 @@ export const useMarketList = ({
                     yesMint: accounts.yesMint,
                     noMint: accounts.noMint,
                     volume: m.volume || 0,
+                    chatId: event.chatId,
+                    id: event.id
                   });
                 }
               });

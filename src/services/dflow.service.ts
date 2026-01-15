@@ -23,8 +23,56 @@ export interface DflowEvent {
   markets?: DflowMarket[];
 }
 
+type MarketAccount = {
+  isInitialized: boolean;
+  marketLedger: string;
+  noMint: string;
+  redemptionStatus: string;
+  yesMint: string;
+};
+
+type AccountsMap = {
+  [accountId: string]: MarketAccount;
+};
+export interface DflowDataEntity {
+  accounts: AccountsMap;
+
+  active: boolean;
+  chatId: string | null;
+
+  closeTime: string;
+  createdAt: string;
+  updatedAt: string;
+  expirationTime: string;
+  openTime: string;
+
+  eventTicker: string;
+  id: string;
+
+  isDeleted: boolean;
+  isMessaged: boolean;
+
+  marketType: "binary" | string;
+
+  noAsk: string;
+  noBid: string;
+  yesAsk: string;
+  yesBid: string;
+
+  openInterest: string;
+  volume: string;
+
+  result: string;
+  status: "active" | "closed" | string;
+
+  subtitle: string;
+  title: string;
+
+  entity: "DflowDataEntity";
+}
+
 export interface DflowListResponse {
-  data: DflowEvent[];
+  data: DflowDataEntity[];
   meta: {
     total: number;
     limit: number;
@@ -48,7 +96,9 @@ export const getDflowEventDetail = async (seriesTicker: string) => {
 };
 
 export const getDflowEventById = async (ticker: string) => {
-  const response = await apiClient.get<DflowEvent>(`/dflow/markets/${ticker}`);
+  const response = await apiClient.get<DflowDataEntity>(
+    `/dflow/markets/${ticker}`
+  );
   return response.data;
 };
 

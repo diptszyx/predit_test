@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { getDflowEvents } from '../../services/dflow.service';
+import { useEffect, useState } from 'react';
+import { DflowDataEntity, getDflowEvents } from '../../services/dflow.service';
 
 export interface MarketSummary {
   ticker: string;
@@ -22,7 +22,7 @@ export const useMarketList = ({
   offset?: number;
   seriesTickers?: string
 } = {}) => {
-  const [markets, setMarkets] = useState<MarketSummary[]>([]);
+  const [markets, setMarkets] = useState<DflowDataEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState<{ total: number; limit: number; offset: number }>({ total: 0, limit, offset });
 
@@ -39,31 +39,7 @@ export const useMarketList = ({
         if (response.meta) {
           setMeta(response.meta);
         }
-
-        const flattened: MarketSummary[] = [];
-        if (response.data) {
-          response.data.forEach((event: any) => {
-            if (event.markets) {
-              event.markets.forEach((m: any) => {
-                const accounts = Object.values(m.accounts || {})[0] as any;
-                if (accounts) {
-                  flattened.push({
-                    ticker: m.ticker,
-                    seriesTicker: event.seriesTicker,
-                    title: m.title,
-                    subtitle: event.title,
-                    yesMint: accounts.yesMint,
-                    noMint: accounts.noMint,
-                    volume: m.volume || 0,
-                    chatId: event.chatId,
-                    id: event.id
-                  });
-                }
-              });
-            }
-          });
-        }
-        setMarkets(flattened);
+        setMarkets(response.data);
 
       } catch (err) {
         console.error(err);

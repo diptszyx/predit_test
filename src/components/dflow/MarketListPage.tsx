@@ -1,11 +1,12 @@
-import { ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { MarketSummary, useMarketList } from "../../hooks/dflow/useMarketList";
+import { arcLength, rdImageMarket } from '../../constants/ui';
+import { useMarketList } from "../../hooks/dflow/useMarketList";
 import { useTrade } from "../../hooks/dflow/useTrade";
-import { createDflowMarketChat } from '../../services/dflow.service';
-import { Badge } from "../ui/badge";
+import { formatDate } from '../../lib/date';
+import { createDflowMarketChat, DflowDataEntity } from '../../services/dflow.service';
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
@@ -19,10 +20,8 @@ export const MarketListPage = () => {
   const { placeOrder, isTrading } = useTrade();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const handleMarketClick = (ticker: string) => {
-    // Navigate to Dflow detail page (using series or ticker?)
-    // Assuming ticker is unique market ID
-    navigate(`/dflow/${ticker}`);
+  const handleMarketClick = (id: string) => {
+    navigate(`/dflow/${id}`);
   };
 
   const handleQuickBuy = async (e: React.MouseEvent<HTMLButtonElement>, mint: string) => {
@@ -44,45 +43,51 @@ export const MarketListPage = () => {
     return `$${volume.toFixed(0)}`;
   };
 
-  const handleClickChat = async (market: MarketSummary) => {
+  const handleClickChat = async (market: DflowDataEntity) => {
     if (!market.chatId) {
       try {
         const data = await createDflowMarketChat(market.id)
         if (data)
-          navigate(`/dflow/${market.ticker}/chat/${data.id}`)
+          navigate(`/dflow/${market.id}/chat/${data.id}`)
       } catch (error) {
         console.log('error', error)
         toast.error('Something wrong with chat polymarket')
       }
     } else {
-      navigate(`/dflow/${market.ticker}/chat/${market.chatId}`)
+      navigate(`/dflow/${market.id}/chat/${market.chatId}`)
     }
   }
 
-  const renderMarketCard = (market: MarketSummary) => {
-    // Hardcoded probability/price for now as it's not in the list API yet
-    // In a real app, you'd fetch prices or have them in the list
-    const yesPrice = 50;
-    const arcLength = 126; // Approx arc length for the svg
-    const progressLength = (yesPrice / 100) * arcLength;
+  const renderMarketCard = (market: DflowDataEntity) => {
+    const yes = parseFloat(market.yesBid ?? "0")
+    const no = parseFloat(market.noBid ?? "0")
+
+    const probYes = (yes + no) > 0 ? yes / (yes + no) : 0.5
+    const progressLength = probYes * arcLength
+
     return (
       <Card
-        key={market.ticker}
+        key={market.id}
         className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg bg-background border-background/50"
-        onClick={() => handleMarketClick(market.ticker)}
+        onClick={() => handleMarketClick(market.id)}
       >
         <CardContent className="p-4">
           {/* Header */}
           <div className="flex items-start gap-3 mb-4">
-            <div className="w-16 h-16 rounded-md overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center">
+            <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 bg-muted flex items-center justify-center">
               {/* Placeholder Image */}
-              <span className="text-xs text-muted-foreground">IMG</span>
+              <img
+                src={rdImageMarket()}
+                alt={market.title}
+                className="w-full h-full object-cover"
+              />
+              {/* <span className="text-xs text-muted-foreground">IMG</span> */}
             </div>
             <div className="flex-1 flex items-start justify-between gap-2">
               <h4 className="text-sm font-medium line-clamp-2 leading-snug">
                 {market.title}
               </h4>
-              <div className="flex flex-col items-center flex-shrink-0">
+              <div className="flex flex-col items-center shrink-0">
                 {/* Semicircle Progress Bar (Simulated) */}
                 <div className="relative w-24 h-12 mb-1">
                   <svg className="w-full h-full" viewBox="0 0 100 50" style={{ overflow: 'visible' }}>
@@ -98,27 +103,26 @@ export const MarketListPage = () => {
                     />
                   </svg>
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 text-2xl font-bold text-gray-400 leading-none">
-                    {yesPrice}%
+                    {(probYes * 100).toFixed(0)}%
                   </div>
                 </div>
                 <div className="text-xs text-gray-400">chance</div>
               </div>
             </div>
           </div>
-          <Badge variant="outline" className="text-xs">{market.subtitle}</Badge>
 
           {/* Buttons */}
           <div className="grid grid-cols-2 gap-3 mt-6 mb-4">
             <Button
               className="h-10 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-lg font-semibold border border-green-600/30 rounded-lg"
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleQuickBuy(e, market.yesMint)}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleQuickBuy(e, market.yesBid)}
               disabled={isTrading}
             >
               Yes
             </Button>
             <Button
               className="h-10 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-lg font-semibold border border-red-600/30 rounded-lg"
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleQuickBuy(e, market.noMint)}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleQuickBuy(e, market.noBid)}
               disabled={isTrading}
             >
               No
@@ -128,7 +132,11 @@ export const MarketListPage = () => {
           {/* Footer */}
           <div className="flex items-center justify-between text-sm text-gray-400 gap-4">
             <div className="flex items-center gap-2">
-              <span className="font-medium">{formatVolume(market.volume)} Vol.</span>
+              <span className="font-medium">{formatVolume(Number(market.volume))} Vol.</span>
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{formatDate(market.closeTime)}</span>
+              </div>
             </div>
             <Tooltip>
               <TooltipTrigger>

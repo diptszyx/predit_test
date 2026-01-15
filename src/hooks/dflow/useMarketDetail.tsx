@@ -1,32 +1,20 @@
 
-import { useState, useEffect } from 'react';
-import { getDflowEventDetail } from '../../services/dflow.service';
+import { useEffect, useState } from 'react';
+import { DflowDataEntity, getDflowEventById } from '../../services/dflow.service';
 
-export const useMarketDetail = (seriesTicker: string) => {
-  const [market, setMarket] = useState<any | null>(null);
+export const useMarketDetail = (id: string) => {
+  const [market, setMarket] = useState<DflowDataEntity | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!seriesTicker) return;
+    if (!id) return;
 
     const fetchDetail = async () => {
       try {
         setLoading(true);
 
-        const response: any = await getDflowEventDetail(seriesTicker);
-
-        if (response.data && response.data.length > 0) {
-          const event = response.data[0];
-          const m = event.markets?.[0];
-          const accounts = Object.values(m?.accounts || {})[0] as any;
-
-          setMarket({
-            ...m,
-            yesMint: accounts?.yesMint,
-            noMint: accounts?.noMint,
-            eventTitle: event.title,
-          });
-        }
+        const response: any = await getDflowEventById(id);
+        setMarket(response)
 
       } catch (err) {
         console.error(err);
@@ -36,7 +24,7 @@ export const useMarketDetail = (seriesTicker: string) => {
     };
 
     fetchDetail();
-  }, [seriesTicker]);
+  }, [id]);
 
   return { market, loading };
 };

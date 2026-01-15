@@ -1277,7 +1277,7 @@ function AppContent() {
         }
       />
 
-      < Route
+      <Route
         path="/dflow/:id"
         element={
           < div className="flex h-screen bg-background overflow-hidden" >
@@ -1285,10 +1285,14 @@ function AppContent() {
               <title>Dflow Market Detail</title>
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            <div className="flex-1 overflow-y-auto">
-              <MarketDetailPage />
-            </div>
-            {commonDialogProps}
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <RequirePhantomConnected>
+                <div className="flex-1 overflow-y-auto">
+                  <MarketDetailPage />
+                </div>
+              </RequirePhantomConnected>
+              {commonDialogProps}
+            </InviteCodeGuard>
           </ div>
         }
       />
@@ -1311,11 +1315,13 @@ function AppContent() {
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
-              {user && (
-                <div className="flex-1 overflow-y-auto">
-                  <DflowChatPage />
-                </div>
-              )}
+              <RequirePhantomConnected>
+                {user && (
+                  <div className="flex-1 overflow-y-auto">
+                    <DflowChatPage />
+                  </div>
+                )}
+              </RequirePhantomConnected>
               {commonDialogProps}
             </InviteCodeGuard>
           </div>

@@ -152,7 +152,7 @@ export const MarketDetailPage = () => {
                 <CardContent className="p-6 space-y-4">
                   <div className="w-full h-72 rounded-lg overflow-hidden bg-muted">
                     <img
-                      src={rdImageMarket()}
+                      src={rdImageMarket(id)}
                       alt={market.title}
                       className="w-full h-full object-fill"
                     />

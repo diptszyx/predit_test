@@ -84,7 +84,7 @@ export const MarketListPage = () => {
             <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 bg-muted flex items-center justify-center">
               {/* Placeholder Image */}
               <img
-                src={rdImageMarket()}
+                src={rdImageMarket(market.id)}
                 alt={market.title}
                 className="w-full h-full object-cover"
               />

@@ -11,7 +11,13 @@ const imageMarketLink = [
   "https://kalshi.com/_next/image?url=https%3A%2F%2Fd1lvyva3zy5u58.cloudfront.net%2Fseries-images-webp%2FKXSHIBAD.webp%3Fsize%3Dsm&w=256&q=80&dpl=dpl_GMuAEvrWdvNKWAd7etdL7AsoBekq",
 ];
 
-export const rdImageMarket = () => {
-  const rd = Math.floor(Math.random() * imageMarketLink.length);
-  return imageMarketLink[rd];
+// use lastChar of id to map with link image
+export const rdImageMarket = (id: string) => {
+  if (!id || imageMarketLink.length === 0) return imageMarketLink[0];
+
+  const lastChar = id[id.length - 1];
+  const charCode = lastChar.charCodeAt(0);
+  const index = charCode % imageMarketLink.length;
+
+  return imageMarketLink[index];
 };

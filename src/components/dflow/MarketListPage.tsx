@@ -12,6 +12,7 @@ import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import { Skeleton } from "../ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import TradeModalDflow from './TradeModalDflow';
 
 export const MarketListPage = () => {
   const navigate = useNavigate();
@@ -20,20 +21,26 @@ export const MarketListPage = () => {
   const { placeOrder, isTrading } = useTrade();
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Trade modal state
+  const [tradeModalOpen, setTradeModalOpen] = useState(false);
+  const [selectedMarket, setSelectedMarket] = useState<DflowDataEntity | null>(
+    null
+  );
+  const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>('Yes');
+
   const handleMarketClick = (id: string) => {
     navigate(`/dflow/${id}`);
   };
 
-  const handleQuickBuy = async (e: React.MouseEvent<HTMLButtonElement>, mint: string) => {
+  const handleTradeClick = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    market: DflowDataEntity,
+    outcome: 'Yes' | 'No'
+  ) => {
     e.stopPropagation();
-    if (isTrading) return;
-    try {
-      await placeOrder('BUY', mint, 10); // Quick buy $10
-      alert("Order placed successfully!");
-    } catch (error) {
-      console.error(error);
-      alert("Trade failed");
-    }
+    setSelectedMarket(market);
+    setSelectedOutcome(outcome);
+    setTradeModalOpen(true);
   };
 
   const formatVolume = (volume: number) => {
@@ -115,14 +122,14 @@ export const MarketListPage = () => {
           <div className="grid grid-cols-2 gap-3 mt-6 mb-4">
             <Button
               className="h-10 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-lg font-semibold border border-green-600/30 rounded-lg"
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleQuickBuy(e, market.yesBid)}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleTradeClick(e, market, 'Yes')}
               disabled={isTrading}
             >
               Yes
             </Button>
             <Button
               className="h-10 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-lg font-semibold border border-red-600/30 rounded-lg"
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleQuickBuy(e, market.noBid)}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleTradeClick(e, market, 'No')}
               disabled={isTrading}
             >
               No
@@ -217,7 +224,6 @@ export const MarketListPage = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setPage(p => p + 1)}
-                  // simplistic check, ideally use total/limit
                   disabled={filteredMarkets.length < meta.limit}
                 >
                   Next <ChevronRight className="w-4 h-4 ml-1" />
@@ -225,6 +231,15 @@ export const MarketListPage = () => {
               </div>
             )}
           </>
+        )}
+        {selectedMarket && (
+          <TradeModalDflow
+            open={tradeModalOpen}
+            onOpenChange={setTradeModalOpen}
+            market={selectedMarket}
+            initialOutcome={selectedOutcome}
+          // onTradeSuccess={handleTradeSuccess}
+          />
         )}
       </div>
     </div>

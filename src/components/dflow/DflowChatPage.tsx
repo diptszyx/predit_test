@@ -904,7 +904,9 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
     }
 
     try {
-      const mint = selectedOutcome === 'Yes' ? market.yesBid : market.noBid;
+      const mint = selectedOutcome === 'Yes' ?
+        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].yesMint :
+        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].noMint;
 
       const result = await placeOrder(tradeSide, mint, parseFloat(amount));
       toast.success(`Order successfully placed! TX: ${result.signature.slice(0, 8)}...`);

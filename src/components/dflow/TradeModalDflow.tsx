@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useTrade } from "../../hooks/dflow/useTrade";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { useTrade, USDC_MINT, CASH_MINT } from "../../hooks/dflow/useTrade";
 import { DflowDataEntity } from "../../services/dflow.service";
 import useAuthStore from "../../store/auth.store";
-import { useWalletStore } from "../../store/wallet.store";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+
+// const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 interface TradeModalDflowProps {
   open: boolean;
@@ -23,14 +28,52 @@ const TradeModalDflow = ({ open,
   initialOutcome = 'Yes',
   onTradeSuccess }: TradeModalDflowProps) => {
   const user = useAuthStore((state) => state.user);
-  const { usdcBalance, fetchUSDCBalance } = useWalletStore();
-  const { placeOrder, isTrading } = useTrade();
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
+  const { placeOrder, redeemPositions, isTrading } = useTrade();
+
+  const [balance, setBalance] = useState('0');
 
   const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>(
     initialOutcome
   );
 
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
+
+  const fetchBalance = async () => {
+    if (!publicKey || !market) return;
+    try {
+      let mintToCheck = USDC_MINT;
+
+      if (tradeSide === 'BUY') {
+        mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+      } else if (tradeSide === 'SELL') {
+        const dflowAccount = market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        if (dflowAccount) {
+          mintToCheck = selectedOutcome === 'Yes' ? dflowAccount.yesMint : dflowAccount.noMint;
+        }
+      }
+
+      const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
+        mint: new PublicKey(mintToCheck),
+      });
+
+      const bal = accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      setBalance(bal.toString());
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      setBalance('0');
+    }
+  };
+
+  useEffect(() => {
+    if (open && publicKey) {
+      fetchBalance();
+    }
+  }, [tradeSide, selectedOutcome, buyToken]);
+
+
   const [amount, setAmount] = useState('');
 
   useEffect(() => {
@@ -42,12 +85,8 @@ const TradeModalDflow = ({ open,
   }, [open, initialOutcome]);
 
   const handleMaxAmount = () => {
-    if (tradeSide === 'BUY') {
-      const max = parseFloat(usdcBalance);
-      if (max > 0) setAmount(max.toString());
-    } else {
-      toast.info("Fetch token balance logic needed for SELL Max");
-    }
+    const max = parseFloat(balance);
+    if (max > 0) setAmount(max.toString());
   };
 
   const handleTrade = async () => {
@@ -71,10 +110,18 @@ const TradeModalDflow = ({ open,
         market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].yesMint :
         market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].noMint;
 
-      const result = await placeOrder(tradeSide, mint, parseFloat(amount));
+      let result;
+      if (tradeSide === 'BUY') {
+        const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+        result = await placeOrder(tradeSide, mint, parseFloat(amount), inputMint);
+      } else {
+        result = await redeemPositions(mint, parseFloat(amount));
+      }
+
       toast.success(`Order successfully placed! TX: ${result.signature.slice(0, 8)}...`);
+
       setAmount('');
-      fetchUSDCBalance();
+      fetchBalance();
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to place order');
@@ -133,10 +180,32 @@ const TradeModalDflow = ({ open,
           </div>
         </div>
 
+        {/* Payment Token Selection (Only for BUY) */}
+        {tradeSide === 'BUY' && (
+          <div className="space-y-2">
+            <Label>Pay with</Label>
+            <RadioGroup
+              defaultValue="USDC"
+              value={buyToken}
+              onValueChange={(value) => setBuyToken(value as 'USDC' | 'CASH')}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="USDC" id="USDC" />
+                <Label htmlFor="USDC">USDC</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="CASH" id="CASH" />
+                <Label htmlFor="CASH">CASH</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
+
         {/* Amount Input */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>Amount (USDC)</Label>
+            <Label>Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})</Label>
             {user && (
               <Button
                 type="button" variant="outline" size="sm"
@@ -156,7 +225,7 @@ const TradeModalDflow = ({ open,
           />
           {user && (
             <div className="text-xs text-muted-foreground">
-              USDC Balance: {usdcBalance}
+              {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
             </div>
           )}
         </div>

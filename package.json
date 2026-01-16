@@ -75,7 +75,9 @@
         "@types/react-helmet-async": "^1.0.3",
         "@types/react-syntax-highlighter": "^15.5.13",
         "@vitejs/plugin-react-swc": "^3.10.2",
-        "vite": "6.3.5"
+        "buffer": "^6.0.3",
+        "vite": "6.3.5",
+        "vite-plugin-node-polyfills": "^0.25.0"
     },
     "scripts": {
         "dev": "vite",

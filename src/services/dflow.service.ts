@@ -132,6 +132,21 @@ export const getDflowTradeTransaction = async (params: DflowTradeDto) => {
   return response.data;
 };
 
+export interface DflowRedeemDto {
+  inputMint: string;
+  amount: number;
+  userPublicKey: string;
+  outputMint?: string;
+}
+
+export const getDflowRedemptionTransaction = async (params: DflowRedeemDto) => {
+  const response = await apiClient.get<DflowTradeResponse>(
+    "/dflow/redeem/transaction",
+    { params }
+  );
+  return response.data;
+};
+
 export interface DflowOrderStatusResponse {
   status: string; // "open", "pendingClose", "closed", "failed"
   fills: any[];

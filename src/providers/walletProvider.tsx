@@ -12,7 +12,7 @@ export default function WalletAdapter(props: WalletAdapterProps) {
   const wallets = useMemo(() => [], []);
 
   return (
-    <ConnectionProvider endpoint={'https://api.devnet.solana.com'}>
+    <ConnectionProvider endpoint={import.meta.env.VITE_RPC_URL}>
       <WalletProvider
         wallets={wallets}
         autoConnect

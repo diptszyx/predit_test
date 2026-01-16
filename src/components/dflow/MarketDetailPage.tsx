@@ -2,45 +2,72 @@ import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { rdImageMarket } from '../../constants/ui';
 import { useMarketDetail } from '../../hooks/dflow/useMarketDetail';
-import { useTrade } from '../../hooks/dflow/useTrade';
+import { useTrade, USDC_MINT, CASH_MINT } from '../../hooks/dflow/useTrade';
 import useAuthStore from '../../store/auth.store';
-import { useWalletStore } from '../../store/wallet.store';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 export const MarketDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const { usdcBalance, fetchUSDCBalance } = useWalletStore();
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
 
   const { market, loading } = useMarketDetail(id || '');
 
-  const { placeOrder, isTrading } = useTrade();
+  const { placeOrder, redeemPositions, isTrading } = useTrade();
 
   const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>('Yes');
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
   const [amount, setAmount] = useState('');
+  const [balance, setBalance] = useState('0');
+
+  const fetchBalance = async () => {
+    if (!publicKey || !market) return;
+    try {
+      let mintToCheck = USDC_MINT;
+
+      if (tradeSide === 'BUY') {
+        mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+      } else if (tradeSide === 'SELL') {
+        const dflowAccount = market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        if (dflowAccount) {
+          mintToCheck = selectedOutcome === 'Yes' ? dflowAccount.yesMint : dflowAccount.noMint;
+        }
+      }
+
+      const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
+        mint: new PublicKey(mintToCheck),
+      });
+
+      const bal = accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      setBalance(bal.toString());
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      setBalance('0');
+    }
+  };
 
   useEffect(() => {
     if (user) {
-      fetchUSDCBalance();
+      fetchBalance();
     }
-  }, [user, fetchUSDCBalance]);
+  }, [user, publicKey, tradeSide, selectedOutcome, market, buyToken]);
 
   const handleMaxAmount = () => {
-    if (tradeSide === 'BUY') {
-      const max = parseFloat(usdcBalance);
-      if (max > 0) setAmount(max.toString());
-    } else {
-      toast.info("Fetch token balance logic needed for SELL Max");
-    }
+    const max = parseFloat(balance);
+    if (max > 0) setAmount(max.toString());
   };
 
   const handleTrade = async () => {
@@ -64,10 +91,17 @@ export const MarketDetailPage = () => {
         market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].yesMint :
         market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].noMint;
 
-      const result = await placeOrder(tradeSide, mint, parseFloat(amount));
+      let result;
+      if (tradeSide === 'BUY') {
+        const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+        result = await placeOrder(tradeSide, mint, parseFloat(amount), inputMint);
+      } else {
+        result = await redeemPositions(mint, parseFloat(amount));
+      }
+
       toast.success(`Order successfully placed! TX: ${result.signature.slice(0, 8)}...`);
       setAmount('');
-      fetchUSDCBalance();
+      fetchBalance();
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to place order');
@@ -243,10 +277,32 @@ export const MarketDetailPage = () => {
                     </div>
                   </div>
 
+                  {/* Payment Token Selection (Only for BUY) */}
+                  {tradeSide === 'BUY' && (
+                    <div className="space-y-2">
+                      <Label>Pay with</Label>
+                      <RadioGroup
+                        defaultValue="USDC"
+                        value={buyToken}
+                        onValueChange={(value) => setBuyToken(value as 'USDC' | 'CASH')}
+                        className="flex gap-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="USDC" id="USDC" />
+                          <Label htmlFor="USDC">USDC</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="CASH" id="CASH" />
+                          <Label htmlFor="CASH">CASH</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  )}
+
                   {/* Amount Input */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label>Amount (USDC)</Label>
+                      <Label>Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})</Label>
                       {user && (
                         <Button
                           type="button" variant="outline" size="sm"
@@ -266,7 +322,7 @@ export const MarketDetailPage = () => {
                     />
                     {user && (
                       <div className="text-xs text-muted-foreground">
-                        USDC Balance: {usdcBalance}
+                        {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
                       </div>
                     )}
                   </div>

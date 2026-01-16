@@ -1,16 +1,19 @@
-import { ChevronLeft, ChevronRight, Clock, MessageSquare } from 'lucide-react';
+import { Badge, ChevronLeft, ChevronRight, Clock, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { arcLength, rdImageMarket } from '../../constants/ui';
 import { useMarketList } from "../../hooks/dflow/useMarketList";
 import { useTrade } from "../../hooks/dflow/useTrade";
-import { formatDate } from '../../lib/date';
+import { formatDate, formatDateTime } from '../../lib/date';
 import { createDflowMarketChat, DflowDataEntity } from '../../services/dflow.service';
+import { PolymarketTrade } from '../../services/polymarket.service';
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import { Skeleton } from "../ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import TradeModalDflow from './TradeModalDflow';
 
@@ -27,6 +30,11 @@ export const MarketListPage = () => {
     null
   );
   const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>('Yes');
+
+  const [trades, setTrades] = useState<PolymarketTrade[]>([]);
+  const [activeTab, setActiveTab] = useState<'markets' | 'trades'>(
+    'markets'
+  );
 
   const handleMarketClick = (id: string) => {
     navigate(`/dflow/${id}`);
@@ -88,7 +96,6 @@ export const MarketListPage = () => {
                 alt={market.title}
                 className="w-full h-full object-cover"
               />
-              {/* <span className="text-xs text-muted-foreground">IMG</span> */}
             </div>
             <div className="flex-1 flex items-start justify-between gap-2">
               <h4 className="text-sm font-medium line-clamp-2 leading-snug">
@@ -177,61 +184,144 @@ export const MarketListPage = () => {
           <p className="text-muted-foreground">Trade on real-world events powered by Dflow</p>
         </div>
 
-        {/* Search / Filter bar */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Input
-              placeholder="Search markets..."
-              className="pl-9"
-              value={searchTerm}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v: string) => setActiveTab(v as any)}
+          className="w-full"
+        >
+          <div className="flex items-center justify-between">
+            <TabsList>
+              <TabsTrigger value='markets'>Markets</TabsTrigger>
+              <TabsTrigger value="trades">Trade History</TabsTrigger>
+            </TabsList>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i}>
-                <CardContent className="p-4 space-y-3">
-                  <Skeleton className="h-40 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : filteredMarkets.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No markets found</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredMarkets.map(renderMarketCard)}
-            </div>
-
-            {/* Pagination */}
-            {meta && (meta.total > meta.limit) && (
-              <div className="flex items-center justify-center gap-2 border-t pt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" /> Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => p + 1)}
-                  disabled={filteredMarkets.length < meta.limit}
-                >
-                  Next <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
+            {/* Search / Filter bar */}
+            {activeTab === 'markets' &&
+              <div className="relative flex-1 max-w-md">
+                <Input
+                  placeholder="Search markets..."
+                  className="pl-9"
+                  value={searchTerm}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                />
               </div>
+            }
+          </div>
+
+          <TabsContent value='markets' className="mt-6 space-y-6">
+            {loading ? (
+              <MarketSkeleton />
+            ) : filteredMarkets.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No markets found</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredMarkets.map(renderMarketCard)}
+                </div>
+
+                {/* Pagination */}
+                {meta && (meta.total > meta.limit) && (
+                  <div className="flex items-center justify-center gap-2 border-t pt-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(p => p + 1)}
+                      disabled={filteredMarkets.length < meta.limit}
+                    >
+                      Next <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
+          </TabsContent>
+
+          <TabsContent value='trades' className='mt-6'>
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-20 w-full" />
+                ))}
+              </div>
+            ) : trades.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No trade history</p>
+              </div>
+            ) : (
+              <Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Market</TableHead>
+                      <TableHead>Outcome</TableHead>
+                      <TableHead>Side</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Match Time</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {trades.map((trade) => (
+                      <TableRow key={trade.id}>
+                        <TableCell className="font-medium max-w-xs truncate">
+                          {trade.market}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              trade.outcome === 'Yes' ? 'default' : 'secondary'
+                            }
+                          >
+                            {trade.outcome}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              trade.side === 'BUY' ? 'default' : 'outline'
+                            }
+                          >
+                            {trade.side}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {parseFloat(trade.size).toFixed(2)}
+                        </TableCell>
+                        <TableCell>${trade.price}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              trade.status === 'MATCHED'
+                                ? 'default'
+                                : 'secondary'
+                            }
+                          >
+                            {trade.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDateTime(trade.match_time)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+
         {selectedMarket && (
           <TradeModalDflow
             open={tradeModalOpen}
@@ -245,3 +335,23 @@ export const MarketListPage = () => {
     </div>
   );
 };
+
+const MarketSkeleton = () => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <Card key={i}>
+          <CardContent className="p-4 space-y-3">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-12" />
+              <Skeleton className="h-12" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}

@@ -1,20 +1,22 @@
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import { rdImageMarket } from '../../constants/ui';
 import { useMarketDetail } from '../../hooks/dflow/useMarketDetail';
-import { useTrade, USDC_MINT, CASH_MINT } from '../../hooks/dflow/useTrade';
+import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
+import { formatDateTime } from '../../lib/date';
 import useAuthStore from '../../store/auth.store';
+import { getStatusBadgeProps } from "../market/MarketListAdmin";
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Skeleton } from '../ui/skeleton';
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { Skeleton } from '../ui/skeleton';
 
 export const MarketDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -144,6 +146,9 @@ export const MarketDetailPage = () => {
     return `${(parseFloat(price) * 100).toFixed(2)}`;
   };
 
+  const roundString = (string: string) => {
+    return Math.round(Number(string))
+  }
   return (
     <div className="min-h-screen bg-background">
       <div className="w-full p-4 lg:p-6">
@@ -165,18 +170,22 @@ export const MarketDetailPage = () => {
                   <CardTitle>Market Statistics</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Volume</p>
-                      <p className="text-sm font-mono">${market.volume || 0}</p>
+                      <p className="text-sm font-semibold">${roundString(market.volume) || 0}</p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Open Interest</p>
-                      <p className="text-sm font-mono">{market.openInterest}</p>
+                      <p className="text-sm font-semibold">${roundString(market.openInterest)}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Ticker</p>
-                      <p className="text-sm font-mono">{market.eventTicker}</p>
+                      <p className="text-sm text-muted-foreground">Close Time</p>
+                      <p className="text-sm font-semibold">{formatDateTime(market.closeTime)}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Type</p>
+                      <p className="text-sm font-semibold capitalize">{market.marketType}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -184,20 +193,48 @@ export const MarketDetailPage = () => {
 
               <Card>
                 <CardContent className="p-6 space-y-4">
-                  <div className="w-full h-72 rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={rdImageMarket(id)}
-                      alt={market.title}
-                      className="w-full h-full object-fill"
-                    />
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-20 h-20 rounded-md overflow-hidden shrink-0 bg-muted flex items-center justify-center">
+                      {/* Placeholder Image */}
+                      <img
+                        src={rdImageMarket(market.id)}
+                        alt={market.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 flex items-start justify-between gap-2">
+                      <div className="space-y-3">
+                        <h1 className="text-2xl lg:text-3xl font-bold">
+                          {market.title}
+                        </h1>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant={getStatusBadgeProps(market.status).variant}
+                            className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(market.status).className
+                              }`}
+                          >{market.status}</Badge>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-3">
-                    <h1 className="text-2xl lg:text-3xl font-bold">
-                      {market.title}
-                    </h1>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">{market.status}</Badge>
+                    {market.subtitle && (
+                      <div className="pt-4">
+                        <h4 className="font-semibold mb-2">Description</h4>
+                        <p className="text-muted-foreground whitespace-pre-wrap">
+                          {market.subtitle}
+                        </p>
+                      </div>
+                    )}
+                    <div className="pt-4">
+                      <h4 className="font-semibold mb-2">Market Rules</h4>
+                      <p className="text-muted-foreground whitespace-pre-wrap">
+                        This is a binary prediction market. The market will resolve to "YES" if the outcome specified in the title occurs by the event’s official conclusion. Otherwise, the market will resolve to "NO". <br /> <br />
+
+                        Trading for this market will be locked at the close time listed above. After the event has concluded, the market will be resolved based on publicly available and verifiable information from reliable sources.<br />
+                        <br />
+                        Please note that this market is intended for prediction and trading purposes only. Prices reflect the market’s implied probability and do not represent guaranteed outcomes.
+                      </p>
                     </div>
                   </div>
                 </CardContent>

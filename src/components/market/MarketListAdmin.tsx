@@ -224,6 +224,7 @@ export const getStatusBadgeProps = (status: string) => {
       };
     case 'resolved':
     case 'yes':
+    case 'active':
       return {
         variant: 'secondary' as const,
         className: 'bg-green-500 text-white hover:bg-green-600',

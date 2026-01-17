@@ -358,7 +358,7 @@ const PolymarketPage = () => {
           onValueChange={(v: string) => setActiveTab(v as any)}
           className="w-full"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between">
             <TabsList>
               <TabsTrigger value="markets">Markets</TabsTrigger>
               {/* TODO: Add my orders tab if limit place order */}
@@ -367,7 +367,7 @@ const PolymarketPage = () => {
             </TabsList>
 
             {activeTab === 'markets' &&
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mt-4 sm:mt-0">
                 <Select
                   value={sortOptionId ?? ''}
                   onValueChange={(v: string) => {

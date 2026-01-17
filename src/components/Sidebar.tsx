@@ -1,3 +1,4 @@
+import { useWallet } from '@solana/wallet-adapter-react';
 import {
   BookType,
   ChevronDown,
@@ -190,6 +191,8 @@ export function Sidebar({
   const [showAllChats, setShowAllChats] = useState(false);
   const isMobile = useIsMobile(1024); // Use custom hook with 1024px breakpoint
   const userLevel = user ? user.level : 1;
+
+  const { publicKey, connected, disconnect } = useWallet();
 
   useEffect(() => {
     (async () => {
@@ -395,7 +398,7 @@ export function Sidebar({
 
       {/* Bottom Section */}
       <div
-        className="p-4 border-t border-border space-y-2
+        className="p-4 border-t border-border space-y-1
       "
       >
         {/* Social Links */}
@@ -478,28 +481,38 @@ export function Sidebar({
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
-                    {user.email || (
-                      <p className="flex items-center font-medium">
-                        {shortenAddress(user?.appWallet || '')}
-                        <Copy
-                          className="w-3 h-3 ml-2 cursor-pointer"
-                          onClick={() => handleCopyToClipboard(user?.appWallet)}
-                        />
-                      </p>
-                    )}
+                    <p className="text-sm font-medium truncate">
+                      {user.email && user.email}
+                    </p>
                   </p>
 
-                  {user.email ? (
-                    <p className="text-xs text-muted-foreground flex items-center">
-                      {shortenAddress(user?.appWallet || '')}
+                  <p className="text-xs gap-1 mt-0.5 text-muted-foreground flex items-center">
+                    <img src="/polygon.png" className='w-3 h-3' alt="" />
+                    {shortenAddress(user?.appWallet || '')}
+                    <Copy
+                      className="w-3 h-3 ml-2 cursor-pointer"
+                      onClick={() =>
+                        handleCopyToClipboard(user?.appWallet)
+                      }
+                    />
+                  </p>
+                  <div className='text-xs mt-0.5 flex gap-1 items-center text-muted-foreground'>
+                    <img src="/solana.png" className='w-3 h-3' alt="" />
+                    <p>
+                      {(!publicKey || !connected) ?
+                        'Not connected' :
+                        shortenAddress(publicKey?.toBase58())
+                      }
+                    </p>
+                    {publicKey && connected &&
                       <Copy
                         className="w-3 h-3 ml-2 cursor-pointer"
-                        onClick={() => handleCopyToClipboard(user?.appWallet)}
+                        onClick={() =>
+                          handleCopyToClipboard(publicKey?.toBase58())
+                        }
                       />
-                    </p>
-                  ) : (
-                    ''
-                  )}
+                    }
+                  </div>
                 </div>
               </div>
 
@@ -731,7 +744,7 @@ export function Sidebar({
           </nav>
 
           {/* Bottom Section */}
-          <div className="p-4 border-t border-border space-y-2">
+          <div className="p-4 border-t border-border space-y-1">
             {/* Social Links */}
             <div className="flex items-center justify-center gap-6 pb-2">
               {SOCIAL_LINKS.map((social) => {
@@ -792,7 +805,7 @@ export function Sidebar({
 
             {/* User Section */}
             {user ? (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {/* User Info Card */}
                 <div className="p-3 rounded-lg bg-accent border border-border">
                   <div className="flex items-center gap-3 mb-2">
@@ -810,32 +823,36 @@ export function Sidebar({
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
-                        {user.email || (
-                          <p className="flex items-center font-medium">
-                            {shortenAddress(user?.appWallet || '')}
-                            <Copy
-                              className="w-3 h-3 ml-2 cursor-pointer"
-                              onClick={() =>
-                                handleCopyToClipboard(user?.appWallet)
-                              }
-                            />
-                          </p>
-                        )}
+                        {user.email && user.email}
                       </p>
 
-                      {user.email ? (
-                        <p className="text-xs text-muted-foreground flex items-center">
-                          {shortenAddress(user?.appWallet || '')}
+                      <p className="text-xs gap-1 text-muted-foreground flex items-center mt-1">
+                        <img src="/polygon.png" className='w-3 h-3' alt="" />
+                        {shortenAddress(user?.appWallet || '')}
+                        <Copy
+                          className="w-3 h-3 ml-2 cursor-pointer"
+                          onClick={() =>
+                            handleCopyToClipboard(user?.appWallet)
+                          }
+                        />
+                      </p>
+                      <div className='text-xs mt-0.5 flex gap-1 items-center text-muted-foreground'>
+                        <img src="/solana.png" className='w-3 h-3' alt="" />
+                        <p>
+                          {(!publicKey || !connected) ?
+                            'Not connected' :
+                            shortenAddress(publicKey?.toBase58())
+                          }
+                        </p>
+                        {publicKey && connected &&
                           <Copy
                             className="w-3 h-3 ml-2 cursor-pointer"
                             onClick={() =>
-                              handleCopyToClipboard(user?.appWallet)
+                              handleCopyToClipboard(publicKey?.toBase58())
                             }
                           />
-                        </p>
-                      ) : (
-                        ''
-                      )}
+                        }
+                      </div>
                     </div>
                   </div>
 
@@ -868,7 +885,7 @@ export function Sidebar({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <Button
                     variant="ghost"
                     size="sm"

@@ -369,7 +369,7 @@ const PolymarketDetail = () => {
                 <CardContent className="space-y-3">
                   <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">YES</span>
+                      <span className="font-semibold text-gray-600">YES</span>
                       <span className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {yesToken ? formatPrice(yesToken.price) : 'N/A'}
                       </span>
@@ -377,7 +377,7 @@ const PolymarketDetail = () => {
                   </div>
                   <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">NO</span>
+                      <span className="font-semibold text-gray-600">NO</span>
                       <span className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {noToken ? formatPrice(noToken.price) : 'N/A'}
                       </span>

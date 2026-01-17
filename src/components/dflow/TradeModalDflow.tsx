@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { useTrade, USDC_MINT, CASH_MINT } from "../../hooks/dflow/useTrade";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { CASH_MINT, USDC_MINT, useTrade } from "../../hooks/dflow/useTrade";
 import { DflowDataEntity } from "../../services/dflow.service";
 import useAuthStore from "../../store/auth.store";
 import { Button } from "../ui/button";
@@ -11,8 +11,6 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-
-// const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 interface TradeModalDflowProps {
   open: boolean;
@@ -118,16 +116,38 @@ const TradeModalDflow = ({ open,
         result = await redeemPositions(mint, parseFloat(amount));
       }
 
-      toast.success(`Order successfully placed! TX: ${result.signature.slice(0, 8)}...`);
+      const tx = result.signature;
+      const orbTxUrl = `https://orbmarkets.io/tx/${tx}?tab=summary`;
+      toast.success(
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span>
+            Order successfully placed! TX: {tx.slice(0, 8)}...
+          </span>
+
+          <a
+            href={orbTxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className='underline font-medium text-[#3b82f6]'
+          >
+            Open with Orb
+          </a>
+        </div>,
+        {
+          duration: 6000,
+        }
+      );
 
       setAmount('');
       fetchBalance();
+      if (onTradeSuccess) {
+        onTradeSuccess();
+      }
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to place order');
     }
   };
-
 
   return (
     <Dialog
@@ -187,7 +207,7 @@ const TradeModalDflow = ({ open,
             <RadioGroup
               defaultValue="USDC"
               value={buyToken}
-              onValueChange={(value) => setBuyToken(value as 'USDC' | 'CASH')}
+              onValueChange={(value: any) => setBuyToken(value as 'USDC' | 'CASH')}
               className="flex gap-4"
             >
               <div className="flex items-center space-x-2">

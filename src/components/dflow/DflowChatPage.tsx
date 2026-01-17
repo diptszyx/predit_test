@@ -1,3 +1,5 @@
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import clsx from 'clsx';
 import { ArrowLeft, ArrowRight, Crown, Loader2, MessageSquare, Share } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -6,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
 import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
-import { useTrade } from '../../hooks/dflow/useTrade';
+import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
 import { formatTime } from '../../lib/date';
 import { chatService } from '../../services/chat.service';
 import { DflowDataEntity, getDflowEventById } from '../../services/dflow.service';
@@ -14,7 +16,6 @@ import { ChatMessage, messageService } from '../../services/message.service';
 import { OracleEntity, oraclesServices } from '../../services/oracles.service';
 import { createSharedMessageLink, createSharePolymarketConversationLink } from '../../services/share-message.service';
 import useAuthStore from '../../store/auth.store';
-import { useWalletStore } from '../../store/wallet.store';
 import { DisclaimerDialog } from '../DisclaimerDialog';
 import { ShareChatDialog, SharePayload } from '../ShareChatDialog';
 import { SubscriptionManagementDialog } from '../SubscriptionManagementDialog';
@@ -25,6 +26,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
 import {
   Select,
@@ -862,29 +864,53 @@ type TradeSidebarProps = {
 
 const TradeSidebar = ({ market }: TradeSidebarProps) => {
   const user = useAuthStore((state) => state.user);
-  const { usdcBalance, fetchUSDCBalance } = useWalletStore();
-  const { placeOrder, isTrading } = useTrade();
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
+  const { placeOrder, redeemPositions, isTrading } = useTrade();
 
   const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>('Yes');
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
   const [amount, setAmount] = useState('');
+  const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
+  const [balance, setBalance] = useState('0');
 
   const yesBid = market.yesBid;
   const noBid = market.noBid;
 
   useEffect(() => {
     if (user) {
-      fetchUSDCBalance();
+      fetchBalance();
     }
-  }, [user, fetchUSDCBalance]);
+  }, [user, publicKey, tradeSide, selectedOutcome, market, buyToken]);
 
-  const handleMaxAmount = () => {
-    if (tradeSide === 'BUY') {
-      const max = parseFloat(usdcBalance);
-      if (max > 0) setAmount(max.toString());
-    } else {
-      toast.info("Fetch token balance logic needed for SELL Max");
+  const fetchBalance = async () => {
+    if (!publicKey || !market) return;
+    try {
+      let mintToCheck = USDC_MINT;
+
+      if (tradeSide === 'BUY') {
+        mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+      } else if (tradeSide === 'SELL') {
+        const dflowAccount = market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        if (dflowAccount) {
+          mintToCheck = selectedOutcome === 'Yes' ? dflowAccount.yesMint : dflowAccount.noMint;
+        }
+      }
+
+      const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
+        mint: new PublicKey(mintToCheck),
+      });
+
+      const bal = accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      setBalance(bal.toString());
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      setBalance('0');
     }
+  };
+  const handleMaxAmount = () => {
+    const max = parseFloat(balance);
+    if (max > 0) setAmount(max.toString());
   };
 
   const handleTrade = async () => {
@@ -908,10 +934,38 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
         market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].yesMint :
         market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].noMint;
 
-      const result = await placeOrder(tradeSide, mint, parseFloat(amount));
-      toast.success(`Order successfully placed! TX: ${result.signature.slice(0, 8)}...`);
+      let result;
+      if (tradeSide === 'BUY') {
+        const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+        result = await placeOrder(tradeSide, mint, parseFloat(amount), inputMint);
+      } else {
+        result = await redeemPositions(mint, parseFloat(amount));
+      }
+
+      const tx = result.signature;
+      const orbTxUrl = `https://orbmarkets.io/tx/${tx}?tab=summary`;
+      toast.success(
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span>
+            Order successfully placed! TX: {tx.slice(0, 8)}...
+          </span>
+
+          <a
+            href={orbTxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className='underline font-medium text-[#3b82f6]'
+          >
+            Open with Orb
+          </a>
+        </div>,
+        {
+          duration: 6000,
+        }
+      );
+
       setAmount('');
-      fetchUSDCBalance();
+      fetchBalance();
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to place order');
@@ -923,24 +977,32 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
   };
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
+    <div className="space-y-2">
+      <Card
+        className="border-border overflow-hidden mb-3"
+        style={{
+          height: 'calc(50vh - 130px)',
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          gap: '15px'
+        }}
+      >
+        <CardHeader className='pb-0'>
           <CardTitle>Current Prices</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+        <CardContent className="space-y-2">
+          <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
             <div className="flex justify-between items-center">
-              <span className="font-semibold">YES</span>
-              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <span className="font-semibold text-gray-600">YES</span>
+              <span className="text-xl font-bold text-green-600 dark:text-green-400">
                 {yesBid ? formatPrice(yesBid) : 'N/A'}
               </span>
             </div>
           </div>
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
+          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
             <div className="flex justify-between items-center">
-              <span className="font-semibold">NO</span>
-              <span className="text-2xl font-bold text-red-600 dark:text-red-400">
+              <span className="font-semibold text-gray-600">NO</span>
+              <span className="text-xl font-bold text-red-600 dark:text-red-400">
                 {noBid ? formatPrice(noBid) : 'N/A'}
               </span>
             </div>
@@ -948,7 +1010,13 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card
+        style={{
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+          gap: '10px'
+        }}
+      >
         <CardHeader>
           <CardTitle>Trade</CardTitle>
         </CardHeader>
@@ -995,10 +1063,31 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
             </div>
           </div>
 
+          {tradeSide === 'BUY' && (
+            <div className="space-y-4">
+              <Label>Pay with</Label>
+              <RadioGroup
+                defaultValue="USDC"
+                value={buyToken}
+                onValueChange={(value: any) => setBuyToken(value as 'USDC' | 'CASH')}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="USDC" id="USDC" />
+                  <Label htmlFor="USDC">USDC</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="CASH" id="CASH" />
+                  <Label htmlFor="CASH">CASH</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
           {/* Amount Input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Amount (USDC)</Label>
+              <Label>Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})</Label>
               {user && (
                 <Button
                   type="button" variant="outline" size="sm"
@@ -1018,7 +1107,7 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
             />
             {user && (
               <div className="text-xs text-muted-foreground">
-                USDC Balance: {usdcBalance}
+                {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
               </div>
             )}
           </div>

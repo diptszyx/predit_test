@@ -101,7 +101,27 @@ export const MarketDetailPage = () => {
         result = await redeemPositions(mint, parseFloat(amount));
       }
 
-      toast.success(`Order successfully placed! TX: ${result.signature.slice(0, 8)}...`);
+      const tx = result.signature;
+      const orbTxUrl = `https://orbmarkets.io/tx/${tx}?tab=summary`;
+      toast.success(
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span>
+            Order successfully placed! TX: {tx.slice(0, 8)}...
+          </span>
+
+          <a
+            href={orbTxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className='underline font-medium text-[#3b82f6]'
+          >
+            Open with Orb
+          </a>
+        </div>,
+        {
+          duration: 6000,
+        }
+      );
       setAmount('');
       fetchBalance();
     } catch (err: any) {
@@ -251,7 +271,7 @@ export const MarketDetailPage = () => {
                 <CardContent className="space-y-3">
                   <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">YES</span>
+                      <span className="font-semibold text-gray-600">YES</span>
                       <span className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {yesBid ? formatPrice(yesBid) : 'N/A'}
                       </span>
@@ -259,7 +279,7 @@ export const MarketDetailPage = () => {
                   </div>
                   <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold">NO</span>
+                      <span className="font-semibold text-gray-600">NO</span>
                       <span className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {noBid ? formatPrice(noBid) : 'N/A'}
                       </span>
@@ -321,7 +341,7 @@ export const MarketDetailPage = () => {
                       <RadioGroup
                         defaultValue="USDC"
                         value={buyToken}
-                        onValueChange={(value) => setBuyToken(value as 'USDC' | 'CASH')}
+                        onValueChange={(value: any) => setBuyToken(value as 'USDC' | 'CASH')}
                         className="flex gap-4"
                       >
                         <div className="flex items-center space-x-2">

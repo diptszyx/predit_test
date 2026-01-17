@@ -1263,7 +1263,6 @@ function AppContent() {
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
-            {/* <WalletAdapter> */}
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               <RequirePhantomConnected>
                 <div className="flex-1 overflow-y-auto">
@@ -1272,7 +1271,6 @@ function AppContent() {
               </RequirePhantomConnected>
               {commonDialogProps}
             </InviteCodeGuard>
-            {/* </WalletAdapter> */}
           </div>
         }
       />

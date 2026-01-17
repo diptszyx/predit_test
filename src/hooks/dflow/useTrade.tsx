@@ -7,6 +7,7 @@ import {
   getDflowTradeTransaction,
   getDflowOrderStatus,
   getDflowRedemptionTransaction,
+  postTradeSignature,
 } from '../../services/dflow.service';
 
 export const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
@@ -32,7 +33,7 @@ export const useTrade = () => {
           // Assuming 6 decimals for both USDC and Outcome tokens
           const atomicAmount = Math.floor(uiAmount * 1_000_000);
 
-          const { transaction: swapTransaction } =
+          const { tradeId, transaction: swapTransaction } =
             await getDflowTradeTransaction({
               inputMint: finalInputMint,
               outputMint: finalOutputMint,
@@ -56,6 +57,12 @@ export const useTrade = () => {
           const confirmation = await connection.confirmTransaction(txid);
           if (confirmation.value.err) {
             throw new Error('Transaction failed to confirm');
+          }
+
+          try {
+            await postTradeSignature({ tradeId, signature: txid });
+          } catch (e) {
+            console.warn('Failed to save trade signature to backend:', e);
           }
 
           let attempts = 0;
@@ -100,7 +107,7 @@ export const useTrade = () => {
           // Assuming 6 decimals
           const atomicAmount = Math.floor(uiAmount * 1_000_000);
 
-          const { transaction: redeemTransaction } =
+          const { tradeId, transaction: redeemTransaction } =
             await getDflowRedemptionTransaction({
               inputMint: outcomeMint,
               outputMint: CASH_MINT,
@@ -120,10 +127,14 @@ export const useTrade = () => {
             }
           );
 
-
           const confirmation = await connection.confirmTransaction(txid);
           if (confirmation.value.err) {
             throw new Error('Transaction failed to confirm');
+          }
+          try {
+            await postTradeSignature({ tradeId, signature: txid });
+          } catch (e) {
+            console.warn('Failed to save redeem signature:', e);
           }
 
           let attempts = 0;

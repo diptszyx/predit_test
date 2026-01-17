@@ -121,6 +121,7 @@ export interface DflowTradeDto {
 }
 
 export interface DflowTradeResponse {
+  tradeId: string;
   transaction: string;
 }
 
@@ -157,4 +158,127 @@ export const getDflowOrderStatus = async (signature: string) => {
     `/dflow/trade/status/${signature}`
   );
   return response.data;
+};
+
+export const postTradeSignature = async (payload: {
+  tradeId: string;
+  signature: string;
+}) => {
+  const res = await apiClient.post("dflow/trade/signature", payload);
+  return res.data;
+};
+
+export interface DflowTradeEntity {
+  id: string; // tradeId (UUID)
+  userId: string;
+
+  marketTicker: string | null;
+
+  inputMint: string;
+  outputMint: string;
+
+  amount: string; // atomic string
+  slippageBps: number;
+
+  userPublicKey: string;
+
+  signature: string | null; // có thể null nếu chưa ký
+  status: "pending" | "open" | "closed" | "failed" | string;
+
+  inAmount: string | null;
+  outAmount: string | null;
+
+  fills: DflowTradeFill[];
+  reverts: DflowTradeRevert[];
+
+  transactionResponse: DflowTransactionResponse | null;
+
+  createdAt: string; // ISO
+  updatedAt: string; // ISO
+
+  __entity: "DflowTradeEntity";
+}
+export interface DflowTradeFill {
+  signature: string;
+  inputMint: string;
+  inAmount: string;
+  outputMint: string;
+  outAmount: string;
+}
+
+export interface DflowTradeRevert {
+  signature: string;
+  mint: string;
+  amount: string;
+}
+
+export interface DflowTransactionResponse {
+  inputMint: string;
+  inAmount: string;
+
+  outputMint: string;
+  outAmount: string;
+
+  otherAmountThreshold: string;
+  minOutAmount: string;
+
+  slippageBps: number;
+  predictionMarketSlippageBps: number;
+
+  platformFee: any | null;
+  priceImpactPct: string;
+
+  routePlan: DflowRoutePlan[];
+
+  contextSlot: number;
+  executionMode: "async" | string;
+
+  revertMint: string | null;
+
+  transaction: string; // base64
+  lastValidBlockHeight: number;
+
+  prioritizationFeeLamports: number;
+  computeUnitLimit: number;
+
+  prioritizationType: DflowPrioritizationType;
+}
+export interface DflowRoutePlan {
+  venue: string;
+  marketKey: string;
+
+  inputMint: string;
+  outputMint: string;
+
+  inAmount: string;
+  outAmount: string;
+
+  inputMintDecimals: number;
+  outputMintDecimals: number;
+}
+
+export interface DflowPrioritizationType {
+  computeBudget: {
+    microLamports: number;
+    estimatedMicroLamports: number;
+  };
+}
+
+export interface TradeHistoryResponse {
+  data: DflowTradeEntity[];
+  meta: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}
+
+export const getTradeHistory = async (params?: {
+  limit?: number;
+  offset?: number;
+}) => {
+  const res = await apiClient.get<TradeHistoryResponse>("dflow/trade/history", {
+    params,
+  });
+  return res.data;
 };

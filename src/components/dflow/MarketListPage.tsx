@@ -308,7 +308,7 @@ export const MarketListPage = () => {
                 <TradeHistoryTable trades={tradeHistory} />
                 {
                   historyMeta && <div className="flex items-center justify-between pt-8">
-                    <p>Page {page} of {Math.ceil(historyMeta.total / pageSize)}</p>
+                    <p className='text-sm'>Page {page} of {Math.ceil(historyMeta.total / pageSize)}</p>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"

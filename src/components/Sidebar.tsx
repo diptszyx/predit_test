@@ -117,14 +117,14 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
         icon: LineChart,
         requiresAuth: true,
       },
-      {
-        id: 'dflow',
-        label: 'Dflow Market',
-        icon: Store,
-        requiresAuth: true,
-      },
     ]
     : []),
+  {
+    id: 'dflow',
+    label: 'Dflow Market',
+    icon: Store,
+    requiresAuth: true,
+  },
   {
     id: 'invites',
     label: 'Invites',

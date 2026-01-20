@@ -358,7 +358,7 @@ const PolymarketPage = () => {
           onValueChange={(v: string) => setActiveTab(v as any)}
           className="w-full"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between">
             <TabsList>
               <TabsTrigger value="markets">Markets</TabsTrigger>
               {/* TODO: Add my orders tab if limit place order */}
@@ -366,33 +366,37 @@ const PolymarketPage = () => {
               <TabsTrigger value="trades">Trade History</TabsTrigger>
             </TabsList>
 
-            <div className="flex items-center gap-3">
-              <Select
-                value={sortOptionId ?? ''}
-                onValueChange={(v: string) => {
-                  setSortOptionId(v as PolymarketSortOptionId)
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="w-52">
-                  <SelectValue placeholder="Sort By" />
-                </SelectTrigger>
+            {activeTab === 'markets' &&
+              <div className="flex items-center gap-3 mt-4 sm:mt-0">
+                <Select
+                  value={sortOptionId ?? ''}
+                  onValueChange={(v: string) => {
+                    setSortOptionId(v as PolymarketSortOptionId)
+                    setCurrentPage(1);
+                  }}
 
-                <SelectContent className="bg-background">
-                  {Object.entries(POLYMARKET_SORT_OPTIONS).map(([key, { label }]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                >
+                  <SelectTrigger className="border-input data-placeholder:text-muted-foreground [&_svg:not([class*=' text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50 flex items-center justify-between gap-2 rounded-md border bg-input-background px-3 py-2 text-sm whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-52">
+                    <SelectValue placeholder="Sort By" />
+                  </SelectTrigger>
 
-              {isAdmin &&
-                <Button variant="outline" onClick={() => setOpenCreate(true)}>
-                  <CircleFadingPlus />
-                </Button>
-              }
-            </div>
+                  <SelectContent className="bg-background">
+                    {Object.entries(POLYMARKET_SORT_OPTIONS).map(([key, { label }]) => (
+                      <SelectItem key={key} value={key}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {isAdmin &&
+                  <Button variant="outline" onClick={() => setOpenCreate(true)}>
+                    <CircleFadingPlus />
+                  </Button>
+                }
+              </div>
+            }
+
           </div>
 
           {/* Markets Tab */}

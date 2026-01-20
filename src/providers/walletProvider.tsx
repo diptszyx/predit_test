@@ -1,29 +1,21 @@
-import { ReactNode, useMemo } from 'react';
 import {
   ConnectionProvider,
   WalletProvider,
 } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import {
-  PhantomWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
-
+import { useMemo } from 'react';
 interface WalletAdapterProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export default function WalletAdapter(props: WalletAdapterProps) {
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter()
-    ],
-    []
-  );
+  const wallets = useMemo(() => [], []);
 
   return (
-    <ConnectionProvider endpoint={'https://api.devnet.solana.com'}>
+    <ConnectionProvider endpoint={import.meta.env.VITE_RPC_URL}>
       <WalletProvider
-        wallets={wallets}s
+        wallets={wallets}
+        autoConnect
       >
         <WalletModalProvider>{props.children}</WalletModalProvider>
       </WalletProvider>

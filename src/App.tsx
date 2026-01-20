@@ -20,7 +20,11 @@ import { useXP } from './lib/useXP';
 import { AIAgentCard } from './components/AIAgentCard';
 import { ArticleDetailPage } from './components/ArticleDetailPage';
 import { ChatPage } from './components/ChatPage';
+import DflowChatPage from './components/dflow/DflowChatPage';
+import { MarketDetailPage } from './components/dflow/MarketDetailPage';
+import { MarketListPage } from './components/dflow/MarketListPage';
 import InviteCodeGuard from './components/guard/InviteCodeGuard';
+import { RequirePhantomConnected } from './components/guard/WalletConnectGuard';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
@@ -43,6 +47,7 @@ import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
 import ShareChatPage from './pages/ShareChatPage';
 import XpHistoryPage from './pages/XpHistoryPage';
+import WalletAdapter from './providers/walletProvider';
 import { chatService } from './services/chat.service';
 import { inviteCodeService } from './services/invite-code.service';
 import { News } from './services/news.service';
@@ -55,7 +60,9 @@ export default function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
-        <AppContent />
+        <WalletAdapter>
+          <AppContent />
+        </WalletAdapter>
       </BrowserRouter>
     </HelmetProvider>
   );
@@ -126,6 +133,7 @@ function AppContent() {
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
     if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
     if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/)) return 'polymarket-chat'
+    if (path === '/dflow') return 'dflow'
     return 'home';
   };
 
@@ -187,6 +195,9 @@ function AppContent() {
       case 'polymarket-chat':
         navigate('/polymarket/chat');
         break;
+      case 'dflow':
+        navigate('/dflow')
+        break
       default:
         navigate('/');
     }
@@ -423,6 +434,7 @@ function AppContent() {
     setSelectedAIAgent: setSelectedAIAgent,
     isAdmin: checkIsAdmin(user),
   };
+
 
   const commonDialogProps = (
     <>
@@ -1071,7 +1083,7 @@ function AppContent() {
         }
       />
 
-      {/* Polymarket Detail Page */}
+      {/* Polymarket Chat Page */}
       <Route
         path="/polymarket/:marketId/chat/:chatId"
         element={
@@ -1080,7 +1092,7 @@ function AppContent() {
               <title>Polymarket Chat - Polymarket</title>
               <meta
                 name="description"
-                content="View market details and place trades on Polymarket."
+                content="Join the discussion for this crypto market. Share insights, track real-time probabilities, and follow market updates in one place."
               />
               <link
                 rel="canonical"
@@ -1233,7 +1245,87 @@ function AppContent() {
           </div>
         }
       />
-    </Routes>
+
+      {/* DFlow Market Pages */}
+      <Route
+        path="/dflow"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Dflow Markets - Real-World Prediction Markets</title>
+              <meta
+                name="description"
+                content="Trade crypto prediction markets on real-world outcomes. Market prices reflect real-time probabilities for Bitcoin, Ethereum and key crypto events."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/dflow`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <RequirePhantomConnected>
+                <div className="flex-1 overflow-y-auto">
+                  <MarketListPage />
+                </div>
+              </RequirePhantomConnected>
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      <Route
+        path="/dflow/:id"
+        element={
+          < div className="flex h-screen bg-background overflow-hidden" >
+            <Helmet>
+              <title>Dflow Market Detail</title>
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <RequirePhantomConnected>
+                <div className="flex-1 overflow-y-auto">
+                  <MarketDetailPage />
+                </div>
+              </RequirePhantomConnected>
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </ div>
+        }
+      />
+
+      {/* Dflow Chat Page */}
+      <Route
+        path="/dflow/:marketId/chat/:chatId"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Dflow Chat - Dflow</title>
+              <meta
+                name="description"
+                content="Join the discussion for this crypto market. Share insights, track real-time probabilities, and follow market updates in one place."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/kalshi/chat`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <RequirePhantomConnected>
+                {user && (
+                  <div className="flex-1 overflow-y-auto">
+                    <DflowChatPage />
+                  </div>
+                )}
+              </RequirePhantomConnected>
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+    </Routes >
   );
 }
 

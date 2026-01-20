@@ -4587,6 +4587,10 @@
   }
 
   @media (width >=40rem) {
+    .sm\:mt-0 {
+      margin-top: 0;
+    }
+
     .sm\:mt-2 {
       margin-top: calc(var(--spacing) * 2);
     }
@@ -4759,6 +4763,12 @@
   @media (width >=40rem) {
     .sm\:justify-end {
       justify-content: flex-end;
+    }
+  }
+
+  @media (width >=40rem) {
+    .sm\:items-center {
+      align-items: center;
     }
   }
 

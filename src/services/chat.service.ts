@@ -17,12 +17,19 @@ export interface MessageEntity {
   oracle: OracleEntity;
   oracleId: string;
   createdAt: string;
-  sender: 'user' | 'assistant';
+  sender: "user" | "assistant";
 }
 
+export interface GetMessagesResponse {
+  data: MessageEntity[];
+  meta: {};
+}
 
 export const chatService = {
-  getChats: async (params?: { limit?: number; offset?: number }): Promise<ChatEntity[]> => {
+  getChats: async (params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<ChatEntity[]> => {
     try {
       const { data } = await apiClient.get<{ data: ChatEntity[] }>("/chats", {
         params,
@@ -43,12 +50,15 @@ export const chatService = {
     }
   },
 
-  getMessages: async (chatId: string, params?: { limit?: number; offset?: number }) => {
+  getMessages: async (
+    chatId: string,
+    params?: { limit?: number; offset?: number }
+  ) => {
     try {
-      const { data } = await apiClient.get<MessageEntity[]>(`/messages`, {
+      const { data } = await apiClient.get<GetMessagesResponse>(`/messages`, {
         params: { ...params, chatId },
       });
-      return data;
+      return data.data;
     } catch (error) {
       console.log("Failed to fetch messages: ", error);
       return [];

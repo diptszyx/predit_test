@@ -1,3 +1,5 @@
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import clsx from 'clsx';
 import { ArrowLeft, ArrowRight, Crown, Loader2, MessageSquare, Share } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -6,14 +8,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
 import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
+import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
 import { formatTime } from '../../lib/date';
 import { chatService } from '../../services/chat.service';
+import { DflowDataEntity, getDflowEventById } from '../../services/dflow.service';
 import { ChatMessage, messageService } from '../../services/message.service';
 import { OracleEntity, oraclesServices } from '../../services/oracles.service';
-import { getPolymarketById, getTokenBalance, placePolymarketOrder, PolymarketMarket } from '../../services/polymarket.service';
 import { createSharedMessageLink, createSharePolymarketConversationLink } from '../../services/share-message.service';
 import useAuthStore from '../../store/auth.store';
-import { useWalletStore } from '../../store/wallet.store';
 import { DisclaimerDialog } from '../DisclaimerDialog';
 import { ShareChatDialog, SharePayload } from '../ShareChatDialog';
 import { SubscriptionManagementDialog } from '../SubscriptionManagementDialog';
@@ -24,6 +26,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
 import {
   Select,
@@ -40,10 +43,7 @@ const tabs = [
   { id: 'trade', label: 'Trade' },
 ];
 
-interface PolymarketChatPage {
-}
-
-const PolymarketChatPage = () => {
+const DflowChatPage = () => {
   const navigate = useNavigate();
   const [isMessaged, setIsMessaged] = useState(true);
 
@@ -53,7 +53,7 @@ const PolymarketChatPage = () => {
   const [availableOracles, setAvailableOracles] = useState<OracleEntity[]>([])
 
   const { marketId, chatId } = useParams()
-  const [market, setMarket] = useState<PolymarketMarket | null>(null)
+  const [market, setMarket] = useState<DflowDataEntity | null>(null)
   const [loading, setLoading] = useState(true)
 
   const [currentTab, setCurrentTab] = useState<string>('chat')
@@ -83,9 +83,9 @@ const PolymarketChatPage = () => {
   useEffect(() => {
     if (market && !isMessaged) {
       setIsMessaged(true);
-      setInput(market.question)
+      setInput(market.title)
       setTimeout(() => {
-        handleSend(market.question)
+        handleSend(market.title)
       }, 1000)
     }
   }, [market, isMessaged])
@@ -97,13 +97,11 @@ const PolymarketChatPage = () => {
     fetchMessages()
   }, [marketId, chatId]);
 
-
-
   const fetchMarket = async () => {
     if (!marketId) return;
     try {
       setLoading(true);
-      const data = await getPolymarketById(marketId);
+      const data = await getDflowEventById(marketId);
       setMarket(data);
     } catch (err) {
       console.error(err);
@@ -141,7 +139,7 @@ const PolymarketChatPage = () => {
   }
 
   const handleBack = () => {
-    navigate('/polymarket');
+    navigate('/dflow');
   };
 
   const bufferRef = useRef("");
@@ -860,126 +858,59 @@ const PolymarketChatPage = () => {
   )
 }
 
-interface TradeSidebarProps {
-  market: PolymarketMarket
+type TradeSidebarProps = {
+  market: DflowDataEntity
 }
 
 const TradeSidebar = ({ market }: TradeSidebarProps) => {
   const user = useAuthStore((state) => state.user);
-  const { usdcBalance, fetchUSDCBalance } = useWalletStore();
-  const [trading, setTrading] = useState(false);
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
+  const { placeOrder, redeemPositions, isTrading } = useTrade();
 
   const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>('Yes');
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
   const [amount, setAmount] = useState('');
-  const [yesTokenBalance, setYesTokenBalance] = useState<string>('0');
-  const [noTokenBalance, setNoTokenBalance] = useState<string>('0');
-  const [loadingBalances, setLoadingBalances] = useState(false);
+  const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
+  const [balance, setBalance] = useState('0');
+
+  const yesBid = market.yesBid;
+  const noBid = market.noBid;
 
   useEffect(() => {
-    if (market && user) {
-      fetchBalances();
+    if (user) {
+      fetchBalance();
     }
-  }, [market, user]);
+  }, [user, publicKey, tradeSide, selectedOutcome, market, buyToken]);
 
-  // Reset amount when outcome or side changes
-  useEffect(() => {
-    setAmount('');
-  }, [selectedOutcome, tradeSide]);
-
-  const fetchBalances = async () => {
-    if (!market || !user) return;
+  const fetchBalance = async () => {
+    if (!publicKey || !market) return;
     try {
-      setLoadingBalances(true);
+      let mintToCheck = USDC_MINT;
 
-      // Fetch USDC balance
-      fetchUSDCBalance();
-
-      // Fetch token balances for Yes and No tokens
-      const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
-      const noToken = market.tokens.find((t) => t.outcome === 'No');
-
-      if (yesToken) {
-        try {
-          const yesBalanceData = await getTokenBalance(yesToken.token_id);
-          setYesTokenBalance(
-            yesBalanceData.formatted || yesBalanceData.balance || '0'
-          );
-        } catch (err) {
-          console.error('Failed to fetch Yes token balance:', err);
-          setYesTokenBalance('0');
+      if (tradeSide === 'BUY') {
+        mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+      } else if (tradeSide === 'SELL') {
+        const dflowAccount = market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        if (dflowAccount) {
+          mintToCheck = selectedOutcome === 'Yes' ? dflowAccount.yesMint : dflowAccount.noMint;
         }
       }
 
-      if (noToken) {
-        try {
-          const noBalanceData = await getTokenBalance(noToken.token_id);
-          setNoTokenBalance(
-            noBalanceData.formatted || noBalanceData.balance || '0'
-          );
-        } catch (err) {
-          console.error('Failed to fetch No token balance:', err);
-          setNoTokenBalance('0');
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch balances:', err);
-    } finally {
-      setLoadingBalances(false);
+      const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
+        mint: new PublicKey(mintToCheck),
+      });
+
+      const bal = accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      setBalance(bal.toString());
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      setBalance('0');
     }
   };
-
   const handleMaxAmount = () => {
-    if (!market) return;
-
-    const selectedToken = market.tokens.find(
-      (t) => t.outcome === selectedOutcome
-    );
-    if (!selectedToken) return;
-
-    // For BUY: use USDC balance
-    // For SELL: use token balance
-    if (tradeSide === 'BUY') {
-      const maxAmount = parseFloat(usdcBalance);
-      if (maxAmount > 0) {
-        setAmount(maxAmount.toString());
-      }
-    } else {
-      const balance =
-        selectedOutcome === 'Yes' ? yesTokenBalance : noTokenBalance;
-      const maxAmount = parseFloat(balance);
-      if (maxAmount > 0) {
-        setAmount(maxAmount.toString());
-      }
-    }
-  };
-
-  // Check if balance is sufficient
-  const isBalanceSufficient = () => {
-    if (!amount || parseFloat(amount) <= 0) return true; // No validation needed if amount is empty
-    const amountValue = parseFloat(amount);
-
-    if (tradeSide === 'BUY') {
-      return amountValue <= parseFloat(usdcBalance);
-    } else {
-      const balance =
-        selectedOutcome === 'Yes' ? yesTokenBalance : noTokenBalance;
-      return amountValue <= parseFloat(balance);
-    }
-  };
-
-  // Get insufficient balance error message
-  const getBalanceError = () => {
-    if (!amount || parseFloat(amount) <= 0) return null;
-    if (isBalanceSufficient()) return null;
-
-    if (tradeSide === 'BUY') {
-      return `Insufficient USDC balance. Available: ${usdcBalance}`;
-    } else {
-      const balance =
-        selectedOutcome === 'Yes' ? yesTokenBalance : noTokenBalance;
-      return `Insufficient token balance. Available: ${balance} tokens`;
-    }
+    const max = parseFloat(balance);
+    if (max > 0) setAmount(max.toString());
   };
 
   const handleTrade = async () => {
@@ -988,15 +919,9 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
       return;
     }
 
-    // Validate minimum amount for BUY orders
     if (tradeSide === 'BUY' && parseFloat(amount) < 1) {
       toast.error('Minimum amount for buying is 1');
       return;
-    }
-
-    // Validate sufficient balance (button should be disabled, but check as safety)
-    if (!isBalanceSufficient()) {
-      return; // Error is already shown as text below input
     }
 
     if (!user) {
@@ -1004,69 +929,81 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
       return;
     }
 
-    const selectedToken = market.tokens.find(
-      (t) => t.outcome === selectedOutcome
-    );
-    if (!selectedToken) {
-      toast.error('Token not found');
-      return;
-    }
-
     try {
-      setTrading(true);
-      const orderData: any = {
-        tokenID: selectedToken.token_id,
-        amount: parseFloat(amount),
-        side: tradeSide,
-      };
+      const mint = selectedOutcome === 'Yes' ?
+        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].yesMint :
+        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].noMint;
 
-      await placePolymarketOrder(orderData);
-      toast.success(`${tradeSide} order placed successfully`);
+      let result;
+      if (tradeSide === 'BUY') {
+        const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+        result = await placeOrder(tradeSide, mint, parseFloat(amount), inputMint);
+      } else {
+        result = await redeemPositions(mint, parseFloat(amount));
+      }
+
+      const tx = result.signature;
+      const orbTxUrl = `https://orbmarkets.io/tx/${tx}?tab=summary`;
+      toast.success(
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span>
+            Order successfully placed! TX: {tx.slice(0, 8)}...
+          </span>
+
+          <a
+            href={orbTxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className='underline font-medium text-[#3b82f6]'
+          >
+            Open with Orb
+          </a>
+        </div>,
+        {
+          duration: 6000,
+        }
+      );
+
       setAmount('');
-      // Refresh balances after successful trade
-      // Add a small delay to ensure backend has processed the transaction
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      await fetchBalances();
+      fetchBalance();
     } catch (err: any) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Failed to place order');
-    } finally {
-      setTrading(false);
+      toast.error(err.message || 'Failed to place order');
     }
   };
 
   const formatPrice = (price: string) => {
-    return `${(parseFloat(price) * 100).toFixed(2)}%`;
+    return `${(parseFloat(price) * 100).toFixed(2)}`;
   };
 
-  const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
-  const noToken = market.tokens.find((t) => t.outcome === 'No');
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <Card
+        className="border-border overflow-hidden mb-3"
         style={{
+          height: 'calc(50vh - 130px)',
           borderTopLeftRadius: 0,
           borderTopRightRadius: 0,
+          gap: '15px'
         }}
       >
-        <CardHeader>
+        <CardHeader className='pb-0'>
           <CardTitle>Current Prices</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
+        <CardContent className="space-y-2">
+          <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
             <div className="flex justify-between items-center">
               <span className="font-semibold text-gray-600">YES</span>
-              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {yesToken ? formatPrice(yesToken.price) : 'N/A'}
+              <span className="text-xl font-bold text-green-600 dark:text-green-400">
+                {yesBid ? formatPrice(yesBid) : 'N/A'}
               </span>
             </div>
           </div>
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
+          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
             <div className="flex justify-between items-center">
               <span className="font-semibold text-gray-600">NO</span>
-              <span className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {noToken ? formatPrice(noToken.price) : 'N/A'}
+              <span className="text-xl font-bold text-red-600 dark:text-red-400">
+                {noBid ? formatPrice(noBid) : 'N/A'}
               </span>
             </div>
           </div>
@@ -1074,100 +1011,87 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
       </Card>
 
       <Card
-        className="border-border"
         style={{
           borderBottomLeftRadius: 0,
           borderBottomRightRadius: 0,
+          gap: '10px'
         }}
       >
         <CardHeader>
           <CardTitle>Trade</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Outcome Selection */}
           <div className="space-y-2">
             <Label>Outcome</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
-                variant={
-                  selectedOutcome === 'Yes' ? 'default' : 'outline'
-                }
+                variant={selectedOutcome === 'Yes' ? 'default' : 'outline'}
                 onClick={() => setSelectedOutcome('Yes')}
-                className={
-                  selectedOutcome === 'Yes'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : ''
-                }
+                className={selectedOutcome === 'Yes' ? 'bg-green-600 hover:bg-green-700' : ''}
               >
                 YES
               </Button>
               <Button
-                variant={
-                  selectedOutcome === 'No' ? 'default' : 'outline'
-                }
+                variant={selectedOutcome === 'No' ? 'default' : 'outline'}
                 onClick={() => setSelectedOutcome('No')}
-                className={
-                  selectedOutcome === 'No'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : ''
-                }
+                className={selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''}
               >
                 NO
               </Button>
             </div>
           </div>
 
+          {/* Side Selection */}
           <div className="space-y-2">
             <Label>Side</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant={tradeSide === 'BUY' ? 'default' : 'outline'}
                 onClick={() => setTradeSide('BUY')}
-                className={
-                  tradeSide === 'BUY'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : ''
-                }
+                className={tradeSide === 'BUY' ? 'bg-green-600 hover:bg-green-700' : ''}
               >
                 BUY
               </Button>
               <Button
                 variant={tradeSide === 'SELL' ? 'default' : 'outline'}
                 onClick={() => setTradeSide('SELL')}
-                className={
-                  tradeSide === 'SELL'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : ''
-                }
+                className={tradeSide === 'SELL' ? 'bg-red-600 hover:bg-red-700' : ''}
               >
                 SELL
               </Button>
             </div>
           </div>
 
+          {tradeSide === 'BUY' && (
+            <div className="space-y-4">
+              <Label>Pay with</Label>
+              <RadioGroup
+                defaultValue="USDC"
+                value={buyToken}
+                onValueChange={(value: any) => setBuyToken(value as 'USDC' | 'CASH')}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="USDC" id="USDC" />
+                  <Label htmlFor="USDC">USDC</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="CASH" id="CASH" />
+                  <Label htmlFor="CASH">CASH</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          {/* Amount Input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Amount</Label>
+              <Label>Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})</Label>
               {user && (
                 <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
+                  type="button" variant="outline" size="sm"
                   onClick={handleMaxAmount}
-                  disabled={
-                    loadingBalances ||
-                    (tradeSide === 'BUY'
-                      ? parseFloat(usdcBalance) <= 0
-                      : parseFloat(
-                        selectedOutcome === 'Yes'
-                          ? yesTokenBalance
-                          : noTokenBalance
-                      ) <= 0)
-                  }
-                  title={
-                    tradeSide === 'BUY'
-                      ? 'Set max USDC for buying'
-                      : 'Set max token balance for selling'
-                  }
                 >
                   Max
                 </Button>
@@ -1177,52 +1101,23 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
               type="number"
               placeholder="Enter amount"
               value={amount}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setAmount(e.target.value)
-              }
-              min={tradeSide === 'BUY' ? '1' : '0'}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
+              min="0"
               step="0.01"
-              className={getBalanceError() ? 'border-destructive' : ''}
             />
-            {getBalanceError() && (
-              <p className="text-xs text-destructive text-red-500">
-                {getBalanceError()}
-              </p>
-            )}
-            {user && !getBalanceError() && (
+            {user && (
               <div className="text-xs text-muted-foreground">
-                {tradeSide === 'BUY' ? (
-                  <span>USDC Balance: {usdcBalance} (Min: 1)</span>
-                ) : (
-                  <span>
-                    Token Balance:{' '}
-                    {selectedOutcome === 'Yes'
-                      ? yesTokenBalance
-                      : noTokenBalance}{' '}
-                    tokens
-                  </span>
-                )}
+                {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
               </div>
             )}
           </div>
 
           <Button
             onClick={handleTrade}
-            disabled={
-              trading ||
-              !user ||
-              !amount ||
-              parseFloat(amount) <= 0 ||
-              (tradeSide === 'BUY' && parseFloat(amount) < 1) ||
-              !isBalanceSufficient()
-            }
-            className={
-              tradeSide === 'BUY'
-                ? 'w-full bg-green-600 hover:bg-green-700'
-                : 'w-full bg-red-600 hover:bg-red-700'
-            }
+            disabled={isTrading || !user || !amount || parseFloat(amount) <= 0}
+            className={tradeSide === 'BUY' ? 'w-full bg-green-600 hover:bg-green-700' : 'w-full bg-red-600 hover:bg-red-700'}
           >
-            {trading ? 'Processing...' : 'Confirm'}
+            {isTrading ? 'Processing...' : 'Confirm'}
           </Button>
 
           {!user && (
@@ -1235,5 +1130,4 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
     </div>
   )
 }
-
-export default PolymarketChatPage
+export default DflowChatPage

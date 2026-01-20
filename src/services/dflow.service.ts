@@ -97,7 +97,7 @@ export const getDflowEventDetail = async (seriesTicker: string) => {
 
 export const getDflowEventById = async (ticker: string) => {
   const response = await apiClient.get<DflowDataEntity>(
-    `/dflow/markets/${ticker}`
+    `/dflow/markets/${ticker}`,
   );
   return response.data;
 };
@@ -107,7 +107,7 @@ export const createDflowMarketChat = async (id: string) => {
     "/chats",
     {
       kalshiId: id,
-    }
+    },
   );
 
   return response.data;
@@ -118,6 +118,7 @@ export interface DflowTradeDto {
   amount: number;
   slippageBps: number;
   userPublicKey: string;
+  dflowDataId: string;
 }
 
 export interface DflowTradeResponse {
@@ -128,7 +129,7 @@ export interface DflowTradeResponse {
 export const getDflowTradeTransaction = async (params: DflowTradeDto) => {
   const response = await apiClient.get<DflowTradeResponse>(
     "/dflow/trade/transaction",
-    { params }
+    { params },
   );
   return response.data;
 };
@@ -138,12 +139,13 @@ export interface DflowRedeemDto {
   amount: number;
   userPublicKey: string;
   outputMint?: string;
+  dflowDataId: string;
 }
 
 export const getDflowRedemptionTransaction = async (params: DflowRedeemDto) => {
   const response = await apiClient.get<DflowTradeResponse>(
     "/dflow/redeem/transaction",
-    { params }
+    { params },
   );
   return response.data;
 };
@@ -155,7 +157,7 @@ export interface DflowOrderStatusResponse {
 
 export const getDflowOrderStatus = async (signature: string) => {
   const response = await apiClient.get<DflowOrderStatusResponse>(
-    `/dflow/trade/status/${signature}`
+    `/dflow/trade/status/${signature}`,
   );
   return response.data;
 };
@@ -173,16 +175,16 @@ export interface DflowTradeEntity {
   userId: string;
 
   marketTicker: string | null;
-
+  dflowDataId: string | null;
   inputMint: string;
   outputMint: string;
 
-  amount: string; // atomic string
+  amount: string;
   slippageBps: number;
 
   userPublicKey: string;
 
-  signature: string | null; // có thể null nếu chưa ký
+  signature: string | null;
   status: "pending" | "open" | "closed" | "failed" | string;
 
   inAmount: string | null;
@@ -193,8 +195,8 @@ export interface DflowTradeEntity {
 
   transactionResponse: DflowTransactionResponse | null;
 
-  createdAt: string; // ISO
-  updatedAt: string; // ISO
+  createdAt: string;
+  updatedAt: string;
 
   __entity: "DflowTradeEntity";
 }

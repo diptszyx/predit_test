@@ -269,8 +269,8 @@ const PolymarketDetail = () => {
     );
   }
 
-  const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
-  const noToken = market.tokens.find((t) => t.outcome === 'No');
+  const yesToken = market.tokens.find((t) => t.outcome === 'Yes' || t.outcome === 'Up');
+  const noToken = market.tokens.find((t) => t.outcome === 'No' || t.outcome === 'Down');
 
   return (
     <div className="min-h-screen bg-background">
@@ -302,7 +302,7 @@ const PolymarketDetail = () => {
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Liquidity</p>
                       <p className="text-lg font-semibold">
-                        {formatVolume(market.liquidity)}
+                        {market.liquidity ? formatVolume(market.liquidity) : "$0.00"}
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -373,7 +373,7 @@ const PolymarketDetail = () => {
                       <span className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {yesToken ? formatPrice(yesToken.price) : 'N/A'}
                       </span>
-                    </div>
+                    </div>``
                   </div>
                   <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
                     <div className="flex justify-between items-center">

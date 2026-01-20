@@ -96,9 +96,9 @@ export const MarketDetailPage = () => {
       let result;
       if (tradeSide === 'BUY') {
         const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
-        result = await placeOrder(tradeSide, mint, parseFloat(amount), inputMint);
+        result = await placeOrder(tradeSide, mint, parseFloat(amount), market.id, inputMint);
       } else {
-        result = await redeemPositions(mint, parseFloat(amount));
+        result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
       const tx = result.signature;
@@ -175,7 +175,7 @@ export const MarketDetailPage = () => {
         <div className="max-w-6xl mx-auto space-y-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/dflow')}
+            onClick={() => navigate('/kalshi')}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

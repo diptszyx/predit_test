@@ -20,7 +20,7 @@ export const useTrade = () => {
 
   const placeOrder = useMemo(
     () =>
-      async (side: 'BUY' | 'SELL', outcomeMint: string, uiAmount: number, inputMint?: string) => {
+      async (side: 'BUY' | 'SELL', outcomeMint: string, uiAmount: number, dflowDataId: string, inputMint?: string) => {
         if (!publicKey || !signTransaction)
           throw new Error('Wallet not connected');
 
@@ -40,6 +40,7 @@ export const useTrade = () => {
               amount: atomicAmount,
               slippageBps: 500, // Increased slippage tolerance slightly
               userPublicKey: publicKey.toString(),
+              dflowDataId
             });
 
           const txBuf = Buffer.from(swapTransaction, 'base64');
@@ -97,7 +98,7 @@ export const useTrade = () => {
 
   const redeemPositions = useMemo(
     () =>
-      async (outcomeMint: string, uiAmount: number) => {
+      async (outcomeMint: string, uiAmount: number, dflowDataId: string) => {
         if (!publicKey || !signTransaction)
           throw new Error('Wallet not connected');
 
@@ -113,6 +114,7 @@ export const useTrade = () => {
               outputMint: CASH_MINT,
               amount: atomicAmount,
               userPublicKey: publicKey.toString(),
+              dflowDataId
             });
 
           const txBuf = Buffer.from(redeemTransaction, 'base64');

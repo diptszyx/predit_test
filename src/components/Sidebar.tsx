@@ -120,8 +120,8 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     ]
     : []),
   {
-    id: 'dflow',
-    label: 'Dflow Market',
+    id: 'kalshi',
+    label: 'Kalshi Market',
     icon: Store,
     requiresAuth: true,
   },

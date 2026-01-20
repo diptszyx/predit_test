@@ -133,7 +133,7 @@ function AppContent() {
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
     if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
     if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/)) return 'polymarket-chat'
-    if (path === '/dflow') return 'dflow'
+    if (path === '/kalshi') return 'kalshi'
     return 'home';
   };
 
@@ -195,8 +195,8 @@ function AppContent() {
       case 'polymarket-chat':
         navigate('/polymarket/chat');
         break;
-      case 'dflow':
-        navigate('/dflow')
+      case 'kalshi':
+        navigate('/kalshi')
         break
       default:
         navigate('/');
@@ -1246,20 +1246,20 @@ function AppContent() {
         }
       />
 
-      {/* DFlow Market Pages */}
+      {/* kalshi Market Pages */}
       <Route
-        path="/dflow"
+        path="/kalshi"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Dflow Markets - Real-World Prediction Markets</title>
+              <title>Kalshi Market - Real-World Prediction Markets</title>
               <meta
                 name="description"
                 content="Trade crypto prediction markets on real-world outcomes. Market prices reflect real-time probabilities for Bitcoin, Ethereum and key crypto events."
               />
               <link
                 rel="canonical"
-                href={`${window.location.origin}/dflow`}
+                href={`${window.location.origin}/kalshi`}
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
@@ -1276,11 +1276,11 @@ function AppContent() {
       />
 
       <Route
-        path="/dflow/:id"
+        path="/kalshi/:id"
         element={
           < div className="flex h-screen bg-background overflow-hidden" >
             <Helmet>
-              <title>Dflow Market Detail</title>
+              <title>Kalshi Market Detail - Real-World Prediction Markets</title>
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1295,13 +1295,13 @@ function AppContent() {
         }
       />
 
-      {/* Dflow Chat Page */}
+      {/* Kalshi Chat Page */}
       <Route
-        path="/dflow/:marketId/chat/:chatId"
+        path="/kalshi/:marketId/chat/:chatId"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Dflow Chat - Dflow</title>
+              <title>Kalshi Chat - Kalshi Market</title>
               <meta
                 name="description"
                 content="Join the discussion for this crypto market. Share insights, track real-time probabilities, and follow market updates in one place."

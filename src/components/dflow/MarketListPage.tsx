@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { arcLength, rdImageMarket } from '../../constants/ui';
 import { useMarketList } from "../../hooks/dflow/useMarketList";
 import { useTrade } from "../../hooks/dflow/useTrade";
+import { formatMint, mapTradeToUI, TradeRowUI } from '../../hooks/dflow/useTradeHistory';
 import { formatDate, formatDateTime } from '../../lib/date';
 import { createDflowMarketChat, DflowDataEntity, DflowTradeEntity, getTradeHistory } from '../../services/dflow.service';
 import { Badge } from '../ui/badge';
@@ -17,13 +18,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import TradeModalDflow from './TradeModalDflow';
 import { WalletInfoCard } from './WalletInfoCard';
-import { formatMint, mapTradeToUI } from '../../hooks/dflow/useTradeHistory';
 
 export const MarketListPage = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const { markets, loading, meta } = useMarketList({ limit: 20, offset: (page - 1) * 20 });
-  const { placeOrder, isTrading } = useTrade();
+  const { isTrading } = useTrade();
   const [searchTerm, setSearchTerm] = useState("");
 
   // Trade modal state
@@ -71,7 +71,7 @@ export const MarketListPage = () => {
   }
 
   const handleMarketClick = (id: string) => {
-    navigate(`/dflow/${id}`);
+    navigate(`/kalshi/${id}`);
   };
 
   const handleTradeClick = (
@@ -104,13 +104,13 @@ export const MarketListPage = () => {
       try {
         const data = await createDflowMarketChat(market.id)
         if (data)
-          navigate(`/dflow/${market.id}/chat/${data.id}`)
+          navigate(`/kalshi/${market.id}/chat/${data.id}`)
       } catch (error) {
         console.log('error', error)
         toast.error('Something wrong with chat polymarket')
       }
     } else {
-      navigate(`/dflow/${market.id}/chat/${market.chatId}`)
+      navigate(`/kalshi/${market.id}/chat/${market.chatId}`)
     }
   }
 
@@ -221,8 +221,8 @@ export const MarketListPage = () => {
       <div className="w-full p-4 lg:p-6 space-y-6">
         <div className="space-y-2 flex flex-col sm:flex-row sm:items-center justify-between w-full">
           <div>
-            <h1 className="text-3xl font-bold">Dflow Markets</h1>
-            <p className="text-muted-foreground">Trade on real-world events powered by Dflow</p>
+            <h1 className="text-3xl font-bold">Kalshi Market</h1>
+            <p className="text-muted-foreground">Trade on real-world events powered by Kalshi</p>
           </div>
           <div className='w-fit'>
             <WalletInfoCard />
@@ -394,16 +394,18 @@ export const TradeHistoryTable = ({ trades, decimals = 6 }: TradeHistoryTablePro
           <TableRow>
             <TableHead>Time</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Side</TableHead>
             <TableHead>Currency</TableHead>
             <TableHead>Requested</TableHead>
             <TableHead>In → Out</TableHead>
             <TableHead>Fills/Reverts</TableHead>
+            <TableHead>Market</TableHead>
             <TableHead>TX</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
-          {rows.map((r: any) => (
+          {rows.map((r: TradeRowUI) => (
             <TableRow key={r.id}>
               <TableCell className="text-sm text-muted-foreground">
                 {formatDateTime(r.updatedAt)}
@@ -412,6 +414,12 @@ export const TradeHistoryTable = ({ trades, decimals = 6 }: TradeHistoryTablePro
               <TableCell>
                 <Badge variant={statusVariant(r.status)} className='capitalize'>
                   {r.status}
+                </Badge>
+              </TableCell>
+
+              <TableCell>
+                <Badge variant={'outline'} className='capitalize'>
+                  {r.tradeSide}
                 </Badge>
               </TableCell>
 
@@ -439,6 +447,15 @@ export const TradeHistoryTable = ({ trades, decimals = 6 }: TradeHistoryTablePro
 
               <TableCell className="text-sm">
                 {r.fillsCount} / {r.revertsCount}
+              </TableCell>
+
+              <TableCell>
+                <a
+                  href={`/kalshi/${r.marketId}`}
+                  className="underline text-[#3b82f6]"
+                >
+                  View
+                </a>
               </TableCell>
 
               <TableCell className="text-sm">

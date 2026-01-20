@@ -6,7 +6,7 @@ export interface TradeRowUI {
   createdAt: string;
   updatedAt: string;
   tradeCurrency: TradeCurrency;
-
+  tradeSide: string;
   requestedAmountUi: number;
   requestedAmountAtomic: string;
   slippageBps: number;
@@ -19,6 +19,7 @@ export interface TradeRowUI {
 
   fillsCount: number;
   revertsCount: number;
+  marketId: string | null;
 
   signature: string | null;
   orbUrl: string | null;
@@ -39,6 +40,13 @@ export const getTradeCurrency = (inputMint: string): TradeCurrency => {
   if (inputMint === CASH_MINT) return "CASH";
   return "OTHER";
 };
+
+export const tradeSide = (trade: DflowTradeEntity): string => {
+  const { outputMint } = trade;
+  const side = outputMint === CASH_MINT ? "SELL" : "BUY";
+  return side;
+};
+
 export const mapTradeToUI = (t: DflowTradeEntity, decimals = 6): TradeRowUI => {
   const sig = t.signature ?? null;
   return {
@@ -46,7 +54,7 @@ export const mapTradeToUI = (t: DflowTradeEntity, decimals = 6): TradeRowUI => {
     status: t.status ?? "unknown",
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
-
+    tradeSide: tradeSide(t),
     tradeCurrency: getTradeCurrency(t.inputMint),
     requestedAmountUi: toUi(t.amount, decimals) ?? 0,
     requestedAmountAtomic: t.amount,
@@ -60,6 +68,7 @@ export const mapTradeToUI = (t: DflowTradeEntity, decimals = 6): TradeRowUI => {
 
     fillsCount: Array.isArray(t.fills) ? t.fills.length : 0,
     revertsCount: Array.isArray(t.reverts) ? t.reverts.length : 0,
+    marketId: t.dflowDataId,
 
     signature: sig,
     orbUrl: sig ? `https://orbmarkets.io/tx/${sig}?tab=summary` : null,

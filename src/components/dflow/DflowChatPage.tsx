@@ -995,7 +995,7 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
             <div className="flex justify-between items-center">
               <span className="font-semibold text-gray-600">YES</span>
               <span className="text-xl font-bold text-green-600 dark:text-green-400">
-                {yesBid ? formatPrice(yesBid) : 'N/A'}
+                {yesBid ? formatPrice(yesBid) : '0.00'}
               </span>
             </div>
           </div>
@@ -1003,7 +1003,7 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
             <div className="flex justify-between items-center">
               <span className="font-semibold text-gray-600">NO</span>
               <span className="text-xl font-bold text-red-600 dark:text-red-400">
-                {noBid ? formatPrice(noBid) : 'N/A'}
+                {noBid ? formatPrice(noBid) : '0.00'}
               </span>
             </div>
           </div>

@@ -179,7 +179,7 @@ export const MarketDetailPage = () => {
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Markets (Dflow)
+            Back to Kalshi Market
           </Button>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -273,7 +273,7 @@ export const MarketDetailPage = () => {
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-gray-600">YES</span>
                       <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {yesBid ? formatPrice(yesBid) : 'N/A'}
+                        {yesBid ? formatPrice(yesBid) : '0.00'}
                       </span>
                     </div>
                   </div>
@@ -281,7 +281,7 @@ export const MarketDetailPage = () => {
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-gray-600">NO</span>
                       <span className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {noBid ? formatPrice(noBid) : 'N/A'}
+                        {noBid ? formatPrice(noBid) : '0.00'}
                       </span>
                     </div>
                   </div>

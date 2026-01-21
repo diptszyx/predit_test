@@ -35,6 +35,7 @@ export const MarketListPage = () => {
 
   // Trade history
   const pageSize = 10
+  const [loadingTradeHistory, setLoadingTradeHistory] = useState(false)
   const [pageTradeHistory, setPageTradeHistory] = useState(1)
   const [tradeHistory, setTradeHistory] = useState<DflowTradeEntity[]>([]);
   const [historyMeta, setHistoryMeta] = useState<{
@@ -58,6 +59,7 @@ export const MarketListPage = () => {
 
   const fetchHistory = async () => {
     try {
+      setLoadingTradeHistory(true)
       const data = await getTradeHistory({
         limit: 10,
         offset: (pageTradeHistory - 1) * pageSize
@@ -67,6 +69,8 @@ export const MarketListPage = () => {
     } catch (error) {
       console.log('Fail to fetch trade history', error)
       toast.error("Fail to fetch trade history")
+    } finally {
+      setLoadingTradeHistory(false)
     }
   }
 
@@ -293,10 +297,10 @@ export const MarketListPage = () => {
           </TabsContent>
 
           <TabsContent value='trades' className='mt-6'>
-            {loading ? (
+            {loadingTradeHistory ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-20 w-full" />
+                  <Skeleton key={i} className="h-14 w-full" />
                 ))}
               </div>
             ) : tradeHistory.length === 0 ? (

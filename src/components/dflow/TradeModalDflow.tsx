@@ -10,7 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
+import clsx from "clsx";
+import { CircleDollarSign } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import Usdc from "../wallet/icon/Usdc";
 
 interface TradeModalDflowProps {
   open: boolean;
@@ -19,6 +22,7 @@ interface TradeModalDflowProps {
   initialOutcome?: 'Yes' | 'No';
   onTradeSuccess?: () => void;
 }
+export const toPriceLabel = (num: string): string => parseFloat(num).toFixed(2)
 
 const TradeModalDflow = ({ open,
   onOpenChange,
@@ -165,9 +169,12 @@ const TradeModalDflow = ({ open,
             <Button
               variant={selectedOutcome === 'Yes' ? 'default' : 'outline'}
               onClick={() => setSelectedOutcome('Yes')}
-              className={selectedOutcome === 'Yes' ? 'bg-green-600 hover:bg-green-700' : ''}
+              className={`${selectedOutcome === 'Yes' ? 'bg-green-600 hover:bg-green-700' : ''}`}
             >
               YES
+              {market.yesBid &&
+                <span className="text-[12.5px]">${toPriceLabel(market.yesBid)}</span>
+              }
             </Button>
             <Button
               variant={selectedOutcome === 'No' ? 'default' : 'outline'}
@@ -175,6 +182,9 @@ const TradeModalDflow = ({ open,
               className={selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''}
             >
               NO
+              {market.noBid &&
+                <span className="text-[12.5px]">${toPriceLabel(market.noBid)}</span>
+              }
             </Button>
           </div>
         </div>
@@ -212,11 +222,17 @@ const TradeModalDflow = ({ open,
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="USDC" id="USDC" />
-                <Label htmlFor="USDC">USDC</Label>
+                <Label htmlFor="USDC">
+                  <Usdc width={23} height={23} />
+                  USDC
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="CASH" id="CASH" />
-                <Label htmlFor="CASH">CASH</Label>
+                <Label htmlFor="CASH">
+                  <CircleDollarSign />
+                  CASH
+                </Label>
               </div>
             </RadioGroup>
           </div>
@@ -227,12 +243,9 @@ const TradeModalDflow = ({ open,
           <div className="flex items-center justify-between">
             <Label>Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})</Label>
             {user && (
-              <Button
-                type="button" variant="outline" size="sm"
-                onClick={handleMaxAmount}
-              >
-                Max
-              </Button>
+              <div className="text-xs text-muted-foreground">
+                {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
+              </div>
             )}
           </div>
           <Input
@@ -243,11 +256,51 @@ const TradeModalDflow = ({ open,
             min="0"
             step="0.01"
           />
-          {user && (
-            <div className="text-xs text-muted-foreground">
-              {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
-            </div>
-          )}
+          <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
+            {[1, 20, 50].map((v) => {
+              const disabled = !user
+                || Number(amount) >= Number(balance)
+                || v > Number(balance)
+
+              return (
+                <Button
+                  key={v}
+                  disabled={disabled}
+                  type="button"
+                  size="sm"
+                  variant='outline'
+                  className={clsx(
+                    'text-sm transition-all',
+                    disabled
+                      ? 'opacity-40'
+                      : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer'
+                  )}
+                  onClick={() => {
+                    if (!disabled) {
+                      if (!amount) {
+                        setAmount(String(v));
+                      } else {
+                        const newValue = Number(amount) + v
+                        if (newValue > Number(amount)) handleMaxAmount()
+                        else setAmount(String(newValue))
+                      }
+                    }
+                  }}
+                >
+                  +${v}
+                </Button>
+              );
+            })}
+            {user && (
+              <Button
+                type="button" size="sm"
+                variant='outline'
+                onClick={handleMaxAmount}
+              >
+                Max
+              </Button>
+            )}
+          </div>
         </div>
 
         <Button

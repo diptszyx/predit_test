@@ -1,6 +1,7 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { ArrowLeft } from 'lucide-react';
+import clsx from "clsx";
+import { ArrowLeft, CircleDollarSign } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -17,6 +18,8 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Skeleton } from '../ui/skeleton';
+import Usdc from "../wallet/icon/Usdc";
+import { toPriceLabel } from "./TradeModalDflow";
 
 export const MarketDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -263,33 +266,9 @@ export const MarketDetailPage = () => {
 
             {/* Right Column: Trade Panel */}
             <div className="space-y-6">
-
               <Card>
                 <CardHeader>
-                  <CardTitle>Current Prices</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-600">YES</span>
-                      <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {yesBid ? formatPrice(yesBid) : '0.00'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-600">NO</span>
-                      <span className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {noBid ? formatPrice(noBid) : '0.00'}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Trade</CardTitle>
+                  <CardTitle className='font-semibold'>Trade</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Outcome Selection */}
@@ -302,6 +281,9 @@ export const MarketDetailPage = () => {
                         className={selectedOutcome === 'Yes' ? 'bg-green-600 hover:bg-green-700' : ''}
                       >
                         YES
+                        {market.yesBid &&
+                          <span className="text-[12.5px]">${toPriceLabel(market.yesBid)}</span>
+                        }
                       </Button>
                       <Button
                         variant={selectedOutcome === 'No' ? 'default' : 'outline'}
@@ -309,6 +291,9 @@ export const MarketDetailPage = () => {
                         className={selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''}
                       >
                         NO
+                        {market.noBid &&
+                          <span className="text-[12.5px]">${toPriceLabel(market.noBid)}</span>
+                        }
                       </Button>
                     </div>
                   </div>
@@ -346,11 +331,17 @@ export const MarketDetailPage = () => {
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="USDC" id="USDC" />
-                          <Label htmlFor="USDC">USDC</Label>
+                          <Label htmlFor="USDC">
+                            <Usdc width={23} height={23} />
+                            USDC
+                          </Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="CASH" id="CASH" />
-                          <Label htmlFor="CASH">CASH</Label>
+                          <Label htmlFor="CASH">
+                            <CircleDollarSign />
+                            CASH
+                          </Label>
                         </div>
                       </RadioGroup>
                     </div>
@@ -361,12 +352,9 @@ export const MarketDetailPage = () => {
                     <div className="flex items-center justify-between">
                       <Label>Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})</Label>
                       {user && (
-                        <Button
-                          type="button" variant="outline" size="sm"
-                          onClick={handleMaxAmount}
-                        >
-                          Max
-                        </Button>
+                        <div className="text-xs text-muted-foreground">
+                          {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
+                        </div>
                       )}
                     </div>
                     <Input
@@ -377,11 +365,51 @@ export const MarketDetailPage = () => {
                       min="0"
                       step="0.01"
                     />
-                    {user && (
-                      <div className="text-xs text-muted-foreground">
-                        {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
-                      </div>
-                    )}
+                    <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
+                      {[1, 20, 50].map((v) => {
+                        const disabled = !user
+                          || Number(amount) >= Number(balance)
+                          || v > Number(balance)
+
+                        return (
+                          <Button
+                            key={v}
+                            disabled={disabled}
+                            type="button"
+                            size="sm"
+                            variant='outline'
+                            className={clsx(
+                              'text-sm transition-all',
+                              disabled
+                                ? 'opacity-40'
+                                : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer'
+                            )}
+                            onClick={() => {
+                              if (!disabled) {
+                                if (!amount) {
+                                  setAmount(String(v));
+                                } else {
+                                  const newValue = Number(amount) + v
+                                  if (newValue > Number(amount)) handleMaxAmount()
+                                  else setAmount(String(newValue))
+                                }
+                              }
+                            }}
+                          >
+                            +${v}
+                          </Button>
+                        );
+                      })}
+                      {user && (
+                        <Button
+                          type="button" size="sm"
+                          variant='outline'
+                          onClick={handleMaxAmount}
+                        >
+                          Max
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <Button

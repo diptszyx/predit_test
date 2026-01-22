@@ -373,7 +373,7 @@ const PolymarketDetail = () => {
                       <span className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {yesToken ? formatPrice(yesToken.price) : 'N/A'}
                       </span>
-                    </div>``
+                    </div>
                   </div>
                   <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
                     <div className="flex justify-between items-center">

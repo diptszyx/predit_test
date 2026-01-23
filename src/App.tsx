@@ -998,7 +998,7 @@ function AppContent() {
 
       {/* Market Detail Page */}
       <Route
-        path="/market/:marketId"
+        path="/market/:marketId/chat/:chatID"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
@@ -1465,18 +1465,13 @@ function ChatWithOracleWrapper({
   handleReloadOracle,
 }: any) {
   const navigate = useNavigate();
-  const { oracleId } = useParams();
+  const { chatId } = useParams();
 
-  // Load oracle from URL param if not already selected
   useEffect(() => {
-    if (oracleId && listOracles.length > 0) {
-      const oracle = listOracles.find((o: OracleEntity) => o.id === oracleId);
-      if (oracle && (!selectedAIAgent || selectedAIAgent.id !== oracleId)) {
-        setSelectedAIAgent(oracle);
-        localStorage.setItem('deor-currentOracle', oracleId);
-      }
+    if (listOracles.length > 0 && !selectedAIAgent) {
+      setSelectedAIAgent(listOracles[0])
     }
-  }, [oracleId, listOracles, selectedAIAgent]);
+  }, [listOracles, selectedAIAgent])
 
   if (!selectedAIAgent) {
     return null;
@@ -1507,7 +1502,7 @@ function ChatWithOracleWrapper({
         />
         <link
           rel="canonical"
-          href={`${window.location.origin}/chat/${oracleId}`}
+          href={`${window.location.origin}/chat/${chatId}`}
         />
       </Helmet>
       <Sidebar {...commonSidebarProps} />

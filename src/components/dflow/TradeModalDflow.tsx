@@ -22,7 +22,7 @@ interface TradeModalDflowProps {
   initialOutcome?: 'Yes' | 'No';
   onTradeSuccess?: () => void;
 }
-export const toPriceLabel = (num: string): string => parseFloat(num).toFixed(2)
+export const toPriceLabel = (num: string, fixed = 2): string => parseFloat(num).toFixed(fixed)
 
 const TradeModalDflow = ({ open,
   onOpenChange,

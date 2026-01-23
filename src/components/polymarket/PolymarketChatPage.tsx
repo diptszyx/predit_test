@@ -34,6 +34,7 @@ import {
 } from '../ui/select';
 import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { toPriceLabel } from '../dflow/TradeModalDflow';
 
 const tabs = [
   { id: 'chat', label: 'Chat' },
@@ -1035,55 +1036,21 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
     }
   };
 
-  const formatPrice = (price: string) => {
-    return `${(parseFloat(price) * 100).toFixed(2)}%`;
-  };
-
-  const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
-  const noToken = market.tokens.find((t) => t.outcome === 'No');
+  const yesToken = market.tokens.find((t) => t.outcome === 'Yes' || t.outcome === 'Up');
+  const noToken = market.tokens.find((t) => t.outcome === 'No' || t.outcome === 'Down');
 
   return (
     <div className="space-y-4">
       <Card
-        style={{
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-        }}
-      >
-        <CardHeader>
-          <CardTitle>Current Prices</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-gray-600">YES</span>
-              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {yesToken ? formatPrice(yesToken.price) : 'N/A'}
-              </span>
-            </div>
-          </div>
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-gray-600">NO</span>
-              <span className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {noToken ? formatPrice(noToken.price) : 'N/A'}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card
         className="border-border"
         style={{
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
+          borderRadius: '0px',
         }}
       >
         <CardHeader>
-          <CardTitle>Trade</CardTitle>
+          <CardTitle className="font-semibold">Trade</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label>Outcome</Label>
             <div className="grid grid-cols-2 gap-2">
@@ -1099,6 +1066,9 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
                 }
               >
                 YES
+                {yesToken &&
+                  <span className="text-[12.5px]">${toPriceLabel(yesToken.price, 1)}</span>
+                }
               </Button>
               <Button
                 variant={
@@ -1112,6 +1082,9 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
                 }
               >
                 NO
+                {noToken &&
+                  <span className="text-[12.5px]">${toPriceLabel(noToken.price, 1)}</span>
+                }
               </Button>
             </div>
           </div>

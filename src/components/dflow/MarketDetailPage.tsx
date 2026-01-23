@@ -162,13 +162,6 @@ export const MarketDetailPage = () => {
     );
   }
 
-  const yesBid = market.yesBid;
-  const noBid = market.noBid;
-
-  const formatPrice = (price: string) => {
-    return `${(parseFloat(price) * 100).toFixed(2)}`;
-  };
-
   const roundString = (string: string) => {
     return Math.round(Number(string))
   }

@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { ArrowLeft, ArrowRight, Crown, Info, Loader2, MessageSquare, Share, ShoppingCart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
 import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
@@ -35,9 +35,6 @@ import MarketInfoModal from './MarketInfoModal';
 import MarketList from './MarketList';
 import { MarketModal } from './MarketModal';
 
-interface MarketDetailProps {
-}
-
 const tabs = [
   { id: 'chat', label: 'Chat' },
   { id: 'market', label: 'Market' },
@@ -45,13 +42,13 @@ const tabs = [
 
 export default function MarketDetail() {
   const navigate = useNavigate();
-  const location = useLocation();
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
   const user = useAuthStore((state) => state.user);
-  const { marketId } = useParams<{
+  const { marketId, chatID } = useParams<{
     marketId: string;
+    chatID: string;
   }>();
-  const [chatId, setChatId] = useState<string | null>(null);
+
   const [market, setMarket] = useState<Market | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,10 +94,10 @@ export default function MarketDetail() {
   }, [marketId]);
 
   useEffect(() => {
-    if (chatId) {
+    if (chatID) {
       fetchMessages()
     }
-  }, [chatId]);
+  }, [chatID]);
 
   useEffect(() => {
     if (market
@@ -120,7 +117,6 @@ export default function MarketDetail() {
     try {
       const data = await getMarketById(marketId);
       setMarket(data);
-      if (data.chatId) setChatId(data.chatId);
 
       const oracleList = await oraclesServices.getAllOracles();
       if (oracleList && oracleList.data) {
@@ -143,10 +139,10 @@ export default function MarketDetail() {
   };
 
   const fetchMessages = async () => {
-    if (!chatId) return
+    if (!chatID) return
 
     try {
-      const data = await getMarketMessages(chatId)
+      const { data } = await getMarketMessages(marketId)
       if (data && data.length > 0) {
         setMessages(data.reverse())
         if (data[0]?.oracle) {
@@ -265,9 +261,9 @@ export default function MarketDetail() {
     let messageCreated = false;
 
     try {
-      if (!chatId) throw new Error("Chat ID is missing");
+      if (!chatID) throw new Error("Chat ID is missing");
 
-      await sendMarketMessageStream(trimmedInput, chatId, {
+      await sendMarketMessageStream(marketId, trimmedInput, chatID, {
         onMetadata: (metadata) => {
           if (metadata.xpReward.milestone) {
             toast.success(

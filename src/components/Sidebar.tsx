@@ -369,8 +369,15 @@ export function Sidebar({
                           size="sm"
                           className={`w-full justify-start text-[12.5px] text-muted-foreground hover:text-foreground hover:bg-accent/50`}
                           onClick={() => {
-                            onNavigate(`chat?chatId=${chat.id}`);
-                            setIsMobileMenuOpen(false);
+                            if (chat.polymarketId) {
+                              return navigate(`/polymarket/${chat.polymarketId}/chat/${chat.id}`);
+                            } else if (chat.marketId) {
+                              return navigate(`/market/${chat.marketId}/chat/${chat.id}`);
+                            } else if (chat.kalshiId) {
+                              return navigate(`/kalshi/${chat.kalshiId}/chat/${chat.id}`)
+                            } else {
+                              return navigate(`/chat/${chat.id}`);
+                            }
                           }}
                         >
                           <MessageCircle className="w-4 h-4 mr-2" />
@@ -714,7 +721,9 @@ export function Sidebar({
                                 if (chat.polymarketId) {
                                   return navigate(`/polymarket/${chat.polymarketId}/chat/${chat.id}`);
                                 } else if (chat.marketId) {
-                                  return navigate(`/market/${chat.marketId}`);
+                                  return navigate(`/market/${chat.marketId}/chat/${chat.id}`);
+                                } else if (chat.kalshiId) {
+                                  return navigate(`/kalshi/${chat.kalshiId}/chat/${chat.id}`)
                                 } else {
                                   return navigate(`/chat/${chat.id}`);
                                 }

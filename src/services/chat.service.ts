@@ -8,6 +8,7 @@ export interface ChatEntity {
   polymarketId: string;
   firstMessage: string;
   marketId: string;
+  kalshiId: string;
 }
 
 export interface MessageEntity {
@@ -52,7 +53,7 @@ export const chatService = {
 
   getMessages: async (
     chatId: string,
-    params?: { limit?: number; offset?: number }
+    params?: { limit?: number; offset?: number },
   ) => {
     try {
       const { data } = await apiClient.get<GetMessagesResponse>(`/messages`, {

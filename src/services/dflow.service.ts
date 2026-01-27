@@ -1,4 +1,5 @@
 import apiClient from "../lib/axios";
+import { TokenAccount } from "../utils/getTokenAccounts";
 import { CreatePolymarketChatResponse } from "./polymarket-message.service";
 
 export interface DflowMarket {
@@ -46,6 +47,7 @@ export interface DflowDataEntity {
   expirationTime: string;
   openTime: string;
 
+  ticker: string;
   eventTicker: string;
   id: string;
 
@@ -171,7 +173,7 @@ export const postTradeSignature = async (payload: {
 };
 
 export interface DflowTradeEntity {
-  id: string; // tradeId (UUID)
+  id: string;
   userId: string;
 
   marketTicker: string | null;
@@ -282,5 +284,38 @@ export const getTradeHistory = async (params?: {
   const res = await apiClient.get<TradeHistoryResponse>("dflow/trade/history", {
     params,
   });
+  return res.data;
+};
+
+interface GetPositionsParams {
+  tokenAccounts: TokenAccount[];
+  limit?: number;
+  offset?: number;
+}
+export interface MarketPosition {
+  mint: string;
+  balance: string;
+  decimals: number;
+  positionType: "YES" | "NO";
+  market: DflowDataEntity;
+  avgPrice?: number;
+}
+export interface Meta {
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface MarketPositionsResponse {
+  data: MarketPosition[];
+  meta: Meta;
+}
+
+export const getPositions = async (data: GetPositionsParams) => {
+  const res = await apiClient.post<MarketPositionsResponse>(
+    "dflow/positions",
+    data,
+  );
+
   return res.data;
 };

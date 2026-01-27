@@ -1,13 +1,16 @@
+import { useWallet } from '@solana/wallet-adapter-react';
 import { ChevronLeft, ChevronRight, Clock, MessageSquare } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { arcLength, rdImageMarket } from '../../constants/ui';
 import { useMarketList } from "../../hooks/dflow/useMarketList";
+import { calculateAvgAndPnL, centsLabel, getKalshiBidAsk, moneyLabel, pctLabel } from '../../hooks/dflow/usePositions';
 import { useTrade } from "../../hooks/dflow/useTrade";
-import { formatMint, mapTradeToUI, TradeRowUI } from '../../hooks/dflow/useTradeHistory';
+import { formatMint, mapTradeToUI, toUi, TradeRowUI } from '../../hooks/dflow/useTradeHistory';
 import { formatDate, formatDateTime } from '../../lib/date';
-import { createDflowMarketChat, DflowDataEntity, DflowTradeEntity, getTradeHistory } from '../../services/dflow.service';
+import { createDflowMarketChat, DflowDataEntity, DflowTradeEntity, getTradeHistory, MarketPosition, Meta } from '../../services/dflow.service';
+import { getUserTokenAccounts } from '../../utils/getTokenAccounts';
 import { Badge } from '../ui/badge';
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -16,6 +19,7 @@ import { Skeleton } from "../ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { getPositions } from './../../services/dflow.service';
 import TradeModalDflow from './TradeModalDflow';
 import { WalletInfoCard } from './WalletInfoCard';
 
@@ -38,16 +42,23 @@ export const MarketListPage = () => {
   const [loadingTradeHistory, setLoadingTradeHistory] = useState(false)
   const [pageTradeHistory, setPageTradeHistory] = useState(1)
   const [tradeHistory, setTradeHistory] = useState<DflowTradeEntity[]>([]);
-  const [historyMeta, setHistoryMeta] = useState<{
-    total: number;
-    limit: number;
-    offset: number;
-  }>({
+  const [historyMeta, setHistoryMeta] = useState<Meta>({
     total: 0,
     limit: pageSize,
     offset: (pageTradeHistory - 1) * pageSize
   });
-  const [activeTab, setActiveTab] = useState<'markets' | 'trades'>(
+
+  // Positions
+  const { publicKey } = useWallet();
+  const [loadingPositions, setLoadingPositions] = useState(false)
+  const [pagePositions, setPagePositions] = useState(1)
+  const [positions, setPositions] = useState<MarketPosition[]>([])
+  const [positionMeta, setPositionMeta] = useState<Meta>({
+    total: 0,
+    limit: pageSize,
+    offset: (pagePositions - 1) * pageSize
+  })
+  const [activeTab, setActiveTab] = useState<'markets' | 'trades' | 'positions'>(
     'markets'
   );
 
@@ -55,7 +66,10 @@ export const MarketListPage = () => {
     if (activeTab === 'trades') {
       fetchHistory()
     }
-  }, [activeTab, pageTradeHistory])
+    if (activeTab === 'positions') {
+      fetchPositions()
+    }
+  }, [activeTab, pageTradeHistory, pagePositions])
 
   const fetchHistory = async () => {
     try {
@@ -71,6 +85,26 @@ export const MarketListPage = () => {
       toast.error("Fail to fetch trade history")
     } finally {
       setLoadingTradeHistory(false)
+    }
+  }
+
+  const fetchPositions = async () => {
+    if (!publicKey) return
+    setLoadingPositions(true)
+    try {
+      const tokenAccounts = await getUserTokenAccounts(publicKey.toBase58())
+      const data = await getPositions({
+        tokenAccounts,
+        limit: pageSize,
+        offset: (pagePositions - 1) * pageSize
+      })
+      setPositions(data.data)
+      setPositionMeta(data.meta)
+    } catch (error) {
+      console.log('Fail to fetch trade positions', error)
+      toast.error("Fail to fetch trade positions")
+    } finally {
+      setLoadingPositions(false)
     }
   }
 
@@ -243,6 +277,7 @@ export const MarketListPage = () => {
             <TabsList>
               <TabsTrigger value='markets'>Markets</TabsTrigger>
               <TabsTrigger value="trades">Trade History</TabsTrigger>
+              <TabsTrigger value="positions">Positions</TabsTrigger>
             </TabsList>
 
             {/* Search / Filter bar */}
@@ -326,6 +361,46 @@ export const MarketListPage = () => {
                         variant="outline"
                         disabled={page === Math.ceil(historyMeta.total / pageSize)}
                         onClick={() => setPageTradeHistory((p) => p + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                }
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value='positions' className='mt-6'>
+            {loadingPositions ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
+              </div>
+            ) : positions.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No positions</p>
+              </div>
+            ) : (
+              <>
+                <PositionsTable positions={positions} />
+                {
+                  positions && <div className="flex items-center justify-between pt-8">
+                    <p className='text-sm'>Page {page} of {Math.ceil(positionMeta.total / pageSize)}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        disabled={page === 1}
+                        onClick={() => setPagePositions((p) => p - 1)}
+                      >
+                        Previous
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        disabled={page === Math.ceil(positionMeta.total / pageSize)}
+                        onClick={() => setPagePositions((p) => p + 1)}
                       >
                         Next
                       </Button>
@@ -483,3 +558,130 @@ export const TradeHistoryTable = ({ trades, decimals = 6 }: TradeHistoryTablePro
     </Card>
   );
 };
+export interface PositionsTableProps {
+  positions: MarketPosition[];
+}
+export const PositionsTable = ({ positions }: PositionsTableProps) => {
+  return (
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow className="">
+            <TableHead className="text-xs tracking-wide">MARKET</TableHead>
+            <TableHead className="w-[90px] text-right text-xs tracking-wide">
+              AVG
+            </TableHead>
+            <TableHead className="w-[90px] text-right text-xs tracking-wide">
+              CURRENT
+            </TableHead>
+            <TableHead className="w-[150px] text-right text-xs tracking-wide">
+              VALUE
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
+          {positions.map((position) => {
+            const shares = toUi(position.balance, position.decimals)
+            const { yesBid, yesAsk, noBid, noAsk } = getKalshiBidAsk(position)
+
+            const currentUSD =
+              position.positionType === "YES" ? yesAsk ?? 0 : noAsk ?? 0
+
+            const valueUSD = shares * currentUSD
+            const { avgUSD, pnlUSD, pnlPct, isAvgEstimated } =
+              calculateAvgAndPnL({
+                positionType: position.positionType,
+                shares,
+                currentUSD,
+                yesBid,
+                yesAsk,
+                noBid,
+                noAsk,
+                avgPrice: position.avgPrice,
+              })
+
+            const sideLabel = position.positionType === "YES" ? "Yes" : "No"
+            const sideColor =
+              position.positionType === "YES"
+                ? "text-emerald-300"
+                : "text-rose-300"
+
+            return (
+              <TableRow
+                key={`${position.market.eventTicker}-${position.mint}`}
+              >
+                {/* MARKET CELL */}
+                <TableCell className="py-5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/10 ring-1 ring-white/10">
+                      <img
+                        src={rdImageMarket(position.market.ticker)}
+                        alt={position.market.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold">
+                        {position.market.title}
+                      </div>
+
+                      <div className="mt-1 flex items-center gap-2 text-xs">
+                        <span className={`font-semibold ${sideColor}`}>{sideLabel}</span>
+                        <span className="">•</span>
+                        <span>{shares.toFixed(1)} shares</span>
+                        <span className="">at</span>
+                        <span className="font-medium ">
+                          {avgUSD != null ? centsLabel(avgUSD) : "—"}
+                        </span>
+                        {isAvgEstimated && (
+                          <span className="ml-1 rounded-full border bg-background/80 px-2 py-1 text-[8px]">
+                            Estimated
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+
+                {/* AVG */}
+                <TableCell className="text-right align-top">
+                  <div className="text-sm font-semibold">
+                    {avgUSD != null ? centsLabel(avgUSD) : "—"}
+                  </div>
+                </TableCell>
+
+                {/* CURRENT */}
+                <TableCell className="text-right align-top">
+                  <div className="text-sm font-semibold">
+                    {centsLabel(currentUSD)}
+                  </div>
+                </TableCell>
+
+                {/* VALUE */}
+                <TableCell className="text-right align-top">
+                  <div className="text-sm font-semibold">
+                    {moneyLabel(valueUSD)}
+                  </div>
+
+                  <div className="mt-1 text-xs">
+                    {pnlUSD != null && pnlPct != null ? (
+                      <span className={pnlUSD >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                        {pnlUSD >= 0 ? "+" : ""}
+                        {moneyLabel(pnlUSD)} ({pnlUSD >= 0 ? "+" : ""}
+                        {pctLabel(pnlPct)})
+                      </span>
+                    ) : (
+                      <span className="">—</span>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </Card>
+  )
+}

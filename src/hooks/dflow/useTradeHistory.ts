@@ -25,10 +25,10 @@ export interface TradeRowUI {
   orbUrl: string | null;
 }
 export type TradeCurrency = "USDC" | "CASH" | "OTHER";
-const toUi = (atomic?: string | null, decimals = 6): number | null => {
-  if (!atomic) return null;
+export const toUi = (atomic?: string | null, decimals = 6): number => {
+  if (!atomic) return 0;
   const n = Number(atomic);
-  if (!Number.isFinite(n)) return null;
+  if (!Number.isFinite(n)) return 0;
   return n / Math.pow(10, decimals);
 };
 

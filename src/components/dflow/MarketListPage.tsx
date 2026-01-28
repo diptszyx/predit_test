@@ -20,6 +20,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { getPositions } from './../../services/dflow.service';
+import SellingModal from './SellingModal';
 import TradeModalDflow from './TradeModalDflow';
 import { WalletInfoCard } from './WalletInfoCard';
 
@@ -384,7 +385,7 @@ export const MarketListPage = () => {
               </div>
             ) : (
               <>
-                <PositionsTable positions={positions} />
+                <PositionsTable positions={positions} onSellSuccess={fetchPositions} />
                 {
                   positions && <div className="flex items-center justify-between pt-8">
                     <p className='text-sm'>Page {page} of {Math.ceil(positionMeta.total / pageSize)}</p>
@@ -560,23 +561,39 @@ export const TradeHistoryTable = ({ trades, decimals = 6 }: TradeHistoryTablePro
 };
 export interface PositionsTableProps {
   positions: MarketPosition[];
+  onSellSuccess: () => void
 }
-export const PositionsTable = ({ positions }: PositionsTableProps) => {
+
+export const PositionsTable = ({ positions, onSellSuccess }: PositionsTableProps) => {
+  const [openSellingModal, setOpenSellingModal] = useState<boolean>(false)
+  const [selectedPosition, setSelectedPosition] = useState<MarketPosition | null>(null)
+
+  const handleClickSelling = (position: MarketPosition) => {
+    setSelectedPosition(position)
+    setOpenSellingModal(true)
+  }
+
+  const sellingSuccess = () => {
+    setSelectedPosition(null)
+    setOpenSellingModal(false)
+    onSellSuccess()
+  }
   return (
     <Card>
       <Table>
         <TableHeader>
-          <TableRow className="">
+          <TableRow>
             <TableHead className="text-xs tracking-wide">MARKET</TableHead>
-            <TableHead className="w-[90px] text-right text-xs tracking-wide">
+            <TableHead className="w-20 text-right text-xs tracking-wide">
               AVG
             </TableHead>
-            <TableHead className="w-[90px] text-right text-xs tracking-wide">
+            <TableHead className="w-20 text-right text-xs tracking-wide">
               CURRENT
             </TableHead>
             <TableHead className="w-[150px] text-right text-xs tracking-wide">
               VALUE
             </TableHead>
+            <TableHead className='w-[130px] text-right text-xs'></TableHead>
           </TableRow>
         </TableHeader>
 
@@ -677,10 +694,25 @@ export const PositionsTable = ({ positions }: PositionsTableProps) => {
                     )}
                   </div>
                 </TableCell>
+
+                <TableCell>
+                  <div className='flex justify-end'>
+                    <Button size='sm' className='w-2/3' onClick={() => handleClickSelling(position)}>
+                      {position.market.status === 'active' ? 'Sell' : 'Claim'}
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
             )
           })}
         </TableBody>
+        {selectedPosition &&
+          <SellingModal
+            open={openSellingModal}
+            onChange={setOpenSellingModal}
+            position={selectedPosition}
+            onTradeSuccess={sellingSuccess} />
+        }
       </Table>
     </Card>
   )

@@ -118,16 +118,14 @@ const TradeModalDflow = ({
     }
 
     try {
-      const mint =
-        selectedOutcome === 'Yes'
-          ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .yesMint
-          : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .noMint;
+      const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
 
       let result;
       if (tradeSide === 'BUY') {
-        const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+        const mint =
+          selectedOutcome === 'Yes'
+            ? market.accounts[inputMint].yesMint
+            : market.accounts[inputMint].noMint;
         result = await placeOrder(
           tradeSide,
           mint,
@@ -136,6 +134,12 @@ const TradeModalDflow = ({
           inputMint,
         );
       } else {
+        const mint =
+          selectedOutcome === 'Yes'
+            ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+                .yesMint
+            : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+                .noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 

@@ -200,7 +200,7 @@ export const MarketListPage = () => {
             <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 bg-muted flex items-center justify-center">
               {/* Placeholder Image */}
               <ImageWithFallback
-                src={market.imageUrl}
+                src={market.imageUrl || rdImageMarket(market.ticker)}
                 alt={market.title}
                 className="w-full h-full object-cover"
               />
@@ -720,7 +720,10 @@ export const PositionsTable = ({
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/10 ring-1 ring-white/10">
                       <ImageWithFallback
-                        src={position.market.imageUrl}
+                        src={
+                          position.market.imageUrl ||
+                          rdImageMarket(position.market.ticker)
+                        }
                         alt={position.market.title}
                         className="w-full h-full object-cover"
                       />

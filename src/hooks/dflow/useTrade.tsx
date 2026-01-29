@@ -24,7 +24,7 @@ export const useTrade = () => {
         outcomeMint: string,
         uiAmount: number,
         dflowDataId: string,
-        inputMint?: string,
+        inputMint: string,
       ) => {
         if (!publicKey || !signTransaction)
           throw new Error('Wallet not connected');
@@ -32,17 +32,15 @@ export const useTrade = () => {
         try {
           setIsTrading(true);
 
-          const finalInputMint =
-            inputMint || (side === 'BUY' ? USDC_MINT : outcomeMint);
-          const finalOutputMint = side === 'BUY' ? outcomeMint : CASH_MINT;
+          // const finalOutputMint = side === 'BUY' ? outcomeMint : CASH_MINT;
 
           // Assuming 6 decimals for both USDC and Outcome tokens
           const atomicAmount = Math.floor(uiAmount * 1_000_000);
 
           const { tradeId, transaction: swapTransaction } =
             await getDflowTradeTransaction({
-              inputMint: finalInputMint,
-              outputMint: finalOutputMint,
+              inputMint: inputMint,
+              outputMint: outcomeMint,
               amount: atomicAmount,
               slippageBps: 500, // Increased slippage tolerance slightly
               userPublicKey: publicKey.toString(),

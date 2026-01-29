@@ -101,16 +101,13 @@ export const MarketDetailPage = () => {
     }
 
     try {
-      const mint =
-        selectedOutcome === 'Yes'
-          ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .yesMint
-          : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .noMint;
-
+      const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
       let result;
       if (tradeSide === 'BUY') {
-        const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+        const mint =
+          selectedOutcome === 'Yes'
+            ? market.accounts[inputMint].yesMint
+            : market.accounts[inputMint].noMint;
         result = await placeOrder(
           tradeSide,
           mint,
@@ -119,6 +116,12 @@ export const MarketDetailPage = () => {
           inputMint,
         );
       } else {
+        const mint =
+          selectedOutcome === 'Yes'
+            ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+                .yesMint
+            : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+                .noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
@@ -239,7 +242,7 @@ export const MarketDetailPage = () => {
                     <div className="w-20 h-20 rounded-md overflow-hidden shrink-0 bg-muted flex items-center justify-center">
                       {/* Placeholder Image */}
                       <ImageWithFallback
-                        src={market.imageUrl}
+                        src={market.imageUrl || rdImageMarket(market.ticker)}
                         alt={market.title}
                         className="w-full h-full object-cover"
                       />

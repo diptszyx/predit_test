@@ -20,6 +20,7 @@ import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Skeleton } from '../ui/skeleton';
 import Usdc from '../wallet/icon/Usdc';
 import { toPriceLabel } from './TradeModalDflow';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
 
 export const MarketDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -237,8 +238,8 @@ export const MarketDetailPage = () => {
                   <div className="flex items-start gap-3 mb-4">
                     <div className="w-20 h-20 rounded-md overflow-hidden shrink-0 bg-muted flex items-center justify-center">
                       {/* Placeholder Image */}
-                      <img
-                        src={rdImageMarket(market.id)}
+                      <ImageWithFallback
+                        src={market.imageUrl}
                         alt={market.title}
                         className="w-full h-full object-cover"
                       />

@@ -48,6 +48,7 @@ import { getPositions } from './../../services/dflow.service';
 import SellingModal from './SellingModal';
 import TradeModalDflow from './TradeModalDflow';
 import { WalletInfoCard } from './WalletInfoCard';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
 
 export const MarketListPage = () => {
   const navigate = useNavigate();
@@ -198,15 +199,10 @@ export const MarketListPage = () => {
           <div className="flex items-start gap-3 mb-4">
             <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 bg-muted flex items-center justify-center">
               {/* Placeholder Image */}
-              <img
+              <ImageWithFallback
                 src={market.imageUrl}
                 alt={market.title}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  target.onerror = null;
-                  target.src = rdImageMarket(market.ticker);
-                }}
               />
             </div>
             <div className="flex-1 flex items-start justify-between gap-2">
@@ -723,15 +719,10 @@ export const PositionsTable = ({
                 <TableCell className="py-5">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white/10 ring-1 ring-white/10">
-                      <img
+                      <ImageWithFallback
                         src={position.market.imageUrl}
                         alt={position.market.title}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          target.onerror = null;
-                          target.src = rdImageMarket(position.market.ticker);
-                        }}
                       />
                     </div>
 

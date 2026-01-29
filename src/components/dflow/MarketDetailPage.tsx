@@ -1,6 +1,6 @@
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
-import clsx from "clsx";
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import clsx from 'clsx';
 import { ArrowLeft, CircleDollarSign } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,16 +10,16 @@ import { useMarketDetail } from '../../hooks/dflow/useMarketDetail';
 import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
 import { formatDateTime } from '../../lib/date';
 import useAuthStore from '../../store/auth.store';
-import { getStatusBadgeProps } from "../market/MarketListAdmin";
+import { getStatusBadgeProps } from '../market/MarketListAdmin';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Skeleton } from '../ui/skeleton';
-import Usdc from "../wallet/icon/Usdc";
-import { toPriceLabel } from "./TradeModalDflow";
+import Usdc from '../wallet/icon/Usdc';
+import { toPriceLabel } from './TradeModalDflow';
 
 export const MarketDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,20 +46,28 @@ export const MarketDetailPage = () => {
       if (tradeSide === 'BUY') {
         mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
       } else if (tradeSide === 'SELL') {
-        const dflowAccount = market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        const dflowAccount =
+          market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
         if (dflowAccount) {
-          mintToCheck = selectedOutcome === 'Yes' ? dflowAccount.yesMint : dflowAccount.noMint;
+          mintToCheck =
+            selectedOutcome === 'Yes'
+              ? dflowAccount.yesMint
+              : dflowAccount.noMint;
         }
       }
 
-      const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
-        mint: new PublicKey(mintToCheck),
-      });
+      const accounts = await connection.getParsedTokenAccountsByOwner(
+        publicKey,
+        {
+          mint: new PublicKey(mintToCheck),
+        },
+      );
 
-      const bal = accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      const bal =
+        accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
       setBalance(bal.toString());
     } catch (error) {
-      console.error("Error fetching balance:", error);
+      console.error('Error fetching balance:', error);
       setBalance('0');
     }
   };
@@ -92,14 +100,23 @@ export const MarketDetailPage = () => {
     }
 
     try {
-      const mint = selectedOutcome === 'Yes' ?
-        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].yesMint :
-        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].noMint;
+      const mint =
+        selectedOutcome === 'Yes'
+          ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+              .yesMint
+          : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+              .noMint;
 
       let result;
       if (tradeSide === 'BUY') {
         const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
-        result = await placeOrder(tradeSide, mint, parseFloat(amount), market.id, inputMint);
+        result = await placeOrder(
+          tradeSide,
+          mint,
+          parseFloat(amount),
+          market.id,
+          inputMint,
+        );
       } else {
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
@@ -108,22 +125,20 @@ export const MarketDetailPage = () => {
       const orbTxUrl = `https://orbmarkets.io/tx/${tx}?tab=summary`;
       toast.success(
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span>
-            Order successfully placed! TX: {tx.slice(0, 8)}...
-          </span>
+          <span>Order successfully placed! TX: {tx.slice(0, 8)}...</span>
 
           <a
             href={orbTxUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className='underline font-medium text-[#3b82f6]'
+            className="underline font-medium text-[#3b82f6]"
           >
             Open with Orb
           </a>
         </div>,
         {
           duration: 6000,
-        }
+        },
       );
       setAmount('');
       fetchBalance();
@@ -154,17 +169,15 @@ export const MarketDetailPage = () => {
       <div className="min-h-screen bg-background p-4 lg:p-6 flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Market not found</p>
-          <Button onClick={() => navigate('/dflow')}>
-            Back to Markets
-          </Button>
+          <Button onClick={() => navigate('/kalshi')}>Back to Markets</Button>
         </div>
       </div>
     );
   }
 
   const roundString = (string: string) => {
-    return Math.round(Number(string))
-  }
+    return Math.round(Number(string));
+  };
   return (
     <div className="min-h-screen bg-background">
       <div className="w-full p-4 lg:p-6">
@@ -189,19 +202,31 @@ export const MarketDetailPage = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Volume</p>
-                      <p className="text-sm font-semibold">${roundString(market.volume) || 0}</p>
+                      <p className="text-sm font-semibold">
+                        ${roundString(market.volume) || 0}
+                      </p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Open Interest</p>
-                      <p className="text-sm font-semibold">${roundString(market.openInterest)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Open Interest
+                      </p>
+                      <p className="text-sm font-semibold">
+                        ${roundString(market.openInterest)}
+                      </p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Close Time</p>
-                      <p className="text-sm font-semibold">{formatDateTime(market.closeTime)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Close Time
+                      </p>
+                      <p className="text-sm font-semibold">
+                        {formatDateTime(market.closeTime)}
+                      </p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Type</p>
-                      <p className="text-sm font-semibold capitalize">{market.marketType}</p>
+                      <p className="text-sm font-semibold capitalize">
+                        {market.marketType}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -224,10 +249,14 @@ export const MarketDetailPage = () => {
                           {market.title}
                         </h1>
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant={getStatusBadgeProps(market.status).variant}
-                            className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${getStatusBadgeProps(market.status).className
-                              }`}
-                          >{market.status}</Badge>
+                          <Badge
+                            variant={getStatusBadgeProps(market.status).variant}
+                            className={`text-[10px] px-1.5 py-0 h-5 capitalize shrink-0 ${
+                              getStatusBadgeProps(market.status).className
+                            }`}
+                          >
+                            {market.status}
+                          </Badge>
                         </div>
                       </div>
                     </div>
@@ -245,11 +274,20 @@ export const MarketDetailPage = () => {
                     <div className="pt-4">
                       <h4 className="font-semibold mb-2">Market Rules</h4>
                       <p className="text-muted-foreground whitespace-pre-wrap">
-                        This is a binary prediction market. The market will resolve to "YES" if the outcome specified in the title occurs by the event’s official conclusion. Otherwise, the market will resolve to "NO". <br /> <br />
-
-                        Trading for this market will be locked at the close time listed above. After the event has concluded, the market will be resolved based on publicly available and verifiable information from reliable sources.<br />
+                        This is a binary prediction market. The market will
+                        resolve to "YES" if the outcome specified in the title
+                        occurs by the event’s official conclusion. Otherwise,
+                        the market will resolve to "NO". <br /> <br />
+                        Trading for this market will be locked at the close time
+                        listed above. After the event has concluded, the market
+                        will be resolved based on publicly available and
+                        verifiable information from reliable sources.
                         <br />
-                        Please note that this market is intended for prediction and trading purposes only. Prices reflect the market’s implied probability and do not represent guaranteed outcomes.
+                        <br />
+                        Please note that this market is intended for prediction
+                        and trading purposes only. Prices reflect the market’s
+                        implied probability and do not represent guaranteed
+                        outcomes.
                       </p>
                     </div>
                   </div>
@@ -261,7 +299,7 @@ export const MarketDetailPage = () => {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className='font-semibold'>Trade</CardTitle>
+                  <CardTitle className="font-semibold">Trade</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Outcome Selection */}
@@ -269,24 +307,40 @@ export const MarketDetailPage = () => {
                     <Label>Outcome</Label>
                     <div className="grid grid-cols-2 gap-2">
                       <Button
-                        variant={selectedOutcome === 'Yes' ? 'default' : 'outline'}
+                        variant={
+                          selectedOutcome === 'Yes' ? 'default' : 'outline'
+                        }
                         onClick={() => setSelectedOutcome('Yes')}
-                        className={selectedOutcome === 'Yes' ? 'bg-green-600 hover:bg-green-700' : ''}
+                        className={
+                          selectedOutcome === 'Yes'
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : ''
+                        }
                       >
                         YES
-                        {market.yesBid &&
-                          <span className="text-[12.5px]">${toPriceLabel(market.yesBid)}</span>
-                        }
+                        {market.yesBid && (
+                          <span className="text-[12.5px]">
+                            ${toPriceLabel(market.yesBid)}
+                          </span>
+                        )}
                       </Button>
                       <Button
-                        variant={selectedOutcome === 'No' ? 'default' : 'outline'}
+                        variant={
+                          selectedOutcome === 'No' ? 'default' : 'outline'
+                        }
                         onClick={() => setSelectedOutcome('No')}
-                        className={selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''}
+                        className={
+                          selectedOutcome === 'No'
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : ''
+                        }
                       >
                         NO
-                        {market.noBid &&
-                          <span className="text-[12.5px]">${toPriceLabel(market.noBid)}</span>
-                        }
+                        {market.noBid && (
+                          <span className="text-[12.5px]">
+                            ${toPriceLabel(market.noBid)}
+                          </span>
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -298,14 +352,22 @@ export const MarketDetailPage = () => {
                       <Button
                         variant={tradeSide === 'BUY' ? 'default' : 'outline'}
                         onClick={() => setTradeSide('BUY')}
-                        className={tradeSide === 'BUY' ? 'bg-green-600 hover:bg-green-700' : ''}
+                        className={
+                          tradeSide === 'BUY'
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : ''
+                        }
                       >
                         BUY
                       </Button>
                       <Button
                         variant={tradeSide === 'SELL' ? 'default' : 'outline'}
                         onClick={() => setTradeSide('SELL')}
-                        className={tradeSide === 'SELL' ? 'bg-red-600 hover:bg-red-700' : ''}
+                        className={
+                          tradeSide === 'SELL'
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : ''
+                        }
                       >
                         SELL
                       </Button>
@@ -319,18 +381,29 @@ export const MarketDetailPage = () => {
                       <RadioGroup
                         defaultValue="USDC"
                         value={buyToken}
-                        onValueChange={(value: any) => setBuyToken(value as 'USDC' | 'CASH')}
+                        onValueChange={(value: any) =>
+                          setBuyToken(value as 'USDC' | 'CASH')
+                        }
                         className="flex gap-4"
                       >
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="USDC" id="USDC" />
+                          <RadioGroupItem
+                            value="USDC"
+                            id="USDC"
+                          />
                           <Label htmlFor="USDC">
-                            <Usdc width={23} height={23} />
+                            <Usdc
+                              width={23}
+                              height={23}
+                            />
                             USDC
                           </Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="CASH" id="CASH" />
+                          <RadioGroupItem
+                            value="CASH"
+                            id="CASH"
+                          />
                           <Label htmlFor="CASH">
                             <CircleDollarSign />
                             CASH
@@ -343,10 +416,14 @@ export const MarketDetailPage = () => {
                   {/* Amount Input */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label>Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})</Label>
+                      <Label>
+                        Amount (
+                        {tradeSide === 'BUY' ? buyToken : selectedOutcome})
+                      </Label>
                       {user && (
                         <div className="text-xs text-muted-foreground">
-                          {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
+                          {tradeSide === 'BUY' ? buyToken : selectedOutcome}{' '}
+                          Balance: {parseFloat(balance).toFixed(2)}
                         </div>
                       )}
                     </div>
@@ -354,15 +431,18 @@ export const MarketDetailPage = () => {
                       type="number"
                       placeholder="Enter amount"
                       value={amount}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setAmount(e.target.value)
+                      }
                       min="0"
                       step="0.01"
                     />
                     <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
                       {[1, 20, 50].map((v) => {
-                        const disabled = !user
-                          || Number(amount) >= Number(balance)
-                          || v > Number(balance)
+                        const disabled =
+                          !user ||
+                          Number(amount) >= Number(balance) ||
+                          v > Number(balance);
 
                         return (
                           <Button
@@ -370,21 +450,22 @@ export const MarketDetailPage = () => {
                             disabled={disabled}
                             type="button"
                             size="sm"
-                            variant='outline'
+                            variant="outline"
                             className={clsx(
                               'text-sm transition-all',
                               disabled
                                 ? 'opacity-40'
-                                : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer'
+                                : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer',
                             )}
                             onClick={() => {
                               if (!disabled) {
                                 if (!amount) {
                                   setAmount(String(v));
                                 } else {
-                                  const newValue = Number(amount) + v
-                                  if (newValue > Number(amount)) handleMaxAmount()
-                                  else setAmount(String(newValue))
+                                  const newValue = Number(amount) + v;
+                                  if (newValue > Number(amount))
+                                    handleMaxAmount();
+                                  else setAmount(String(newValue));
                                 }
                               }
                             }}
@@ -395,8 +476,9 @@ export const MarketDetailPage = () => {
                       })}
                       {user && (
                         <Button
-                          type="button" size="sm"
-                          variant='outline'
+                          type="button"
+                          size="sm"
+                          variant="outline"
                           onClick={handleMaxAmount}
                         >
                           Max
@@ -407,8 +489,14 @@ export const MarketDetailPage = () => {
 
                   <Button
                     onClick={handleTrade}
-                    disabled={isTrading || !user || !amount || parseFloat(amount) <= 0}
-                    className={tradeSide === 'BUY' ? 'w-full bg-green-600 hover:bg-green-700' : 'w-full bg-red-600 hover:bg-red-700'}
+                    disabled={
+                      isTrading || !user || !amount || parseFloat(amount) <= 0
+                    }
+                    className={
+                      tradeSide === 'BUY'
+                        ? 'w-full bg-green-600 hover:bg-green-700'
+                        : 'w-full bg-red-600 hover:bg-red-700'
+                    }
                   >
                     {isTrading ? 'Processing...' : 'Confirm'}
                   </Button>

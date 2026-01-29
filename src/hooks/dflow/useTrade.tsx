@@ -2,7 +2,6 @@ import { useState, useCallback, useMemo } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { VersionedTransaction } from '@solana/web3.js';
 
-
 import {
   getDflowTradeTransaction,
   getDflowOrderStatus,
@@ -20,14 +19,21 @@ export const useTrade = () => {
 
   const placeOrder = useMemo(
     () =>
-      async (side: 'BUY' | 'SELL', outcomeMint: string, uiAmount: number, dflowDataId: string, inputMint?: string) => {
+      async (
+        side: 'BUY' | 'SELL',
+        outcomeMint: string,
+        uiAmount: number,
+        dflowDataId: string,
+        inputMint?: string,
+      ) => {
         if (!publicKey || !signTransaction)
           throw new Error('Wallet not connected');
 
         try {
           setIsTrading(true);
 
-          const finalInputMint = inputMint || (side === 'BUY' ? USDC_MINT : outcomeMint);
+          const finalInputMint =
+            inputMint || (side === 'BUY' ? USDC_MINT : outcomeMint);
           const finalOutputMint = side === 'BUY' ? outcomeMint : CASH_MINT;
 
           // Assuming 6 decimals for both USDC and Outcome tokens
@@ -40,7 +46,7 @@ export const useTrade = () => {
               amount: atomicAmount,
               slippageBps: 500, // Increased slippage tolerance slightly
               userPublicKey: publicKey.toString(),
-              dflowDataId
+              dflowDataId,
             });
 
           const txBuf = Buffer.from(swapTransaction, 'base64');
@@ -52,7 +58,7 @@ export const useTrade = () => {
             signedTx.serialize(),
             {
               skipPreflight: true,
-            }
+            },
           );
 
           const confirmation = await connection.confirmTransaction(txid);
@@ -86,14 +92,14 @@ export const useTrade = () => {
           }
 
           throw new Error('Timeout waiting for order verification');
-        } catch (err) {
+        } catch (err: any) {
           console.error(err);
-          throw err;
+          throw err.response.data || err;
         } finally {
           setIsTrading(false);
         }
       },
-    [publicKey, signTransaction, connection]
+    [publicKey, signTransaction, connection],
   );
 
   const redeemPositions = useMemo(
@@ -114,7 +120,7 @@ export const useTrade = () => {
               outputMint: CASH_MINT,
               amount: atomicAmount,
               userPublicKey: publicKey.toString(),
-              dflowDataId
+              dflowDataId,
             });
 
           const txBuf = Buffer.from(redeemTransaction, 'base64');
@@ -126,7 +132,7 @@ export const useTrade = () => {
             signedTx.serialize(),
             {
               skipPreflight: true,
-            }
+            },
           );
 
           const confirmation = await connection.confirmTransaction(txid);
@@ -166,7 +172,7 @@ export const useTrade = () => {
           setIsTrading(false);
         }
       },
-    [publicKey, signTransaction, connection]
+    [publicKey, signTransaction, connection],
   );
 
   const checkOrder = useCallback(async (signature: string) => {

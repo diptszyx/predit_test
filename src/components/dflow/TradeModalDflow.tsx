@@ -1,19 +1,19 @@
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { CASH_MINT, USDC_MINT, useTrade } from "../../hooks/dflow/useTrade";
-import { DflowDataEntity } from "../../services/dflow.service";
-import useAuthStore from "../../store/auth.store";
-import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
+import { DflowDataEntity } from '../../services/dflow.service';
+import useAuthStore from '../../store/auth.store';
+import { Button } from '../ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
-import clsx from "clsx";
-import { CircleDollarSign } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import Usdc from "../wallet/icon/Usdc";
+import clsx from 'clsx';
+import { CircleDollarSign } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import Usdc from '../wallet/icon/Usdc';
 
 interface TradeModalDflowProps {
   open: boolean;
@@ -22,13 +22,16 @@ interface TradeModalDflowProps {
   initialOutcome?: 'Yes' | 'No';
   onTradeSuccess?: () => void;
 }
-export const toPriceLabel = (num: string, fixed = 2): string => parseFloat(num).toFixed(fixed)
+export const toPriceLabel = (num: string, fixed = 2): string =>
+  parseFloat(num).toFixed(fixed);
 
-const TradeModalDflow = ({ open,
+const TradeModalDflow = ({
+  open,
   onOpenChange,
   market,
   initialOutcome = 'Yes',
-  onTradeSuccess }: TradeModalDflowProps) => {
+  onTradeSuccess,
+}: TradeModalDflowProps) => {
   const user = useAuthStore((state) => state.user);
   const { connection } = useConnection();
   const { publicKey } = useWallet();
@@ -37,7 +40,7 @@ const TradeModalDflow = ({ open,
   const [balance, setBalance] = useState('0');
 
   const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>(
-    initialOutcome
+    initialOutcome,
   );
 
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
@@ -51,20 +54,28 @@ const TradeModalDflow = ({ open,
       if (tradeSide === 'BUY') {
         mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
       } else if (tradeSide === 'SELL') {
-        const dflowAccount = market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        const dflowAccount =
+          market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
         if (dflowAccount) {
-          mintToCheck = selectedOutcome === 'Yes' ? dflowAccount.yesMint : dflowAccount.noMint;
+          mintToCheck =
+            selectedOutcome === 'Yes'
+              ? dflowAccount.yesMint
+              : dflowAccount.noMint;
         }
       }
 
-      const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
-        mint: new PublicKey(mintToCheck),
-      });
+      const accounts = await connection.getParsedTokenAccountsByOwner(
+        publicKey,
+        {
+          mint: new PublicKey(mintToCheck),
+        },
+      );
 
-      const bal = accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      const bal =
+        accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
       setBalance(bal.toString());
     } catch (error) {
-      console.error("Error fetching balance:", error);
+      console.error('Error fetching balance:', error);
       setBalance('0');
     }
   };
@@ -74,7 +85,6 @@ const TradeModalDflow = ({ open,
       fetchBalance();
     }
   }, [tradeSide, selectedOutcome, buyToken]);
-
 
   const [amount, setAmount] = useState('');
 
@@ -108,14 +118,23 @@ const TradeModalDflow = ({ open,
     }
 
     try {
-      const mint = selectedOutcome === 'Yes' ?
-        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].yesMint :
-        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].noMint;
+      const mint =
+        selectedOutcome === 'Yes'
+          ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+              .yesMint
+          : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+              .noMint;
 
       let result;
       if (tradeSide === 'BUY') {
         const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
-        result = await placeOrder(tradeSide, mint, parseFloat(amount), market.id, inputMint);
+        result = await placeOrder(
+          tradeSide,
+          mint,
+          parseFloat(amount),
+          market.id,
+          inputMint,
+        );
       } else {
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
@@ -124,22 +143,20 @@ const TradeModalDflow = ({ open,
       const orbTxUrl = `https://orbmarkets.io/tx/${tx}?tab=summary`;
       toast.success(
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span>
-            Order successfully placed! TX: {tx.slice(0, 8)}...
-          </span>
+          <span>Order successfully placed! TX: {tx.slice(0, 8)}...</span>
 
           <a
             href={orbTxUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className='underline font-medium text-[#3b82f6]'
+            className="underline font-medium text-[#3b82f6]"
           >
             Open with Orb
           </a>
         </div>,
         {
           duration: 6000,
-        }
+        },
       );
 
       setAmount('');
@@ -150,6 +167,7 @@ const TradeModalDflow = ({ open,
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to place order');
+      onOpenChange(false);
     }
   };
 
@@ -158,7 +176,10 @@ const TradeModalDflow = ({ open,
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent aria-describedby="trade" className="sm:max-w-md">
+      <DialogContent
+        aria-describedby="trade"
+        className="sm:max-w-md"
+      >
         <DialogHeader>
           <DialogTitle>{market.title}</DialogTitle>
         </DialogHeader>
@@ -172,19 +193,25 @@ const TradeModalDflow = ({ open,
               className={`${selectedOutcome === 'Yes' ? 'bg-green-600 hover:bg-green-700' : ''}`}
             >
               YES
-              {market.yesBid &&
-                <span className="text-[12.5px]">${toPriceLabel(market.yesBid)}</span>
-              }
+              {market.yesBid && (
+                <span className="text-[12.5px]">
+                  ${toPriceLabel(market.yesBid)}
+                </span>
+              )}
             </Button>
             <Button
               variant={selectedOutcome === 'No' ? 'default' : 'outline'}
               onClick={() => setSelectedOutcome('No')}
-              className={selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''}
+              className={
+                selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''
+              }
             >
               NO
-              {market.noBid &&
-                <span className="text-[12.5px]">${toPriceLabel(market.noBid)}</span>
-              }
+              {market.noBid && (
+                <span className="text-[12.5px]">
+                  ${toPriceLabel(market.noBid)}
+                </span>
+              )}
             </Button>
           </div>
         </div>
@@ -196,14 +223,18 @@ const TradeModalDflow = ({ open,
             <Button
               variant={tradeSide === 'BUY' ? 'default' : 'outline'}
               onClick={() => setTradeSide('BUY')}
-              className={tradeSide === 'BUY' ? 'bg-green-600 hover:bg-green-700' : ''}
+              className={
+                tradeSide === 'BUY' ? 'bg-green-600 hover:bg-green-700' : ''
+              }
             >
               BUY
             </Button>
             <Button
               variant={tradeSide === 'SELL' ? 'default' : 'outline'}
               onClick={() => setTradeSide('SELL')}
-              className={tradeSide === 'SELL' ? 'bg-red-600 hover:bg-red-700' : ''}
+              className={
+                tradeSide === 'SELL' ? 'bg-red-600 hover:bg-red-700' : ''
+              }
             >
               SELL
             </Button>
@@ -217,18 +248,29 @@ const TradeModalDflow = ({ open,
             <RadioGroup
               defaultValue="USDC"
               value={buyToken}
-              onValueChange={(value: any) => setBuyToken(value as 'USDC' | 'CASH')}
+              onValueChange={(value: any) =>
+                setBuyToken(value as 'USDC' | 'CASH')
+              }
               className="flex gap-4"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="USDC" id="USDC" />
+                <RadioGroupItem
+                  value="USDC"
+                  id="USDC"
+                />
                 <Label htmlFor="USDC">
-                  <Usdc width={23} height={23} />
+                  <Usdc
+                    width={23}
+                    height={23}
+                  />
                   USDC
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="CASH" id="CASH" />
+                <RadioGroupItem
+                  value="CASH"
+                  id="CASH"
+                />
                 <Label htmlFor="CASH">
                   <CircleDollarSign />
                   CASH
@@ -241,10 +283,13 @@ const TradeModalDflow = ({ open,
         {/* Amount Input */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})</Label>
+            <Label>
+              Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})
+            </Label>
             {user && (
               <div className="text-xs text-muted-foreground">
-                {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
+                {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance:{' '}
+                {parseFloat(balance).toFixed(2)}
               </div>
             )}
           </div>
@@ -252,15 +297,18 @@ const TradeModalDflow = ({ open,
             type="number"
             placeholder="Enter amount"
             value={amount}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setAmount(e.target.value)
+            }
             min="0"
             step="0.01"
           />
           <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
             {[1, 20, 50].map((v) => {
-              const disabled = !user
-                || Number(amount) >= Number(balance)
-                || v > Number(balance)
+              const disabled =
+                !user ||
+                Number(amount) >= Number(balance) ||
+                v > Number(balance);
 
               return (
                 <Button
@@ -268,21 +316,21 @@ const TradeModalDflow = ({ open,
                   disabled={disabled}
                   type="button"
                   size="sm"
-                  variant='outline'
+                  variant="outline"
                   className={clsx(
                     'text-sm transition-all',
                     disabled
                       ? 'opacity-40'
-                      : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer'
+                      : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer',
                   )}
                   onClick={() => {
                     if (!disabled) {
                       if (!amount) {
                         setAmount(String(v));
                       } else {
-                        const newValue = Number(amount) + v
-                        if (newValue > Number(amount)) handleMaxAmount()
-                        else setAmount(String(newValue))
+                        const newValue = Number(amount) + v;
+                        if (newValue > Number(amount)) handleMaxAmount();
+                        else setAmount(String(newValue));
                       }
                     }
                   }}
@@ -293,8 +341,9 @@ const TradeModalDflow = ({ open,
             })}
             {user && (
               <Button
-                type="button" size="sm"
-                variant='outline'
+                type="button"
+                size="sm"
+                variant="outline"
                 onClick={handleMaxAmount}
               >
                 Max
@@ -306,7 +355,11 @@ const TradeModalDflow = ({ open,
         <Button
           onClick={handleTrade}
           disabled={isTrading || !user || !amount || parseFloat(amount) <= 0}
-          className={tradeSide === 'BUY' ? 'w-full bg-green-600 hover:bg-green-700' : 'w-full bg-red-600 hover:bg-red-700'}
+          className={
+            tradeSide === 'BUY'
+              ? 'w-full bg-green-600 hover:bg-green-700'
+              : 'w-full bg-red-600 hover:bg-red-700'
+          }
         >
           {isTrading ? 'Processing...' : 'Confirm'}
         </Button>
@@ -318,7 +371,7 @@ const TradeModalDflow = ({ open,
         )}
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default TradeModalDflow
+export default TradeModalDflow;

@@ -1,20 +1,37 @@
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import clsx from 'clsx';
-import { ArrowLeft, ArrowRight, CircleDollarSign, Crown, Loader2, MessageSquare, Share } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CircleDollarSign,
+  Crown,
+  Loader2,
+  MessageSquare,
+  Share,
+} from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
-import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
+import {
+  generateSuggestedQuestions,
+  MAX_PREDICTIONS_PER_DAY,
+} from '../../constants/prediction';
 import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
 import { formatTime } from '../../lib/date';
 import { chatService } from '../../services/chat.service';
-import { DflowDataEntity, getDflowEventById } from '../../services/dflow.service';
+import {
+  DflowDataEntity,
+  getDflowEventById,
+} from '../../services/dflow.service';
 import { ChatMessage, messageService } from '../../services/message.service';
 import { OracleEntity, oraclesServices } from '../../services/oracles.service';
-import { createSharedMessageLink, createSharePolymarketConversationLink } from '../../services/share-message.service';
+import {
+  createSharedMessageLink,
+  createSharePolymarketConversationLink,
+} from '../../services/share-message.service';
 import useAuthStore from '../../store/auth.store';
 import { DisclaimerDialog } from '../DisclaimerDialog';
 import { ShareChatDialog, SharePayload } from '../ShareChatDialog';
@@ -23,7 +40,13 @@ import Markdown from '../chat/Markdown';
 import DailyLimitReachDialog from '../dialog/DailyLimitReachDialog';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -49,28 +72,28 @@ const DflowChatPage = () => {
   const navigate = useNavigate();
   const [isMessaged, setIsMessaged] = useState(true);
 
-  const user = useAuthStore((state) => state.user)
-  const fetchUser = useAuthStore((state) => state.fetchCurrentUser)
-  const [currentOracle, setCurrentOracle] = useState<OracleEntity>()
-  const [availableOracles, setAvailableOracles] = useState<OracleEntity[]>([])
+  const user = useAuthStore((state) => state.user);
+  const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
+  const [currentOracle, setCurrentOracle] = useState<OracleEntity>();
+  const [availableOracles, setAvailableOracles] = useState<OracleEntity[]>([]);
 
-  const { marketId, chatId } = useParams()
-  const [market, setMarket] = useState<DflowDataEntity | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { marketId, chatId } = useParams();
+  const [market, setMarket] = useState<DflowDataEntity | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [currentTab, setCurrentTab] = useState<string>('chat')
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [userMessageCount, setUserMessageCount] = useState(0)
+  const [currentTab, setCurrentTab] = useState<string>('chat');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [userMessageCount, setUserMessageCount] = useState(0);
 
-  const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false)
-  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false)
-  const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false)
+  const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
+  const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false);
 
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [thinkingTokens, setThinkingTokens] = useState(0)
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [thinkingTokens, setThinkingTokens] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>()
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>();
 
   const [shareChatDialogOpen, setShareChatDialogOpen] = useState(false);
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null);
@@ -79,24 +102,24 @@ const DflowChatPage = () => {
   };
 
   useEffect(() => {
-    scrollToBottom()
+    scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
     if (market && !isMessaged) {
       setIsMessaged(true);
-      setInput(market.title)
+      setInput(market.title);
       setTimeout(() => {
-        handleSend(market.title)
-      }, 1000)
+        handleSend(market.title);
+      }, 1000);
     }
-  }, [market, isMessaged])
+  }, [market, isMessaged]);
 
   useEffect(() => {
     if (!marketId || !chatId) return;
 
-    fetchMarket()
-    fetchMessages()
+    fetchMarket();
+    fetchMessages();
   }, [marketId, chatId]);
 
   const fetchMarket = async () => {
@@ -116,20 +139,20 @@ const DflowChatPage = () => {
   const fetchMessages = async () => {
     try {
       const oracleList = await oraclesServices.getAllOracles();
-      if (!oracleList || !oracleList.data) return
+      if (!oracleList || !oracleList.data) return;
 
       setAvailableOracles(oracleList.data);
 
       if (!currentOracle) {
         setCurrentOracle(oracleList.data[0]);
-        setSuggestedQuestions(generateSuggestedQuestions(oracleList.data[0]))
+        setSuggestedQuestions(generateSuggestedQuestions(oracleList.data[0]));
       }
 
       if (chatId) {
-        const data = await chatService.getMessages(chatId)
+        const data = await chatService.getMessages(chatId);
         if (data && data.length > 0) {
           setMessages(data.reverse());
-          setCurrentOracle(data[data.length - 1].oracle)
+          setCurrentOracle(data[data.length - 1].oracle);
           setIsMessaged(true);
         } else {
           setIsMessaged(false);
@@ -138,27 +161,27 @@ const DflowChatPage = () => {
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
-  }
+  };
 
   const handleBack = () => {
     navigate('/kalshi');
   };
 
-  const bufferRef = useRef("");
+  const bufferRef = useRef('');
   const flushTimer = useRef<number | null>(null);
 
   const flushBuffer = (assistantMessageId: string) => {
     if (!bufferRef.current) return;
 
     const chunk = bufferRef.current;
-    bufferRef.current = "";
+    bufferRef.current = '';
 
-    setMessages(prev =>
-      prev.map(msg =>
+    setMessages((prev) =>
+      prev.map((msg) =>
         msg.id === assistantMessageId
           ? { ...msg, content: msg.content + chunk }
-          : msg
-      )
+          : msg,
+      ),
     );
   };
 
@@ -220,47 +243,55 @@ const DflowChatPage = () => {
     let messageCreated = false;
 
     try {
-      await messageService.sendMessageStream(trimmedInput, currentOracle.id, {
-        onMetadata: (metadata) => {
-          // Handle metadata (userMessage and xpReward)
-          if (metadata.xpReward.milestone) {
-            toast.success(
-              `🎯 Prediction Milestone Reached! +${metadata.xpReward.milestone?.xp} XP earned.`
-            );
-          }
-        },
-        onSession: (id) => { },
-        onThinking: (tokens) => {
-          setThinkingTokens(tokens);
-        },
-        onContent: (content) => {
-          setThinkingTokens(0);
+      await messageService.sendMessageStream(
+        trimmedInput,
+        currentOracle.id,
+        {
+          onMetadata: (metadata) => {
+            // Handle metadata (userMessage and xpReward)
+            if (metadata.xpReward.milestone) {
+              toast.success(
+                `🎯 Prediction Milestone Reached! +${metadata.xpReward.milestone?.xp} XP earned.`,
+              );
+            }
+          },
+          onSession: (id) => {},
+          onThinking: (tokens) => {
+            setThinkingTokens(tokens);
+          },
+          onContent: (content) => {
+            setThinkingTokens(0);
 
-          if (!messageCreated) {
-            messageCreated = true;
-            setMessages(prev => [
-              ...prev,
-              { id: assistantMessageId, sender: 'assistant', content: '', createdAt: new Date().toISOString() }
-            ]);
-          }
+            if (!messageCreated) {
+              messageCreated = true;
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: assistantMessageId,
+                  sender: 'assistant',
+                  content: '',
+                  createdAt: new Date().toISOString(),
+                },
+              ]);
+            }
 
-          onStreamContent(content, assistantMessageId);
+            onStreamContent(content, assistantMessageId);
+          },
+          onComplete: (data) => {},
+          onDone: () => {
+            setIsLoading(false);
+            setThinkingTokens(0);
+            fetchUser();
+          },
+          onError: (error) => {
+            console.error('Error streaming message:', error);
+            toast.error('Failed to send message. Please try again.');
+            setIsLoading(false);
+            setThinkingTokens(0);
+          },
         },
-        onComplete: (data) => {
-
-        },
-        onDone: () => {
-          setIsLoading(false);
-          setThinkingTokens(0);
-          fetchUser();
-        },
-        onError: (error) => {
-          console.error('Error streaming message:', error);
-          toast.error('Failed to send message. Please try again.');
-          setIsLoading(false);
-          setThinkingTokens(0);
-        },
-      }, chatId);
+        chatId,
+      );
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
@@ -279,35 +310,37 @@ const DflowChatPage = () => {
   const onShare = async (isFullChat: boolean, message?: ChatMessage) => {
     try {
       if (isFullChat && messages && user) {
-        const data = await createSharePolymarketConversationLink(chatId)
+        const data = await createSharePolymarketConversationLink(chatId);
         setSharePayload({
           mode: 'conversation',
           question: messages[0].content,
           answer: messages[1].content,
-          sharedLink: data.shareUrl
+          sharedLink: data.shareUrl,
         });
       }
       if (message) {
-        const data = await createSharedMessageLink(message.id)
+        const data = await createSharedMessageLink(message.id);
         if (data) {
           setSharePayload({
             mode: 'reply',
             message: message.content,
-            sharedLink: data.shareUrl
+            sharedLink: data.shareUrl,
           });
         }
       }
       setShareChatDialogOpen(true);
     } catch (error) {
-      toast.error("Something went wrong while creating the share link. Please try again later.")
-      console.log('Failed to shared chat: ', error)
+      toast.error(
+        'Something went wrong while creating the share link. Please try again later.',
+      );
+      console.log('Failed to shared chat: ', error);
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex h-dvh overflow-hidden">
-        <div className='flex-1'>
+        <div className="flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="max-w-4xl mx-auto flex-1">
               <Skeleton className="h-64 md:h-96 w-full rounded-none" />
@@ -328,7 +361,7 @@ const DflowChatPage = () => {
                 </div>
               </div>
             </div>
-            <div className='hidden sm:block w-full h-full lg:w-80'>
+            <div className="hidden sm:block w-full h-full lg:w-80">
               <Skeleton className="h-[98vh] w-full rounded-none" />
             </div>
           </div>
@@ -343,9 +376,7 @@ const DflowChatPage = () => {
         <div className="w-full p-4 lg:p-6 space-y-6">
           <div className="max-w-4xl mx-auto">
             <Card className="p-6">
-              <p className="text-red-500 text-center">
-                Market not found
-              </p>
+              <p className="text-red-500 text-center">Market not found</p>
             </Card>
           </div>
         </div>
@@ -355,7 +386,7 @@ const DflowChatPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex h-dvh overflow-hidden">
-      <div className='flex-1 overflow-y-auto'>
+      <div className="flex-1 overflow-y-auto">
         <div className="w-full h-full">
           <div className="h-full flex flex-col lg:flex-row max-w-7xl m-0 gap-4 w-full">
             {/* Chat Section - Center with max width */}
@@ -376,7 +407,10 @@ const DflowChatPage = () => {
                     }}
                   >
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <Button variant="ghost" onClick={handleBack}>
+                      <Button
+                        variant="ghost"
+                        onClick={handleBack}
+                      >
                         <ArrowLeft className="h-4 w-4" />
                       </Button>
                       <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
@@ -390,18 +424,22 @@ const DflowChatPage = () => {
                         <Select
                           value={currentOracle.id}
                           onValueChange={(value: string) => {
-                            const selected = availableOracles.find((o) => o.id === value);
+                            const selected = availableOracles.find(
+                              (o) => o.id === value,
+                            );
                             if (selected) setCurrentOracle(selected);
                           }}
                         >
                           <SelectTrigger>
-                            <SelectValue>
-                              {currentOracle.name}
-                            </SelectValue>
+                            <SelectValue>{currentOracle.name}</SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {availableOracles.map((oracle) => (
-                              <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                              <SelectItem
+                                key={oracle.id}
+                                value={oracle.id}
+                                className="flex items-center gap-2"
+                              >
                                 <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
                                   <ImageWithFallback
                                     src={oracle.image}
@@ -409,9 +447,7 @@ const DflowChatPage = () => {
                                     className="w-full h-full object-cover"
                                   />
                                 </div>
-                                <span>
-                                  {oracle.name}
-                                </span>
+                                <span>{oracle.name}</span>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -420,7 +456,7 @@ const DflowChatPage = () => {
                           {currentOracle.type}
                         </CardDescription>
                       </div>
-                      {messages.length !== 0 &&
+                      {messages.length !== 0 && (
                         <Tooltip>
                           <TooltipTrigger>
                             <button
@@ -434,17 +470,15 @@ const DflowChatPage = () => {
                               <Share className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            Share
-                          </TooltipContent>
+                          <TooltipContent>Share</TooltipContent>
                         </Tooltip>
-                      }
+                      )}
                     </div>
                   </CardContent>
                 </Card>
                 <Card
                   className={clsx(
-                    'border-border bg-background/80 backdrop-blur-md'
+                    'border-border bg-background/80 backdrop-blur-md',
                   )}
                   style={{
                     borderRadius: '0px',
@@ -464,7 +498,7 @@ const DflowChatPage = () => {
                           'relative flex-1 p-2 py-4 sm:p-3 flex items-center justify-center text-base font-medium cursor-pointer transition-opacity',
                           currentTab === tab.id
                             ? 'opacity-100'
-                            : 'opacity-50 hover:opacity-80'
+                            : 'opacity-50 hover:opacity-80',
                         )}
                         onClick={() => setCurrentTab(tab.id)}
                       >
@@ -502,7 +536,10 @@ const DflowChatPage = () => {
                       }}
                     >
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <Button variant="ghost" onClick={handleBack}>
+                        <Button
+                          variant="ghost"
+                          onClick={handleBack}
+                        >
                           <ArrowLeft className="h-4 w-4" />
                         </Button>
                         <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
@@ -516,18 +553,22 @@ const DflowChatPage = () => {
                           <Select
                             value={currentOracle.id}
                             onValueChange={(value: string) => {
-                              const selected = availableOracles.find((o) => o.id === value);
+                              const selected = availableOracles.find(
+                                (o) => o.id === value,
+                              );
                               if (selected) setCurrentOracle(selected);
                             }}
                           >
                             <SelectTrigger className="w-full h-auto p-0 text-sm sm:text-base md:text-lg border-none bg-transparent hover:bg-accent/50 focus:ring-0 shadow-none font-semibold justify-start">
-                              <SelectValue>
-                                {currentOracle.name}
-                              </SelectValue>
+                              <SelectValue>{currentOracle.name}</SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {availableOracles.map((oracle) => (
-                                <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                                <SelectItem
+                                  key={oracle.id}
+                                  value={oracle.id}
+                                  className="flex items-center gap-2"
+                                >
                                   <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
                                     <ImageWithFallback
                                       src={oracle.image}
@@ -535,9 +576,7 @@ const DflowChatPage = () => {
                                       className="w-full h-full object-cover"
                                     />
                                   </div>
-                                  <span>
-                                    {oracle.name}
-                                  </span>
+                                  <span>{oracle.name}</span>
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -546,7 +585,7 @@ const DflowChatPage = () => {
                             {currentOracle.type}
                           </CardDescription>
                         </div>
-                        {messages.length !== 0 &&
+                        {messages.length !== 0 && (
                           <Tooltip>
                             <TooltipTrigger>
                               <button
@@ -560,11 +599,9 @@ const DflowChatPage = () => {
                                 <Share className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                              Share
-                            </TooltipContent>
+                            <TooltipContent>Share</TooltipContent>
                           </Tooltip>
-                        }
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -586,34 +623,39 @@ const DflowChatPage = () => {
                                 Start a New Conversation
                               </h3>
                               <p className="text-sm text-muted-foreground max-w-md">
-                                Ask {currentOracle.name} anything. Get predictions,
-                                insights, and expert analysis on{' '}
+                                Ask {currentOracle.name} anything. Get
+                                predictions, insights, and expert analysis on{' '}
                                 {currentOracle.type.split(' ')[0]}.
                               </p>
                             </div>
                           )}
                           <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
                             {messages.map((message, index) => {
-                              const isLastMessage = index === messages.length - 1;
+                              const isLastMessage =
+                                index === messages.length - 1;
                               return (
                                 <div key={message.id}>
                                   <div
-                                    className={`flex ${message.sender === 'user'
-                                      ? 'justify-end max-w-[94vw]'
-                                      : 'justify-start'
-                                      }`}
+                                    className={`flex ${
+                                      message.sender === 'user'
+                                        ? 'justify-end max-w-[94vw]'
+                                        : 'justify-start'
+                                    }`}
                                   >
                                     <div
-                                      className={`max-w-[80%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
-                                        ? 'bg-blue-600 text-white backdrop-blur-sm'
-                                        : `backdrop-blur-md border border-border`
-                                        }`}
+                                      className={`max-w-[80%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
+                                        message.sender === 'user'
+                                          ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                          : `backdrop-blur-md border border-border`
+                                      }`}
                                     >
                                       {message.sender === 'assistant' ? (
                                         <div className="text-xs sm:text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs">
                                           <Markdown
                                             text={message.content}
-                                            showCharts={!isLoading || !isLastMessage}
+                                            showCharts={
+                                              !isLoading || !isLastMessage
+                                            }
                                           />
                                         </div>
                                       ) : (
@@ -623,20 +665,20 @@ const DflowChatPage = () => {
                                       )}
                                     </div>
                                   </div>
-                                  <div className={`text-xs mt-3 text-muted-foreground block ${message.sender === 'user'
-                                    ? 'text-right max-w-[94vw]'
-                                    : 'text-left'
-                                    }`}>
-                                    <span
-                                    >
-                                      {formatTime(message.createdAt)}
-                                    </span>
-                                    {message.sender === 'assistant' &&
+                                  <div
+                                    className={`text-xs mt-3 text-muted-foreground block ${
+                                      message.sender === 'user'
+                                        ? 'text-right max-w-[94vw]'
+                                        : 'text-left'
+                                    }`}
+                                  >
+                                    <span>{formatTime(message.createdAt)}</span>
+                                    {message.sender === 'assistant' && (
                                       <Tooltip>
                                         <TooltipTrigger>
                                           <button
                                             onClick={() => {
-                                              onShare(false, message)
+                                              onShare(false, message);
                                             }}
                                             className="
                             p-1.5 rounded-md mx-2
@@ -644,15 +686,12 @@ const DflowChatPage = () => {
                             transition-colors cursor-pointer
                           "
                                           >
-                                            <Share className="w-4 h-3.5 cursor-pointer"
-                                            />
+                                            <Share className="w-4 h-3.5 cursor-pointer" />
                                           </button>
                                         </TooltipTrigger>
-                                        <TooltipContent>
-                                          Share
-                                        </TooltipContent>
+                                        <TooltipContent>Share</TooltipContent>
                                       </Tooltip>
-                                    }
+                                    )}
                                   </div>
                                   {message.sender === 'assistant' &&
                                     suggestedQuestions &&
@@ -671,7 +710,7 @@ const DflowChatPage = () => {
                                               >
                                                 {question}
                                               </button>
-                                            )
+                                            ),
                                           )}
                                         </div>
                                       </div>
@@ -691,7 +730,8 @@ const DflowChatPage = () => {
                                       />
                                     </div>
                                     <span className="text-xs text-foreground">
-                                      {currentOracle.name} is thinking... ({thinkingTokens} tokens)
+                                      {currentOracle.name} is thinking... (
+                                      {thinkingTokens} tokens)
                                     </span>
                                   </div>
                                   <div className="flex gap-1">
@@ -728,8 +768,9 @@ const DflowChatPage = () => {
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                       <MessageSquare className="w-4 h-4" />
                                       <span>
-                                        {user.restTodayPredictionCount}/{MAX_PREDICTIONS_PER_DAY} {' '}
-                                        messages remaining today
+                                        {user.restTodayPredictionCount}/
+                                        {MAX_PREDICTIONS_PER_DAY} messages
+                                        remaining today
                                       </span>
                                     </div>
                                     {user.restTodayPredictionCount <= 2 && (
@@ -749,9 +790,7 @@ const DflowChatPage = () => {
                               );
                             })()}
                           <div className="flex gap-1.5 sm:gap-2">
-                            <div
-                              className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-16 cursor-pointer relative"
-                            >
+                            <div className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-16 cursor-pointer relative">
                               {/* Input Field */}
                               {!user ? (
                                 <span className="flex-1 text-muted-foreground text-sm">
@@ -760,7 +799,9 @@ const DflowChatPage = () => {
                               ) : (
                                 <TextareaAutosize
                                   value={input}
-                                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
+                                  onChange={(
+                                    e: React.ChangeEvent<HTMLTextAreaElement>,
+                                  ) => setInput(e.target.value)}
                                   onKeyDown={handleKeyPress}
                                   className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm
                                     leading-normal mr-9 resize-none"
@@ -837,13 +878,13 @@ const DflowChatPage = () => {
       />
 
       {/* Share Chat Dialog */}
-      {sharePayload &&
+      {sharePayload && (
         <ShareChatDialog
           open={shareChatDialogOpen}
           onOpenChange={setShareChatDialogOpen}
           sharePayload={sharePayload}
         />
-      }
+      )}
 
       <SubscriptionManagementDialog
         open={subscriptionDialogOpen}
@@ -857,12 +898,12 @@ const DflowChatPage = () => {
         setSubscriptionDialogOpen={setSubscriptionDialogOpen}
       />
     </div>
-  )
-}
+  );
+};
 
 type TradeSidebarProps = {
-  market: DflowDataEntity
-}
+  market: DflowDataEntity;
+};
 
 const TradeSidebar = ({ market }: TradeSidebarProps) => {
   const user = useAuthStore((state) => state.user);
@@ -890,20 +931,28 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
       if (tradeSide === 'BUY') {
         mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
       } else if (tradeSide === 'SELL') {
-        const dflowAccount = market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        const dflowAccount =
+          market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
         if (dflowAccount) {
-          mintToCheck = selectedOutcome === 'Yes' ? dflowAccount.yesMint : dflowAccount.noMint;
+          mintToCheck =
+            selectedOutcome === 'Yes'
+              ? dflowAccount.yesMint
+              : dflowAccount.noMint;
         }
       }
 
-      const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
-        mint: new PublicKey(mintToCheck),
-      });
+      const accounts = await connection.getParsedTokenAccountsByOwner(
+        publicKey,
+        {
+          mint: new PublicKey(mintToCheck),
+        },
+      );
 
-      const bal = accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      const bal =
+        accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
       setBalance(bal.toString());
     } catch (error) {
-      console.error("Error fetching balance:", error);
+      console.error('Error fetching balance:', error);
       setBalance('0');
     }
   };
@@ -929,14 +978,23 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
     }
 
     try {
-      const mint = selectedOutcome === 'Yes' ?
-        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].yesMint :
-        market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'].noMint;
+      const mint =
+        selectedOutcome === 'Yes'
+          ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+              .yesMint
+          : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+              .noMint;
 
       let result;
       if (tradeSide === 'BUY') {
         const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
-        result = await placeOrder(tradeSide, mint, parseFloat(amount), market.id, inputMint);
+        result = await placeOrder(
+          tradeSide,
+          mint,
+          parseFloat(amount),
+          market.id,
+          inputMint,
+        );
       } else {
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
@@ -945,29 +1003,26 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
       const orbTxUrl = `https://orbmarkets.io/tx/${tx}?tab=summary`;
       toast.success(
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span>
-            Order successfully placed! TX: {tx.slice(0, 8)}...
-          </span>
+          <span>Order successfully placed! TX: {tx.slice(0, 8)}...</span>
 
           <a
             href={orbTxUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className='underline font-medium text-[#3b82f6]'
+            className="underline font-medium text-[#3b82f6]"
           >
             Open with Orb
           </a>
         </div>,
         {
           duration: 6000,
-        }
+        },
       );
 
       setAmount('');
       fetchBalance();
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || 'Failed to place order');
+      toast.error(err.message || 'Trade failed');
     }
   };
 
@@ -980,7 +1035,7 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
         }}
       >
         <CardHeader>
-          <CardTitle className='font-semibold'>Trade</CardTitle>
+          <CardTitle className="font-semibold">Trade</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Outcome Selection */}
@@ -990,22 +1045,32 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
               <Button
                 variant={selectedOutcome === 'Yes' ? 'default' : 'outline'}
                 onClick={() => setSelectedOutcome('Yes')}
-                className={selectedOutcome === 'Yes' ? 'bg-green-600 hover:bg-green-700' : ''}
+                className={
+                  selectedOutcome === 'Yes'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : ''
+                }
               >
                 YES
-                {market.yesBid &&
-                  <span className="text-[12.5px]">${toPriceLabel(market.yesBid)}</span>
-                }
+                {market.yesBid && (
+                  <span className="text-[12.5px]">
+                    ${toPriceLabel(market.yesBid)}
+                  </span>
+                )}
               </Button>
               <Button
                 variant={selectedOutcome === 'No' ? 'default' : 'outline'}
                 onClick={() => setSelectedOutcome('No')}
-                className={selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''}
+                className={
+                  selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''
+                }
               >
                 NO
-                {market.noBid &&
-                  <span className="text-[12.5px]">${toPriceLabel(market.noBid)}</span>
-                }
+                {market.noBid && (
+                  <span className="text-[12.5px]">
+                    ${toPriceLabel(market.noBid)}
+                  </span>
+                )}
               </Button>
             </div>
           </div>
@@ -1017,14 +1082,18 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
               <Button
                 variant={tradeSide === 'BUY' ? 'default' : 'outline'}
                 onClick={() => setTradeSide('BUY')}
-                className={tradeSide === 'BUY' ? 'bg-green-600 hover:bg-green-700' : ''}
+                className={
+                  tradeSide === 'BUY' ? 'bg-green-600 hover:bg-green-700' : ''
+                }
               >
                 BUY
               </Button>
               <Button
                 variant={tradeSide === 'SELL' ? 'default' : 'outline'}
                 onClick={() => setTradeSide('SELL')}
-                className={tradeSide === 'SELL' ? 'bg-red-600 hover:bg-red-700' : ''}
+                className={
+                  tradeSide === 'SELL' ? 'bg-red-600 hover:bg-red-700' : ''
+                }
               >
                 SELL
               </Button>
@@ -1037,18 +1106,29 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
               <RadioGroup
                 defaultValue="USDC"
                 value={buyToken}
-                onValueChange={(value: any) => setBuyToken(value as 'USDC' | 'CASH')}
+                onValueChange={(value: any) =>
+                  setBuyToken(value as 'USDC' | 'CASH')
+                }
                 className="flex gap-4"
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="USDC" id="USDC" />
+                  <RadioGroupItem
+                    value="USDC"
+                    id="USDC"
+                  />
                   <Label htmlFor="USDC">
-                    <Usdc width={23} height={23} />
+                    <Usdc
+                      width={23}
+                      height={23}
+                    />
                     USDC
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="CASH" id="CASH" />
+                  <RadioGroupItem
+                    value="CASH"
+                    id="CASH"
+                  />
                   <Label htmlFor="CASH">
                     <CircleDollarSign />
                     CASH
@@ -1061,10 +1141,13 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
           {/* Amount Input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})</Label>
+              <Label>
+                Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})
+              </Label>
               {user && (
                 <div className="text-xs text-muted-foreground">
-                  {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance: {parseFloat(balance).toFixed(2)}
+                  {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance:{' '}
+                  {parseFloat(balance).toFixed(2)}
                 </div>
               )}
             </div>
@@ -1072,15 +1155,18 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
               type="number"
               placeholder="Enter amount"
               value={amount}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setAmount(e.target.value)
+              }
               min="0"
               step="0.01"
             />
             <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
               {[1, 20, 50].map((v) => {
-                const disabled = !user
-                  || Number(amount) >= Number(balance)
-                  || v > Number(balance)
+                const disabled =
+                  !user ||
+                  Number(amount) >= Number(balance) ||
+                  v > Number(balance);
 
                 return (
                   <Button
@@ -1088,21 +1174,21 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
                     disabled={disabled}
                     type="button"
                     size="sm"
-                    variant='outline'
+                    variant="outline"
                     className={clsx(
                       'text-sm transition-all',
                       disabled
                         ? 'opacity-40'
-                        : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer'
+                        : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer',
                     )}
                     onClick={() => {
                       if (!disabled) {
                         if (!amount) {
                           setAmount(String(v));
                         } else {
-                          const newValue = Number(amount) + v
-                          if (newValue > Number(amount)) handleMaxAmount()
-                          else setAmount(String(newValue))
+                          const newValue = Number(amount) + v;
+                          if (newValue > Number(amount)) handleMaxAmount();
+                          else setAmount(String(newValue));
                         }
                       }
                     }}
@@ -1113,8 +1199,9 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
               })}
               {user && (
                 <Button
-                  type="button" size="sm"
-                  variant='outline'
+                  type="button"
+                  size="sm"
+                  variant="outline"
                   onClick={handleMaxAmount}
                 >
                   Max
@@ -1126,7 +1213,11 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
           <Button
             onClick={handleTrade}
             disabled={isTrading || !user || !amount || parseFloat(amount) <= 0}
-            className={tradeSide === 'BUY' ? 'w-full bg-green-600 hover:bg-green-700' : 'w-full bg-red-600 hover:bg-red-700'}
+            className={
+              tradeSide === 'BUY'
+                ? 'w-full bg-green-600 hover:bg-green-700'
+                : 'w-full bg-red-600 hover:bg-red-700'
+            }
           >
             {isTrading ? 'Processing...' : 'Confirm'}
           </Button>
@@ -1139,6 +1230,6 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
         </CardContent>
       </Card>
     </div>
-  )
-}
-export default DflowChatPage
+  );
+};
+export default DflowChatPage;

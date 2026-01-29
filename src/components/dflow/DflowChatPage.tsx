@@ -61,7 +61,7 @@ import {
 import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import Usdc from '../wallet/icon/Usdc';
-import { toPriceLabel } from './TradeModalDflow';
+import { safePrice } from './TradeModalDflow';
 
 const tabs = [
   { id: 'chat', label: 'Chat' },
@@ -255,7 +255,7 @@ const DflowChatPage = () => {
               );
             }
           },
-          onSession: (id) => {},
+          onSession: (id) => { },
           onThinking: (tokens) => {
             setThinkingTokens(tokens);
           },
@@ -277,7 +277,7 @@ const DflowChatPage = () => {
 
             onStreamContent(content, assistantMessageId);
           },
-          onComplete: (data) => {},
+          onComplete: (data) => { },
           onDone: () => {
             setIsLoading(false);
             setThinkingTokens(0);
@@ -636,18 +636,16 @@ const DflowChatPage = () => {
                               return (
                                 <div key={message.id}>
                                   <div
-                                    className={`flex ${
-                                      message.sender === 'user'
-                                        ? 'justify-end max-w-[94vw]'
-                                        : 'justify-start'
-                                    }`}
+                                    className={`flex ${message.sender === 'user'
+                                      ? 'justify-end max-w-[94vw]'
+                                      : 'justify-start'
+                                      }`}
                                   >
                                     <div
-                                      className={`max-w-[80%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
-                                        message.sender === 'user'
-                                          ? 'bg-blue-600 text-white backdrop-blur-sm'
-                                          : `backdrop-blur-md border border-border`
-                                      }`}
+                                      className={`max-w-[80%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
+                                        ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                        : `backdrop-blur-md border border-border`
+                                        }`}
                                     >
                                       {message.sender === 'assistant' ? (
                                         <div className="text-xs sm:text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs">
@@ -666,11 +664,10 @@ const DflowChatPage = () => {
                                     </div>
                                   </div>
                                   <div
-                                    className={`text-xs mt-3 text-muted-foreground block ${
-                                      message.sender === 'user'
-                                        ? 'text-right max-w-[94vw]'
-                                        : 'text-left'
-                                    }`}
+                                    className={`text-xs mt-3 text-muted-foreground block ${message.sender === 'user'
+                                      ? 'text-right max-w-[94vw]'
+                                      : 'text-left'
+                                      }`}
                                   >
                                     <span>{formatTime(message.createdAt)}</span>
                                     {message.sender === 'assistant' && (
@@ -996,9 +993,9 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
         const mint =
           selectedOutcome === 'Yes'
             ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-                .yesMint
+              .yesMint
             : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-                .noMint;
+              .noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
@@ -1029,6 +1026,12 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
     }
   };
 
+  const buyPrice =
+    selectedOutcome === 'Yes' ? market.yesAsk : market.noAsk
+
+  const sellPrice =
+    selectedOutcome === 'Yes' ? market.yesBid : market.noBid
+
   return (
     <div className="space-y-2">
       <Card
@@ -1055,11 +1058,6 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
                 }
               >
                 YES
-                {market.yesBid && (
-                  <span className="text-[12.5px]">
-                    ${toPriceLabel(market.yesBid)}
-                  </span>
-                )}
               </Button>
               <Button
                 variant={selectedOutcome === 'No' ? 'default' : 'outline'}
@@ -1069,11 +1067,6 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
                 }
               >
                 NO
-                {market.noBid && (
-                  <span className="text-[12.5px]">
-                    ${toPriceLabel(market.noBid)}
-                  </span>
-                )}
               </Button>
             </div>
           </div>
@@ -1090,6 +1083,9 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
                 }
               >
                 BUY
+                <span className="ml-2 text-xs">
+                  ${safePrice(buyPrice)}
+                </span>
               </Button>
               <Button
                 variant={tradeSide === 'SELL' ? 'default' : 'outline'}
@@ -1099,6 +1095,9 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
                 }
               >
                 SELL
+                <span className="ml-2 text-xs">
+                  ${safePrice(sellPrice)}
+                </span>
               </Button>
             </div>
           </div>

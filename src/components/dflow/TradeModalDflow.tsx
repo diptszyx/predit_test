@@ -25,6 +25,13 @@ interface TradeModalDflowProps {
 export const toPriceLabel = (num: string, fixed = 2): string =>
   parseFloat(num).toFixed(fixed);
 
+export const safePrice = (v?: string | number | null) => {
+  if (v === null || v === undefined) return '--'
+  const n = Number(v)
+  if (isNaN(n)) return '--'
+  return n.toFixed(2)
+}
+
 const TradeModalDflow = ({
   open,
   onOpenChange,
@@ -137,9 +144,9 @@ const TradeModalDflow = ({
         const mint =
           selectedOutcome === 'Yes'
             ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-                .yesMint
+              .yesMint
             : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-                .noMint;
+              .noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
@@ -175,6 +182,12 @@ const TradeModalDflow = ({
     }
   };
 
+  const buyPrice =
+    selectedOutcome === 'Yes' ? market.yesAsk : market.noAsk
+
+  const sellPrice =
+    selectedOutcome === 'Yes' ? market.yesBid : market.noBid
+
   return (
     <Dialog
       open={open}
@@ -197,11 +210,6 @@ const TradeModalDflow = ({
               className={`${selectedOutcome === 'Yes' ? 'bg-green-600 hover:bg-green-700' : ''}`}
             >
               YES
-              {market.yesBid && (
-                <span className="text-[12.5px]">
-                  ${toPriceLabel(market.yesBid)}
-                </span>
-              )}
             </Button>
             <Button
               variant={selectedOutcome === 'No' ? 'default' : 'outline'}
@@ -211,11 +219,6 @@ const TradeModalDflow = ({
               }
             >
               NO
-              {market.noBid && (
-                <span className="text-[12.5px]">
-                  ${toPriceLabel(market.noBid)}
-                </span>
-              )}
             </Button>
           </div>
         </div>
@@ -232,6 +235,9 @@ const TradeModalDflow = ({
               }
             >
               BUY
+              <span className="ml-2 text-xs">
+                ${safePrice(buyPrice)}
+              </span>
             </Button>
             <Button
               variant={tradeSide === 'SELL' ? 'default' : 'outline'}
@@ -241,6 +247,9 @@ const TradeModalDflow = ({
               }
             >
               SELL
+              <span className="ml-2 text-xs">
+                ${safePrice(sellPrice)}
+              </span>
             </Button>
           </div>
         </div>

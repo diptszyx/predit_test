@@ -9,6 +9,7 @@ import {
   Loader2,
   MessageSquare,
   Share,
+  TriangleAlert,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
@@ -19,12 +20,13 @@ import {
   generateSuggestedQuestions,
   MAX_PREDICTIONS_PER_DAY,
 } from '../../constants/prediction';
+import { useMarketDetail } from '../../hooks/dflow/useMarketDetail';
 import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
 import { formatTime } from '../../lib/date';
 import { chatService } from '../../services/chat.service';
 import {
   DflowDataEntity,
-  getDflowEventById,
+  DflowMarket
 } from '../../services/dflow.service';
 import { ChatMessage, messageService } from '../../services/message.service';
 import { OracleEntity, oraclesServices } from '../../services/oracles.service';
@@ -78,8 +80,7 @@ const DflowChatPage = () => {
   const [availableOracles, setAvailableOracles] = useState<OracleEntity[]>([]);
 
   const { marketId, chatId } = useParams();
-  const [market, setMarket] = useState<DflowDataEntity | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { market, dflowMarket, loading } = useMarketDetail(marketId || '');
 
   const [currentTab, setCurrentTab] = useState<string>('chat');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -118,23 +119,8 @@ const DflowChatPage = () => {
   useEffect(() => {
     if (!marketId || !chatId) return;
 
-    fetchMarket();
     fetchMessages();
   }, [marketId, chatId]);
-
-  const fetchMarket = async () => {
-    if (!marketId) return;
-    try {
-      setLoading(true);
-      const data = await getDflowEventById(marketId);
-      setMarket(data);
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to load market details');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchMessages = async () => {
     try {
@@ -370,7 +356,7 @@ const DflowChatPage = () => {
     );
   }
 
-  if (!market || !currentOracle) {
+  if (!market || !dflowMarket || !currentOracle) {
     return (
       <div className="min-h-screen bg-background">
         <div className="w-full p-4 lg:p-6 space-y-6">
@@ -855,14 +841,14 @@ const DflowChatPage = () => {
 
               {currentTab === 'trade' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px] h-full">
-                  <TradeSidebar market={market} />
+                  <TradeSidebar market={market} dflowMarket={dflowMarket} />
                 </div>
               )}
             </div>
 
             {/* Trade */}
             <div className="hidden lg:block w-full h-full lg:w-80">
-              <TradeSidebar market={market} />
+              <TradeSidebar market={market} dflowMarket={dflowMarket} />
             </div>
           </div>
         </div>
@@ -900,9 +886,10 @@ const DflowChatPage = () => {
 
 type TradeSidebarProps = {
   market: DflowDataEntity;
+  dflowMarket: DflowMarket;
 };
 
-const TradeSidebar = ({ market }: TradeSidebarProps) => {
+const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
   const user = useAuthStore((state) => state.user);
   const { connection } = useConnection();
   const { publicKey } = useWallet();
@@ -1027,10 +1014,17 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
   };
 
   const buyPrice =
-    selectedOutcome === 'Yes' ? market.yesAsk : market.noAsk
-
+    selectedOutcome === 'Yes' ? dflowMarket.yesAsk : dflowMarket.noAsk;
   const sellPrice =
-    selectedOutcome === 'Yes' ? market.yesBid : market.noBid
+    selectedOutcome === 'Yes' ? dflowMarket.yesBid : dflowMarket.noBid
+  const isBuyDisabled = buyPrice === null
+  const isSellDisabled = sellPrice === null
+
+  const isConfirmDisabled =
+    isTrading || !user || !amount ||
+    parseFloat(amount) <= 0 ||
+    (tradeSide === 'BUY' && isBuyDisabled) ||
+    (tradeSide === 'SELL' && isSellDisabled)
 
   return (
     <div className="space-y-2">
@@ -1076,6 +1070,7 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
             <Label>Side</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
+                disabled={isBuyDisabled}
                 variant={tradeSide === 'BUY' ? 'default' : 'outline'}
                 onClick={() => setTradeSide('BUY')}
                 className={
@@ -1088,6 +1083,7 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
                 </span>
               </Button>
               <Button
+                disabled={isSellDisabled}
                 variant={tradeSide === 'SELL' ? 'default' : 'outline'}
                 onClick={() => setTradeSide('SELL')}
                 className={
@@ -1214,7 +1210,7 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
 
           <Button
             onClick={handleTrade}
-            disabled={isTrading || !user || !amount || parseFloat(amount) <= 0}
+            disabled={isConfirmDisabled}
             className={
               tradeSide === 'BUY'
                 ? 'w-full bg-green-600 hover:bg-green-700'
@@ -1223,6 +1219,16 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
           >
             {isTrading ? 'Processing...' : 'Confirm'}
           </Button>
+
+          {(dflowMarket?.status === 'active' &&
+            (isSellDisabled || isBuyDisabled)) &&
+            <div className='bg-amber-400/75 p-2 mt-2 text-xs rounded-md flex items-center gap-2'>
+              <TriangleAlert className='w-5 h-5' />
+              <p>
+                This market currently has low liquidity.
+              </p>
+            </div>
+          }
 
           {!user && (
             <p className="text-xs text-center text-muted-foreground">

@@ -3,7 +3,7 @@ import { PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
-import { DflowDataEntity } from '../../services/dflow.service';
+import { DflowDataEntity, DflowMarket, getDflowMarket } from '../../services/dflow.service';
 import useAuthStore from '../../store/auth.store';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
@@ -11,7 +11,9 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
 import clsx from 'clsx';
-import { CircleDollarSign } from 'lucide-react';
+import { CircleDollarSign, TriangleAlert } from 'lucide-react';
+import { getStatusBadgeProps } from '../market/MarketListAdmin';
+import { Badge } from '../ui/badge';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import Usdc from '../wallet/icon/Usdc';
 
@@ -52,6 +54,9 @@ const TradeModalDflow = ({
 
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
   const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
+  const [amount, setAmount] = useState('');
+
+  const [dflowMarket, setDflowMarket] = useState<DflowMarket | null>(null)
 
   const fetchBalance = async () => {
     if (!publicKey || !market) return;
@@ -88,12 +93,14 @@ const TradeModalDflow = ({
   };
 
   useEffect(() => {
+    fetchDflowMarket()
+  }, [open])
+
+  useEffect(() => {
     if (open && publicKey) {
       fetchBalance();
     }
   }, [tradeSide, selectedOutcome, buyToken]);
-
-  const [amount, setAmount] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -102,6 +109,15 @@ const TradeModalDflow = ({
       setAmount('');
     }
   }, [open, initialOutcome]);
+
+  const fetchDflowMarket = async () => {
+    try {
+      const dflowMarket = await getDflowMarket(market.id)
+      if (dflowMarket) setDflowMarket(dflowMarket)
+    } catch (error) {
+      console.log("Failed to fetch market from Dflow", error)
+    }
+  }
 
   const handleMaxAmount = () => {
     const max = parseFloat(balance);
@@ -183,10 +199,17 @@ const TradeModalDflow = ({
   };
 
   const buyPrice =
-    selectedOutcome === 'Yes' ? market.yesAsk : market.noAsk
-
+    selectedOutcome === 'Yes' ? dflowMarket?.yesAsk : dflowMarket?.noAsk;
   const sellPrice =
-    selectedOutcome === 'Yes' ? market.yesBid : market.noBid
+    selectedOutcome === 'Yes' ? dflowMarket?.yesBid : dflowMarket?.noBid
+  const isBuyDisabled = buyPrice === null
+  const isSellDisabled = sellPrice === null
+
+  const isConfirmDisabled =
+    isTrading || !user || !amount ||
+    parseFloat(amount) <= 0 ||
+    (tradeSide === 'BUY' && isBuyDisabled) ||
+    (tradeSide === 'SELL' && isSellDisabled)
 
   return (
     <Dialog
@@ -198,7 +221,17 @@ const TradeModalDflow = ({
         className="sm:max-w-md"
       >
         <DialogHeader>
-          <DialogTitle>{market.title}</DialogTitle>
+          <DialogTitle>{market.title}
+            {dflowMarket &&
+              <Badge
+                variant={getStatusBadgeProps(dflowMarket?.status).variant}
+                className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${getStatusBadgeProps(dflowMarket?.status).className
+                  }`}
+              >
+                {dflowMarket?.status}
+              </Badge>
+            }
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-2">
@@ -228,6 +261,7 @@ const TradeModalDflow = ({
           <Label>Side</Label>
           <div className="grid grid-cols-2 gap-2">
             <Button
+              disabled={isBuyDisabled}
               variant={tradeSide === 'BUY' ? 'default' : 'outline'}
               onClick={() => setTradeSide('BUY')}
               className={
@@ -240,6 +274,7 @@ const TradeModalDflow = ({
               </span>
             </Button>
             <Button
+              disabled={isSellDisabled}
               variant={tradeSide === 'SELL' ? 'default' : 'outline'}
               onClick={() => setTradeSide('SELL')}
               className={
@@ -367,7 +402,7 @@ const TradeModalDflow = ({
 
         <Button
           onClick={handleTrade}
-          disabled={isTrading || !user || !amount || parseFloat(amount) <= 0}
+          disabled={isConfirmDisabled}
           className={
             tradeSide === 'BUY'
               ? 'w-full bg-green-600 hover:bg-green-700'
@@ -376,6 +411,16 @@ const TradeModalDflow = ({
         >
           {isTrading ? 'Processing...' : 'Confirm'}
         </Button>
+
+        {(dflowMarket?.status === 'active' &&
+          (isSellDisabled || isBuyDisabled)) &&
+          <div className='bg-amber-400/75 p-2 mt-2 text-xs rounded-md flex items-center gap-2'>
+            <TriangleAlert className='w-5 h-5' />
+            <p>
+              This market currently has low liquidity.
+            </p>
+          </div>
+        }
 
         {!user && (
           <p className="text-xs text-center text-muted-foreground">

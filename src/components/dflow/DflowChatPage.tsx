@@ -900,6 +900,7 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
   const [amount, setAmount] = useState('');
   const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
   const [balance, setBalance] = useState('0');
+  const [errorAmount, setErrorAmount] = useState('')
 
   useEffect(() => {
     if (user) {
@@ -942,8 +943,18 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
   };
   const handleMaxAmount = () => {
     const max = parseFloat(balance);
-    if (max > 0) setAmount(max.toString());
+    if (max > 0) handleSetAmount(max.toString())
   };
+
+  const handleSetAmount = (val: string) => {
+    setAmount(val)
+
+    if (Number(val) < 1) {
+      setErrorAmount('Minimum amount for buying is 1')
+    } else {
+      setErrorAmount('')
+    }
+  }
 
   const handleTrade = async () => {
     if (!market || !amount || parseFloat(amount) <= 0) {
@@ -1021,7 +1032,7 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
   const isSellDisabled = sellPrice === null
 
   const isConfirmDisabled =
-    isTrading || !user || !amount ||
+    isTrading || !user || !amount || (tradeSide === 'BUY' && errorAmount) ||
     parseFloat(amount) <= 0 ||
     (tradeSide === 'BUY' && isBuyDisabled) ||
     (tradeSide === 'SELL' && isSellDisabled)
@@ -1153,12 +1164,16 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
               type="number"
               placeholder="Enter amount"
               value={amount}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setAmount(e.target.value)
-              }
-              min="0"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSetAmount(e.target.value)}
+              min={1}
+              max={balance}
               step="0.01"
             />
+            {tradeSide === 'BUY' && amount && errorAmount && (
+              <p className="text-sm text-red-500 mt-1">
+                {errorAmount}
+              </p>
+            )}
             <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
               {[1, 20, 50].map((v) => {
                 const disabled =
@@ -1182,11 +1197,11 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
                     onClick={() => {
                       if (!disabled) {
                         if (!amount) {
-                          setAmount(String(v));
+                          handleSetAmount(String(v));
                         } else {
                           const newValue = Number(amount) + v;
                           if (newValue > Number(amount)) handleMaxAmount();
-                          else setAmount(String(newValue));
+                          else handleSetAmount(String(newValue));
                         }
                       }
                     }}

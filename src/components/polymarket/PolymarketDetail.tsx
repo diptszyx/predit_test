@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
+import { toPriceLabel } from '../dflow/TradeModalDflow';
 
 const PolymarketDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -269,8 +270,8 @@ const PolymarketDetail = () => {
     );
   }
 
-  const yesToken = market.tokens.find((t) => t.outcome === 'Yes');
-  const noToken = market.tokens.find((t) => t.outcome === 'No');
+  const yesToken = market.tokens.find((t) => t.outcome === 'Yes' || t.outcome === 'Up');
+  const noToken = market.tokens.find((t) => t.outcome === 'No' || t.outcome === 'Down');
 
   return (
     <div className="min-h-screen bg-background">
@@ -302,7 +303,7 @@ const PolymarketDetail = () => {
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Liquidity</p>
                       <p className="text-lg font-semibold">
-                        {formatVolume(market.liquidity)}
+                        {market.liquidity ? formatVolume(market.liquidity) : "$0.00"}
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -364,31 +365,7 @@ const PolymarketDetail = () => {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Current Prices</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">YES</span>
-                      <span className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {yesToken ? formatPrice(yesToken.price) : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">NO</span>
-                      <span className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {noToken ? formatPrice(noToken.price) : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Trade</CardTitle>
+                  <CardTitle className="font-semibold">Trade</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -406,6 +383,9 @@ const PolymarketDetail = () => {
                         }
                       >
                         YES
+                        {yesToken &&
+                          <span className="text-[12.5px]">${toPriceLabel(yesToken.price, 1)}</span>
+                        }
                       </Button>
                       <Button
                         variant={
@@ -419,6 +399,9 @@ const PolymarketDetail = () => {
                         }
                       >
                         NO
+                        {noToken &&
+                          <span className="text-[12.5px]">${toPriceLabel(noToken.price, 1)}</span>
+                        }
                       </Button>
                     </div>
                   </div>

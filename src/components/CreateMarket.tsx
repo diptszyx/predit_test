@@ -345,7 +345,6 @@ export default function CreateUpdateMarketModal({
                       }}
                       min={new Date()}
                       modal={true}
-                      timezone='GMT+0'
                     />
                   )}
                 />

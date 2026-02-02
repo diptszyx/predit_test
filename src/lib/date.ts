@@ -43,8 +43,13 @@ export const formatDate = (dateString: string) => {
   });
 };
 
-export const formatDateTime = (timestamp: number) => {
-  const date = new Date(timestamp * 1000);
+export const formatDateTime = (timestamp: number | string) => {
+  let date;
+  if (typeof timestamp === 'string') {
+    date = new Date(timestamp);
+  } else { 
+    date = new Date(timestamp * 1000);
+  }
   return date.toLocaleString("en-US", {
     month: "short",
     day: "numeric",

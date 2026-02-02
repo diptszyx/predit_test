@@ -95,7 +95,7 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
     if (!showCharts || chartSymbols.length === 0) {
       return (
         <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
+          remarkPlugins={[[remarkGfm, { singleTilde: false }]]}
           components={markdownComponents}
         >
           {text}
@@ -113,7 +113,7 @@ const Markdown = ({ text, showCharts = true }: MarkdownProps) => {
         elements.push(
           <ReactMarkdown
             key={`text-${i}`}
-            remarkPlugins={[remarkGfm]}
+            remarkPlugins={[[remarkGfm, { singleTilde: false }]]}
             components={markdownComponents}
           >
             {parts[i]}

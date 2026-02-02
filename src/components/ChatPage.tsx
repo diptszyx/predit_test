@@ -1,27 +1,20 @@
 import {
-  ArrowLeft,
   ArrowRight,
-  Check,
   Crown,
   Info,
   Loader2,
   Lock,
   MessageSquare,
-  Moon,
-  Plus,
+  Share,
   ShoppingCart,
-  Sparkles,
-  Star,
-  Sun,
-  ThumbsUp,
-  Zap,
+  Zap
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import TextareaAutosize from 'react-textarea-autosize';
 import { DisclaimerDialog } from './DisclaimerDialog';
-import { ShareAIAgentDialog } from './ShareAIAgentDialog';
+import { ShareChatDialog, SharePayload } from './ShareChatDialog';
 import { SharePredictionDialog } from './SharePredictionDialog';
 import { SubscriptionManagementDialog } from './SubscriptionManagementDialog';
-import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
   Card,
@@ -31,20 +24,26 @@ import {
   CardTitle,
 } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
-import { Skeleton } from './ui/skeleton';
-import TextareaAutosize from 'react-textarea-autosize';
 
 import clsx from 'clsx';
 import { motion } from 'motion/react';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { formatTime, timeAgo } from '../lib/date';
+import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../constants/prediction';
+import { formatTime } from '../lib/date';
 import type { User } from '../lib/types';
+import { chatService, MessageEntity } from '../services/chat.service';
 import { ChatMessage, messageService } from '../services/message.service';
 import { News, newsService } from '../services/news.service';
 import { OracleEntity, oraclesServices } from '../services/oracles.service';
+import { Topic, topicServices } from '../services/topic-admin.service';
 import useAuthStore from '../store/auth.store';
+import Markdown from './chat/Markdown';
+import DailyLimitReachDialog from './dialog/DailyLimitReachDialog';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
 import { InfoAgentDialog } from './InfoAgentDialog';
+import MarketList from './market/MarketList';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,14 +54,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
-import HotTakeChatPageList from './hotTake/HotTakeChatPageList';
-import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY, questionsByAIAgent } from '../constants/prediction';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import MarketList from './market/MarketList';
-import { Topic, topicServices } from '../services/topic-admin.service';
-import Markdown from './chat/Markdown';
-import { Textarea } from './ui/textarea';
-import DailyLimitReachDialog from './dialog/DailyLimitReachDialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { createSharedMessageLink, createShareOracleConversationLink } from '../services/share-message.service';
 
 interface ChatPageProps {
   aiAgent: OracleEntity;
@@ -126,8 +126,7 @@ export function ChatPage({
   onReloadAiAgent,
 }: ChatPageProps) {
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [threadsExpanded, setThreadsExpanded] = useState(false);
+  const [messages, setMessages] = useState<MessageEntity[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [newsArticles, setNewsArticles] = useState<News[]>([]);
@@ -138,11 +137,30 @@ export function ChatPage({
   const [page, setPage] = useState(0);
   const [hasMoreArticles, setHasMoreArticles] = useState(true);
   const isFetchingMoreRef = useRef(false);
-  const [deletedArticleIds, setDeletedArticleIds] = useState<Set<string>>(
-    new Set()
-  );
-  const [articleCounter, setArticleCounter] = useState(5);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [availableOracles, setAvailableOracles] = useState<OracleEntity[]>([]);
+  const [currentOracle, setCurrentOracle] = useState<OracleEntity>(aiAgent);
+
+  useEffect(() => {
+    setLocalLikes(currentOracle.likes);
+    setLocalRating(currentOracle.rating);
+    // setSuggestedQuestions(generateSuggestedQuestions(currentOracle));
+  }, [currentOracle]);
+
+  useEffect(() => {
+    const fetchOracles = async () => {
+      try {
+        const data = await oraclesServices.getAllOracles();
+        if (data && data.data) {
+          setAvailableOracles(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch oracles:', error);
+      }
+    };
+    fetchOracles();
+  }, []);
 
   // Streaming states
   const [thinkingTokens, setThinkingTokens] = useState(0);
@@ -152,8 +170,8 @@ export function ChatPage({
   // Rating and Like states
   const [userRating, setUserRating] = useState<number | null>(0);
   const [hasLiked, setHasLiked] = useState(false);
-  const [localLikes, setLocalLikes] = useState(aiAgent.likes);
-  const [localRating, setLocalRating] = useState(aiAgent.rating);
+  const [localLikes, setLocalLikes] = useState(currentOracle.likes);
+  const [localRating, setLocalRating] = useState(currentOracle.rating);
 
   // Sign-in and subscription tracking
   const [userMessageCount, setUserMessageCount] = useState(0);
@@ -172,20 +190,21 @@ export function ChatPage({
     question: string;
     answer: string;
   } | null>(null);
+  const [shareChatDialogOpen, setShareChatDialogOpen] = useState(false);
+  const [sharePayload, setSharePayload] = useState<SharePayload | null>(null);
 
   // Disclaimer dialog
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
-  const [shareAIAgentDialogOpen, setShareAIAgentDialogOpen] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>(
     generateSuggestedQuestions(aiAgent)
   );
 
-  // Rating flash functionality
-  const [ratingFlashing, setRatingFlashing] = useState(false);
   const [currentTab, setCurrentTab] = useState<string>('chat');
+  const [searchParams] = useSearchParams();
+  const chatIdFromUrl = searchParams.get('chatId');
 
   const navigate = useNavigate();
-  const { oracleId } = useParams();
+  const { chatId }: { chatId: string } = useParams();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -210,8 +229,20 @@ export function ChatPage({
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const data = await messageService.loadMessages(aiAgent.id);
-        if (data) setMessages(data.reverse());
+        if (!chatId) return;
+
+        const data = await chatService.getMessages(chatId);
+        if (data && data.length > 0) {
+          setMessages(data.reverse());
+          setCurrentOracle(data[0].oracle);
+        } else if (data) {
+          setMessages(data);
+        }
+
+        if (chatIdFromUrl) {
+          setSessionId(chatIdFromUrl);
+        }
+
         if (autoSend) {
           const { question } = autoSend;
           handleSend(question);
@@ -225,7 +256,7 @@ export function ChatPage({
     if (user?.id) {
       fetchMessages();
     }
-  }, [user?.id]);
+  }, [chatId]);
 
   // Send message from homepage
   useEffect(() => {
@@ -270,7 +301,7 @@ export function ChatPage({
         isFetchingMoreRef.current = false;
 
         const initial = await newsService.getNewsList(
-          aiAgent.id,
+          currentOracle.id,
           topicFilter,
           PAGE_SIZE,
           0
@@ -284,7 +315,7 @@ export function ChatPage({
         setIsLoadingNews(false);
       }
     })();
-  }, [aiAgent.id, topicFilter]);
+  }, [currentOracle.id, topicFilter]);
 
   // Load next page
   const getMore = async () => {
@@ -298,7 +329,7 @@ export function ChatPage({
       const offset = nextPage * PAGE_SIZE;
 
       const more = await newsService.getNewsList(
-        aiAgent.id,
+        currentOracle.id,
         topicFilter,
         PAGE_SIZE,
         offset
@@ -322,7 +353,7 @@ export function ChatPage({
     if (user?.id) {
       (async () => {
         try {
-          const data = await oraclesServices.getOracleUserStatus(aiAgent.id);
+          const data = await oraclesServices.getOracleUserStatus(currentOracle.id);
           if (data) {
             setHasLiked(data.hasLiked);
             setUserRating(data?.userRating || 0);
@@ -332,106 +363,7 @@ export function ChatPage({
         }
       })();
     }
-  }, [user]);
-
-  // Auto-send pending message after user signs in or upgrades subscription
-  // useEffect(() => {
-  //   const shouldSendPending =
-  //     pendingMessage &&
-  //     !signInDialogOpen &&
-  //     !subscriptionDialogOpen &&
-  //     // Either just signed in
-  //     ((user?.walletAddress && !isLoading) ||
-  //       // Or has a paid subscription
-  //       (user?.subscriptionTier && user?.subscriptionTier !== "free"));
-
-  //   if (shouldSendPending) {
-  //     // User just signed in or upgraded and we have a pending message
-  //     const sendPendingMessage = async () => {
-  //       // Check if this is a prediction question
-  //       const isPrediction = isPredictionQuestion(pendingMessage);
-  //       console.log("Auto-send message:", pendingMessage);
-  //       console.log("Auto-send is prediction:", isPrediction);
-
-  //       const userMessage: Message = {
-  //         id: Date.now().toString(),
-  //         role: "user",
-  //         content: `I want a prediction on: ${pendingMessage}`,
-  //         timestamp: new Date(),
-  //         isPrediction,
-  //       };
-
-  //       setMessages((prev) => [...prev, userMessage]);
-  //       setInput(""); // Clear input
-  //       setPendingMessage(""); // Clear pending message
-  //       setIsLoading(true);
-
-  //       // Track total questions asked
-  //       if (onQuestionAsked) {
-  //         onQuestionAsked();
-  //       }
-
-  //       // Increment daily line count for free users (for pending messages)
-  //       if (
-  //         user?.walletAddress &&
-  //         (!user?.subscriptionTier || user?.subscriptionTier === "free")
-  //       ) {
-  //         const linesInMessage = countLines(pendingMessage);
-  //         incrementDailyLines(linesInMessage);
-  //       }
-
-  //       // Fetch relevant news
-  //       fetchRelevantNews(pendingMessage);
-
-  //       try {
-  //         const response = await sendToGrokAPI(pendingMessage, aiAgent);
-  //         const assistantMessage: Message = {
-  //           id: (Date.now() + 1).toString(),
-  //           role: "assistant",
-  //           content: response,
-  //           timestamp: new Date(),
-  //           isPrediction,
-  //           suggestedQuestions: generateSuggestedQuestions(
-  //             aiAgent,
-  //             pendingMessage
-  //           ),
-  //         };
-  //         setMessages((prev) => [...prev, assistantMessage]);
-
-  //         // If this was a prediction, store it and flash the share button
-  //         if (isPrediction) {
-  //           console.log("✓ PREDICTION DETECTED (pending message)!");
-  //           console.log("Question:", pendingMessage);
-  //           console.log("Answer:", response);
-  //           const predictionData = {
-  //             question: pendingMessage,
-  //             answer: response,
-  //           };
-  //           console.log("Storing prediction data:", predictionData);
-  //           setLastPrediction(predictionData);
-  //           setShareFlashing(true);
-
-  //           // Stop flashing after 3 seconds
-  //           setTimeout(() => {
-  //             setShareFlashing(false);
-  //           }, 3000);
-  //         }
-  //       } catch (error) {
-  //         console.error("Error sending message:", error);
-  //       } finally {
-  //         setIsLoading(false);
-  //       }
-  //     };
-
-  //     sendPendingMessage();
-  //   }
-  // }, [
-  //   user?.walletAddress,
-  //   user?.subscriptionTier,
-  //   pendingMessage,
-  //   signInDialogOpen,
-  //   subscriptionDialogOpen,
-  // ]);
+  }, [user, currentOracle.id]);
 
   // Increment daily prediction count
   function incrementDailyPredictions() {
@@ -500,11 +432,14 @@ export function ChatPage({
       }
     }
 
-    const userMessage: ChatMessage = {
+    const userMessage: MessageEntity = {
       id: Date.now().toString(),
       sender: 'user',
       content: `${trimmedInput}`,
       createdAt: new Date().toISOString(),
+      chatId: chatId,
+      oracleId: currentOracle.id,
+      oracle: currentOracle,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -513,14 +448,14 @@ export function ChatPage({
     setThinkingTokens(0);
     setCitations([]);
 
-    setSuggestedQuestions(generateSuggestedQuestions(aiAgent));
+    setSuggestedQuestions(generateSuggestedQuestions(currentOracle));
 
     // Prepare assistant message ID but don't create message yet
     const assistantMessageId = (Date.now() + 1).toString();
     let messageCreated = false;
 
     try {
-      await messageService.sendMessageStream(trimmedInput, aiAgent.id, {
+      await messageService.sendMessageStream(trimmedInput, currentOracle.id, {
         onMetadata: (metadata) => {
           // Handle metadata (userMessage and xpReward)
           if (metadata.xpReward.milestone) {
@@ -532,6 +467,13 @@ export function ChatPage({
         onSession: (id) => {
           setSessionId(id);
           console.log('Session ID:', id);
+
+          // Update URL with chatId if it's a new session
+          if (!chatIdFromUrl) {
+            const newSearchParams = new URLSearchParams(searchParams);
+            newSearchParams.set('chatId', id);
+            navigate(`${location.pathname}?${newSearchParams.toString()}`, { replace: true });
+          }
         },
         onThinking: (tokens) => {
           setThinkingTokens(tokens);
@@ -543,11 +485,14 @@ export function ChatPage({
           // Create assistant message only on first content chunk
           if (!messageCreated) {
             messageCreated = true;
-            const assistantMessage: ChatMessage = {
+            const assistantMessage: MessageEntity = {
               id: assistantMessageId,
               sender: 'assistant',
               content: content,
               createdAt: new Date().toISOString(),
+              oracle: currentOracle,
+              oracleId: currentOracle.id,
+              chatId: chatId,
             };
             setMessages((prev) => [...prev, assistantMessage]);
           } else {
@@ -573,7 +518,6 @@ export function ChatPage({
           setIsLoading(false);
           setThinkingTokens(0);
           fetchUser();
-          onReloadAiAgent?.(aiAgent.id);
         },
         onError: (error) => {
           // Handle error
@@ -582,7 +526,7 @@ export function ChatPage({
           setIsLoading(false);
           setThinkingTokens(0);
         },
-      });
+      }, chatId);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
@@ -601,22 +545,22 @@ export function ChatPage({
   const handleLike = async () => {
     if (!hasLiked) {
       try {
-        const data = await oraclesServices.handleLike(aiAgent.id);
+        const data = await oraclesServices.handleLike(currentOracle.id);
         if (data) {
           setHasLiked(true);
           setLocalLikes(data.likes);
-          onReloadAiAgent?.(aiAgent.id);
+          onReloadAiAgent?.(currentOracle.id);
         }
       } catch (error) {
         console.log('Failed to like oracle: ', error);
       }
     } else {
       try {
-        const data = await oraclesServices.handleDislike(aiAgent.id);
+        const data = await oraclesServices.handleDislike(currentOracle.id);
         if (data) {
           setHasLiked(false);
           setLocalLikes(data.likes);
-          onReloadAiAgent?.(aiAgent.id);
+          onReloadAiAgent?.(currentOracle.id);
         }
       } catch (error) {
         console.log('Failed to dislike oracle: ', error);
@@ -627,10 +571,10 @@ export function ChatPage({
   const handleRating = async (rating: number) => {
     // In a real app, this would update the oracle's rating based on user feedback
     try {
-      const data = await oraclesServices.handleRating(aiAgent.id, rating);
+      const data = await oraclesServices.handleRating(currentOracle.id, rating);
       if (data) {
         setUserRating(rating);
-        onReloadAiAgent?.(aiAgent.id);
+        onReloadAiAgent?.(currentOracle.id);
       }
       console.log('data rating', data);
     } catch (error) {
@@ -639,10 +583,35 @@ export function ChatPage({
   };
 
   const formatLikes = (likes: number): string => {
-    // if (likes >= 1000) {
-    //   return `${(likes / 1000).toFixed(1)}K`;
-    // }
     return likes.toString();
+  };
+
+  const onShare = async (isFullChat: boolean, message?: ChatMessage) => {
+    try {
+      if (isFullChat && messages && user) {
+        const data = await createShareOracleConversationLink(user.id, currentOracle.id)
+        setSharePayload({
+          mode: 'conversation',
+          question: messages[0].content,
+          answer: messages[1].content,
+          sharedLink: data.shareUrl
+        });
+      }
+      if (message) {
+        const data = await createSharedMessageLink(message.id)
+        if (data) {
+          setSharePayload({
+            mode: 'reply',
+            message: message.content,
+            sharedLink: data.shareUrl
+          });
+        }
+      }
+      setShareChatDialogOpen(true);
+    } catch (error) {
+      toast.error("Something went wrong while creating the share link. Please try again later.")
+      console.log('Failed to shared chat: ', error)
+    }
   };
 
   return (
@@ -664,78 +633,14 @@ export function ChatPage({
             : ''
         }
       >
-        {/* Oracle Header Bar */}
-        {!(
-          onNavigate &&
-          shortenAddress &&
-          onWalletDisconnect &&
-          onOpenWalletDialog
-        ) && (
-            <header className="sticky top-0 z-50 w-full border-b border-border bg-card">
-              <div className="container flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onBack}
-                    className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
-                    <img
-                      src={aiAgent.image}
-                      alt={aiAgent.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="text-sm sm:text-base leading-none truncate">
-                      {aiAgent.name}
-                    </h1>
-                    <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                      {aiAgent.type}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 text-xs text-muted-foreground">
-                  <div className="hidden sm:flex items-center gap-3">
-                    <span>{localRating} rating</span>
-                    <span>{formatLikes(localLikes)} likes</span>
-                    {aiAgent.consultSessions && (
-                      <span className="hidden md:inline">
-                        {aiAgent.consultSessions} sessions
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex sm:hidden">
-                    <span>{localRating}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDarkMode(!darkMode)}
-                    className="h-8 w-8"
-                  >
-                    {darkMode ? (
-                      <Sun className="w-4 h-4" />
-                    ) : (
-                      <Moon className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </header>
-          )}
 
         {/* Main Chat Area */}
         <div className="w-full h-full">
-          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-[0px] gap-4 w-full">
+          <div className="h-full flex flex-col lg:flex-row max-w-7xl m-0 gap-4 w-full">
             {/* Chat Section - Center with max width */}
             <div className="w-full h-full lg:flex-1 space-y-0 flex flex-col">
               {/* Oracle mobile header tab */}
-              <div className="lg:hidden fixed top-0 left-0 right-0 z-[10]">
+              <div className="lg:hidden fixed top-0 left-0 right-0 z-10">
                 <Card
                   className="border-border bg-background/80 backdrop-blur-md"
                   style={{
@@ -750,43 +655,83 @@ export function ChatPage({
                     }}
                   >
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
                         <ImageWithFallback
-                          src={aiAgent.image}
-                          alt={aiAgent.name}
+                          src={currentOracle.image}
+                          alt={currentOracle.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-sm sm:text-base md:text-lg truncate">
-                          {aiAgent.name}
-                        </CardTitle>
+                        <Select
+                          value={currentOracle.id}
+                          onValueChange={(value: string) => {
+                            const selected = availableOracles.find((o) => o.id === value);
+                            if (selected) setCurrentOracle(selected);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue>
+                              {currentOracle.name}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableOracles.map((oracle) => (
+                              <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                                  <ImageWithFallback
+                                    src={oracle.image}
+                                    alt={oracle.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <span>
+                                  {oracle.name}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <CardDescription className="text-xs">
-                          {aiAgent.type}
+                          {currentOracle.type}
                         </CardDescription>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setInfoDialogOpen(true)}
-                        className="lg:hidden text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700! h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                      >
-                        <Info className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <button
+                            onClick={() => setInfoDialogOpen(true)}
+                            className="
+    p-1.5 rounded-md
+    hover:bg-gray-600/40
+    transition-colors
+  "
+                          >
+                            <Info className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
                           Info
-                        </span>
-                      </Button>
-                      {/* <Button
-                        variant="ghost"
-                        size="sm"
-                        // onClick={() => setShareOracleDialogOpen(true)}
-                        className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                      >
-                        <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
-                          Share
-                        </span>
-                      </Button> */}
+                        </TooltipContent>
+                      </Tooltip>
+                      {messages.length !== 0 &&
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <button
+                              onClick={() => onShare(true)}
+                              className="
+    p-1.5 rounded-md
+    hover:bg-gray-600/40
+    transition-colors
+  "
+                            >
+                              <Share className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Share
+                          </TooltipContent>
+                        </Tooltip>
+                      }
                     </div>
                   </CardContent>
                 </Card>
@@ -821,7 +766,7 @@ export function ChatPage({
                         {currentTab === tab.id && (
                           <motion.div
                             layoutId="underline"
-                            className="absolute bottom-0 h-[2px] dark:bg-white bg-black w-full"
+                            className="absolute bottom-0 h-0.5 dark:bg-white bg-black w-full"
                             transition={{
                               type: 'spring',
                               stiffness: 300,
@@ -851,40 +796,83 @@ export function ChatPage({
                       }}
                     >
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 flex-shrink-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
                           <ImageWithFallback
-                            src={aiAgent.image}
-                            alt={aiAgent.name}
+                            src={currentOracle.image}
+                            alt={currentOracle.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-sm sm:text-base md:text-lg truncate">
-                            {aiAgent.name}
-                          </CardTitle>
+                          <Select
+                            value={currentOracle.id}
+                            onValueChange={(value: string) => {
+                              const selected = availableOracles.find((o) => o.id === value);
+                              if (selected) setCurrentOracle(selected);
+                            }}
+                          >
+                            <SelectTrigger className="w-full h-auto p-0 text-sm sm:text-base md:text-lg border-none bg-transparent hover:bg-accent/50 focus:ring-0 shadow-none font-semibold justify-start">
+                              <SelectValue>
+                                {currentOracle.name}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableOracles.map((oracle) => (
+                                <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                                  <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                                    <ImageWithFallback
+                                      src={oracle.image}
+                                      alt={oracle.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <span>
+                                    {oracle.name}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <CardDescription className="text-xs">
-                            {aiAgent.type}
+                            {currentOracle.type}
                           </CardDescription>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setInfoDialogOpen(true)}
-                          className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700! h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                        >
-                          <Info className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </Button>
-                        {/* <Button
-                          variant="ghost"
-                          size="sm"
-                          // onClick={() => setShareOracleDialogOpen(true)}
-                          className="text-white hover:text-white flex-shrink-0 bg-blue-600 hover:bg-blue-700 h-8 sm:h-9 px-2 sm:px-3 cursor-pointer"
-                        >
-                          <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="ml-1.5 hidden sm:inline text-xs sm:text-sm">
-                            Share
-                          </span>
-                        </Button> */}
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <button
+                              onClick={() => setInfoDialogOpen(true)}
+                              className="
+    p-1.5 rounded-md
+    hover:bg-gray-600/40
+    transition-colors
+  "
+                            >
+                              <Info className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Info
+                          </TooltipContent>
+                        </Tooltip>
+                        {messages.length !== 0 &&
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <button
+                                onClick={() => onShare(true)}
+                                className="
+    p-1.5 rounded-md
+    hover:bg-gray-600/40
+    transition-colors
+  "
+                              >
+                                <Share className="w-4 h-4 sm:w-5 sm:h-5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Share
+                            </TooltipContent>
+                          </Tooltip>
+                        }
                       </div>
                     </CardContent>
                   </Card>
@@ -908,9 +896,9 @@ export function ChatPage({
                                 Start a New Conversation
                               </h3>
                               <p className="text-sm text-muted-foreground max-w-md">
-                                Ask {aiAgent.name} anything. Get predictions,
+                                Ask {currentOracle.name} anything. Get predictions,
                                 insights, and expert analysis on{' '}
-                                {aiAgent.type.split(' ')[0]}.
+                                {currentOracle.type.split(' ')[0]}.
                               </p>
                             </div>
                           )}
@@ -946,33 +934,38 @@ export function ChatPage({
                                       )}
                                     </div>
                                   </div>
-                                  <span
-                                    className={`text-xs mt-2 block text-muted-foreground ${message.sender === 'user'
-                                      ? 'text-right max-w-[94vw]'
-                                      : 'text-left'
-                                      }`}
-                                  >
-                                    {formatTime(message.createdAt)}
-                                  </span>
-
-                                  {/* Suggested Questions for assistant messages (only show for the last message and if not loading) */}
-                                  {/* {message.sender === "assistant"
-                              && message.suggestedQuestions && index === messages.length - 1 && !isLoading &&
-                              (
-                              <div className="flex justify-start mt-2 sm:mt-3">
-                                <div className="max-w-[85%] sm:max-w-[75%] flex flex-col gap-1.5 sm:gap-2">
-                                  {message.suggestedQuestions.map((question, qIndex) => (
-                                    <button
-                                      key={qIndex}
-                                      onClick={() => handleSend(question)}
-                                      className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 hover:border-blue-500/60 rounded-full text-foreground hover:text-foreground transition-all backdrop-blur-sm text-left"
+                                  <div className={`text-xs mt-3 text-muted-foreground block ${message.sender === 'user'
+                                    ? 'text-right max-w-[94vw]'
+                                    : 'text-left'
+                                    }`}>
+                                    <span
                                     >
-                                      {question}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )} */}
+                                      {formatTime(message.createdAt)}
+                                    </span>
+                                    {message.sender === 'assistant' &&
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <button
+                                            onClick={() => {
+                                              onShare(false, message)
+                                            }}
+                                            className="
+                            p-1.5 rounded-md mx-2
+                            hover:bg-gray-600/20
+                            transition-colors cursor-pointer
+                          "
+                                          >
+                                            <Share className="w-4 h-3.5"
+                                            />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          Share
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    }
+                                  </div>
+
                                   {message.sender === 'assistant' &&
                                     suggestedQuestions &&
                                     index === messages.length - 1 &&
@@ -1004,13 +997,13 @@ export function ChatPage({
                                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                                     <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
                                       <ImageWithFallback
-                                        src={aiAgent.image}
-                                        alt={aiAgent.name}
+                                        src={currentOracle.image}
+                                        alt={currentOracle.name}
                                         className="w-full h-full object-cover"
                                       />
                                     </div>
                                     <span className="text-xs text-foreground">
-                                      {aiAgent.name} is thinking... ({thinkingTokens} tokens)
+                                      {currentOracle.name} is thinking... ({thinkingTokens} tokens)
                                     </span>
                                   </div>
                                   <div className="flex gap-1">
@@ -1138,7 +1131,7 @@ export function ChatPage({
                               ) : (
                                 <TextareaAutosize
                                   value={input}
-                                  onChange={(e) => setInput(e.target.value)}
+                                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
                                   onKeyDown={handleKeyPress}
                                   className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm
                                   leading-normal mr-9 resize-none"
@@ -1206,7 +1199,7 @@ export function ChatPage({
                         <span>Hot Takes</span>
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
-                        Latest insights from {aiAgent.name}
+                        Latest insights from {currentOracle.name}
                       </p>
                     </CardHeader>
 
@@ -1238,11 +1231,11 @@ export function ChatPage({
                         <span>Markets</span>
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
-                        Latest market from {aiAgent.name}
+                        Latest market from {currentOracle.name}
                       </p>
                     </CardHeader>
 
-                    <MarketList oracleId={aiAgent.id} />
+                    <MarketList oracleId={currentOracle.id} />
                   </Card>
                 </div>
               )}
@@ -1265,11 +1258,11 @@ export function ChatPage({
                     <span>Markets</span>
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
-                    Latest market from {aiAgent.name}
+                    Latest market from {currentOracle.name}
                   </p>
                 </CardHeader>
 
-                <MarketList oracleId={aiAgent.id} />
+                <MarketList oracleId={currentOracle.id} />
               </Card>
 
               {/* Hot Takes Section */}
@@ -1288,7 +1281,7 @@ export function ChatPage({
                     <span>Hot Takes</span>
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
-                    Latest insights from {aiAgent.name}
+                    Latest insights from {currentOracle.name}
                   </p>
                 </CardHeader>
                 <HotTakeChatPageList
@@ -1321,7 +1314,7 @@ export function ChatPage({
               <AlertDialogDescription asChild>
                 <div className="space-y-3">
                   <p className="text-sm">
-                    Sign in required to chat with {aiAgent.name} and get
+                    Sign in required to chat with {currentOracle.name} and get
                     personalized AI predictions!
                   </p>
                   <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
@@ -1386,21 +1379,19 @@ export function ChatPage({
             onOpenChange={setShareDialogOpen}
             question={lastPrediction.question}
             answer={lastPrediction.answer}
-            aiAgentName={aiAgent.name}
-            aiAgentAvatar={aiAgent.image}
-            aiAgentEmoji={aiAgent.emoji}
+            aiAgentName={currentOracle.name}
+            aiAgentAvatar={currentOracle.image}
           />
         )}
 
-        {/* Share AI Agent Dialog */}
-        <ShareAIAgentDialog
-          open={shareAIAgentDialogOpen}
-          onOpenChange={setShareAIAgentDialogOpen}
-          aiAgentName={aiAgent.name}
-          aiAgentAvatar={aiAgent.avatar}
-          aiAgentTitle={aiAgent.title}
-          aiAgentId={aiAgent.id}
-        />
+        {/* Share Chat Dialog */}
+        {sharePayload &&
+          <ShareChatDialog
+            open={shareChatDialogOpen}
+            onOpenChange={setShareChatDialogOpen}
+            sharePayload={sharePayload}
+          />
+        }
 
         {/* Disclaimer Dialog */}
         <DisclaimerDialog
@@ -1411,7 +1402,7 @@ export function ChatPage({
         <InfoAgentDialog
           open={infoDialogOpen}
           onOpenChange={setInfoDialogOpen}
-          aiAgent={aiAgent}
+          aiAgent={currentOracle}
           handleLike={handleLike}
           handleRating={handleRating}
           hasLiked={hasLiked}
@@ -1419,6 +1410,6 @@ export function ChatPage({
           localLikes={localLikes}
         />
       </div>
-    </div>
+    </div >
   );
 }

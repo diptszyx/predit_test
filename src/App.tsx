@@ -20,7 +20,11 @@ import { useXP } from './lib/useXP';
 import { AIAgentCard } from './components/AIAgentCard';
 import { ArticleDetailPage } from './components/ArticleDetailPage';
 import { ChatPage } from './components/ChatPage';
+import DflowChatPage from './components/dflow/DflowChatPage';
+import { MarketDetailPage } from './components/dflow/MarketDetailPage';
+import { MarketListPage } from './components/dflow/MarketListPage';
 import InviteCodeGuard from './components/guard/InviteCodeGuard';
+import { RequirePhantomConnected } from './components/guard/WalletConnectGuard';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
@@ -41,7 +45,10 @@ import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
+import ShareChatPage from './pages/ShareChatPage';
 import XpHistoryPage from './pages/XpHistoryPage';
+import WalletAdapter from './providers/walletProvider';
+import { chatService } from './services/chat.service';
 import { inviteCodeService } from './services/invite-code.service';
 import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
@@ -53,7 +60,9 @@ export default function App() {
   return (
     <HelmetProvider>
       <BrowserRouter>
-        <AppContent />
+        <WalletAdapter>
+          <AppContent />
+        </WalletAdapter>
       </BrowserRouter>
     </HelmetProvider>
   );
@@ -124,6 +133,7 @@ function AppContent() {
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
     if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
     if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/)) return 'polymarket-chat'
+    if (path === '/kalshi') return 'kalshi'
     return 'home';
   };
 
@@ -138,11 +148,15 @@ function AppContent() {
       case 'chat':
         // Navigate to chat with oracle if one is selected
         if (selectedAIAgent) {
-          navigate(`/chat/${selectedAIAgent.id}`);
+          chatService.createChat().then((newChat) => {
+            if (newChat) navigate(`/chat/${newChat.id}`);
+          });
         } else {
           const savedOracleId = localStorage.getItem('deor-currentOracle');
           if (savedOracleId) {
-            navigate(`/chat/${savedOracleId}`);
+            chatService.createChat().then((newChat) => {
+              if (newChat) navigate(`/chat/${newChat.id}`);
+            });
           } else {
             navigate('/chat');
           }
@@ -181,6 +195,9 @@ function AppContent() {
       case 'polymarket-chat':
         navigate('/polymarket/chat');
         break;
+      case 'kalshi':
+        navigate('/kalshi')
+        break
       default:
         navigate('/');
     }
@@ -418,6 +435,7 @@ function AppContent() {
     isAdmin: checkIsAdmin(user),
   };
 
+
   const commonDialogProps = (
     <>
       <WalletConnectDialog
@@ -514,18 +532,22 @@ function AppContent() {
                   if (prompt) {
                     setInitialPrompt(prompt);
                   }
-                  if (!selectedAIAgent && listOracles.length > 0) {
-                    localStorage.setItem(
-                      'deor-currentOracle',
-                      listOracles[0].id
-                    );
-                    setSelectedAIAgent(listOracles[0]);
-                    navigate(`/chat/${listOracles[0].id}`);
-                  } else if (selectedAIAgent) {
-                    navigate(`/chat/${selectedAIAgent.id}`);
-                  } else {
-                    navigate('/chat');
-                  }
+                  const handlePredictionNav = async () => {
+                    let targetAgent = selectedAIAgent;
+                    if (!targetAgent && listOracles.length > 0) {
+                      targetAgent = listOracles[0];
+                      localStorage.setItem('deor-currentOracle', listOracles[0].id);
+                      setSelectedAIAgent(listOracles[0]);
+                    }
+
+                    if (targetAgent) {
+                      const newChat = await chatService.createChat();
+                      if (newChat) navigate(`/chat/${newChat.id}`);
+                    } else {
+                      navigate('/chat');
+                    }
+                  };
+                  handlePredictionNav();
                 }}
                 user={user}
               />
@@ -582,13 +604,14 @@ function AppContent() {
                       <AIAgentCard
                         key={aiAgent.id}
                         aiAgent={aiAgent}
-                        onClick={() => {
+                        onClick={async () => {
                           localStorage.setItem(
                             'deor-currentOracle',
                             aiAgent.id
                           );
                           setSelectedAIAgent(aiAgent);
-                          navigate(`/chat/${aiAgent.id}`);
+                          const newChat = await chatService.createChat();
+                          if (newChat) navigate(`/chat/${newChat.id}`);
                         }}
                       />
                     ))}
@@ -603,7 +626,7 @@ function AppContent() {
 
       {/* Chat Page - With Oracle */}
       <Route
-        path="/chat/:oracleId"
+        path="/chat/:chatId"
         element={
           <ChatWithOracleWrapper
             selectedAIAgent={selectedAIAgent}
@@ -975,7 +998,7 @@ function AppContent() {
 
       {/* Market Detail Page */}
       <Route
-        path="/market/:marketId"
+        path="/market/:marketId/chat/:chatID"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
@@ -1060,7 +1083,7 @@ function AppContent() {
         }
       />
 
-      {/* Polymarket Detail Page */}
+      {/* Polymarket Chat Page */}
       <Route
         path="/polymarket/:marketId/chat/:chatId"
         element={
@@ -1069,7 +1092,7 @@ function AppContent() {
               <title>Polymarket Chat - Polymarket</title>
               <meta
                 name="description"
-                content="View market details and place trades on Polymarket."
+                content="Join the discussion for this crypto market. Share insights, track real-time probabilities, and follow market updates in one place."
               />
               <link
                 rel="canonical"
@@ -1182,7 +1205,127 @@ function AppContent() {
           </div>
         }
       />
-    </Routes>
+
+      {/* Share chat page */}
+      <Route
+        path="/share/*"
+        element={
+          <div className="flex h-dvh bg-background overflow-hidden">
+            <Helmet>
+              <title>Shared Chat | Predit Market AI</title>
+
+              <meta
+                name="description"
+                content="View a shared chat from Predit Market. Open the link to see the conversation content."
+              />
+
+              <meta
+                name="keywords"
+                content="shared chat, share link, conversation, ai chat, predit market"
+              />
+
+              {/* Open Graph */}
+              <meta property="og:type" content="website" />
+              <meta property="og:title" content={'Shared Chat | Predit Market AI'} />
+              <meta property="og:description" content={'View a shared chat from Predit Market. Open the link to see the conversation content.'} />
+
+              {/* Twitter */}
+              <meta name="twitter:card" content="summary" />
+              <meta name="twitter:title" content={'Shared Chat | Predit Market AI'} />
+              <meta name="twitter:description" content={'View a shared chat from Predit Market. Open the link to see the conversation content.'} />
+            </Helmet>
+
+            <Sidebar {...commonSidebarProps} />
+            <div className="flex-1 overflow-y-auto">
+              <main className="container mx-auto">
+                <ShareChatPage />
+              </main>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      {/* kalshi Market Pages */}
+      <Route
+        path="/kalshi"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Kalshi Market - Real-World Prediction Markets</title>
+              <meta
+                name="description"
+                content="Trade crypto prediction markets on real-world outcomes. Market prices reflect real-time probabilities for Bitcoin, Ethereum and key crypto events."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/kalshi`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <RequirePhantomConnected>
+                <div className="flex-1 overflow-y-auto">
+                  <MarketListPage />
+                </div>
+              </RequirePhantomConnected>
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      <Route
+        path="/kalshi/:id"
+        element={
+          < div className="flex h-screen bg-background overflow-hidden" >
+            <Helmet>
+              <title>Kalshi Market Detail - Real-World Prediction Markets</title>
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <RequirePhantomConnected>
+                <div className="flex-1 overflow-y-auto">
+                  <MarketDetailPage />
+                </div>
+              </RequirePhantomConnected>
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </ div>
+        }
+      />
+
+      {/* Kalshi Chat Page */}
+      <Route
+        path="/kalshi/:marketId/chat/:chatId"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Kalshi Chat - Kalshi Market</title>
+              <meta
+                name="description"
+                content="Join the discussion for this crypto market. Share insights, track real-time probabilities, and follow market updates in one place."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/kalshi/chat`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              <RequirePhantomConnected>
+                {user && (
+                  <div className="flex-1 overflow-y-auto">
+                    <DflowChatPage />
+                  </div>
+                )}
+              </RequirePhantomConnected>
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+    </Routes >
   );
 }
 
@@ -1223,7 +1366,14 @@ function ArticleDetailWrapper({
           onBack={() => {
             if (previousPage === 'chat' && selectedAIAgent) {
               setPreviousPage(null);
-              navigate(`/chat/${selectedAIAgent}`);
+              // Create chat if returning to chat context
+              if (selectedAIAgent.id) {
+                chatService.createChat().then(newChat => {
+                  if (newChat) navigate(`/chat/${newChat.id}`);
+                });
+              } else {
+                navigate('/chat');
+              }
             } else if (previousPage === 'hotTakes') {
               setPreviousPage(null);
               navigate('/hot-takes');
@@ -1232,12 +1382,10 @@ function ArticleDetailWrapper({
               navigate('/');
             } else {
               setPreviousPage(null);
-              navigate(-1);
+              navigate(-1 as any);
             }
             setSelectedArticle(null);
           }}
-          aiAgentName={selectedAIAgent?.name}
-          aiAgentSpecialty={selectedAIAgent?.type}
           user={user}
           darkMode={darkMode}
           onToggleDarkMode={() => setDarkMode(!darkMode)}
@@ -1275,7 +1423,9 @@ function ArticleDetailWrapper({
               localStorage.setItem('deor-currentOracle', aiAgent.id);
               setArticleContext(selectedArticle);
               setPreviousPage('articleDetail');
-              navigate(`/chat/${aiAgent.id}`);
+              chatService.createChat().then(newChat => {
+                if (newChat) navigate(`/chat/${newChat.id}`);
+              });
             }
           }}
         />
@@ -1315,24 +1465,16 @@ function ChatWithOracleWrapper({
   handleReloadOracle,
 }: any) {
   const navigate = useNavigate();
-  const { oracleId } = useParams();
+  const { chatId } = useParams();
 
-  // Load oracle from URL param if not already selected
   useEffect(() => {
-    if (oracleId && listOracles.length > 0) {
-      const oracle = listOracles.find((o: OracleEntity) => o.id === oracleId);
-      if (oracle && (!selectedAIAgent || selectedAIAgent.id !== oracleId)) {
-        setSelectedAIAgent(oracle);
-        localStorage.setItem('deor-currentOracle', oracleId);
-      } else if (!oracle) {
-        // Oracle not found, redirect to chat selection
-        navigate('/chat');
-      }
+    if (listOracles.length > 0 && !selectedAIAgent) {
+      setSelectedAIAgent(listOracles[0])
     }
-  }, [oracleId, listOracles, selectedAIAgent]);
+  }, [listOracles, selectedAIAgent])
 
   if (!selectedAIAgent) {
-    return null; // Wait for oracle to load
+    return null;
   }
 
   return (
@@ -1360,7 +1502,7 @@ function ChatWithOracleWrapper({
         />
         <link
           rel="canonical"
-          href={`${window.location.origin}/chat/${oracleId}`}
+          href={`${window.location.origin}/chat/${chatId}`}
         />
       </Helmet>
       <Sidebar {...commonSidebarProps} />

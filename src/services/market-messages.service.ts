@@ -1,5 +1,16 @@
 import apiClient, { AUTH_TOKEN_STORAGE_KEY } from "../lib/axios";
 import { StreamCallbacks } from "./message.service";
+import { OracleEntity } from "./oracles.service";
+
+export type MarketMessageResponse = {
+  data: MarketMessage[];
+  meta: {
+    hasMore: boolean;
+    lastMessageId: string;
+    limit: number;
+    total: number;
+  };
+};
 
 export type MarketMessage = {
   id: string;
@@ -8,20 +19,46 @@ export type MarketMessage = {
   userId?: string;
   marketId?: string;
   createdAt: string;
+  oracleId?: string;
+  oracle?: OracleEntity;
+};
+
+export type CreatePreditMarketChatResponse = {
+  id: string;
+  userId: string;
+  marketId: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export const getMarketMessages = async (marketId: string) => {
-  const response = await apiClient.get<MarketMessage[]>("/market-messages", {
-    params: { marketId },
-  });
+  const response = await apiClient.get<MarketMessageResponse>(
+    "/market-messages",
+    {
+      params: { marketId },
+    },
+  );
+
+  return response.data;
+};
+
+export const createPreditMarketChat = async (id: string) => {
+  const response = await apiClient.post<CreatePreditMarketChatResponse>(
+    "/chats",
+    {
+      marketId: id,
+    },
+  );
 
   return response.data;
 };
 
 export const sendMarketMessageStream = async (
-  message: string,
   marketId: string,
-  callbacks: StreamCallbacks
+  message: string,
+  chatId: string,
+  callbacks: StreamCallbacks,
+  oracleId?: string,
 ) => {
   try {
     const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
@@ -34,10 +71,12 @@ export const sendMarketMessageStream = async (
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          marketId,
           content: message,
-          marketId: marketId,
+          chatId: chatId,
+          oracleId,
         }),
-      }
+      },
     );
 
     if (!response.ok) {

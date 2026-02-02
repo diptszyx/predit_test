@@ -1,26 +1,57 @@
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import clsx from 'clsx';
-import { ArrowLeft, ArrowRight, Crown, Info, Loader2, MessageSquare, Share, ShoppingCart } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CircleDollarSign,
+  Crown,
+  Loader2,
+  MessageSquare,
+  Share,
+  TriangleAlert,
+} from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'sonner';
-import { generateSuggestedQuestions, MAX_PREDICTIONS_PER_DAY } from '../../constants/prediction';
+import {
+  generateSuggestedQuestions,
+  MAX_PREDICTIONS_PER_DAY,
+} from '../../constants/prediction';
+import { useMarketDetail } from '../../hooks/dflow/useMarketDetail';
+import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
 import { formatTime } from '../../lib/date';
-import { getMarketMessages, MarketMessage, sendMarketMessageStream } from '../../services/market-messages.service';
-import { getMarketById, Market } from '../../services/market.service';
-import { ChatMessage } from '../../services/message.service';
+import { chatService } from '../../services/chat.service';
+import {
+  DflowDataEntity,
+  DflowMarket
+} from '../../services/dflow.service';
+import { ChatMessage, messageService } from '../../services/message.service';
 import { OracleEntity, oraclesServices } from '../../services/oracles.service';
-import { createShareMarketConversationLink, createShareMarketMessageLink } from '../../services/share-message.service';
+import {
+  createSharedMessageLink,
+  createSharePolymarketConversationLink,
+} from '../../services/share-message.service';
 import useAuthStore from '../../store/auth.store';
-import Markdown from '../chat/Markdown';
-import DailyLimitReachDialog from '../dialog/DailyLimitReachDialog';
 import { DisclaimerDialog } from '../DisclaimerDialog';
-import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { ShareChatDialog, SharePayload } from '../ShareChatDialog';
 import { SubscriptionManagementDialog } from '../SubscriptionManagementDialog';
+import Markdown from '../chat/Markdown';
+import DailyLimitReachDialog from '../dialog/DailyLimitReachDialog';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
 import {
   Select,
@@ -31,177 +62,112 @@ import {
 } from '../ui/select';
 import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import MarketInfoModal from './MarketInfoModal';
-import MarketList from './MarketList';
-import { MarketModal } from './MarketModal';
+import Usdc from '../wallet/icon/Usdc';
+import { safePrice } from './TradeModalDflow';
 
 const tabs = [
   { id: 'chat', label: 'Chat' },
-  { id: 'market', label: 'Market' },
+  { id: 'trade', label: 'Trade' },
 ];
 
-export default function MarketDetail() {
+const DflowChatPage = () => {
   const navigate = useNavigate();
-  const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
-  const user = useAuthStore((state) => state.user);
-  const { marketId, chatID } = useParams<{
-    marketId: string;
-    chatID: string;
-  }>();
+  const [isMessaged, setIsMessaged] = useState(true);
 
-  const [market, setMarket] = useState<Market | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedChoice, setSelectedChoice] = useState<'yes' | 'no' | null>(
-    null
-  );
-  const [currentOracle, setCurrentOracle] = useState<OracleEntity>()
-  const [availableOracles, setAvailableOracles] = useState<OracleEntity[]>([])
+  const user = useAuthStore((state) => state.user);
+  const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
+  const [currentOracle, setCurrentOracle] = useState<OracleEntity>();
+  const [availableOracles, setAvailableOracles] = useState<OracleEntity[]>([]);
+
+  const { marketId, chatId } = useParams();
+  const { market, dflowMarket, loading } = useMarketDetail(marketId || '');
+
   const [currentTab, setCurrentTab] = useState<string>('chat');
-  const [messages, setMessages] = useState<MarketMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [userMessageCount, setUserMessageCount] = useState(0);
 
   const [disclaimerDialogOpen, setDisclaimerDialogOpen] = useState(false);
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
   const [limitReachedDialogOpen, setLimitReachedDialogOpen] = useState(false);
-  const [marketInfoOpen, setMarketInfoOpen] = useState(false)
 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [thinkingTokens, setThinkingTokens] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>();
 
   const [shareChatDialogOpen, setShareChatDialogOpen] = useState(false);
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null);
-
-  const [isMessaged, setIsMessaged] = useState(true);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, marketId]);
+  }, [messages]);
 
   useEffect(() => {
-    if (marketId) {
-      fetchMarket();
-    }
-  }, [marketId]);
-
-  useEffect(() => {
-    if (chatID) {
-      fetchMessages()
-    }
-  }, [chatID]);
-
-  useEffect(() => {
-    if (market
-      && market.status === 'open'
-      && !isMessaged) {
+    if (market && !isMessaged) {
       setIsMessaged(true);
-      setInput(market.question)
+      setInput(market.title);
       setTimeout(() => {
-        handleSend(market.question)
-      }, 1000)
+        handleSend(market.title);
+      }, 1000);
     }
-  }, [market, isMessaged])
+  }, [market, isMessaged]);
 
-  const fetchMarket = async () => {
-    if (!marketId) return;
+  useEffect(() => {
+    if (!marketId || !chatId) return;
 
-    try {
-      const data = await getMarketById(marketId);
-      setMarket(data);
-
-      const oracleList = await oraclesServices.getAllOracles();
-      if (oracleList && oracleList.data) {
-        setAvailableOracles(oracleList.data);
-        if (!currentOracle) {
-          setCurrentOracle(data.oracle);
-          setSuggestedQuestions(generateSuggestedQuestions(data.oracle))
-        }
-      } else {
-        setCurrentOracle(data.oracle);
-        setSuggestedQuestions(generateSuggestedQuestions(data.oracle))
-      }
-
-    } catch (err) {
-      console.error(err);
-      setError('Failed to load market details.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchMessages();
+  }, [marketId, chatId]);
 
   const fetchMessages = async () => {
-    if (!chatID) return
-
     try {
-      const { data } = await getMarketMessages(marketId)
-      if (data && data.length > 0) {
-        setMessages(data.reverse())
-        if (data[0]?.oracle) {
-          setCurrentOracle(data[0].oracle)
+      const oracleList = await oraclesServices.getAllOracles();
+      if (!oracleList || !oracleList.data) return;
+
+      setAvailableOracles(oracleList.data);
+
+      if (!currentOracle) {
+        setCurrentOracle(oracleList.data[0]);
+        setSuggestedQuestions(generateSuggestedQuestions(oracleList.data[0]));
+      }
+
+      if (chatId) {
+        const data = await chatService.getMessages(chatId);
+        if (data && data.length > 0) {
+          setMessages(data.reverse());
+          setCurrentOracle(data[data.length - 1].oracle);
+          setIsMessaged(true);
+        } else {
+          setIsMessaged(false);
         }
-        setIsMessaged(true);
-      } else {
-        setIsMessaged(false);
       }
     } catch (error) {
-      console.error(error);
-    }
-  }
-
-  const handleBetClick = (choice: 'yes' | 'no') => {
-    if (!user) {
-      toast.error('Please log in to place a bet');
-      return;
-    }
-
-    if (market?.isBetted) {
-      toast.error('You have already placed a bet on this market');
-      return;
-    }
-
-    setSelectedChoice(choice);
-    setModalOpen(true);
-  };
-
-  const handleBetPlaced = async () => {
-    if (!marketId) return;
-
-    try {
-      const data = await getMarketById(marketId);
-      setMarket(data);
-    } catch (err) {
-      console.error(err);
+      console.error('Error fetching messages:', error);
     }
   };
 
   const handleBack = () => {
-    navigate('/market');
+    navigate('/kalshi');
   };
 
-  const bufferRef = useRef("");
+  const bufferRef = useRef('');
   const flushTimer = useRef<number | null>(null);
 
   const flushBuffer = (assistantMessageId: string) => {
     if (!bufferRef.current) return;
 
     const chunk = bufferRef.current;
-    bufferRef.current = "";
+    bufferRef.current = '';
 
-    setMessages(prev =>
-      prev.map(msg =>
+    setMessages((prev) =>
+      prev.map((msg) =>
         msg.id === assistantMessageId
           ? { ...msg, content: msg.content + chunk }
-          : msg
-      )
+          : msg,
+      ),
     );
   };
 
@@ -220,6 +186,7 @@ export default function MarketDetail() {
     const trimmedInput = messageToSend || input.trim();
     if (!user || !trimmedInput || isLoading) return;
 
+    // Increment user message count
     const newMessageCount = userMessageCount + 1;
     setUserMessageCount(newMessageCount);
 
@@ -233,6 +200,7 @@ export default function MarketDetail() {
       return;
     }
 
+    // Increment daily prediction count if this is a prediction
     if (!user.isPro) {
       const restTodayPredictionCount = (user.restTodayPredictionCount || 0) - 1;
 
@@ -261,48 +229,55 @@ export default function MarketDetail() {
     let messageCreated = false;
 
     try {
-      if (!chatID) throw new Error("Chat ID is missing");
+      await messageService.sendMessageStream(
+        trimmedInput,
+        currentOracle.id,
+        {
+          onMetadata: (metadata) => {
+            // Handle metadata (userMessage and xpReward)
+            if (metadata.xpReward.milestone) {
+              toast.success(
+                `🎯 Prediction Milestone Reached! +${metadata.xpReward.milestone?.xp} XP earned.`,
+              );
+            }
+          },
+          onSession: (id) => { },
+          onThinking: (tokens) => {
+            setThinkingTokens(tokens);
+          },
+          onContent: (content) => {
+            setThinkingTokens(0);
 
-      await sendMarketMessageStream(marketId, trimmedInput, chatID, {
-        onMetadata: (metadata) => {
-          if (metadata.xpReward.milestone) {
-            toast.success(
-              `🎯 Prediction Milestone Reached! +${metadata.xpReward.milestone?.xp} XP earned.`
-            );
-          }
-        },
-        onSession: (id) => { },
-        onThinking: (tokens) => {
-          setThinkingTokens(tokens);
-        },
-        onContent: (content) => {
-          setThinkingTokens(0);
+            if (!messageCreated) {
+              messageCreated = true;
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: assistantMessageId,
+                  sender: 'assistant',
+                  content: '',
+                  createdAt: new Date().toISOString(),
+                },
+              ]);
+            }
 
-          if (!messageCreated) {
-            messageCreated = true;
-            setMessages(prev => [
-              ...prev,
-              { id: assistantMessageId, sender: 'assistant', content: '', createdAt: new Date().toISOString() }
-            ]);
-          }
-
-          onStreamContent(content, assistantMessageId);
+            onStreamContent(content, assistantMessageId);
+          },
+          onComplete: (data) => { },
+          onDone: () => {
+            setIsLoading(false);
+            setThinkingTokens(0);
+            fetchUser();
+          },
+          onError: (error) => {
+            console.error('Error streaming message:', error);
+            toast.error('Failed to send message. Please try again.');
+            setIsLoading(false);
+            setThinkingTokens(0);
+          },
         },
-        onComplete: (data) => {
-
-        },
-        onDone: () => {
-          setIsLoading(false);
-          setThinkingTokens(0);
-          fetchUser();
-        },
-        onError: (error) => {
-          console.error('Error streaming message:', error);
-          toast.error('Failed to send message. Please try again.');
-          setIsLoading(false);
-          setThinkingTokens(0);
-        },
-      }, currentOracle?.id);
+        chatId,
+      );
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
@@ -318,38 +293,40 @@ export default function MarketDetail() {
     }
   };
 
-  const onShare = async (isFullChat: boolean, message?: MarketMessage) => {
+  const onShare = async (isFullChat: boolean, message?: ChatMessage) => {
     try {
       if (isFullChat && messages && user) {
-        const data = await createShareMarketConversationLink(user.id, marketId)
+        const data = await createSharePolymarketConversationLink(chatId);
         setSharePayload({
           mode: 'conversation',
           question: messages[0].content,
           answer: messages[1].content,
-          sharedLink: data.shareUrl
+          sharedLink: data.shareUrl,
         });
       }
       if (message) {
-        const data = await createShareMarketMessageLink(message.id)
+        const data = await createSharedMessageLink(message.id);
         if (data) {
           setSharePayload({
             mode: 'reply',
             message: message.content,
-            sharedLink: data.shareUrl
+            sharedLink: data.shareUrl,
           });
         }
       }
       setShareChatDialogOpen(true);
     } catch (error) {
-      toast.error("Something went wrong while creating the share link. Please try again later.")
-      console.log('Failed to shared chat: ', error)
+      toast.error(
+        'Something went wrong while creating the share link. Please try again later.',
+      );
+      console.log('Failed to shared chat: ', error);
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex h-dvh overflow-hidden">
-        <div className='flex-1'>
+        <div className="flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="max-w-4xl mx-auto flex-1">
               <Skeleton className="h-64 md:h-96 w-full rounded-none" />
@@ -370,7 +347,7 @@ export default function MarketDetail() {
                 </div>
               </div>
             </div>
-            <div className='hidden sm:block w-full h-full lg:w-80'>
+            <div className="hidden sm:block w-full h-full lg:w-80">
               <Skeleton className="h-[98vh] w-full rounded-none" />
             </div>
           </div>
@@ -379,15 +356,13 @@ export default function MarketDetail() {
     );
   }
 
-  if (error || !market || !currentOracle) {
+  if (!market || !dflowMarket || !currentOracle) {
     return (
       <div className="min-h-screen bg-background">
         <div className="w-full p-4 lg:p-6 space-y-6">
           <div className="max-w-4xl mx-auto">
             <Card className="p-6">
-              <p className="text-red-500 text-center">
-                {error || 'Market not found'}
-              </p>
+              <p className="text-red-500 text-center">Market not found</p>
             </Card>
           </div>
         </div>
@@ -397,7 +372,7 @@ export default function MarketDetail() {
 
   return (
     <div className="min-h-screen bg-background flex h-dvh overflow-hidden">
-      <div className='flex-1 overflow-y-auto'>
+      <div className="flex-1 overflow-y-auto">
         <div className="w-full h-full">
           <div className="h-full flex flex-col lg:flex-row max-w-7xl m-0 gap-4 w-full">
             {/* Chat Section - Center with max width */}
@@ -418,7 +393,10 @@ export default function MarketDetail() {
                     }}
                   >
                     <div className="flex items-center gap-2 sm:gap-3">
-                      <Button variant="ghost" onClick={handleBack}>
+                      <Button
+                        variant="ghost"
+                        onClick={handleBack}
+                      >
                         <ArrowLeft className="h-4 w-4" />
                       </Button>
                       <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
@@ -432,18 +410,22 @@ export default function MarketDetail() {
                         <Select
                           value={currentOracle.id}
                           onValueChange={(value: string) => {
-                            const selected = availableOracles.find((o) => o.id === value);
+                            const selected = availableOracles.find(
+                              (o) => o.id === value,
+                            );
                             if (selected) setCurrentOracle(selected);
                           }}
                         >
                           <SelectTrigger>
-                            <SelectValue>
-                              {currentOracle.name}
-                            </SelectValue>
+                            <SelectValue>{currentOracle.name}</SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {availableOracles.map((oracle) => (
-                              <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                              <SelectItem
+                                key={oracle.id}
+                                value={oracle.id}
+                                className="flex items-center gap-2"
+                              >
                                 <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
                                   <ImageWithFallback
                                     src={oracle.image}
@@ -451,9 +433,7 @@ export default function MarketDetail() {
                                     className="w-full h-full object-cover"
                                   />
                                 </div>
-                                <span>
-                                  {oracle.name}
-                                </span>
+                                <span>{oracle.name}</span>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -462,25 +442,7 @@ export default function MarketDetail() {
                           {currentOracle.type}
                         </CardDescription>
                       </div>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <button
-                            onClick={() => setMarketInfoOpen(true)}
-
-                            className="
-                            p-1.5 rounded-md
-                            hover:bg-gray-600/40
-                            transition-colors
-                          "
-                          >
-                            <Info className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Info
-                        </TooltipContent>
-                      </Tooltip>
-                      {messages.length !== 0 &&
+                      {messages.length !== 0 && (
                         <Tooltip>
                           <TooltipTrigger>
                             <button
@@ -494,17 +456,15 @@ export default function MarketDetail() {
                               <Share className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            Share
-                          </TooltipContent>
+                          <TooltipContent>Share</TooltipContent>
                         </Tooltip>
-                      }
+                      )}
                     </div>
                   </CardContent>
                 </Card>
                 <Card
                   className={clsx(
-                    'border-border bg-background/80 backdrop-blur-md'
+                    'border-border bg-background/80 backdrop-blur-md',
                   )}
                   style={{
                     borderRadius: '0px',
@@ -524,7 +484,7 @@ export default function MarketDetail() {
                           'relative flex-1 p-2 py-4 sm:p-3 flex items-center justify-center text-base font-medium cursor-pointer transition-opacity',
                           currentTab === tab.id
                             ? 'opacity-100'
-                            : 'opacity-50 hover:opacity-80'
+                            : 'opacity-50 hover:opacity-80',
                         )}
                         onClick={() => setCurrentTab(tab.id)}
                       >
@@ -562,7 +522,10 @@ export default function MarketDetail() {
                       }}
                     >
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <Button variant="ghost" onClick={handleBack}>
+                        <Button
+                          variant="ghost"
+                          onClick={handleBack}
+                        >
                           <ArrowLeft className="h-4 w-4" />
                         </Button>
                         <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-blue-500/30 shrink-0">
@@ -576,18 +539,22 @@ export default function MarketDetail() {
                           <Select
                             value={currentOracle.id}
                             onValueChange={(value: string) => {
-                              const selected = availableOracles.find((o) => o.id === value);
+                              const selected = availableOracles.find(
+                                (o) => o.id === value,
+                              );
                               if (selected) setCurrentOracle(selected);
                             }}
                           >
                             <SelectTrigger className="w-full h-auto p-0 text-sm sm:text-base md:text-lg border-none bg-transparent hover:bg-accent/50 focus:ring-0 shadow-none font-semibold justify-start">
-                              <SelectValue>
-                                {currentOracle.name}
-                              </SelectValue>
+                              <SelectValue>{currentOracle.name}</SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {availableOracles.map((oracle) => (
-                                <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
+                                <SelectItem
+                                  key={oracle.id}
+                                  value={oracle.id}
+                                  className="flex items-center gap-2"
+                                >
                                   <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
                                     <ImageWithFallback
                                       src={oracle.image}
@@ -595,9 +562,7 @@ export default function MarketDetail() {
                                       className="w-full h-full object-cover"
                                     />
                                   </div>
-                                  <span>
-                                    {oracle.name}
-                                  </span>
+                                  <span>{oracle.name}</span>
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -606,25 +571,7 @@ export default function MarketDetail() {
                             {currentOracle.type}
                           </CardDescription>
                         </div>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <button
-                              onClick={() => setMarketInfoOpen(true)}
-
-                              className="
-                            p-1.5 rounded-md
-                            hover:bg-gray-600/40
-                            transition-colors
-                          "
-                            >
-                              <Info className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Info
-                          </TooltipContent>
-                        </Tooltip>
-                        {messages.length !== 0 &&
+                        {messages.length !== 0 && (
                           <Tooltip>
                             <TooltipTrigger>
                               <button
@@ -638,11 +585,9 @@ export default function MarketDetail() {
                                 <Share className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                              Share
-                            </TooltipContent>
+                            <TooltipContent>Share</TooltipContent>
                           </Tooltip>
-                        }
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -664,15 +609,16 @@ export default function MarketDetail() {
                                 Start a New Conversation
                               </h3>
                               <p className="text-sm text-muted-foreground max-w-md">
-                                Ask {currentOracle.name} anything. Get predictions,
-                                insights, and expert analysis on{' '}
+                                Ask {currentOracle.name} anything. Get
+                                predictions, insights, and expert analysis on{' '}
                                 {currentOracle.type.split(' ')[0]}.
                               </p>
                             </div>
                           )}
                           <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
                             {messages.map((message, index) => {
-                              const isLastMessage = index === messages.length - 1;
+                              const isLastMessage =
+                                index === messages.length - 1;
                               return (
                                 <div key={message.id}>
                                   <div
@@ -691,7 +637,9 @@ export default function MarketDetail() {
                                         <div className="text-xs sm:text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs">
                                           <Markdown
                                             text={message.content}
-                                            showCharts={!isLoading || !isLastMessage}
+                                            showCharts={
+                                              !isLoading || !isLastMessage
+                                            }
                                           />
                                         </div>
                                       ) : (
@@ -701,20 +649,19 @@ export default function MarketDetail() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className={`text-xs mt-3 text-muted-foreground block ${message.sender === 'user'
-                                    ? 'text-right max-w-[94vw]'
-                                    : 'text-left'
-                                    }`}>
-                                    <span
-                                    >
-                                      {formatTime(message.createdAt)}
-                                    </span>
-                                    {message.sender === 'assistant' &&
+                                  <div
+                                    className={`text-xs mt-3 text-muted-foreground block ${message.sender === 'user'
+                                      ? 'text-right max-w-[94vw]'
+                                      : 'text-left'
+                                      }`}
+                                  >
+                                    <span>{formatTime(message.createdAt)}</span>
+                                    {message.sender === 'assistant' && (
                                       <Tooltip>
                                         <TooltipTrigger>
                                           <button
                                             onClick={() => {
-                                              onShare(false, message)
+                                              onShare(false, message);
                                             }}
                                             className="
                             p-1.5 rounded-md mx-2
@@ -722,15 +669,12 @@ export default function MarketDetail() {
                             transition-colors cursor-pointer
                           "
                                           >
-                                            <Share className="w-4 h-3.5"
-                                            />
+                                            <Share className="w-4 h-3.5 cursor-pointer" />
                                           </button>
                                         </TooltipTrigger>
-                                        <TooltipContent>
-                                          Share
-                                        </TooltipContent>
+                                        <TooltipContent>Share</TooltipContent>
                                       </Tooltip>
-                                    }
+                                    )}
                                   </div>
                                   {message.sender === 'assistant' &&
                                     suggestedQuestions &&
@@ -749,7 +693,7 @@ export default function MarketDetail() {
                                               >
                                                 {question}
                                               </button>
-                                            )
+                                            ),
                                           )}
                                         </div>
                                       </div>
@@ -769,7 +713,8 @@ export default function MarketDetail() {
                                       />
                                     </div>
                                     <span className="text-xs text-foreground">
-                                      {currentOracle.name} is thinking... ({thinkingTokens} tokens)
+                                      {currentOracle.name} is thinking... (
+                                      {thinkingTokens} tokens)
                                     </span>
                                   </div>
                                   <div className="flex gap-1">
@@ -806,8 +751,9 @@ export default function MarketDetail() {
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                       <MessageSquare className="w-4 h-4" />
                                       <span>
-                                        {user.restTodayPredictionCount}/{MAX_PREDICTIONS_PER_DAY} {' '}
-                                        messages remaining today
+                                        {user.restTodayPredictionCount}/
+                                        {MAX_PREDICTIONS_PER_DAY} messages
+                                        remaining today
                                       </span>
                                     </div>
                                     {user.restTodayPredictionCount <= 2 && (
@@ -827,9 +773,7 @@ export default function MarketDetail() {
                               );
                             })()}
                           <div className="flex gap-1.5 sm:gap-2">
-                            <div
-                              className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-16 cursor-pointer relative"
-                            >
+                            <div className="flex-1 flex items-center gap-2 bg-muted/50 backdrop-blur-md border border-border rounded-full px-6 h-14 sm:h-16 cursor-pointer relative">
                               {/* Input Field */}
                               {!user ? (
                                 <span className="flex-1 text-muted-foreground text-sm">
@@ -838,7 +782,9 @@ export default function MarketDetail() {
                               ) : (
                                 <TextareaAutosize
                                   value={input}
-                                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
+                                  onChange={(
+                                    e: React.ChangeEvent<HTMLTextAreaElement>,
+                                  ) => setInput(e.target.value)}
                                   onKeyDown={handleKeyPress}
                                   className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm
                                     leading-normal mr-9 resize-none"
@@ -892,88 +838,36 @@ export default function MarketDetail() {
                   </div>
                 </>
               )}
-              {currentTab === 'market' && (
+
+              {currentTab === 'trade' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px] h-full">
-                  {/* Market Section */}
-                  <Card
-                    className="border-border h-full"
-                    style={{ borderRadius: 0 }}
-                  >
-                    <CardHeader className="border-b border-border pb-3">
-                      <CardTitle className="flex items-center gap-2 text-base">
-                        <ShoppingCart className="w-4 h-4" />
-                        <span>Markets</span>
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground">
-                        Latest market from {currentOracle.name}
-                      </p>
-                    </CardHeader>
-                    <MarketList oracleId={currentOracle.id} />
-                  </Card>
+                  <TradeSidebar market={market} dflowMarket={dflowMarket} />
                 </div>
               )}
             </div>
 
-            {/* Market */}
+            {/* Trade */}
             <div className="hidden lg:block w-full h-full lg:w-80">
-              <Card
-                className="border-border overflow-hidden mb-3"
-                style={{
-                  height: '100vh',
-                  borderTopLeftRadius: 0,
-                  borderTopRightRadius: 0,
-                  gap: 0,
-                }}
-              >
-                <CardHeader className="border-b border-border pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>Markets</span>
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground">
-                    Latest market from {currentOracle.name}
-                  </p>
-                </CardHeader>
-                <MarketList oracleId={currentOracle.id} />
-              </Card>
+              <TradeSidebar market={market} dflowMarket={dflowMarket} />
             </div>
           </div>
         </div>
       </div>
-
-      {/* Betting Modal */}
-      <MarketModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={market.question}
-        choice={selectedChoice}
-        marketId={marketId}
-        onConfirm={() => setModalOpen(false)}
-        onBetPlaced={handleBetPlaced}
-      />
-
-      <MarketInfoModal
-        open={marketInfoOpen}
-        onOpenChange={setMarketInfoOpen}
-        market={market}
-        handleBetClick={handleBetClick}
-        fetchMarket={fetchMarket}
-      />
-
-      {/* Share Chat Dialog */}
-      {sharePayload &&
-        <ShareChatDialog
-          open={shareChatDialogOpen}
-          onOpenChange={setShareChatDialogOpen}
-          sharePayload={sharePayload}
-        />
-      }
 
       {/* Disclaimer Dialog */}
       <DisclaimerDialog
         open={disclaimerDialogOpen}
         onOpenChange={setDisclaimerDialogOpen}
       />
+
+      {/* Share Chat Dialog */}
+      {sharePayload && (
+        <ShareChatDialog
+          open={shareChatDialogOpen}
+          onOpenChange={setShareChatDialogOpen}
+          sharePayload={sharePayload}
+        />
+      )}
 
       <SubscriptionManagementDialog
         open={subscriptionDialogOpen}
@@ -988,4 +882,362 @@ export default function MarketDetail() {
       />
     </div>
   );
-}
+};
+
+type TradeSidebarProps = {
+  market: DflowDataEntity;
+  dflowMarket: DflowMarket;
+};
+
+const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
+  const user = useAuthStore((state) => state.user);
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
+  const { placeOrder, redeemPositions, isTrading } = useTrade();
+
+  const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>('Yes');
+  const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
+  const [amount, setAmount] = useState('');
+  const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
+  const [balance, setBalance] = useState('0');
+
+  useEffect(() => {
+    if (user) {
+      fetchBalance();
+    }
+  }, [user, publicKey, tradeSide, selectedOutcome, market, buyToken]);
+
+  const fetchBalance = async () => {
+    if (!publicKey || !market) return;
+    try {
+      let mintToCheck = USDC_MINT;
+
+      if (tradeSide === 'BUY') {
+        mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+      } else if (tradeSide === 'SELL') {
+        const dflowAccount =
+          market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        if (dflowAccount) {
+          mintToCheck =
+            selectedOutcome === 'Yes'
+              ? dflowAccount.yesMint
+              : dflowAccount.noMint;
+        }
+      }
+
+      const accounts = await connection.getParsedTokenAccountsByOwner(
+        publicKey,
+        {
+          mint: new PublicKey(mintToCheck),
+        },
+      );
+
+      const bal =
+        accounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      setBalance(bal.toString());
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+      setBalance('0');
+    }
+  };
+  const handleMaxAmount = () => {
+    const max = parseFloat(balance);
+    if (max > 0) setAmount(max.toString());
+  };
+
+  const handleTrade = async () => {
+    if (!market || !amount || parseFloat(amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    if (tradeSide === 'BUY' && parseFloat(amount) < 1) {
+      toast.error('Minimum amount for buying is 1');
+      return;
+    }
+
+    if (!user) {
+      toast.error('Please login to trade');
+      return;
+    }
+
+    try {
+      const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+      let result;
+      if (tradeSide === 'BUY') {
+        const mint =
+          selectedOutcome === 'Yes'
+            ? market.accounts[inputMint].yesMint
+            : market.accounts[inputMint].noMint;
+        result = await placeOrder(
+          tradeSide,
+          mint,
+          parseFloat(amount),
+          market.id,
+          inputMint,
+        );
+      } else {
+        const mint =
+          selectedOutcome === 'Yes'
+            ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+              .yesMint
+            : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
+              .noMint;
+        result = await redeemPositions(mint, parseFloat(amount), market.id);
+      }
+
+      const tx = result.signature;
+      const orbTxUrl = `https://orbmarkets.io/tx/${tx}?tab=summary`;
+      toast.success(
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span>Order successfully placed! TX: {tx.slice(0, 8)}...</span>
+
+          <a
+            href={orbTxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline font-medium text-[#3b82f6]"
+          >
+            Open with Orb
+          </a>
+        </div>,
+        {
+          duration: 6000,
+        },
+      );
+
+      setAmount('');
+      fetchBalance();
+    } catch (err: any) {
+      toast.error(err.message || 'Trade failed');
+    }
+  };
+
+  const buyPrice =
+    selectedOutcome === 'Yes' ? dflowMarket.yesAsk : dflowMarket.noAsk;
+  const sellPrice =
+    selectedOutcome === 'Yes' ? dflowMarket.yesBid : dflowMarket.noBid
+  const isBuyDisabled = buyPrice === null
+  const isSellDisabled = sellPrice === null
+
+  const isConfirmDisabled =
+    isTrading || !user || !amount ||
+    parseFloat(amount) <= 0 ||
+    (tradeSide === 'BUY' && isBuyDisabled) ||
+    (tradeSide === 'SELL' && isSellDisabled)
+
+  return (
+    <div className="space-y-2">
+      <Card
+        style={{
+          borderRadius: '0px',
+          gap: '10px',
+        }}
+      >
+        <CardHeader>
+          <CardTitle className="font-semibold">Trade</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Outcome Selection */}
+          <div className="space-y-2">
+            <Label>Outcome</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={selectedOutcome === 'Yes' ? 'default' : 'outline'}
+                onClick={() => setSelectedOutcome('Yes')}
+                className={
+                  selectedOutcome === 'Yes'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : ''
+                }
+              >
+                YES
+              </Button>
+              <Button
+                variant={selectedOutcome === 'No' ? 'default' : 'outline'}
+                onClick={() => setSelectedOutcome('No')}
+                className={
+                  selectedOutcome === 'No' ? 'bg-red-600 hover:bg-red-700' : ''
+                }
+              >
+                NO
+              </Button>
+            </div>
+          </div>
+
+          {/* Side Selection */}
+          <div className="space-y-2">
+            <Label>Side</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                disabled={isBuyDisabled}
+                variant={tradeSide === 'BUY' ? 'default' : 'outline'}
+                onClick={() => setTradeSide('BUY')}
+                className={
+                  tradeSide === 'BUY' ? 'bg-green-600 hover:bg-green-700' : ''
+                }
+              >
+                BUY
+                <span className="ml-2 text-xs">
+                  ${safePrice(buyPrice)}
+                </span>
+              </Button>
+              <Button
+                disabled={isSellDisabled}
+                variant={tradeSide === 'SELL' ? 'default' : 'outline'}
+                onClick={() => setTradeSide('SELL')}
+                className={
+                  tradeSide === 'SELL' ? 'bg-red-600 hover:bg-red-700' : ''
+                }
+              >
+                SELL
+                <span className="ml-2 text-xs">
+                  ${safePrice(sellPrice)}
+                </span>
+              </Button>
+            </div>
+          </div>
+
+          {tradeSide === 'BUY' && (
+            <div className="space-y-4">
+              <Label>Pay with</Label>
+              <RadioGroup
+                defaultValue="USDC"
+                value={buyToken}
+                onValueChange={(value: any) =>
+                  setBuyToken(value as 'USDC' | 'CASH')
+                }
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="USDC"
+                    id="USDC"
+                  />
+                  <Label htmlFor="USDC">
+                    <Usdc
+                      width={23}
+                      height={23}
+                    />
+                    USDC
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="CASH"
+                    id="CASH"
+                  />
+                  <Label htmlFor="CASH">
+                    <CircleDollarSign />
+                    CASH
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          {/* Amount Input */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>
+                Amount ({tradeSide === 'BUY' ? buyToken : selectedOutcome})
+              </Label>
+              {user && (
+                <div className="text-xs text-muted-foreground">
+                  {tradeSide === 'BUY' ? buyToken : selectedOutcome} Balance:{' '}
+                  {parseFloat(balance).toFixed(2)}
+                </div>
+              )}
+            </div>
+            <Input
+              type="number"
+              placeholder="Enter amount"
+              value={amount}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setAmount(e.target.value)
+              }
+              min="0"
+              step="0.01"
+            />
+            <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
+              {[1, 20, 50].map((v) => {
+                const disabled =
+                  !user ||
+                  Number(amount) >= Number(balance) ||
+                  v > Number(balance);
+
+                return (
+                  <Button
+                    key={v}
+                    disabled={disabled}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className={clsx(
+                      'text-sm transition-all',
+                      disabled
+                        ? 'opacity-40'
+                        : 'hover:opacity-80 hover:text-accent-foreground cursor-pointer',
+                    )}
+                    onClick={() => {
+                      if (!disabled) {
+                        if (!amount) {
+                          setAmount(String(v));
+                        } else {
+                          const newValue = Number(amount) + v;
+                          if (newValue > Number(amount)) handleMaxAmount();
+                          else setAmount(String(newValue));
+                        }
+                      }
+                    }}
+                  >
+                    +${v}
+                  </Button>
+                );
+              })}
+              {user && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleMaxAmount}
+                >
+                  Max
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <Button
+            onClick={handleTrade}
+            disabled={isConfirmDisabled}
+            className={
+              tradeSide === 'BUY'
+                ? 'w-full bg-green-600 hover:bg-green-700'
+                : 'w-full bg-red-600 hover:bg-red-700'
+            }
+          >
+            {isTrading ? 'Processing...' : 'Confirm'}
+          </Button>
+
+          {(dflowMarket?.status === 'active' &&
+            (isSellDisabled || isBuyDisabled)) &&
+            <div className='bg-amber-400/75 p-2 mt-2 text-xs rounded-md flex items-center gap-2'>
+              <TriangleAlert className='w-5 h-5' />
+              <p>
+                This market currently has low liquidity.
+              </p>
+            </div>
+          }
+
+          {!user && (
+            <p className="text-xs text-center text-muted-foreground">
+              Please login to trade
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+export default DflowChatPage;

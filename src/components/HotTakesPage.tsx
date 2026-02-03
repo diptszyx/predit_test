@@ -38,6 +38,7 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
 
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [selected, setSelected] = useState<News | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load articles
   const loadArticles = async (reset = false) => {
@@ -110,15 +111,19 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
       return
     };
 
+    setIsDeleting(true);
     try {
       const res = await newsService.deleteNewsById(selected.id)
       if (res === 204) {
-        loadArticles(true)
+        // Remove the deleted item from the local state
+        setArticles((prev) => prev.filter((article) => article.id !== selected.id))
         toast.success("News deleted successfully")
       }
     } catch (error) {
       console.log("Failed to delete news: ", error)
+      toast.error("Failed to delete news")
     } finally {
+      setIsDeleting(false);
       setOpenDeleteConfirm(false)
       setSelected(null)
     }
@@ -149,8 +154,20 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setOpenDeleteConfirm(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+            <Button
+              variant="outline"
+              onClick={() => setOpenDeleteConfirm(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

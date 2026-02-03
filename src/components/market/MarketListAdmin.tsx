@@ -255,7 +255,8 @@ const MarketItem: React.FC<MarketItemProps> = ({
   const [openConfirmCancel, setOpenConfirmCancel] = useState(false);
   const [openMarketResult, setOpenMarketResult] = useState(false);
   const [openUpdateMarket, setOpenUpdateMarket] = useState(false);
-  const [openDeleteMarket, setOpenDeleteMarket] = useState(false)
+  const [openDeleteMarket, setOpenDeleteMarket] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(
     getTimeRemaining(item.closeAt)
   );
@@ -283,16 +284,19 @@ const MarketItem: React.FC<MarketItemProps> = ({
   };
 
   const handleDeleteMarket = async () => {
+    setIsDeleting(true);
     try {
       const data = await marketAdminServices.deleteMarket(item.id);
       if (data.status === 204) {
         toast.success('Delete market successfully!');
-        setOpenConfirmCancel(false);
         onRefetch(); // Refetch the market list
       }
     } catch (error) {
       toast.error('Cannot delete a market with existing bets')
       console.error('Failed to delete market: ', error);
+    } finally {
+      setIsDeleting(false);
+      setOpenDeleteMarket(false);
     }
   };
 
@@ -416,21 +420,25 @@ const MarketItem: React.FC<MarketItemProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto">
-              Maybe Later
+            <AlertDialogCancel
+              className="w-full sm:w-auto"
+              disabled={isDeleting}
+            >
+              Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteMarket}
+              disabled={isDeleting}
               className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto"
             >
-              Confirm
+              {isDeleting ? "Deleting..." : "Confirm"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <Card
-        className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg"
+        className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg hover:border-blue-500/50 hover:scale-[1.02]"
         onClick={() => onClick(item)}
       >
         <CardContent className="p-2">
@@ -558,7 +566,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
                         e.stopPropagation();
                         setOpenUpdateMarket(true);
                       }}
-                      className="bg-background/white hover:bg-accent/50 p-1 rounded-full"
+                      className="bg-background/white hover:opacity-70 transition-opacity p-1 rounded-full"
                     >
                       <Pen className="w-4 h-4" />
                     </Button>
@@ -573,7 +581,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
                 e.stopPropagation();
                 setOpenDeleteMarket(true);
               }}
-              className="bg-background/white hover:bg-accent/50 p-1 rounded-full ml-auto"
+              className="bg-background/white hover:opacity-70 transition-opacity p-1 rounded-full ml-auto"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -581,7 +589,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
               variant="outline"
               size="sm"
               onClick={handleShareMarket}
-              className="bg-background/50 hover:bg-accent/50 p-1 rounded-full"
+              className="bg-background/50 hover:opacity-70 transition-opacity p-1 rounded-full"
             >
               <Share2 className="w-4 h-4" />
             </Button>

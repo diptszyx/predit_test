@@ -1,5 +1,6 @@
 import { CircleAlert, Pen, Trash } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
 import { Topic, topicServices } from "../../services/topic-admin.service"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog"
 import CreateUpdateTopicModal from "./CreateUpdateTopicModal"
@@ -13,7 +14,7 @@ interface TopicListProps {
 
 interface TopicItemProps {
   item: Topic
-  handleDelete: (id: string) => void
+  handleDelete: (id: string) => Promise<void>
   fetchTopics: () => void
 }
 
@@ -23,9 +24,11 @@ const TopicList = ({ list, fetchTopics }: TopicListProps) => {
       const res = await topicServices.deleteTopic(id)
       if (res === 204) {
         fetchTopics()
+        toast.success("Topic deleted successfully")
       }
     } catch (error) {
       console.log("Failed to delete topic: ", error)
+      toast.error("Failed to delete topic")
     }
   }
   return (
@@ -66,6 +69,17 @@ const TopicList = ({ list, fetchTopics }: TopicListProps) => {
 const TopicItem = ({ item, handleDelete, fetchTopics }: TopicItemProps) => {
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [openUpdate, setOpenUpdate] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const onDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await handleDelete(item.id);
+    } finally {
+      setIsDeleting(false);
+      setOpenDeleteConfirm(false);
+    }
+  };
 
   return (
     <>
@@ -126,14 +140,18 @@ const TopicItem = ({ item, handleDelete, fetchTopics }: TopicItemProps) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto">
+            <AlertDialogCancel
+              className="w-full sm:w-auto"
+              disabled={isDeleting}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => handleDelete(item.id)}
+              onClick={onDelete}
+              disabled={isDeleting}
               className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto"
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

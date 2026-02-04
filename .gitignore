@@ -13,3 +13,21 @@
 /old
 .DS_Store
 .env
+# Android/TWA build files (Bubblewrap generated)
+/android-app/
+/android/
+/.gradle/
+/gradle/
+android.keystore
+*.keystore
+*.apk
+*.aab
+*.apk.idsig
+build.gradle
+gradle.properties
+gradlew
+gradlew.bat
+settings.gradle
+store_icon.png
+manifest-checksum.txt
+file-system.probe

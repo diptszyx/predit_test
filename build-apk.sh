@@ -12,7 +12,7 @@ if [ ! -d "$ANDROID_DIR" ]; then
     [ -z "$PWA_URL" ] && { echo "Error: PWA URL required!"; exit 1; }
     mkdir -p "$ANDROID_DIR"
     cd "$ANDROID_DIR"
-    bubblewrap init --manifest "${PWA_URL%/}/manifest.webmanifest"
+    bubblewrap init --manifest "${PWA_URL%/}/manifest.json"
     cd ..
     echo "IMPORTANT: Edit $ANDROID_DIR/app/build.gradle and add: resConfigs \"en\""
     exit 0

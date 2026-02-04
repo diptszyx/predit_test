@@ -34,6 +34,7 @@ import PolymarketChatPage from './components/polymarket/PolymarketChatPage';
 import PolymarketDetail from './components/polymarket/PolymarketDetail';
 import PolymarketPage from './components/PolymarketPage';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
+import QuestPage from './components/quest/QuestPage';
 import { SettingsPage } from './components/SettingsPage';
 import { SharedPredictionPage } from './components/SharedPredictionPage';
 import { Sidebar } from './components/Sidebar';
@@ -134,6 +135,7 @@ function AppContent() {
     if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
     if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/)) return 'polymarket-chat'
     if (path === '/kalshi') return 'kalshi'
+    if (path === '/quests') return 'quests'
     return 'home';
   };
 
@@ -197,6 +199,9 @@ function AppContent() {
         break;
       case 'kalshi':
         navigate('/kalshi')
+        break
+      case 'quests':
+        navigate('/quests')
         break
       default:
         navigate('/');
@@ -1325,6 +1330,56 @@ function AppContent() {
           </div>
         }
       />
+
+      <Route path='/quests'
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Quest Center – Earn Points & Grow Your Rank | Predit</title>
+
+              <meta
+                name="description"
+                content="Complete social quests to earn points: follow on X, share markets, invite friends, and climb the leaderboard. Turn every action into rewards."
+              />
+
+              {/* Open Graph */}
+              <meta property="og:title" content="Quest Center – Earn Points & Grow Your Rank" />
+              <meta
+                property="og:description"
+                content="Complete quests: follow on X, share markets, invite friends, and earn points. Level up and unlock rewards."
+              />
+              <meta property="og:type" content="website" />
+              <meta
+                property="og:url"
+                content={`${window.location.origin}/quest`}
+              />
+
+              {/* X */}
+              <meta name="twitter:card" content="summary_large_image" />
+              <meta name="twitter:title" content="Quest Center – Earn Points & Grow Your Rank" />
+              <meta
+                name="twitter:description"
+                content="Follow, share, and invite to earn points. Join the quest and climb the leaderboard."
+              />
+
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/quest`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <main className="container mx-auto px-4 py-8">
+                    <QuestPage />
+                  </main>
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        } />
     </Routes >
   );
 }

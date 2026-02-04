@@ -145,7 +145,6 @@ export function ChatPage({
   useEffect(() => {
     setLocalLikes(currentOracle.likes);
     setLocalRating(currentOracle.rating);
-    // setSuggestedQuestions(generateSuggestedQuestions(currentOracle));
   }, [currentOracle]);
 
   useEffect(() => {
@@ -678,7 +677,7 @@ export function ChatPage({
                           <SelectContent>
                             {availableOracles.map((oracle) => (
                               <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                                <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
                                   <ImageWithFallback
                                     src={oracle.image}
                                     alt={oracle.name}
@@ -819,7 +818,7 @@ export function ChatPage({
                             <SelectContent>
                               {availableOracles.map((oracle) => (
                                 <SelectItem key={oracle.id} value={oracle.id} className="flex items-center gap-2">
-                                  <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                                  <div className="w-4 h-4 rounded-full overflow-hidden shrink-0">
                                     <ImageWithFallback
                                       src={oracle.image}
                                       alt={oracle.name}
@@ -995,7 +994,7 @@ export function ChatPage({
                               <div className="flex justify-start">
                                 <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
                                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border flex-shrink-0">
+                                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden border border-border shrink-0">
                                       <ImageWithFallback
                                         src={currentOracle.image}
                                         alt={currentOracle.name}
@@ -1035,11 +1034,6 @@ export function ChatPage({
                           {user?.id &&
                             !user?.isPro &&
                             (() => {
-                              // const today = new Date().toDateString();
-                              // const lastResetDate = user?.dailyMessagesResetDate;
-                              // const dailyUsed = (lastResetDate === today) ? (user?.dailyMessagesUsed || 0) : 0;
-                              // const remaining = 5 - dailyUsed;
-
                               return (
                                 <div className="mb-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
                                   <div className="flex items-center justify-between gap-3">
@@ -1056,7 +1050,7 @@ export function ChatPage({
                                         onClick={() =>
                                           setSubscriptionDialogOpen(true)
                                         }
-                                        className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs flex-shrink-0 cursor-pointer"
+                                        className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 px-3 text-xs shrink-0 cursor-pointer"
                                       >
                                         <Crown className="w-3 h-3 mr-1" />
                                         Upgrade
@@ -1093,7 +1087,7 @@ export function ChatPage({
                                         onClick={() =>
                                           setSubscriptionDialogOpen(true)
                                         }
-                                        className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
+                                        className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-7 sm:h-8 px-2 sm:px-3 shrink-0"
                                       >
                                         <Crown className="w-3 h-3 mr-0.5 sm:mr-1" />
                                         <span className="text-xs">Upgrade</span>
@@ -1146,7 +1140,7 @@ export function ChatPage({
                               <button
                                 onClick={() => handleSend(input)}
                                 disabled={!input.trim() || isLoading || !user}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed group flex-shrink-0 shadow-sm cursor-pointer hover:scale-105"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed group shrink-0 shadow-sm cursor-pointer hover:scale-105"
                                 style={{
                                   width: '40px',
                                   height: '40px',
@@ -1353,16 +1347,8 @@ export function ChatPage({
         <SubscriptionManagementDialog
           open={subscriptionDialogOpen}
           onOpenChange={setSubscriptionDialogOpen}
-          // currentTier={user?.subscriptionTier || "free"}
           isUserPro={user?.isPro}
           onSubscriptionSuccess={() => {
-            // if (updateUser) {
-            //   updateUser({ subscriptionTier: "master" });
-            // }
-            // if (awardXPToUser) {
-            //   awardXPToUser("SUBSCRIBE_MASTER", { showToast: false });
-            // }
-            // toast.success("Welcome to Pro! 🎉");
           }}
         />
 

@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { Skeleton } from '../ui/skeleton';
+import { createPreditMarketChat } from '../../services/market-messages.service';
 
 export interface MarketItemProps {
   item: Market;
@@ -90,8 +91,19 @@ export default function MarketListAdmin({
     }
   }, [onRefetchReady]);
 
-  const handleMarketClick = (item: Market) => {
-    navigate(`/market/${item.id}`);
+  const handleMarketClick = async (item: Market) => {
+    if (!item.chatId) {
+      try {
+        const data = await createPreditMarketChat(item.id)
+        if (data)
+          navigate(`/market/${item.id}/chat/${data.id}`);
+      } catch (error) {
+        console.log('error', error)
+        toast.error('Something wrong with chat market')
+      }
+    } else {
+      navigate(`/market/${item.id}/chat/${item.chatId}`);
+    }
   };
 
   const handleRefetch = () => {
@@ -139,7 +151,7 @@ export default function MarketListAdmin({
       </div>
 
       {/* Error Message */}
-      {error && <p className="text-red-500 text-center py-2">{error}</p>}
+      {/* {error && <p className="text-red-500 text-center py-2">{error}</p>} */}
 
       {/* Markets Grid */}
       <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -323,7 +335,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
 
   const handleShareMarket = async (e: Event) => {
     e.stopPropagation();
-    const marketUrl = `${window.location.origin}/market/${item.id}`;
+    const marketUrl = `${window.location.origin}/market/${item.id}/chat/${item.chatId}`;
 
     try {
       await navigator.clipboard.writeText(marketUrl);

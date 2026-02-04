@@ -5,9 +5,9 @@
     ],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.predit.market.twa",
+      "package_name": "market.predit.twa",
       "sha256_cert_fingerprints": [
-        "YOUR_SHA256_FINGERPRINT_HERE"
+        "F6:10:5E:BE:EB:81:E8:22:66:D9:E0:92:E3:F4:6D:96:EC:30:28:34:FF:7C:C6:5E:3B:D0:2E:09:51:EA:F4:4D"
       ]
     }
   }

@@ -320,7 +320,7 @@ export default function MarketList({
 
             {(loading || !user?.appliedInviteCode) && (
               <>
-                {[1, 2].map((i) => (
+                {[1, 2, 3].map((i) => (
                   <div key={i} className="space-y-2">
                     <Skeleton className="h-20 w-full rounded-lg" />
                     <Skeleton className="h-3 w-full" />
@@ -424,7 +424,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
 
   const handleShareMarket = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const marketUrl = `${window.location.origin}/market/${item.id}`;
+    const marketUrl = `${window.location.origin}/market/${item.id}/chat/${item.chatId}`;
 
     try {
       await navigator.clipboard.writeText(marketUrl);
@@ -608,7 +608,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
 
   const handleShareMarket = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const marketUrl = `${window.location.origin}/market/${item.id}`;
+    const marketUrl = `${window.location.origin}/market/${item.id}/chat/${item.chatId}`;
 
     try {
       await navigator.clipboard.writeText(marketUrl);

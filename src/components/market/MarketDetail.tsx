@@ -141,6 +141,14 @@ export default function MarketDetail() {
   const fetchMessages = async () => {
     if (!chatID) return
 
+    const data = await getMarketById(marketId);
+    setMarket(data);
+
+    if (!currentOracle) {
+      setCurrentOracle(data.oracle);
+      setSuggestedQuestions(generateSuggestedQuestions(data.oracle))
+    }
+
     try {
       const { data } = await getMarketMessages(marketId)
       if (data && data.length > 0) {

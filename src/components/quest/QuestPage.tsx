@@ -119,7 +119,6 @@ ${appUrl}
   const getQuestButton = (quest: Quest): QuestButtonConfig => {
     const isComplete = quest.status === QuestStatus.COMPLETED
     const isVerifyingThis = verifyQuestId === quest.questId
-    console.log('verifyQuestId', verifyQuestId, quest.questId)
     if (isComplete) {
       return {
         label: "Completed",
@@ -131,7 +130,6 @@ ${appUrl}
     switch (quest.questType) {
       case QuestType.CONNECT_X:
         return {
-          // label: "Connect",  
           label: isVerifyingThis ? "Connecting..." : "Connect",
           disabled: isVerifyingThis,
           onClick: () => handleConnectX(quest.questId),

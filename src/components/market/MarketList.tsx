@@ -318,7 +318,7 @@ export default function MarketList({
               <div ref={loadMoreBetHistoryRef} className="h-10" />
             )}
 
-            {(loading || !user?.appliedInviteCode) && (
+            {(loading || (!user?.appliedInviteCode && !isAdmin)) && (
               <>
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="space-y-2">
@@ -691,7 +691,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
                 </Badge>
               )}
             </div>
-            <div className="flex flex-col items-center flex-shrink-0">
+            <div className="flex flex-col items-center shrink-0">
               {/* Semicircle Progress Bar */}
               <div className="relative w-24 h-12 mb-1">
                 <svg

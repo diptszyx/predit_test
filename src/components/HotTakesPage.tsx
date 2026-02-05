@@ -2,7 +2,7 @@ import { CircleAlert, Trash } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { timeAgo } from '../lib/date';
-import { removeBrokenImages } from '../lib/htmlUtil';
+import { sanitizeArticleHtml } from '../lib/htmlUtil';
 import { News, newsService } from '../services/news.service';
 import { Topic, topicServices } from '../services/topic-admin.service';
 import useAuthStore from '../store/auth.store';
@@ -252,7 +252,7 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
                   <div
                     className="text-sm text-muted-foreground line-clamp-2 mb-3"
                     dangerouslySetInnerHTML={{
-                      __html: removeBrokenImages(article.content),
+                      __html: sanitizeArticleHtml(article.content),
                     }}
                   />
 

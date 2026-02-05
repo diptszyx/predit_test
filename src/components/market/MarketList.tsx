@@ -80,9 +80,10 @@ export default function MarketList({
   const loadMoreBetHistoryRef = useRef<HTMLDivElement>(null);
   const [pageMyBetHistory, setPageMyBetHistory] = useState(1);
   const [hasMoreMyBetHistory, setHasMoreMyBetHistory] = useState(false);
+  const isUserBlocked = !isAdmin && !user?.appliedInviteCode
 
   const fetchMarkets = async (pageNum: number, replace = false) => {
-    if (!user?.appliedInviteCode) return;
+    if (isUserBlocked) return;
     try {
       setLoading(true);
       const data = await getListMarket({
@@ -248,6 +249,8 @@ export default function MarketList({
     }
   };
 
+  const shouldShowSkeleton = loading || isUserBlocked
+
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
@@ -318,7 +321,7 @@ export default function MarketList({
               <div ref={loadMoreBetHistoryRef} className="h-10" />
             )}
 
-            {(loading || (!user?.appliedInviteCode && !isAdmin)) && (
+            {shouldShowSkeleton && (
               <>
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="space-y-2">
@@ -355,7 +358,7 @@ export default function MarketList({
           />
 
           {!loading &&
-            user?.appliedInviteCode &&
+            (isAdmin || !!user?.appliedInviteCode) &&
             (markets.length === 0 ||
               (myBetHistory.length === 0 && isBetHistoryPage)) && (
               <p className="text-center text-xs text-muted-foreground py-8">

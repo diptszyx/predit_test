@@ -5,7 +5,9 @@ import { toast } from 'sonner';
 import { arcLength } from '../../constants/ui';
 import { formatDate } from '../../lib/date';
 import { marketAdminServices } from '../../services/market-admin.service';
+import { createPreditMarketChat } from '../../services/market-messages.service';
 import { Market } from '../../services/market.service';
+import { handleShareMarket } from '../../utils/shareMarket.utils';
 import CreateUpdateMarketModal from '../CreateMarket';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import {
@@ -29,7 +31,6 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { Skeleton } from '../ui/skeleton';
-import { createPreditMarketChat } from '../../services/market-messages.service';
 
 export interface MarketItemProps {
   item: Market;
@@ -333,19 +334,6 @@ const MarketItem: React.FC<MarketItemProps> = ({
     onRefetch(); // Refetch the market list
   };
 
-  const handleShareMarket = async (e: Event) => {
-    e.stopPropagation();
-    const marketUrl = `${window.location.origin}/market/${item.id}/chat/${item.chatId}`;
-
-    try {
-      await navigator.clipboard.writeText(marketUrl);
-      toast.success('Market link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link: ', error);
-      toast.error('Failed to copy link');
-    }
-  };
-
   return (
     <>
       {/* Confirm cancel */}
@@ -597,14 +585,17 @@ const MarketItem: React.FC<MarketItemProps> = ({
             >
               <Trash2 className="w-4 h-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShareMarket}
-              className="bg-background/50 hover:opacity-70 transition-opacity p-1 rounded-full"
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
+            {item.chatId &&
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e: React.MouseEvent) =>
+                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)}
+                className="bg-background/50 hover:opacity-70 transition-opacity p-1 rounded-full"
+              >
+                <Share2 className="w-4 h-4" />
+              </Button>
+            }
           </div>
         </CardContent>
       </Card>

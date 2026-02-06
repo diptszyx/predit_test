@@ -14,6 +14,7 @@ import {
 } from '../../services/market.service';
 import useAuthStore from '../../store/auth.store';
 import { checkIsAdmin } from '../../utils/isAdmin';
+import { handleShareMarket } from '../../utils/shareMarket.utils';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -425,19 +426,6 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
     return () => clearInterval(interval);
   }, [item.closeAt, item.status]);
 
-  const handleShareMarket = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const marketUrl = `${window.location.origin}/market/${item.id}/chat/${item.chatId}`;
-
-    try {
-      await navigator.clipboard.writeText(marketUrl);
-      toast.success('Market link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link: ', error);
-      toast.error('Failed to copy link');
-    }
-  };
-
   const handleCardClick = async () => {
     if (!item.chatId) {
       try {
@@ -563,8 +551,13 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
               <span>{formatDate(item.closeAt)}</span>
             </div>
           </div>
-
-          <Share2 className="w-4 h-4" onClick={handleShareMarket} />
+          {
+            (item.chatId && item.status === 'open') ?
+              <Share2 className="w-4 h-4"
+                onClick={(e: React.MouseEvent) =>
+                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)} />
+              : <></>
+          }
         </div>
       </CardContent>
     </Card>
@@ -608,19 +601,6 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
 
     return () => clearInterval(interval);
   }, [item.closeAt]);
-
-  const handleShareMarket = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const marketUrl = `${window.location.origin}/market/${item.id}/chat/${item.chatId}`;
-
-    try {
-      await navigator.clipboard.writeText(marketUrl);
-      toast.success('Market link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link: ', error);
-      toast.error('Failed to copy link');
-    }
-  };
 
   const handleCardClick = async () => {
     if (!item.chatId) {
@@ -791,7 +771,13 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
             </div>
           </div>
 
-          <Share2 className="w-4 h-4" onClick={handleShareMarket} />
+          {
+            (item.chatId && item.status === 'open') ?
+              <Share2 className="w-4 h-4"
+                onClick={(e: React.MouseEvent) =>
+                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)} />
+              : <></>
+          }
         </div>
       </CardContent>
     </Card>

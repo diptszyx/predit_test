@@ -1,5 +1,5 @@
 import { useWallet } from '@solana/wallet-adapter-react';
-import { ChevronLeft, ChevronRight, Clock, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, MessageSquare, Share2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -29,6 +29,8 @@ import {
   Meta,
 } from '../../services/dflow.service';
 import { getUserTokenAccounts } from '../../utils/getTokenAccounts';
+import { handleShareMarket } from '../../utils/shareMarket.utils';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
@@ -48,7 +50,6 @@ import { getPositions } from './../../services/dflow.service';
 import SellingModal from './SellingModal';
 import TradeModalDflow from './TradeModalDflow';
 import { WalletInfoCard } from './WalletInfoCard';
-import { ImageWithFallback } from '../figma/ImageWithFallback';
 
 export const MarketListPage = () => {
   const navigate = useNavigate();
@@ -276,18 +277,28 @@ export const MarketListPage = () => {
                 <span>{formatDate(market.closeTime)}</span>
               </div>
             </div>
-            <Tooltip>
-              <TooltipTrigger>
-                <MessageSquare
-                  className="w-4 h-4 cursor-pointer"
-                  onClick={(e: Event) => {
-                    e.stopPropagation();
-                    handleClickChat(market);
-                  }}
-                />
-              </TooltipTrigger>
-              <TooltipContent>Chat with this market</TooltipContent>
-            </Tooltip>
+            <div className="flex gap-3">
+              <Tooltip>
+                <TooltipTrigger>
+                  <MessageSquare
+                    className="w-4 h-4 cursor-pointer"
+                    onClick={(e: Event) => {
+                      e.stopPropagation();
+                      handleClickChat(market);
+                    }}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Chat with this market</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Share2 className="w-4 h-4 cursor-pointer"
+                    onClick={(e: React.MouseEvent) =>
+                      handleShareMarket(e, `${window.location.origin}/kalshi/${market.id}`)} />
+                </TooltipTrigger>
+                <TooltipContent>Share on X</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </CardContent>
       </Card>

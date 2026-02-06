@@ -96,3 +96,19 @@ export const verifySharePost = async (questId: string, tweetUrl: string) => {
 
   return response.data;
 };
+
+export type ContentShareResponse = {
+  marketId: string;
+  marketQuestion: string;
+  shareContent: string;
+  requiredMention: string;
+  marketUrl: string;
+};
+
+export const getContentShare = async () => {
+  const response = await apiClient.get<ContentShareResponse>(
+    "/quests/share-content",
+  );
+
+  return response.data;
+};

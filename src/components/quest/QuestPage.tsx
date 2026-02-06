@@ -1,4 +1,4 @@
-import { Share2, UserPlus, Zap } from "lucide-react"
+import { Info, Share2, UserPlus, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import useGetContentShare from "../../hooks/quests/getContentShare"
@@ -10,6 +10,7 @@ import { ImageWithFallback } from "../figma/ImageWithFallback"
 import ShareCodesModal from "../inviteCode/ShareCodesModal"
 import { Button } from "../ui/button"
 import { Skeleton } from "../ui/skeleton"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import VerifyShareXModal from "./VerifyShareXModal"
 
 type QuestButtonConfig = {
@@ -27,7 +28,9 @@ const QuestPage = () => {
   const [openShareModal, setOpenShareModal] = useState(false);
   const [openVerifyShareModal, setOpenVerifyShareModal] = useState(false);
   const [verifyQuestId, setVerifyQuestId] = useState<string | null>(null)
-
+  const isConnectedX = quests.some(
+    (q) => q.questType === QuestType.CONNECT_X && q.status === QuestStatus.COMPLETED
+  );
   useEffect(() => {
     const url = new URL(window.location.href)
 
@@ -140,13 +143,14 @@ ${content.shareContent}
       case QuestType.FOLLOW_X:
         return {
           label: isVerifyingThis ? "Verifying..." : "Verify",
-          disabled: isVerifyingThis,
+          disabled: isVerifyingThis || !isConnectedX,
           onClick: () => handleVerifyFollow(quest.questId),
         }
 
       case QuestType.SHARE_POST:
         return {
           label: "Verify",
+          disabled: !isConnectedX,
           onClick: () => {
             setVerifyQuestId(quest.questId)
             setOpenVerifyShareModal(true)
@@ -223,6 +227,7 @@ ${content.shareContent}
                       quest={quest}
                       getQuestButton={getQuestButton}
                       onShareNow={() => setOpenShareModal(true)}
+                      isConnectedX={isConnectedX}
                     />
                   ))}
                 </div>
@@ -255,11 +260,16 @@ type QuestItemProps = {
   quest: Quest;
   getQuestButton: (quest: Quest) => QuestButtonConfig;
   onShareNow?: () => void;
+  isConnectedX: boolean
 };
 
-export function QuestItem({ quest, getQuestButton, onShareNow }: QuestItemProps) {
+export function QuestItem({ quest, getQuestButton, onShareNow, isConnectedX }: QuestItemProps) {
   const isComplete = quest.status === QuestStatus.COMPLETED;
   const { label, onClick, disabled } = getQuestButton(quest);
+
+  const requiresX =
+    quest.questType === QuestType.FOLLOW_X ||
+    quest.questType === QuestType.SHARE_POST;
 
   return (
     <div className="relative rounded-3xl border px-5 py-3">
@@ -276,7 +286,22 @@ export function QuestItem({ quest, getQuestButton, onShareNow }: QuestItemProps)
           </div>
 
           <div className="pl-3">
-            <p className="text-sm font-semibold sm:text-base">{quest.name}</p>
+            <p className="text-sm font-semibold sm:text-base flex items-center gap-3">
+              <span>{quest.name}</span>
+              {requiresX &&
+                quest.status !== QuestStatus.COMPLETED &&
+                !isConnectedX &&
+                (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-5 h-4 cursor-pointer text-neutral-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Connect X first to unlock this quest
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+            </p>
             <p className="text-[10px] sm:text-xs">
               {quest.questType === QuestType.FOLLOW_X ? (
                 <>

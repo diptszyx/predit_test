@@ -10,7 +10,6 @@ import {
 } from '../../services/dflow.service';
 
 export const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-export const CASH_MINT = 'CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH';
 
 export const useTrade = () => {
   const { connection } = useConnection();
@@ -31,9 +30,6 @@ export const useTrade = () => {
 
         try {
           setIsTrading(true);
-
-          // const finalOutputMint = side === 'BUY' ? outcomeMint : CASH_MINT;
-
           // Assuming 6 decimals for both USDC and Outcome tokens
           const atomicAmount = Math.floor(uiAmount * 1_000_000);
 
@@ -115,7 +111,7 @@ export const useTrade = () => {
           const { tradeId, transaction: redeemTransaction } =
             await getDflowRedemptionTransaction({
               inputMint: outcomeMint,
-              outputMint: CASH_MINT,
+              outputMint: USDC_MINT,
               amount: atomicAmount,
               userPublicKey: publicKey.toString(),
               dflowDataId,

@@ -21,13 +21,10 @@ import {
   MAX_PREDICTIONS_PER_DAY,
 } from '../../constants/prediction';
 import { useMarketDetail } from '../../hooks/dflow/useMarketDetail';
-import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
+import { USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
 import { formatTime } from '../../lib/date';
 import { chatService } from '../../services/chat.service';
-import {
-  DflowDataEntity,
-  DflowMarket
-} from '../../services/dflow.service';
+import { DflowDataEntity, DflowMarket } from '../../services/dflow.service';
 import { ChatMessage, messageService } from '../../services/message.service';
 import { OracleEntity, oraclesServices } from '../../services/oracles.service';
 import {
@@ -241,7 +238,7 @@ const DflowChatPage = () => {
               );
             }
           },
-          onSession: (id) => { },
+          onSession: (id) => {},
           onThinking: (tokens) => {
             setThinkingTokens(tokens);
           },
@@ -263,7 +260,7 @@ const DflowChatPage = () => {
 
             onStreamContent(content, assistantMessageId);
           },
-          onComplete: (data) => { },
+          onComplete: (data) => {},
           onDone: () => {
             setIsLoading(false);
             setThinkingTokens(0);
@@ -622,16 +619,18 @@ const DflowChatPage = () => {
                               return (
                                 <div key={message.id}>
                                   <div
-                                    className={`flex ${message.sender === 'user'
-                                      ? 'justify-end max-w-[94vw]'
-                                      : 'justify-start'
-                                      }`}
+                                    className={`flex ${
+                                      message.sender === 'user'
+                                        ? 'justify-end max-w-[94vw]'
+                                        : 'justify-start'
+                                    }`}
                                   >
                                     <div
-                                      className={`max-w-[80%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
-                                        ? 'bg-blue-600 text-white backdrop-blur-sm'
-                                        : `backdrop-blur-md border border-border`
-                                        }`}
+                                      className={`max-w-[80%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
+                                        message.sender === 'user'
+                                          ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                          : `backdrop-blur-md border border-border`
+                                      }`}
                                     >
                                       {message.sender === 'assistant' ? (
                                         <div className="text-xs sm:text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs">
@@ -650,10 +649,11 @@ const DflowChatPage = () => {
                                     </div>
                                   </div>
                                   <div
-                                    className={`text-xs mt-3 text-muted-foreground block ${message.sender === 'user'
-                                      ? 'text-right max-w-[94vw]'
-                                      : 'text-left'
-                                      }`}
+                                    className={`text-xs mt-3 text-muted-foreground block ${
+                                      message.sender === 'user'
+                                        ? 'text-right max-w-[94vw]'
+                                        : 'text-left'
+                                    }`}
                                   >
                                     <span>{formatTime(message.createdAt)}</span>
                                     {message.sender === 'assistant' && (
@@ -841,14 +841,20 @@ const DflowChatPage = () => {
 
               {currentTab === 'trade' && (
                 <div className="lg:hidden w-full space-y-3 pt-[130px] h-full">
-                  <TradeSidebar market={market} dflowMarket={dflowMarket} />
+                  <TradeSidebar
+                    market={market}
+                    dflowMarket={dflowMarket}
+                  />
                 </div>
               )}
             </div>
 
             {/* Trade */}
             <div className="hidden lg:block w-full h-full lg:w-80">
-              <TradeSidebar market={market} dflowMarket={dflowMarket} />
+              <TradeSidebar
+                market={market}
+                dflowMarket={dflowMarket}
+              />
             </div>
           </div>
         </div>
@@ -900,7 +906,7 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
   const [amount, setAmount] = useState('');
   const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
   const [balance, setBalance] = useState('0');
-  const [errorAmount, setErrorAmount] = useState('')
+  const [errorAmount, setErrorAmount] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -914,10 +920,9 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
       let mintToCheck = USDC_MINT;
 
       if (tradeSide === 'BUY') {
-        mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+        mintToCheck = USDC_MINT;
       } else if (tradeSide === 'SELL') {
-        const dflowAccount =
-          market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        const dflowAccount = market.accounts[USDC_MINT];
         if (dflowAccount) {
           mintToCheck =
             selectedOutcome === 'Yes'
@@ -943,18 +948,18 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
   };
   const handleMaxAmount = () => {
     const max = parseFloat(balance);
-    if (max > 0) handleSetAmount(max.toString())
+    if (max > 0) handleSetAmount(max.toString());
   };
 
   const handleSetAmount = (val: string) => {
-    setAmount(val)
+    setAmount(val);
 
     if (Number(val) < 1) {
-      setErrorAmount('Minimum amount for buying is 1')
+      setErrorAmount('Minimum amount for buying is 1');
     } else {
-      setErrorAmount('')
+      setErrorAmount('');
     }
-  }
+  };
 
   const handleTrade = async () => {
     if (!market || !amount || parseFloat(amount) <= 0) {
@@ -973,7 +978,7 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
     }
 
     try {
-      const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+      const inputMint = USDC_MINT;
       let result;
       if (tradeSide === 'BUY') {
         const mint =
@@ -990,10 +995,8 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
       } else {
         const mint =
           selectedOutcome === 'Yes'
-            ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .yesMint
-            : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .noMint;
+            ? market.accounts[USDC_MINT].yesMint
+            : market.accounts[USDC_MINT].noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
@@ -1027,15 +1030,18 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
   const buyPrice =
     selectedOutcome === 'Yes' ? dflowMarket.yesAsk : dflowMarket.noAsk;
   const sellPrice =
-    selectedOutcome === 'Yes' ? dflowMarket.yesBid : dflowMarket.noBid
-  const isBuyDisabled = buyPrice === null
-  const isSellDisabled = sellPrice === null
+    selectedOutcome === 'Yes' ? dflowMarket.yesBid : dflowMarket.noBid;
+  const isBuyDisabled = buyPrice === null;
+  const isSellDisabled = sellPrice === null;
 
   const isConfirmDisabled =
-    isTrading || !user || !amount || (tradeSide === 'BUY' && errorAmount) ||
+    isTrading ||
+    !user ||
+    !amount ||
+    (tradeSide === 'BUY' && errorAmount) ||
     parseFloat(amount) <= 0 ||
     (tradeSide === 'BUY' && isBuyDisabled) ||
-    (tradeSide === 'SELL' && isSellDisabled)
+    (tradeSide === 'SELL' && isSellDisabled);
 
   return (
     <div className="space-y-2">
@@ -1089,9 +1095,7 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
                 }
               >
                 BUY
-                <span className="ml-2 text-xs">
-                  ${safePrice(buyPrice)}
-                </span>
+                <span className="ml-2 text-xs">${safePrice(buyPrice)}</span>
               </Button>
               <Button
                 disabled={isSellDisabled}
@@ -1102,50 +1106,10 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
                 }
               >
                 SELL
-                <span className="ml-2 text-xs">
-                  ${safePrice(sellPrice)}
-                </span>
+                <span className="ml-2 text-xs">${safePrice(sellPrice)}</span>
               </Button>
             </div>
           </div>
-
-          {tradeSide === 'BUY' && (
-            <div className="space-y-4">
-              <Label>Pay with</Label>
-              <RadioGroup
-                defaultValue="USDC"
-                value={buyToken}
-                onValueChange={(value: any) =>
-                  setBuyToken(value as 'USDC' | 'CASH')
-                }
-                className="flex gap-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem
-                    value="USDC"
-                    id="USDC"
-                  />
-                  <Label htmlFor="USDC">
-                    <Usdc
-                      width={23}
-                      height={23}
-                    />
-                    USDC
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem
-                    value="CASH"
-                    id="CASH"
-                  />
-                  <Label htmlFor="CASH">
-                    <CircleDollarSign />
-                    CASH
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
 
           {/* Amount Input */}
           <div className="space-y-2">
@@ -1164,15 +1128,15 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
               type="number"
               placeholder="Enter amount"
               value={amount}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSetAmount(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleSetAmount(e.target.value)
+              }
               min={1}
               max={balance}
               step="0.01"
             />
             {tradeSide === 'BUY' && amount && errorAmount && (
-              <p className="text-sm text-red-500 mt-1">
-                {errorAmount}
-              </p>
+              <p className="text-sm text-red-500 mt-1">{errorAmount}</p>
             )}
             <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
               {[1, 20, 50].map((v) => {
@@ -1235,15 +1199,13 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
             {isTrading ? 'Processing...' : 'Confirm'}
           </Button>
 
-          {(dflowMarket?.status === 'active' &&
-            (isSellDisabled || isBuyDisabled)) &&
-            <div className='bg-amber-400/75 p-2 mt-2 text-xs rounded-md flex items-center gap-2'>
-              <TriangleAlert className='w-5 h-5' />
-              <p>
-                This market currently has low liquidity.
-              </p>
-            </div>
-          }
+          {dflowMarket?.status === 'active' &&
+            (isSellDisabled || isBuyDisabled) && (
+              <div className="bg-amber-400/75 p-2 mt-2 text-xs rounded-md flex items-center gap-2">
+                <TriangleAlert className="w-5 h-5" />
+                <p>This market currently has low liquidity.</p>
+              </div>
+            )}
 
           {!user && (
             <p className="text-xs text-center text-muted-foreground">

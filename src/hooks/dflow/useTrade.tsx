@@ -88,7 +88,7 @@ export const useTrade = () => {
           throw new Error('Timeout waiting for order verification');
         } catch (err: any) {
           console.error(err);
-          throw err.response.data || err;
+          throw err?.response?.data || err;
         } finally {
           setIsTrading(false);
         }

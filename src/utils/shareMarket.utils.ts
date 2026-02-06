@@ -10,7 +10,7 @@ Watch how this plays out 👇
 
 ${marketUrl}
 
-#predit_market #prediction`,
+@preditmarket`,
   );
   window.open(`https://x.com/intent/tweet?text=${text}`, "_blank");
 };

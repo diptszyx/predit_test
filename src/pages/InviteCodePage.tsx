@@ -65,7 +65,7 @@ ${formattedCodes}
 
 ${appUrl}
 
-#predit_market #prediction`
+@preditmarket`
     );
     window.open(`https://x.com/intent/tweet?text=${text}`, '_blank');
   };

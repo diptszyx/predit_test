@@ -1,5 +1,11 @@
 import { useWallet } from '@solana/wallet-adapter-react';
-import { ChevronLeft, ChevronRight, Clock, MessageSquare, Share2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  MessageSquare,
+  Share2,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -9,6 +15,8 @@ import {
   calculateAvgAndPnL,
   centsLabel,
   getKalshiBidAsk,
+  getPositionButtonLabel,
+  getPositionValue,
   moneyLabel,
   pctLabel,
 } from '../../hooks/dflow/usePositions';
@@ -292,9 +300,15 @@ export const MarketListPage = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger>
-                  <Share2 className="w-4 h-4 cursor-pointer"
+                  <Share2
+                    className="w-4 h-4 cursor-pointer"
                     onClick={(e: React.MouseEvent) =>
-                      handleShareMarket(e, `${window.location.origin}/kalshi/${market.id}`)} />
+                      handleShareMarket(
+                        e,
+                        `${window.location.origin}/kalshi/${market.id}`,
+                      )
+                    }
+                  />
                 </TooltipTrigger>
                 <TooltipContent>Share on X</TooltipContent>
               </Tooltip>
@@ -701,9 +715,7 @@ export const PositionsTable = ({
           {positions.map((position) => {
             const shares = toUi(position.balance, position.decimals);
             const { yesBid, yesAsk, noBid, noAsk } = getKalshiBidAsk(position);
-
-            const currentUSD =
-              position.positionType === 'YES' ? (yesAsk ?? 0) : (noAsk ?? 0);
+            const currentUSD = getPositionValue(position);
 
             const valueUSD = shares * currentUSD;
             const { avgUSD, pnlUSD, pnlPct, isAvgEstimated } =
@@ -806,10 +818,19 @@ export const PositionsTable = ({
                   <div className="flex justify-end">
                     <Button
                       size="sm"
-                      className="w-2/3"
+                      className={`w-2/3 font-semibold transition-all ${getPositionButtonLabel(position) === 'Redeem'
+                        ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/50'
+                        : getPositionButtonLabel(position) === 'Sell'
+                          ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 border border-amber-500/50'
+                          : 'text-muted-foreground bg-muted/50 border border-transparent'
+                        }`}
+                      disabled={
+                        getPositionButtonLabel(position) !== 'Sell' &&
+                        getPositionButtonLabel(position) !== 'Redeem'
+                      }
                       onClick={() => handleClickSelling(position)}
                     >
-                      {position.market.status === 'active' ? 'Sell' : 'Claim'}
+                      {getPositionButtonLabel(position)}
                     </Button>
                   </div>
                 </TableCell>

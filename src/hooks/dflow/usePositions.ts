@@ -1,4 +1,5 @@
-import { MarketPosition } from "../../services/dflow.service";
+import { MarketPosition } from '../../services/dflow.service';
+import { USDC_MINT } from './useTrade';
 
 export function centsLabel(priceUSD: number) {
   const cents = Math.round(priceUSD * 100);
@@ -6,7 +7,7 @@ export function centsLabel(priceUSD: number) {
 }
 
 export function moneyLabel(usd: number) {
-  return usd.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  return usd.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
 }
 
 export function pctLabel(pct: number) {
@@ -31,7 +32,7 @@ export function getKalshiBidAsk(position: MarketPosition) {
   };
 }
 
-type PositionType = "YES" | "NO";
+type PositionType = 'YES' | 'NO';
 
 export function calculateAvgAndPnL(params: {
   positionType: PositionType;
@@ -56,7 +57,7 @@ export function calculateAvgAndPnL(params: {
   } = params;
 
   const fallbackAvg =
-    positionType === "YES"
+    positionType === 'YES'
       ? yesBid != null && yesAsk != null
         ? (yesBid + yesAsk) / 2
         : null
@@ -65,7 +66,7 @@ export function calculateAvgAndPnL(params: {
         : null;
 
   const avgUSD =
-    typeof avgPrice === "number" && Number.isFinite(avgPrice)
+    typeof avgPrice === 'number' && Number.isFinite(avgPrice)
       ? avgPrice
       : fallbackAvg;
 
@@ -80,6 +81,65 @@ export function calculateAvgAndPnL(params: {
     avgUSD,
     pnlUSD,
     pnlPct,
-    isAvgEstimated: avgUSD != null && typeof avgPrice !== "number",
+    isAvgEstimated: avgUSD != null && typeof avgPrice !== 'number',
   };
 }
+
+export const getPositionButtonLabel = (position: MarketPosition) => {
+  const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+  if (position.market.status === 'active') {
+    return 'Sell';
+  }
+
+  const account = position.market.accounts?.[USDC_MINT];
+
+  if (account?.redemptionStatus === 'open') {
+    const isRedeemable =
+      (position.positionType === 'YES' && position.market.result === 'yes') ||
+      (position.positionType === 'NO' && position.market.result === 'no') ||
+      (position.market.result === '' &&
+        account.scalarOutcomePct !== undefined &&
+        account.scalarOutcomePct !== null);
+
+    if (isRedeemable) {
+      return 'Redeem';
+    }
+    return 'Lose';
+  }
+  return 'Pending';
+};
+
+export const getPositionValue = (position: MarketPosition) => {
+  if (position.market.status === 'active') {
+    const { yesAsk, noAsk } = getKalshiBidAsk(position);
+    return position.positionType === 'YES' ? (yesAsk ?? 0) : (noAsk ?? 0);
+  }
+
+  const account = position.market.accounts?.[USDC_MINT];
+
+
+  if (account?.redemptionStatus === 'open') {
+
+    if (position.positionType === 'YES' && position.market.result === 'yes')
+      return 1;
+    if (position.positionType === 'NO' && position.market.result === 'no')
+      return 1;
+
+    if (
+      position.market.result === '' &&
+      account.scalarOutcomePct !== undefined &&
+      account.scalarOutcomePct !== null
+    ) {
+      if (position.positionType === 'YES') {
+        return account.scalarOutcomePct / 10000;
+      } else {
+        return (10000 - account.scalarOutcomePct) / 10000;
+      }
+    }
+
+    return 0;
+  }
+
+  const { yesAsk, noAsk } = getKalshiBidAsk(position);
+  return position.positionType === 'YES' ? (yesAsk ?? 0) : (noAsk ?? 0);
+};

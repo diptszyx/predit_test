@@ -4,7 +4,13 @@ export enum QuestType {
   CONNECT_X = "CONNECT_X",
   FOLLOW_X = "FOLLOW_X",
   SHARE_POST = "SHARE_POST",
+  DAILY_TRADE = "DAILY_TRADE",
 }
+
+export const DAILY_QUEST_TYPES: QuestType[] = [
+  QuestType.SHARE_POST,
+  QuestType.DAILY_TRADE,
+];
 
 export enum QuestStatus {
   NOT_STARTED = "not_started",
@@ -22,8 +28,6 @@ export interface BaseQuest {
   metadata: Record<string, any> | null;
 }
 
-export interface ConnectXMetadata {}
-
 export interface FollowXMetadata {
   targetUsername: string;
 }
@@ -35,7 +39,7 @@ export interface SharePostMetadata {
 export type Quest =
   | (BaseQuest & {
       questType: QuestType.CONNECT_X;
-      metadata: ConnectXMetadata | null;
+      metadata: null;
     })
   | (BaseQuest & {
       questType: QuestType.FOLLOW_X;
@@ -44,6 +48,10 @@ export type Quest =
   | (BaseQuest & {
       questType: QuestType.SHARE_POST;
       metadata: SharePostMetadata;
+    })
+  | (BaseQuest & {
+      questType: QuestType.DAILY_TRADE;
+      metadata: null;
     });
 
 export interface QuestResponse {
@@ -91,6 +99,17 @@ export const verifySharePost = async (questId: string, tweetUrl: string) => {
     {
       questId,
       tweetUrl,
+    },
+  );
+
+  return response.data;
+};
+
+export const verifyTradeDaily = async (questId: string) => {
+  const response = await apiClient.post<VerifyFollowResponse>(
+    "/quests/verify-daily-trade",
+    {
+      questId,
     },
   );
 

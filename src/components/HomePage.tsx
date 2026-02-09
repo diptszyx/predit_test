@@ -535,7 +535,12 @@ export function HomePage({
                   <span className="text-muted-foreground">Market Analysis</span>
                 </li>
                 <li>
-                  <span className="text-muted-foreground">XP & Rewards</span>
+                  <Link
+                    to="/xp-history"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    XP & Rewards
+                  </Link>
                 </li>
                 <li>
                   <span className="text-muted-foreground">
@@ -561,14 +566,21 @@ export function HomePage({
               <h3 className="font-semibold mb-4">Company</h3>
               <ul className="space-y-2">
                 <li>
-                  <span className="text-muted-foreground">About Us</span>
-                </li>
-                <li>
-                  <span className="text-muted-foreground">Privacy Policy</span>
+                  <Link
+                    to="/privacy-policy"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Privacy Policy
+                  </Link>
                 </li>
                 <li>
                   <span className="text-muted-foreground">
-                    Terms of Service
+                    <Link
+                      to="/terms-of-service"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Terms of Service
+                    </Link>
                   </span>
                 </li>
               </ul>

@@ -46,7 +46,10 @@ import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import RestrictedPage from './pages/RestrictedPage';
 import ShareChatPage from './pages/ShareChatPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
 import XpHistoryPage from './pages/XpHistoryPage';
 import WalletAdapter from './providers/walletProvider';
 import { chatService } from './services/chat.service';
@@ -1330,6 +1333,11 @@ function AppContent() {
           </div>
         }
       />
+
+      {/* Restricted Access Page */}
+      <Route path="/restricted" element={<RestrictedPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms-of-service" element={<TermsOfServicePage />} />
 
       <Route path='/quests'
         element={

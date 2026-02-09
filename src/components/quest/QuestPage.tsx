@@ -1,10 +1,11 @@
-import { Info, Share2, UserPlus, Zap } from "lucide-react"
+import { Info, Share2, Store, UserPlus, Zap } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import useGetContentShare from "../../hooks/quests/getContentShare"
 import useGetInviteCodes from "../../hooks/quests/getInviteCodes"
 import useGetQuest from "../../hooks/quests/getQuest"
-import { connectX, Quest, QuestStatus, QuestType, verifyFollow, verifySharePost } from "../../services/quest.service"
+import { connectX, DAILY_QUEST_TYPES, Quest, QuestStatus, QuestType, verifyFollow, verifySharePost, verifyTradeDaily } from "../../services/quest.service"
 import useAuthStore from "../../store/auth.store"
 import { ImageWithFallback } from "../figma/ImageWithFallback"
 import ShareCodesModal from "../inviteCode/ShareCodesModal"
@@ -104,6 +105,27 @@ ${content.shareContent}
     }
   }
 
+  const handleVerifyTradeDaily = async (questId: string) => {
+    try {
+      setVerifyQuestId(questId)
+
+      const data = await verifyTradeDaily(questId)
+      if (data.success) {
+        await fetchCurrentUser()
+        await refetch()
+        toast.success("Trade Daily verified successfully! XP has been added to your account.")
+      } else {
+        toast.error(data.message)
+      }
+
+    } catch (error: any) {
+      console.error(error)
+      toast.error(error?.response?.data?.message || 'Verification failed. Please trade and try again.')
+    } finally {
+      setVerifyQuestId((current) => (current === questId ? null : current))
+    }
+  }
+
   const handleVerifySharePost = async (questId: string, tweetUrl: string) => {
     try {
       const data = await verifySharePost(questId, tweetUrl)
@@ -157,6 +179,13 @@ ${content.shareContent}
           },
         }
 
+      case QuestType.DAILY_TRADE:
+        return {
+          label: isVerifyingThis ? "Verifying..." : "Verify",
+          disabled: isVerifyingThis,
+          onClick: () => handleVerifyTradeDaily(quest.questId)
+        }
+
       default:
         return {
           label: "Go",
@@ -169,11 +198,11 @@ ${content.shareContent}
     quests.some((q) => q.status !== QuestStatus.COMPLETED);
 
   const dailyQuests = quests.filter(
-    (quest) => quest.questType === QuestType.SHARE_POST
+    (quest) => DAILY_QUEST_TYPES.includes(quest.questType)
   );
 
   const oneTimeQuests = quests.filter(
-    (quest) => quest.questType !== QuestType.SHARE_POST
+    (quest) => !DAILY_QUEST_TYPES.includes(quest.questType)
   );
 
   const shouldShowOneTimeFirst = hasIncompleteQuest(oneTimeQuests);
@@ -181,10 +210,10 @@ ${content.shareContent}
   const questSections = shouldShowOneTimeFirst
     ? [
       { title: "One-time Quests", data: oneTimeQuests },
-      { title: "Daily Quest", data: dailyQuests },
+      { title: "Daily Quests", data: dailyQuests },
     ]
     : [
-      { title: "Daily Quest", data: dailyQuests },
+      { title: "Daily Quests", data: dailyQuests },
       { title: "One-time Quests", data: oneTimeQuests },
     ];
 
@@ -195,7 +224,7 @@ ${content.shareContent}
           Quest Center
         </h1>
         <p className="text-muted-foreground">
-          Follow, share, and invite to earn points and climb the leaderboard.
+          Follow, share, and trade to earn points and climb the leaderboard.
         </p>
       </div>
 
@@ -264,8 +293,88 @@ type QuestItemProps = {
 };
 
 export function QuestItem({ quest, getQuestButton, onShareNow, isConnectedX }: QuestItemProps) {
+  const navigate = useNavigate()
   const isComplete = quest.status === QuestStatus.COMPLETED;
   const { label, onClick, disabled } = getQuestButton(quest);
+
+  const renderQuestIcon = (questType: QuestType) => {
+    switch (questType) {
+      case QuestType.CONNECT_X:
+        return (
+          <ImageWithFallback
+            src="/Twitter-X.svg"
+            alt="icon-social"
+            width={20}
+            height={20}
+          />
+        );
+
+      case QuestType.FOLLOW_X:
+        return (
+          <UserPlus className="h-5 w-5 text-[#a3a3a3]" />
+        );
+
+      case QuestType.DAILY_TRADE:
+        return (
+          <Store className="h-5 w-5 text-[#a3a3a3]" />
+        );
+
+      default:
+        return (
+          <Share2 className="h-5 w-5 text-[#a3a3a3]" />
+        );
+    }
+  };
+
+  const renderQuestContent = (quest: Quest) => {
+    switch (quest.questType) {
+      case QuestType.FOLLOW_X:
+        return (
+          <>
+            Follow{" "}
+            <a
+              href="https://x.com/intent/user?screen_name=preditmarket"
+              target="_blank"
+              className="text-blue-400"
+            >
+              @preditmarket
+            </a>{" "}
+            on X to earn XP
+          </>
+        );
+
+      case QuestType.DAILY_TRADE:
+        return (
+          <>
+            Make a trade on{" "}
+            <button
+              className="text-blue-400 text-[10px] sm:text-xs cursor-pointer"
+              onClick={() => navigate("/kalshi")}
+            >
+              Kalshi Market
+            </button>{" "}
+            to earn XP (1 per day)
+          </>
+        );
+
+      case QuestType.SHARE_POST:
+        return (
+          <>
+            {quest.description}
+            <Button
+              onClick={onShareNow}
+              className="ml-2 h-fit p-0 text-[10px] font-normal sm:text-xs"
+              variant="link"
+            >
+              Share now.
+            </Button>
+          </>
+        );
+
+      default:
+        return quest.description;
+    }
+  };
 
   const requiresX =
     quest.questType === QuestType.FOLLOW_X ||
@@ -276,13 +385,7 @@ export function QuestItem({ quest, getQuestButton, onShareNow, isConnectedX }: Q
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center">
           <div className="flex size-10 items-center justify-center rounded-full border backdrop-blur-[10px]">
-            {quest.questType === QuestType.CONNECT_X ? (
-              <ImageWithFallback src="/Twitter-X.svg" alt="icon-social" width={20} height={20} />
-            ) : quest.questType === QuestType.FOLLOW_X ? (
-              <UserPlus className="h-5 w-5 text-[#a3a3a3]" />
-            ) : (
-              <Share2 className="h-5 w-5 text-[#a3a3a3]" />
-            )}
+            {renderQuestIcon(quest.questType)}
           </div>
 
           <div className="pl-3">
@@ -303,30 +406,7 @@ export function QuestItem({ quest, getQuestButton, onShareNow, isConnectedX }: Q
                 )}
             </p>
             <p className="text-[10px] sm:text-xs">
-              {quest.questType === QuestType.FOLLOW_X ? (
-                <>
-                  Follow{" "}
-                  <a
-                    href="https://x.com/intent/user?screen_name=preditmarket"
-                    target="_blank"
-                    className="text-blue-400"
-                  >
-                    @preditmarket
-                  </a>{" "}
-                  on X to earn XP
-                </>
-              ) : (
-                quest.description
-              )}
-              {quest.questType === QuestType.SHARE_POST && (
-                <Button
-                  onClick={onShareNow}
-                  className="ml-2 h-fit p-0 text-[10px] font-normal sm:text-xs"
-                  variant="link"
-                >
-                  Share now.
-                </Button>
-              )}
+              {renderQuestContent(quest)}
             </p>
           </div>
         </div>
@@ -349,8 +429,6 @@ export function QuestItem({ quest, getQuestButton, onShareNow, isConnectedX }: Q
     </div>
   );
 }
-
-
 
 const QuestSkeletonCard = () => {
   return (

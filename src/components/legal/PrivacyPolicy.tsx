@@ -16,7 +16,7 @@ export function PrivacyPolicyPage() {
           <section className="space-y-4 py-6 border-b border-border/40">
             <h2 className="my-4 text-xl font-semibold text-foreground">1. Introduction and Scope</h2>
             <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
-              Welcome to Predit Market of Oracles, a decentralized prediction platform operated by Predit Market Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Predit Market Limited", "we," "our," or "us").
+              Welcome to Predit Market of Oracles, a decentralized prediction platform operated by Predit Market (“Predit Market”, “we”, “our”, or “us”).
             </p>
             <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
               This Privacy Policy describes how we collect, use, process, store, share, and protect your personal information when you access or use our platform, website, mobile applications, APIs, and related services (collectively, the "Platform" or "Services"). This policy applies to all users, including visitors, registered users, subscribers, and participants in our prediction markets.

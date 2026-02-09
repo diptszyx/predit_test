@@ -16,10 +16,10 @@ export function TermsOfServicePage() {
           <section className="space-y-4 py-6 border-b border-border/40 last:border-b-0">
             <h2 className="my-4 text-xl font-semibold text-foreground">1. Acceptance of Terms and Agreement to Binding Contract</h2>
             <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
-              Welcome to Predit Market of Oracles, a decentralized prediction platform operated by Predit Market Limited, a company registered under the laws of [Jurisdiction] with registration number [Number] and registered office at [Address] ("Predit Market Limited," "we," "our," or "us").
+              Welcome to Predit Market of Oracles, a decentralized prediction platform operated by Predit Market (“Predit Market”, “we”, “our”, or “us”).
             </p>
             <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
-              These Terms of Use ("Terms," "Agreement," or "Terms of Use") constitute a legally binding agreement between you (the "User," "you," or "your") and Predit Market Limited. By accessing, browsing, or using our website, platform, mobile applications, APIs, smart contracts, or any related services (collectively, the "Platform," "Services," or "Predit Market of Oracles"), you acknowledge that:
+              These Terms of Service ("Terms," "Agreement," or "Terms of Service") constitute a legally binding agreement between you (the "User," "you," or "your") and Predit Market Limited. By accessing, browsing, or using our website, platform, mobile applications, APIs, smart contracts, or any related services (collectively, the "Platform," "Services," or "Predit Market of Oracles"), you acknowledge that:
             </p>
             <ul className="mb-4 ml-5 list-disc space-y-2 text-sm text-muted-foreground">
               <li>You have read, understood, and agree to be bound by these Terms in their entirety</li>

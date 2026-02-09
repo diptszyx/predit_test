@@ -46,10 +46,8 @@ import { WalletConnectDialog } from './components/WalletConnectDialog';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import RestrictedPage from './pages/RestrictedPage';
 import ShareChatPage from './pages/ShareChatPage';
-import TermsOfServicePage from './pages/TermsOfServicePage';
 import XpHistoryPage from './pages/XpHistoryPage';
 import WalletAdapter from './providers/walletProvider';
 import { chatService } from './services/chat.service';
@@ -90,20 +88,20 @@ function AppContent() {
   const updateUserInStore = useAuthStore((state) => state.updateUser);
   const logout = useAuthStore((state) => state.logout);
   const authenticateWithToken = useAuthStore(
-    (state) => state.authenticateWithToken
+    (state) => state.authenticateWithToken,
   );
   const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser);
 
   // App state
   const [listOracles, setListOracles] = useState<OracleEntity[]>([]);
   const [selectedAIAgent, setSelectedAIAgent] = useState<OracleEntity | null>(
-    null
+    null,
   );
   const [selectedArticle, setSelectedArticle] = useState<News | null>(null);
   const [articleContext, setArticleContext] = useState<News | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(
-    null
+    null,
   );
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [profileDialogUser, setProfileDialogUser] = useState<User | null>(null);
@@ -136,9 +134,10 @@ function AppContent() {
     if (path === '/xp-history') return 'xpHistory';
     if (path.match(/^\/market\/[^/]+$/)) return 'market-detail';
     if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
-    if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/)) return 'polymarket-chat'
-    if (path === '/kalshi') return 'kalshi'
-    if (path === '/quests') return 'quests'
+    if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/))
+      return 'polymarket-chat';
+    if (path === '/kalshi') return 'kalshi';
+    if (path === '/quests') return 'quests';
     return 'home';
   };
 
@@ -201,11 +200,11 @@ function AppContent() {
         navigate('/polymarket/chat');
         break;
       case 'kalshi':
-        navigate('/kalshi')
-        break
+        navigate('/kalshi');
+        break;
       case 'quests':
-        navigate('/quests')
-        break
+        navigate('/quests');
+        break;
       default:
         navigate('/');
     }
@@ -295,7 +294,7 @@ function AppContent() {
     const inviteCodeFromUrl = searchParams.get('invitecode');
     const oauthToken = searchParams.get('token');
     const isNewUser = searchParams.get('isNew') === 'true';
-    const isAdmin = checkIsAdmin(user)
+    const isAdmin = checkIsAdmin(user);
 
     if (inviteCodeFromUrl && !isAdmin) {
       sessionStorage.setItem('pendingInviteCode', inviteCodeFromUrl);
@@ -330,7 +329,7 @@ function AppContent() {
               description: isNewUser
                 ? "Your Google account is now linked. Let's get started."
                 : "You're back in. Pick up where you left off.",
-            }
+            },
           );
 
           if (pendingNavigation) {
@@ -392,7 +391,7 @@ function AppContent() {
       });
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.message ?? 'Failed to apply invite code'
+        err?.response?.data?.message ?? 'Failed to apply invite code',
       );
     } finally {
       sessionStorage.removeItem('pendingInviteCode');
@@ -416,7 +415,7 @@ function AppContent() {
         setSelectedAIAgent(res);
 
         setListOracles((prev) =>
-          prev.map((item) => (item.id === oracleId ? res : item))
+          prev.map((item) => (item.id === oracleId ? res : item)),
         );
       }
     } catch (e) {
@@ -443,7 +442,6 @@ function AppContent() {
     isAdmin: checkIsAdmin(user),
   };
 
-
   const commonDialogProps = (
     <>
       <WalletConnectDialog
@@ -469,10 +467,7 @@ function AppContent() {
         open={privacyDialogOpen}
         onOpenChange={setPrivacyDialogOpen}
       />
-      <TermsOfUse
-        open={termsDialogOpen}
-        onOpenChange={setTermsDialogOpen}
-      />
+      <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
       <UserProfileDialog
         open={profileDialogOpen}
         onOpenChange={handleProfileDialogOpenChange}
@@ -511,14 +506,8 @@ function AppContent() {
                 property="og:description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
-              <meta
-                property="og:type"
-                content="website"
-              />
-              <meta
-                name="twitter:card"
-                content="summary_large_image"
-              />
+              <meta property="og:type" content="website" />
+              <meta name="twitter:card" content="summary_large_image" />
               <meta
                 name="twitter:title"
                 content="AI-Powered Market Predictions | Predit Market AI Oracles Platform"
@@ -527,10 +516,7 @@ function AppContent() {
                 name="twitter:description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
-              <link
-                rel="canonical"
-                href={window.location.origin}
-              />
+              <link rel="canonical" href={window.location.origin} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <div className="flex-1 overflow-y-auto">
@@ -544,7 +530,10 @@ function AppContent() {
                     let targetAgent = selectedAIAgent;
                     if (!targetAgent && listOracles.length > 0) {
                       targetAgent = listOracles[0];
-                      localStorage.setItem('deor-currentOracle', listOracles[0].id);
+                      localStorage.setItem(
+                        'deor-currentOracle',
+                        listOracles[0].id,
+                      );
                       setSelectedAIAgent(listOracles[0]);
                     }
 
@@ -590,10 +579,7 @@ function AppContent() {
                 property="og:description"
                 content="Chat with specialized AI oracle agents for expert market predictions and insights."
               />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/chat`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/chat`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -615,7 +601,7 @@ function AppContent() {
                         onClick={async () => {
                           localStorage.setItem(
                             'deor-currentOracle',
-                            aiAgent.id
+                            aiAgent.id,
                           );
                           setSelectedAIAgent(aiAgent);
                           const newChat = await chatService.createChat();
@@ -824,7 +810,7 @@ function AppContent() {
                       if (user) {
                         awardXPToUser('SUBSCRIBE_MASTER', { showToast: false });
                         toast.success(
-                          '🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!'
+                          '🎉 Welcome to Pro! You now have unlimited predictions and 2x XP!',
                         );
                       }
                     }}
@@ -869,10 +855,7 @@ function AppContent() {
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               {user && (
                 <div className="flex-1 overflow-y-auto">
-                  <SettingsPage
-                    onBack={() => navigate('/chat')}
-                    user={user}
-                  />
+                  <SettingsPage onBack={() => navigate('/chat')} user={user} />
                 </div>
               )}
               {commonDialogProps}
@@ -931,7 +914,7 @@ function AppContent() {
                         onClick={() => {
                           localStorage.setItem(
                             'deor-currentOracle',
-                            aiAgent.id
+                            aiAgent.id,
                           );
                           setSelectedAIAgent(aiAgent);
                           navigate('/chat');
@@ -958,10 +941,7 @@ function AppContent() {
                 name="description"
                 content="Create and manage prediction markets powered by AI Oracles."
               />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/market`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/market`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -986,10 +966,7 @@ function AppContent() {
                 name="description"
                 content="Create and manage topics powered by AI Oracles."
               />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/topic`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/topic`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1015,10 +992,7 @@ function AppContent() {
                 name="description"
                 content="View and manage prediction market details."
               />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/market`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/market`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1196,10 +1170,7 @@ function AppContent() {
                 content="Track your earned and spent XP from different activities and events."
               />
 
-              <link
-                rel="canonical"
-                href={`https://predit.market/xp-history`}
-              />
+              <link rel="canonical" href={`https://predit.market/xp-history`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1234,13 +1205,29 @@ function AppContent() {
 
               {/* Open Graph */}
               <meta property="og:type" content="website" />
-              <meta property="og:title" content={'Shared Chat | Predit Market AI'} />
-              <meta property="og:description" content={'View a shared chat from Predit Market. Open the link to see the conversation content.'} />
+              <meta
+                property="og:title"
+                content={'Shared Chat | Predit Market AI'}
+              />
+              <meta
+                property="og:description"
+                content={
+                  'View a shared chat from Predit Market. Open the link to see the conversation content.'
+                }
+              />
 
               {/* Twitter */}
               <meta name="twitter:card" content="summary" />
-              <meta name="twitter:title" content={'Shared Chat | Predit Market AI'} />
-              <meta name="twitter:description" content={'View a shared chat from Predit Market. Open the link to see the conversation content.'} />
+              <meta
+                name="twitter:title"
+                content={'Shared Chat | Predit Market AI'}
+              />
+              <meta
+                name="twitter:description"
+                content={
+                  'View a shared chat from Predit Market. Open the link to see the conversation content.'
+                }
+              />
             </Helmet>
 
             <Sidebar {...commonSidebarProps} />
@@ -1265,10 +1252,7 @@ function AppContent() {
                 name="description"
                 content="Trade crypto prediction markets on real-world outcomes. Market prices reflect real-time probabilities for Bitcoin, Ethereum and key crypto events."
               />
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/kalshi`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/kalshi`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1286,9 +1270,11 @@ function AppContent() {
       <Route
         path="/kalshi/:id"
         element={
-          < div className="flex h-screen bg-background overflow-hidden" >
+          <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Kalshi Market Detail - Real-World Prediction Markets</title>
+              <title>
+                Kalshi Market Detail - Real-World Prediction Markets
+              </title>
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1299,7 +1285,7 @@ function AppContent() {
               </RequirePhantomConnected>
               {commonDialogProps}
             </InviteCodeGuard>
-          </ div>
+          </div>
         }
       />
 
@@ -1336,14 +1322,15 @@ function AppContent() {
 
       {/* Restricted Access Page */}
       <Route path="/restricted" element={<RestrictedPage />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-      <Route path="/terms-of-service" element={<TermsOfServicePage />} />
 
-      <Route path='/quests'
+      <Route
+        path="/quests"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Quest Center – Earn Points & Grow Your Rank | Predit</title>
+              <title>
+                Quest Center – Earn Points & Grow Your Rank | Predit
+              </title>
 
               <meta
                 name="description"
@@ -1351,7 +1338,10 @@ function AppContent() {
               />
 
               {/* Open Graph */}
-              <meta property="og:title" content="Quest Center – Earn Points & Grow Your Rank" />
+              <meta
+                property="og:title"
+                content="Quest Center – Earn Points & Grow Your Rank"
+              />
               <meta
                 property="og:description"
                 content="Complete quests: follow on X, share markets, invite friends, and earn points. Level up and unlock rewards."
@@ -1364,16 +1354,16 @@ function AppContent() {
 
               {/* X */}
               <meta name="twitter:card" content="summary_large_image" />
-              <meta name="twitter:title" content="Quest Center – Earn Points & Grow Your Rank" />
+              <meta
+                name="twitter:title"
+                content="Quest Center – Earn Points & Grow Your Rank"
+              />
               <meta
                 name="twitter:description"
                 content="Follow, share, and invite to earn points. Join the quest and climb the leaderboard."
               />
 
-              <link
-                rel="canonical"
-                href={`${window.location.origin}/quest`}
-              />
+              <link rel="canonical" href={`${window.location.origin}/quest`} />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1387,8 +1377,9 @@ function AppContent() {
               {commonDialogProps}
             </InviteCodeGuard>
           </div>
-        } />
-    </Routes >
+        }
+      />
+    </Routes>
   );
 }
 
@@ -1431,7 +1422,7 @@ function ArticleDetailWrapper({
               setPreviousPage(null);
               // Create chat if returning to chat context
               if (selectedAIAgent.id) {
-                chatService.createChat().then(newChat => {
+                chatService.createChat().then((newChat) => {
                   if (newChat) navigate(`/chat/${newChat.id}`);
                 });
               } else {
@@ -1479,14 +1470,14 @@ function ArticleDetailWrapper({
           onOpenTerms={() => setTermsDialogOpen(true)}
           onAIAgentClick={(aiAgentId: string) => {
             const aiAgent = listOracles.find(
-              (a: OracleEntity) => a.id === aiAgentId
+              (a: OracleEntity) => a.id === aiAgentId,
             );
             if (aiAgent) {
               setSelectedAIAgent(aiAgent);
               localStorage.setItem('deor-currentOracle', aiAgent.id);
               setArticleContext(selectedArticle);
               setPreviousPage('articleDetail');
-              chatService.createChat().then(newChat => {
+              chatService.createChat().then((newChat) => {
                 if (newChat) navigate(`/chat/${newChat.id}`);
               });
             }
@@ -1532,9 +1523,9 @@ function ChatWithOracleWrapper({
 
   useEffect(() => {
     if (listOracles.length > 0 && !selectedAIAgent) {
-      setSelectedAIAgent(listOracles[0])
+      setSelectedAIAgent(listOracles[0]);
     }
-  }, [listOracles, selectedAIAgent])
+  }, [listOracles, selectedAIAgent]);
 
   if (!selectedAIAgent) {
     return null;

@@ -29,7 +29,7 @@ import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
 import { PrivacyPolicyPage } from './components/legal/PrivacyPolicy';
-import { TermsOfUsePage } from './components/legal/TermOfUse';
+import { TermsOfServicePage } from './components/legal/TermsOfService';
 import MarketDetail from './components/market/MarketDetail';
 import MarketPage from './components/MarketPage';
 import PolymarketChatPage from './components/polymarket/PolymarketChatPage';
@@ -137,7 +137,7 @@ function AppContent() {
     if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/)) return 'polymarket-chat'
     if (path === '/kalshi') return 'kalshi'
     if (path === '/privacy-policy') return 'privacy-policy'
-    if (path === '/term-of-use') return 'term-of-use'
+    if (path === '/terms-of-service') return 'terms-of-service'
     return 'home';
   };
 
@@ -205,8 +205,8 @@ function AppContent() {
       case 'privacy-policy':
         navigate('/privacy-policy')
         break
-      case 'term-of-use':
-        navigate('/term-of-use')
+      case 'terms-of-service':
+        navigate('/terms-of-service')
         break
       default:
         navigate('/');
@@ -1377,22 +1377,22 @@ function AppContent() {
       />
 
       <Route
-        path="/term-of-use"
+        path="/terms-of-service"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
-              <title>Terms of Use | AI Predictions Platform</title>
+              <title>Terms of Service | AI Predictions Platform</title>
               <meta
                 name="description"
                 content="Read our Terms of Use to understand the rules, responsibilities, and conditions for using our AI predictions platform."
               />
               <meta
                 name="keywords"
-                content="terms of use, terms and conditions, user agreement, platform rules, AI predictions platform"
+                content="terms of service, terms and conditions, user agreement, platform rules, AI predictions platform"
               />
               <meta
                 property="og:title"
-                content="Terms of Use | AI Predictions Platform"
+                content="Terms of service | AI Predictions Platform"
               />
               <meta
                 property="og:description"
@@ -1400,7 +1400,7 @@ function AppContent() {
               />
               <link
                 rel="canonical"
-                href={`${window.location.origin}/term-of-use`}
+                href={`${window.location.origin}/terms-of-service`}
               />
             </Helmet>
 
@@ -1408,7 +1408,7 @@ function AppContent() {
 
             <div className="flex-1 overflow-y-auto">
               <div className="container mx-auto px-4 py-6">
-                <TermsOfUsePage />
+                <TermsOfServicePage />
               </div>
             </div>
             {commonDialogProps}

@@ -240,19 +240,19 @@ export function WalletConnectDialog({
                   navigate('/privacy-policy')
                   onOpenChange(false)
                 }}
-                className="text-blue-500 hover:underline cursor-pointer"
+                className="text-blue-500 hover:underline cursor-pointer text-xs"
               >
                 Privacy Policy
               </button>{' '}
               and{' '}
               <button
                 onClick={() => {
-                  navigate('/term-of-use')
+                  navigate('/terms-of-service')
                   onOpenChange(false)
                 }}
-                className="text-blue-500 hover:underline cursor-pointer"
+                className="text-blue-500 hover:underline cursor-pointer text-xs"
               >
-                Terms of Use
+                Terms of Service
               </button>
               .
             </p>

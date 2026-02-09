@@ -1,11 +1,11 @@
 
-export function TermsOfUsePage() {
+export function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="w-full p-4 lg:p-6 space-y-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Terms of Use
+            Terms of Service
           </h1>
           <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
             Last updated: October 16, 2025 | Effective Date: October 16, 2025

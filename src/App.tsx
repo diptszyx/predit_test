@@ -28,6 +28,8 @@ import { RequirePhantomConnected } from './components/guard/WalletConnectGuard';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
+import { PrivacyPolicyPage } from './components/legal/PrivacyPolicy';
+import { TermsOfUsePage } from './components/legal/TermOfUse';
 import MarketDetail from './components/market/MarketDetail';
 import MarketPage from './components/MarketPage';
 import PolymarketChatPage from './components/polymarket/PolymarketChatPage';
@@ -134,6 +136,8 @@ function AppContent() {
     if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
     if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/)) return 'polymarket-chat'
     if (path === '/kalshi') return 'kalshi'
+    if (path === '/privacy-policy') return 'privacy-policy'
+    if (path === '/term-of-use') return 'term-of-use'
     return 'home';
   };
 
@@ -197,6 +201,12 @@ function AppContent() {
         break;
       case 'kalshi':
         navigate('/kalshi')
+        break
+      case 'privacy-policy':
+        navigate('/privacy-policy')
+        break
+      case 'term-of-use':
+        navigate('/term-of-use')
         break
       default:
         navigate('/');
@@ -1325,6 +1335,87 @@ function AppContent() {
           </div>
         }
       />
+
+      <Route
+        path="/privacy-policy"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Privacy Policy | AI Predictions Platform</title>
+              <meta
+                name="description"
+                content="Read our Privacy Policy to understand how we collect, use, and protect your information when you use our AI predictions platform."
+              />
+              <meta
+                name="keywords"
+                content="privacy policy, data privacy, personal data, data protection, AI predictions platform, user privacy"
+              />
+              <meta
+                property="og:title"
+                content="Privacy Policy | AI Predictions Platform"
+              />
+              <meta
+                property="og:description"
+                content="Learn how we collect, use, and protect your data on our AI predictions platform."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/privacy-policy`}
+              />
+            </Helmet>
+
+            <Sidebar {...commonSidebarProps} />
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="container mx-auto px-4 py-6">
+                <PrivacyPolicyPage />
+              </div>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      <Route
+        path="/term-of-use"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Terms of Use | AI Predictions Platform</title>
+              <meta
+                name="description"
+                content="Read our Terms of Use to understand the rules, responsibilities, and conditions for using our AI predictions platform."
+              />
+              <meta
+                name="keywords"
+                content="terms of use, terms and conditions, user agreement, platform rules, AI predictions platform"
+              />
+              <meta
+                property="og:title"
+                content="Terms of Use | AI Predictions Platform"
+              />
+              <meta
+                property="og:description"
+                content="Review the rules and conditions for using our AI predictions platform."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/term-of-use`}
+              />
+            </Helmet>
+
+            <Sidebar {...commonSidebarProps} />
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="container mx-auto px-4 py-6">
+                <TermsOfUsePage />
+              </div>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+
     </Routes >
   );
 }

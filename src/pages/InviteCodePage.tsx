@@ -302,7 +302,7 @@ ${appUrl}
                           {referralLink}
                         </span>
                         <Copy
-                          className="h-3 w-3 ml-3 cursor-pointer text-muted-foreground hover:text-foreground flex-shrink-0"
+                          className="h-3 w-3 ml-3 cursor-pointer text-muted-foreground hover:text-foreground shrink-0"
                           onClick={() => handleCopyToClipboard(referralLink, "Referral link")}
                         />
                       </div>

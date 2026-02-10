@@ -91,9 +91,7 @@ const InviteCard = ({ user }: InviteCardProps) => {
         </div>
 
         <div className="grid grid-cols-1 gap-5">
-          <div className="col-span-2 rounded-lg border p-4 border-white/10 bg-white/5
-shadow-[0_6px_18px_rgba(0,0,0,0.25)]
-backdrop-blur">
+          <div className="rounded-lg border p-4 border-white/10 border-border bg-muted/30">
             <div className='flex items-center gap-3 mb-3 '>
 
               <Label className="text-sm">My Referral Code</Label>
@@ -119,8 +117,8 @@ backdrop-blur">
               <div className="flex items-center gap-2">
                 {isEditingCode &&
                   <Button
-                    className="rounded-full border text-muted-foreground hover:text-foreground"
-                    variant='icon'
+                    className="h-9 w-9 rounded-full border text-muted-foreground hover:text-foreground"
+                    variant='ghost'
                     size='sm'
                     onClick={() => {
                       setReferralCode(inviteCode)
@@ -128,14 +126,14 @@ backdrop-blur">
                     }}
                     disabled={loading}
                   >
-                    {isEditingCode && <X className='w-4 h-4' />}
+                    {isEditingCode && <X className='w-3.5 h-3.5' />}
                   </Button>
                 }
                 <Button
-                  className="rounded-full border text-muted-foreground hover:text-foreground"
+                  className="h-9 w-9 rounded-full border text-muted-foreground hover:text-foreground"
                   title="Edit"
-                  variant='icon'
-                  size='sm'
+                  variant='ghost'
+                  size='icon'
                   onClick={() => {
                     if (isEditingCode) {
                       handleCustomMyCode(referralCode)
@@ -145,19 +143,19 @@ backdrop-blur">
                   }}
                   disabled={loading}
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : isEditingCode ? <Check className='w-4 h-4' /> :
-                      <Pencil className='w-4 h-4' />
+                  {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : isEditingCode ? <Check className='w-3.5 h-3.5' /> :
+                      <Pencil className='w-3.5 h-3.5' />
                   }
                 </Button>
                 <Button
-                  className="rounded-full border text-muted-foreground hover:text-foreground"
+                  className="h-9 w-9 rounded-full border text-muted-foreground hover:text-foreground"
                   title="Copy code"
-                  variant='icon'
+                  variant='ghost'
                   size='sm'
                   onClick={() => handleCopyToClipboard(referralCode!)}
                 >
-                  <Copy className='w-4 h-4' />
+                  <Copy className='w-3.5 h-3.5' />
                 </Button>
               </div>
             </div>
@@ -169,12 +167,12 @@ backdrop-blur">
 
               <Button
                 onClick={() => handleCopyToClipboard(inviteLink, "Referral link")}
-                className="rounded-full border text-muted-foreground hover:text-foreground"
+                className="h-9 w-9 rounded-full border text-muted-foreground hover:text-foreground"
                 title="Copy link"
-                variant='icon'
+                variant='ghost'
                 size='sm'
               >
-                <Copy className='w-3 h-3' />
+                <Copy className='w-3.5 h-3.5' />
               </Button>
             </div>
           </div>

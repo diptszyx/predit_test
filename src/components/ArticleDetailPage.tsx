@@ -14,7 +14,7 @@ import {
 import { News, newsService } from '../services/news.service';
 import { timeAgo } from '../lib/date';
 import { Skeleton } from './ui/skeleton';
-import { removeBrokenImages } from '../lib/htmlUtil';
+import { sanitizeArticleHtml } from '../lib/htmlUtil';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
@@ -323,7 +323,7 @@ export function ArticleDetailPage({
               </div>
 
               {article.image && (
-                <div className="relative h-96 w-full overflow-hidden flex items-center justify-center">
+                <div className="relative h-72 sm:h-96 w-[90%] mx-auto rounded overflow-hidden flex items-center justify-center mb-5">
                   <ImageWithFallback
                     src={article.image}
                     alt={article.title}
@@ -336,7 +336,7 @@ export function ArticleDetailPage({
                 <div
                   className="prose prose-lg max-w-none space-y-6"
                   dangerouslySetInnerHTML={{
-                    __html: removeBrokenImages(article.content),
+                    __html: sanitizeArticleHtml(article.content),
                   }}
                 />
 

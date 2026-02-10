@@ -1,5 +1,5 @@
-import { DflowTradeEntity } from "../../services/dflow.service";
-import { CASH_MINT, USDC_MINT } from "./useTrade";
+import { DflowTradeEntity } from '../../services/dflow.service';
+import { USDC_MINT } from './useTrade';
 export interface TradeRowUI {
   id: string;
   status: string;
@@ -24,7 +24,7 @@ export interface TradeRowUI {
   signature: string | null;
   orbUrl: string | null;
 }
-export type TradeCurrency = "USDC" | "CASH" | "OTHER";
+export type TradeCurrency = 'USDC' | 'CASH' | 'OTHER';
 export const toUi = (atomic?: string | null, decimals = 6): number => {
   if (!atomic) return 0;
   const n = Number(atomic);
@@ -36,14 +36,13 @@ const short = (s: string, n = 4) => `${s.slice(0, n)}…${s.slice(-n)}`;
 export const formatMint = (mint: string) => short(mint, 4);
 
 export const getTradeCurrency = (inputMint: string): TradeCurrency => {
-  if (inputMint === USDC_MINT) return "USDC";
-  if (inputMint === CASH_MINT) return "CASH";
-  return "OTHER";
+  if (inputMint === USDC_MINT) return 'USDC';
+  return 'OTHER';
 };
 
 export const tradeSide = (trade: DflowTradeEntity): string => {
   const { outputMint } = trade;
-  const side = outputMint === CASH_MINT ? "SELL" : "BUY";
+  const side = outputMint === USDC_MINT ? 'SELL' : 'BUY';
   return side;
 };
 
@@ -51,7 +50,7 @@ export const mapTradeToUI = (t: DflowTradeEntity, decimals = 6): TradeRowUI => {
   const sig = t.signature ?? null;
   return {
     id: t.id,
-    status: t.status ?? "unknown",
+    status: t.status ?? 'unknown',
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
     tradeSide: tradeSide(t),

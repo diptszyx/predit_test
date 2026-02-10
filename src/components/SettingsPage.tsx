@@ -14,6 +14,7 @@ import {
   TrendingUp,
   User,
   Zap,
+  X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -56,13 +57,13 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   // Profile Settings
   const [avatar, setAvatar] = useState(
     user.photo?.path ||
-    user.avatar ||
-    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80'
+      user.avatar ||
+      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80',
   );
   const [nickname, setNickname] = useState(user.username || 'Oracle Seeker');
   const [email, setEmail] = useState(user.email || 'oracle.seeker@example.com');
   const [phone, setPhone] = useState(
-    user.phone || user.phoneNumber || '+1 (555) 123-4567'
+    user.phone || user.phoneNumber || '+1 (555) 123-4567',
   );
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -81,7 +82,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   // const xpIntoLevel = user.xp - xpForCurrentLevel;
   // const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
   const subscriptionMult = getSubscriptionMultiplier(
-    user.subscriptionTier || 'free'
+    user.subscriptionTier || 'free',
   );
   const streakMult = getStreakMultiplier(user.streakDays);
   const totalMult = subscriptionMult * streakMult;
@@ -90,7 +91,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   const predictionForNextLevel = getPredictionsForNextLevel(user.level);
   const predictionProgress = getCurrentProgress(
     user.totalPredictions,
-    user.level
+    user.level,
   );
   const predictionIntoLevel = user.totalPredictions - predictionForCurrentLevel;
   const predictionNeededForLevel =
@@ -144,7 +145,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error uploading photo:', error);
       toast.error(
         error?.response?.data?.message ||
-        'Failed to upload photo. Please try again.'
+          'Failed to upload photo. Please try again.',
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -174,7 +175,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error updating nickname:', error);
       toast.error(
         error?.response?.data?.message ||
-        'Failed to update nickname. Please try again.'
+          'Failed to update nickname. Please try again.',
       );
     } finally {
       setIsSavingNickname(false);
@@ -196,7 +197,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error updating email:', error);
       toast.error(
         error?.response?.data?.message ||
-        'Failed to update email. Please try again.'
+          'Failed to update email. Please try again.',
       );
     } finally {
       setIsSavingEmail(false);
@@ -218,7 +219,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error updating phone:', error);
       toast.error(
         error?.response?.data?.message ||
-        'Failed to update phone number. Please try again.'
+          'Failed to update phone number. Please try again.',
       );
     } finally {
       setIsSavingPhone(false);
@@ -506,8 +507,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                           setIsEditingPhone(false);
                           setPhone(
                             user.phone ||
-                            user.phoneNumber ||
-                            '+1 (555) 123-4567'
+                              user.phoneNumber ||
+                              '+1 (555) 123-4567',
                           );
                         }}
                         disabled={isSavingPhone}
@@ -721,6 +722,124 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                 )}
               </div>
             )}
+
+            <Separator className="my-6" />
+
+            <div className="flex flex-col gap-4">
+              <h3>Feature Comparison</h3>
+              <p className="text-sm text-muted-foreground">
+                See what's included in each plan
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4">Feature</th>
+                      <th className="text-center py-3 px-4">Basic</th>
+                      <th className="text-center py-3 px-4 bg-primary/5">
+                        Pro
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-border">
+                      <td className="py-3 px-4">Total Predictions</td>
+                      <td className="text-center py-3 px-4">5</td>
+                      <td className="text-center py-3 px-4 bg-primary/5">
+                        Unlimited
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="py-3 px-4">AI Agent Access</td>
+                      <td className="text-center py-3 px-4">
+                        <Check className="w-5 h-5 text-green-500 mx-auto" />
+                      </td>
+                      <td className="text-center py-3 px-4 bg-primary/5">
+                        <Check className="w-5 h-5 text-green-500 mx-auto" />
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="py-3 px-4">Conversations</td>
+                      <td className="text-center py-3 px-4">Basic</td>
+                      <td className="text-center py-3 px-4 bg-primary/5">
+                        Unlimited
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="py-3 px-4">XP Multiplier</td>
+                      <td className="text-center py-3 px-4">1x</td>
+                      <td className="text-center py-3 px-4 bg-primary/5">2x</td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="py-3 px-4">Priority Responses</td>
+                      <td className="text-center py-3 px-4">
+                        <X className="w-5 h-5 text-muted-foreground mx-auto" />
+                      </td>
+                      <td className="text-center py-3 px-4 bg-primary/5">
+                        <Check className="w-5 h-5 text-green-500 mx-auto" />
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="py-3 px-4">Community Access</td>
+                      <td className="text-center py-3 px-4">
+                        <Check className="w-5 h-5 text-green-500 mx-auto" />
+                      </td>
+                      <td className="text-center py-3 px-4 bg-primary/5">
+                        <Check className="w-5 h-5 text-green-500 mx-auto" />
+                      </td>
+                    </tr>
+                    <tr className="border-b border-border">
+                      <td className="py-3 px-4">Early Access to New Agents</td>
+                      <td className="text-center py-3 px-4">
+                        <X className="w-5 h-5 text-muted-foreground mx-auto" />
+                      </td>
+                      <td className="text-center py-3 px-4 bg-primary/5">
+                        <Check className="w-5 h-5 text-green-500 mx-auto" />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <Separator className="my-6" />
+
+            <div className="flex flex-col gap-4">
+              <h3>Frequently Asked Questions</h3>
+              <div>
+                <h4 className="mb-2">Can I cancel anytime?</h4>
+                <p className="text-sm text-muted-foreground">
+                  Yes, you can cancel your Pro subscription at any time. You'll
+                  continue to have access until the end of your current billing
+                  period.
+                </p>
+              </div>
+              <div>
+                <h4 className="mb-2">What payment methods do you accept?</h4>
+                <p className="text-sm text-muted-foreground">
+                  We accept all major credit cards, cryptocurrency payments, and
+                  wallet-based payments through MetaMask, Phantom, and other
+                  supported wallets.
+                </p>
+              </div>
+              <div>
+                <h4 className="mb-2">How does the 2x XP multiplier work?</h4>
+                <p className="text-sm text-muted-foreground">
+                  Pro members earn double XP for all activities, helping you
+                  level up faster and climb the leaderboard more quickly.
+                </p>
+              </div>
+              <div>
+                <h4 className="mb-2">
+                  What happens to my data if I downgrade?
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  All your prediction history, XP, and level progress are
+                  preserved. You'll just be limited to the Basic tier features
+                  until you upgrade again.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -766,7 +885,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                               day: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit',
-                            }
+                            },
                           )}
                         </span>
                       </div>

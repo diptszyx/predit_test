@@ -12,6 +12,7 @@ import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { getStatusBadgeProps } from './MarketListAdmin'
+import { handleShareMarket } from '../../utils/shareMarket.utils'
 
 interface MarketInfoModal {
   open: boolean
@@ -45,18 +46,6 @@ const MarketInfoModal = ({ open, onOpenChange, market, handleBetClick, fetchMark
       });
     } finally {
       setResolving(false);
-    }
-  };
-
-  const handleShareMarket = async () => {
-    const marketUrl = `${window.location.origin}/market/${market.id}`;
-
-    try {
-      await navigator.clipboard.writeText(marketUrl);
-      toast.success('Market link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link: ', error);
-      toast.error('Failed to copy link');
     }
   };
 
@@ -219,7 +208,13 @@ const MarketInfoModal = ({ open, onOpenChange, market, handleBetClick, fetchMark
             </div>
           </div>
 
-          <Share2 className="w-4 h-4" onClick={handleShareMarket} />
+          {
+            (market.chatId && market.status === 'open') ?
+              <Share2 className="w-4 h-4 cursor-pointer"
+                onClick={(e: React.MouseEvent) =>
+                  handleShareMarket(e, `${window.location.origin}/market/${market.id}/chat/${market.chatId}`)} />
+              : <></>
+          }
         </div>
 
         {isAdmin ? <>

@@ -5,7 +5,9 @@ import { toast } from 'sonner';
 import { arcLength } from '../../constants/ui';
 import { formatDate } from '../../lib/date';
 import { marketAdminServices } from '../../services/market-admin.service';
+import { createPreditMarketChat } from '../../services/market-messages.service';
 import { Market } from '../../services/market.service';
+import { handleShareMarket } from '../../utils/shareMarket.utils';
 import CreateUpdateMarketModal from '../CreateMarket';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import {
@@ -90,8 +92,19 @@ export default function MarketListAdmin({
     }
   }, [onRefetchReady]);
 
-  const handleMarketClick = (item: Market) => {
-    navigate(`/market/${item.id}`);
+  const handleMarketClick = async (item: Market) => {
+    if (!item.chatId) {
+      try {
+        const data = await createPreditMarketChat(item.id)
+        if (data)
+          navigate(`/market/${item.id}/chat/${data.id}`);
+      } catch (error) {
+        console.log('error', error)
+        toast.error('Something wrong with chat market')
+      }
+    } else {
+      navigate(`/market/${item.id}/chat/${item.chatId}`);
+    }
   };
 
   const handleRefetch = () => {
@@ -139,7 +152,7 @@ export default function MarketListAdmin({
       </div>
 
       {/* Error Message */}
-      {error && <p className="text-red-500 text-center py-2">{error}</p>}
+      {/* {error && <p className="text-red-500 text-center py-2">{error}</p>} */}
 
       {/* Markets Grid */}
       <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -255,7 +268,8 @@ const MarketItem: React.FC<MarketItemProps> = ({
   const [openConfirmCancel, setOpenConfirmCancel] = useState(false);
   const [openMarketResult, setOpenMarketResult] = useState(false);
   const [openUpdateMarket, setOpenUpdateMarket] = useState(false);
-  const [openDeleteMarket, setOpenDeleteMarket] = useState(false)
+  const [openDeleteMarket, setOpenDeleteMarket] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(
     getTimeRemaining(item.closeAt)
   );
@@ -283,16 +297,19 @@ const MarketItem: React.FC<MarketItemProps> = ({
   };
 
   const handleDeleteMarket = async () => {
+    setIsDeleting(true);
     try {
       const data = await marketAdminServices.deleteMarket(item.id);
       if (data.status === 204) {
         toast.success('Delete market successfully!');
-        setOpenConfirmCancel(false);
         onRefetch(); // Refetch the market list
       }
     } catch (error) {
       toast.error('Cannot delete a market with existing bets')
       console.error('Failed to delete market: ', error);
+    } finally {
+      setIsDeleting(false);
+      setOpenDeleteMarket(false);
     }
   };
 
@@ -315,19 +332,6 @@ const MarketItem: React.FC<MarketItemProps> = ({
   const handleUpdateSuccess = () => {
     setOpenUpdateMarket(false);
     onRefetch(); // Refetch the market list
-  };
-
-  const handleShareMarket = async (e: Event) => {
-    e.stopPropagation();
-    const marketUrl = `${window.location.origin}/market/${item.id}`;
-
-    try {
-      await navigator.clipboard.writeText(marketUrl);
-      toast.success('Market link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link: ', error);
-      toast.error('Failed to copy link');
-    }
   };
 
   return (
@@ -416,21 +420,25 @@ const MarketItem: React.FC<MarketItemProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto">
-              Maybe Later
+            <AlertDialogCancel
+              className="w-full sm:w-auto"
+              disabled={isDeleting}
+            >
+              Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteMarket}
+              disabled={isDeleting}
               className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto"
             >
-              Confirm
+              {isDeleting ? "Deleting..." : "Confirm"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <Card
-        className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg"
+        className="overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg hover:border-blue-500/50 hover:scale-[1.02]"
         onClick={() => onClick(item)}
       >
         <CardContent className="p-2">
@@ -558,7 +566,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
                         e.stopPropagation();
                         setOpenUpdateMarket(true);
                       }}
-                      className="bg-background/white hover:bg-accent/50 p-1 rounded-full"
+                      className="bg-background/white hover:opacity-70 transition-opacity p-1 rounded-full"
                     >
                       <Pen className="w-4 h-4" />
                     </Button>
@@ -573,18 +581,21 @@ const MarketItem: React.FC<MarketItemProps> = ({
                 e.stopPropagation();
                 setOpenDeleteMarket(true);
               }}
-              className="bg-background/white hover:bg-accent/50 p-1 rounded-full ml-auto"
+              className="bg-background/white hover:opacity-70 transition-opacity p-1 rounded-full ml-auto"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShareMarket}
-              className="bg-background/50 hover:bg-accent/50 p-1 rounded-full"
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
+            {item.chatId &&
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e: React.MouseEvent) =>
+                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)}
+                className="bg-background/50 hover:opacity-70 transition-opacity p-1 rounded-full"
+              >
+                <Share2 className="w-4 h-4" />
+              </Button>
+            }
           </div>
         </CardContent>
       </Card>

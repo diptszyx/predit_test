@@ -7,7 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { rdImageMarket } from '../../constants/ui';
 import { useMarketDetail } from '../../hooks/dflow/useMarketDetail';
-import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
+import { USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
 import { formatDateTime } from '../../lib/date';
 import useAuthStore from '../../store/auth.store';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
@@ -37,6 +37,7 @@ export const MarketDetailPage = () => {
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
   const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
   const [amount, setAmount] = useState('');
+  const [errorAmount, setErrorAmount] = useState('');
   const [balance, setBalance] = useState('0');
 
   const fetchBalance = async () => {
@@ -45,10 +46,9 @@ export const MarketDetailPage = () => {
       let mintToCheck = USDC_MINT;
 
       if (tradeSide === 'BUY') {
-        mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+        mintToCheck = USDC_MINT;
       } else if (tradeSide === 'SELL') {
-        const dflowAccount =
-          market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        const dflowAccount = market.accounts[USDC_MINT];
         if (dflowAccount) {
           mintToCheck =
             selectedOutcome === 'Yes'
@@ -81,7 +81,17 @@ export const MarketDetailPage = () => {
 
   const handleMaxAmount = () => {
     const max = parseFloat(balance);
-    if (max > 0) setAmount(max.toString());
+    if (max > 0) handleSetAmount(max.toString());
+  };
+
+  const handleSetAmount = (val: string) => {
+    setAmount(val);
+
+    if (Number(val) < 1) {
+      setErrorAmount('Minimum amount for buying is 1');
+    } else {
+      setErrorAmount('');
+    }
   };
 
   const handleTrade = async () => {
@@ -101,7 +111,7 @@ export const MarketDetailPage = () => {
     }
 
     try {
-      const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+      const inputMint = USDC_MINT;
       let result;
       if (tradeSide === 'BUY') {
         const mint =
@@ -118,10 +128,8 @@ export const MarketDetailPage = () => {
       } else {
         const mint =
           selectedOutcome === 'Yes'
-            ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .yesMint
-            : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .noMint;
+            ? market.accounts[USDC_MINT].yesMint
+            : market.accounts[USDC_MINT].noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
@@ -187,15 +195,18 @@ export const MarketDetailPage = () => {
   const buyPrice =
     selectedOutcome === 'Yes' ? dflowMarket.yesAsk : dflowMarket.noAsk;
   const sellPrice =
-    selectedOutcome === 'Yes' ? dflowMarket.yesBid : dflowMarket.noBid
-  const isBuyDisabled = buyPrice === null
-  const isSellDisabled = sellPrice === null
+    selectedOutcome === 'Yes' ? dflowMarket.yesBid : dflowMarket.noBid;
+  const isBuyDisabled = buyPrice === null;
+  const isSellDisabled = sellPrice === null;
 
   const isConfirmDisabled =
-    isTrading || !user || !amount ||
+    isTrading ||
+    !user ||
+    !amount ||
+    (tradeSide === 'BUY' && errorAmount) ||
     parseFloat(amount) <= 0 ||
     (tradeSide === 'BUY' && isBuyDisabled) ||
-    (tradeSide === 'SELL' && isSellDisabled)
+    (tradeSide === 'SELL' && isSellDisabled);
 
   return (
     <div className="min-h-screen bg-background">
@@ -267,9 +278,12 @@ export const MarketDetailPage = () => {
                         <h1 className="text-lg md:text-xl font-bold">
                           {market.title}
                           <Badge
-                            variant={getStatusBadgeProps(dflowMarket.status).variant}
-                            className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${getStatusBadgeProps(dflowMarket.status).className
-                              }`}
+                            variant={
+                              getStatusBadgeProps(dflowMarket.status).variant
+                            }
+                            className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${
+                              getStatusBadgeProps(dflowMarket.status).className
+                            }`}
                           >
                             {dflowMarket.status}
                           </Badge>
@@ -279,18 +293,21 @@ export const MarketDetailPage = () => {
                   </div>
 
                   {/* Result */}
-                  {dflowMarket.result &&
+                  {dflowMarket.result && (
                     <div className="pt-2 mb-0 flex items-center">
                       <h4 className="font-semibold">Result</h4>
                       <Badge
-                        variant={getStatusBadgeProps(dflowMarket.result).variant}
-                        className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${getStatusBadgeProps(dflowMarket.result).className
-                          }`}
+                        variant={
+                          getStatusBadgeProps(dflowMarket.result).variant
+                        }
+                        className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${
+                          getStatusBadgeProps(dflowMarket.result).className
+                        }`}
                       >
                         {dflowMarket.result}
                       </Badge>
                     </div>
-                  }
+                  )}
                   {/* Quotes */}
                   <div className="pt-2 space-y-3">
                     <h4 className="font-semibold">Quotes</h4>
@@ -301,7 +318,8 @@ export const MarketDetailPage = () => {
                         <div className="px-4 py-3 border-b flex items-center justify-between">
                           <span className="font-semibold">Yes</span>
                           <span className="text-xs text-muted-foreground">
-                            Bid {safePrice(dflowMarket.yesBid)} / Ask {safePrice(dflowMarket.yesAsk)}
+                            Bid {safePrice(dflowMarket.yesBid)} / Ask{' '}
+                            {safePrice(dflowMarket.yesAsk)}
                           </span>
                         </div>
 
@@ -313,13 +331,16 @@ export const MarketDetailPage = () => {
                                 ${safePrice(dflowMarket.yesAsk)}
                               </span>
                               <span className="text-xs text-muted-foreground">
-                                (+${(1 - Number(dflowMarket.yesAsk)).toFixed(2)})
+                                (+${(1 - Number(dflowMarket.yesAsk)).toFixed(2)}
+                                )
                               </span>
                             </div>
                           </div>
 
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Sell Yes</span>
+                            <span className="text-sm font-medium">
+                              Sell Yes
+                            </span>
                             <span className="text-sm font-semibold">
                               ${safePrice(dflowMarket.yesBid)}
                             </span>
@@ -332,7 +353,8 @@ export const MarketDetailPage = () => {
                         <div className="px-4 py-3 border-b flex items-center justify-between">
                           <span className="font-semibold">No</span>
                           <span className="text-xs text-muted-foreground">
-                            Bid {safePrice(dflowMarket.noBid)} / Ask {safePrice(dflowMarket.noAsk)}
+                            Bid {safePrice(dflowMarket.noBid)} / Ask{' '}
+                            {safePrice(dflowMarket.noAsk)}
                           </span>
                         </div>
 
@@ -364,7 +386,9 @@ export const MarketDetailPage = () => {
                   <div className="space-y-3">
                     {dflowMarket.rulesPrimary ? (
                       <div className="pt-4">
-                        <h4 className="font-semibold mb-2">How this market works</h4>
+                        <h4 className="font-semibold mb-2">
+                          How this market works
+                        </h4>
                         <p className="text-muted-foreground whitespace-pre-wrap">
                           {dflowMarket.earlyCloseCondition}
                           <br /> <br />
@@ -373,7 +397,7 @@ export const MarketDetailPage = () => {
                           {dflowMarket.rulesSecondary}
                         </p>
                       </div>
-                    ) :
+                    ) : (
                       <div className="pt-4">
                         <h4 className="font-semibold mb-2">Market Rules</h4>
                         <p className="text-muted-foreground whitespace-pre-wrap">
@@ -381,19 +405,19 @@ export const MarketDetailPage = () => {
                           resolve to "YES" if the outcome specified in the title
                           occurs by the event’s official conclusion. Otherwise,
                           the market will resolve to "NO". <br /> <br />
-                          Trading for this market will be locked at the close time
-                          listed above. After the event has concluded, the market
-                          will be resolved based on publicly available and
-                          verifiable information from reliable sources.
+                          Trading for this market will be locked at the close
+                          time listed above. After the event has concluded, the
+                          market will be resolved based on publicly available
+                          and verifiable information from reliable sources.
                           <br />
                           <br />
-                          Please note that this market is intended for prediction
-                          and trading purposes only. Prices reflect the market’s
-                          implied probability and do not represent guaranteed
-                          outcomes.
+                          Please note that this market is intended for
+                          prediction and trading purposes only. Prices reflect
+                          the market’s implied probability and do not represent
+                          guaranteed outcomes.
                         </p>
                       </div>
-                    }
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -476,45 +500,6 @@ export const MarketDetailPage = () => {
                     </div>
                   </div>
 
-                  {/* Payment Token Selection (Only for BUY) */}
-                  {tradeSide === 'BUY' && (
-                    <div className="space-y-2">
-                      <Label>Pay with</Label>
-                      <RadioGroup
-                        defaultValue="USDC"
-                        value={buyToken}
-                        onValueChange={(value: any) =>
-                          setBuyToken(value as 'USDC' | 'CASH')
-                        }
-                        className="flex gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="USDC"
-                            id="USDC"
-                          />
-                          <Label htmlFor="USDC">
-                            <Usdc
-                              width={23}
-                              height={23}
-                            />
-                            USDC
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value="CASH"
-                            id="CASH"
-                          />
-                          <Label htmlFor="CASH">
-                            <CircleDollarSign />
-                            CASH
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  )}
-
                   {/* Amount Input */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -534,11 +519,15 @@ export const MarketDetailPage = () => {
                       placeholder="Enter amount"
                       value={amount}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setAmount(e.target.value)
+                        handleSetAmount(e.target.value)
                       }
-                      min="0"
+                      min={1}
+                      max={balance}
                       step="0.01"
                     />
+                    {tradeSide === 'BUY' && amount && errorAmount && (
+                      <p className="text-sm text-red-500 mt-1">{errorAmount}</p>
+                    )}
                     <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
                       {[1, 20, 50].map((v) => {
                         const disabled =
@@ -562,12 +551,12 @@ export const MarketDetailPage = () => {
                             onClick={() => {
                               if (!disabled) {
                                 if (!amount) {
-                                  setAmount(String(v));
+                                  handleSetAmount(String(v));
                                 } else {
                                   const newValue = Number(amount) + v;
                                   if (newValue > Number(amount))
                                     handleMaxAmount();
-                                  else setAmount(String(newValue));
+                                  else handleSetAmount(String(newValue));
                                 }
                               }
                             }}
@@ -601,15 +590,13 @@ export const MarketDetailPage = () => {
                     {isTrading ? 'Processing...' : 'Confirm'}
                   </Button>
 
-                  {(dflowMarket.status === 'active' &&
-                    (isSellDisabled || isBuyDisabled)) &&
-                    <div className='bg-amber-400/75 p-2 mt-2 text-xs rounded-md flex items-center gap-3'>
-                      <TriangleAlert />
-                      <p>
-                        This market currently has low liquidity.
-                      </p>
-                    </div>
-                  }
+                  {dflowMarket.status === 'active' &&
+                    (isSellDisabled || isBuyDisabled) && (
+                      <div className="bg-amber-400/75 p-2 mt-2 text-xs rounded-md flex items-center gap-3">
+                        <TriangleAlert />
+                        <p>This market currently has low liquidity.</p>
+                      </div>
+                    )}
 
                   {!user && (
                     <p className="text-xs text-center text-muted-foreground">

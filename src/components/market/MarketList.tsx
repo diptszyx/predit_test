@@ -14,6 +14,7 @@ import {
 } from '../../services/market.service';
 import useAuthStore from '../../store/auth.store';
 import { checkIsAdmin } from '../../utils/isAdmin';
+import { handleShareMarket } from '../../utils/shareMarket.utils';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -80,9 +81,10 @@ export default function MarketList({
   const loadMoreBetHistoryRef = useRef<HTMLDivElement>(null);
   const [pageMyBetHistory, setPageMyBetHistory] = useState(1);
   const [hasMoreMyBetHistory, setHasMoreMyBetHistory] = useState(false);
+  const isUserBlocked = !isAdmin && !user?.appliedInviteCode
 
   const fetchMarkets = async (pageNum: number, replace = false) => {
-    if (!user?.appliedInviteCode) return;
+    if (isUserBlocked) return;
     try {
       setLoading(true);
       const data = await getListMarket({
@@ -248,6 +250,8 @@ export default function MarketList({
     }
   };
 
+  const shouldShowSkeleton = loading || isUserBlocked
+
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
@@ -318,9 +322,9 @@ export default function MarketList({
               <div ref={loadMoreBetHistoryRef} className="h-10" />
             )}
 
-            {(loading || !user?.appliedInviteCode) && (
+            {shouldShowSkeleton && (
               <>
-                {[1, 2].map((i) => (
+                {[1, 2, 3].map((i) => (
                   <div key={i} className="space-y-2">
                     <Skeleton className="h-20 w-full rounded-lg" />
                     <Skeleton className="h-3 w-full" />
@@ -355,7 +359,7 @@ export default function MarketList({
           />
 
           {!loading &&
-            user?.appliedInviteCode &&
+            (isAdmin || !!user?.appliedInviteCode) &&
             (markets.length === 0 ||
               (myBetHistory.length === 0 && isBetHistoryPage)) && (
               <p className="text-center text-xs text-muted-foreground py-8">
@@ -421,19 +425,6 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
 
     return () => clearInterval(interval);
   }, [item.closeAt, item.status]);
-
-  const handleShareMarket = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const marketUrl = `${window.location.origin}/market/${item.id}`;
-
-    try {
-      await navigator.clipboard.writeText(marketUrl);
-      toast.success('Market link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link: ', error);
-      toast.error('Failed to copy link');
-    }
-  };
 
   const handleCardClick = async () => {
     if (!item.chatId) {
@@ -560,8 +551,13 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
               <span>{formatDate(item.closeAt)}</span>
             </div>
           </div>
-
-          <Share2 className="w-4 h-4" onClick={handleShareMarket} />
+          {
+            (item.chatId && item.status === 'open') ?
+              <Share2 className="w-4 h-4"
+                onClick={(e: React.MouseEvent) =>
+                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)} />
+              : <></>
+          }
         </div>
       </CardContent>
     </Card>
@@ -605,19 +601,6 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
 
     return () => clearInterval(interval);
   }, [item.closeAt]);
-
-  const handleShareMarket = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const marketUrl = `${window.location.origin}/market/${item.id}`;
-
-    try {
-      await navigator.clipboard.writeText(marketUrl);
-      toast.success('Market link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link: ', error);
-      toast.error('Failed to copy link');
-    }
-  };
 
   const handleCardClick = async () => {
     if (!item.chatId) {
@@ -691,7 +674,7 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
                 </Badge>
               )}
             </div>
-            <div className="flex flex-col items-center flex-shrink-0">
+            <div className="flex flex-col items-center shrink-0">
               {/* Semicircle Progress Bar */}
               <div className="relative w-24 h-12 mb-1">
                 <svg
@@ -788,7 +771,13 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
             </div>
           </div>
 
-          <Share2 className="w-4 h-4" onClick={handleShareMarket} />
+          {
+            (item.chatId && item.status === 'open') ?
+              <Share2 className="w-4 h-4"
+                onClick={(e: React.MouseEvent) =>
+                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)} />
+              : <></>
+          }
         </div>
       </CardContent>
     </Card>

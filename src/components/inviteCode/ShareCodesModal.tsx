@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { InviteCode } from '../../services/invite-code.service';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { Button } from '../ui/button';
+import { Checkbox } from '../ui/checkbox';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { Checkbox } from '../ui/checkbox';
-import { InviteCode } from '../../services/invite-code.service';
-import { Twitter } from 'lucide-react';
 
 interface ShareCodesModalProps {
   open: boolean;
@@ -119,7 +119,10 @@ export default function ShareCodesModal({
               disabled={selectedCodes.length === 0}
               className="gap-2"
             >
-              <Twitter className="w-4 h-4" />
+              <ImageWithFallback
+                src={'/X.png'}
+                className="w-4 h-4"
+              />
               Share on X
             </Button>
           </div>

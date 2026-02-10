@@ -2,8 +2,12 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { CASH_MINT, USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
-import { DflowDataEntity, DflowMarket, getDflowMarket } from '../../services/dflow.service';
+import { USDC_MINT, useTrade } from '../../hooks/dflow/useTrade';
+import {
+  DflowDataEntity,
+  DflowMarket,
+  getDflowMarket,
+} from '../../services/dflow.service';
 import useAuthStore from '../../store/auth.store';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
@@ -28,11 +32,11 @@ export const toPriceLabel = (num: string, fixed = 2): string =>
   parseFloat(num).toFixed(fixed);
 
 export const safePrice = (v?: string | number | null) => {
-  if (v === null || v === undefined) return '--'
-  const n = Number(v)
-  if (isNaN(n)) return '--'
-  return n.toFixed(2)
-}
+  if (v === null || v === undefined) return '--';
+  const n = Number(v);
+  if (isNaN(n)) return '--';
+  return n.toFixed(2);
+};
 
 const TradeModalDflow = ({
   open,
@@ -55,8 +59,9 @@ const TradeModalDflow = ({
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
   const [buyToken, setBuyToken] = useState<'USDC' | 'CASH'>('USDC');
   const [amount, setAmount] = useState('');
+  const [errorAmount, setErrorAmount] = useState('');
 
-  const [dflowMarket, setDflowMarket] = useState<DflowMarket | null>(null)
+  const [dflowMarket, setDflowMarket] = useState<DflowMarket | null>(null);
 
   const fetchBalance = async () => {
     if (!publicKey || !market) return;
@@ -64,10 +69,10 @@ const TradeModalDflow = ({
       let mintToCheck = USDC_MINT;
 
       if (tradeSide === 'BUY') {
-        mintToCheck = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
       } else if (tradeSide === 'SELL') {
-        const dflowAccount =
-          market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH'];
+        const dflowAccount = market.accounts[USDC_MINT];
+
+        console.log(market);
         if (dflowAccount) {
           mintToCheck =
             selectedOutcome === 'Yes'
@@ -93,8 +98,8 @@ const TradeModalDflow = ({
   };
 
   useEffect(() => {
-    fetchDflowMarket()
-  }, [open])
+    fetchDflowMarket();
+  }, [open]);
 
   useEffect(() => {
     if (open && publicKey) {
@@ -107,21 +112,32 @@ const TradeModalDflow = ({
       setSelectedOutcome(initialOutcome);
       setTradeSide('BUY');
       setAmount('');
+      setErrorAmount('');
     }
   }, [open, initialOutcome]);
 
   const fetchDflowMarket = async () => {
     try {
-      const dflowMarket = await getDflowMarket(market.id)
-      if (dflowMarket) setDflowMarket(dflowMarket)
+      const dflowMarket = await getDflowMarket(market.id);
+      if (dflowMarket) setDflowMarket(dflowMarket);
     } catch (error) {
-      console.log("Failed to fetch market from Dflow", error)
+      console.log('Failed to fetch market from Dflow', error);
     }
-  }
+  };
 
   const handleMaxAmount = () => {
     const max = parseFloat(balance);
-    if (max > 0) setAmount(max.toString());
+    if (max > 0) handleSetAmount(max.toString());
+  };
+
+  const handleSetAmount = (val: string) => {
+    setAmount(val);
+
+    if (Number(val) < 1) {
+      setErrorAmount('Minimum amount for buying is 1');
+    } else {
+      setErrorAmount('');
+    }
   };
 
   const handleTrade = async () => {
@@ -141,7 +157,7 @@ const TradeModalDflow = ({
     }
 
     try {
-      const inputMint = buyToken === 'USDC' ? USDC_MINT : CASH_MINT;
+      const inputMint = USDC_MINT;
 
       let result;
       if (tradeSide === 'BUY') {
@@ -159,10 +175,10 @@ const TradeModalDflow = ({
       } else {
         const mint =
           selectedOutcome === 'Yes'
-            ? market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .yesMint
-            : market.accounts['CASHx9KJUStyftLFWGvEVf59SGeG9sh5FfcnZMVPCASH']
-              .noMint;
+            ? market.accounts['EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v']
+                .yesMint
+            : market.accounts['EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v']
+                .noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
@@ -201,15 +217,18 @@ const TradeModalDflow = ({
   const buyPrice =
     selectedOutcome === 'Yes' ? dflowMarket?.yesAsk : dflowMarket?.noAsk;
   const sellPrice =
-    selectedOutcome === 'Yes' ? dflowMarket?.yesBid : dflowMarket?.noBid
-  const isBuyDisabled = buyPrice === null
-  const isSellDisabled = sellPrice === null
+    selectedOutcome === 'Yes' ? dflowMarket?.yesBid : dflowMarket?.noBid;
+  const isBuyDisabled = buyPrice === null;
+  const isSellDisabled = sellPrice === null;
 
   const isConfirmDisabled =
-    isTrading || !user || !amount ||
+    isTrading ||
+    !user ||
+    !amount ||
+    (tradeSide === 'BUY' && errorAmount) ||
     parseFloat(amount) <= 0 ||
     (tradeSide === 'BUY' && isBuyDisabled) ||
-    (tradeSide === 'SELL' && isSellDisabled)
+    (tradeSide === 'SELL' && isSellDisabled);
 
   return (
     <Dialog
@@ -221,16 +240,18 @@ const TradeModalDflow = ({
         className="sm:max-w-md"
       >
         <DialogHeader>
-          <DialogTitle>{market.title}
-            {dflowMarket &&
+          <DialogTitle>
+            {market.title}
+            {dflowMarket && (
               <Badge
                 variant={getStatusBadgeProps(dflowMarket?.status).variant}
-                className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${getStatusBadgeProps(dflowMarket?.status).className
-                  }`}
+                className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${
+                  getStatusBadgeProps(dflowMarket?.status).className
+                }`}
               >
                 {dflowMarket?.status}
               </Badge>
-            }
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -269,9 +290,7 @@ const TradeModalDflow = ({
               }
             >
               BUY
-              <span className="ml-2 text-xs">
-                ${safePrice(buyPrice)}
-              </span>
+              <span className="ml-2 text-xs">${safePrice(buyPrice)}</span>
             </Button>
             <Button
               disabled={isSellDisabled}
@@ -282,51 +301,10 @@ const TradeModalDflow = ({
               }
             >
               SELL
-              <span className="ml-2 text-xs">
-                ${safePrice(sellPrice)}
-              </span>
+              <span className="ml-2 text-xs">${safePrice(sellPrice)}</span>
             </Button>
           </div>
         </div>
-
-        {/* Payment Token Selection (Only for BUY) */}
-        {tradeSide === 'BUY' && (
-          <div className="space-y-2">
-            <Label>Pay with</Label>
-            <RadioGroup
-              defaultValue="USDC"
-              value={buyToken}
-              onValueChange={(value: any) =>
-                setBuyToken(value as 'USDC' | 'CASH')
-              }
-              className="flex gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem
-                  value="USDC"
-                  id="USDC"
-                />
-                <Label htmlFor="USDC">
-                  <Usdc
-                    width={23}
-                    height={23}
-                  />
-                  USDC
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem
-                  value="CASH"
-                  id="CASH"
-                />
-                <Label htmlFor="CASH">
-                  <CircleDollarSign />
-                  CASH
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-        )}
 
         {/* Amount Input */}
         <div className="space-y-2">
@@ -346,11 +324,15 @@ const TradeModalDflow = ({
             placeholder="Enter amount"
             value={amount}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setAmount(e.target.value)
+              handleSetAmount(e.target.value)
             }
-            min="0"
+            min={1}
+            max={balance}
             step="0.01"
           />
+          {tradeSide === 'BUY' && amount && errorAmount && (
+            <p className="text-sm text-red-500 mt-1">{errorAmount}</p>
+          )}
           <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
             {[1, 20, 50].map((v) => {
               const disabled =
@@ -374,11 +356,11 @@ const TradeModalDflow = ({
                   onClick={() => {
                     if (!disabled) {
                       if (!amount) {
-                        setAmount(String(v));
+                        handleSetAmount(String(v));
                       } else {
                         const newValue = Number(amount) + v;
                         if (newValue > Number(amount)) handleMaxAmount();
-                        else setAmount(String(newValue));
+                        else handleSetAmount(String(newValue));
                       }
                     }
                   }}
@@ -412,15 +394,13 @@ const TradeModalDflow = ({
           {isTrading ? 'Processing...' : 'Confirm'}
         </Button>
 
-        {(dflowMarket?.status === 'active' &&
-          (isSellDisabled || isBuyDisabled)) &&
-          <div className='bg-amber-400/75 p-2 mt-2 text-xs rounded-md flex items-center gap-2'>
-            <TriangleAlert className='w-5 h-5' />
-            <p>
-              This market currently has low liquidity.
-            </p>
-          </div>
-        }
+        {dflowMarket?.status === 'active' &&
+          (isSellDisabled || isBuyDisabled) && (
+            <div className="bg-amber-400/75 p-2 mt-2 text-xs rounded-md flex items-center gap-2">
+              <TriangleAlert className="w-5 h-5" />
+              <p>This market currently has low liquidity.</p>
+            </div>
+          )}
 
         {!user && (
           <p className="text-xs text-center text-muted-foreground">

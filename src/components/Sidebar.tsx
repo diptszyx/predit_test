@@ -11,6 +11,7 @@ import {
   History,
   Home,
   LineChart,
+  ListTodo,
   LogOut,
   MessageCircle,
   MessageSquare,
@@ -24,7 +25,8 @@ import {
   Trophy,
   User,
   Users,
-  Zap
+  Zap,
+  ScrollText,
 } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -73,12 +75,6 @@ interface NavigationItem {
 
 const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   {
-    id: 'home',
-    label: 'Home',
-    icon: Home,
-    requiresAuth: false,
-  },
-  {
     id: 'chat',
     label: 'Predictions',
     icon: MessageSquare,
@@ -86,10 +82,16 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     children: [],
   },
   {
-    id: 'hotTakes',
-    label: 'Hot Takes',
-    icon: Flame,
-    requiresAuth: false,
+    id: 'kalshi',
+    label: 'Kalshi Market',
+    icon: Store,
+    requiresAuth: true,
+  },
+  {
+    id: 'quests',
+    label: 'Quests',
+    icon: ScrollText,
+    requiresAuth: true,
   },
   {
     id: 'leaderboard',
@@ -98,16 +100,16 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     requiresAuth: true,
   },
   {
-    id: 'subscription',
-    label: 'Subscription',
-    icon: Crown,
-    requiresAuth: true,
-  },
-  {
     id: 'market',
     label: 'Predit Market',
     icon: ShoppingCart,
     requiresAuth: true,
+  },
+  {
+    id: 'hotTakes',
+    label: 'Hot Takes',
+    icon: Flame,
+    requiresAuth: false,
   },
   ...(import.meta.env.VITE_POLYMARKET_ENABLE === 'true'
     ? [
@@ -119,12 +121,6 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
       },
     ]
     : []),
-  {
-    id: 'kalshi',
-    label: 'Kalshi Market',
-    icon: Store,
-    requiresAuth: true,
-  },
   {
     id: 'invites',
     label: 'Invites',
@@ -182,10 +178,10 @@ export function Sidebar({
   const polymarketEnabled = import.meta.env.VITE_POLYMARKET_ENABLE === 'true';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(
-    currentPage === 'chat' ? 'chat' : null
+    currentPage === 'chat' ? 'chat' : null,
   );
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>(
-    getBaseNavigationItems(isAdmin)
+    getBaseNavigationItems(isAdmin),
   );
   const [chats, setChats] = useState<ChatEntity[]>([]);
   const [showAllChats, setShowAllChats] = useState(false);
@@ -211,7 +207,11 @@ export function Sidebar({
               ...item,
               // If user is logged in, show 'chat' section with its children set to chats
               // We'll modify hasChildren check later or ensure children isn't empty if we want to show 'New Chat'
-              children: user ? !polymarketEnabled ? chatsData.filter(i => !i.polymarketId) : chatsData : [],
+              children: user
+                ? !polymarketEnabled
+                  ? chatsData.filter((i) => !i.polymarketId)
+                  : chatsData
+                : [],
             };
           }
           return item;
@@ -281,7 +281,10 @@ export function Sidebar({
       {/* Logo Section */}
       <div className="relative px-6 py-3 border-b border-border">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-3"
+            onClick={() => navigate('/')}
+          >
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <ImageWithFallback
                 src={'/logo-MarkWhite.svg'}
@@ -309,7 +312,8 @@ export function Sidebar({
       <nav className="flex-1 p-4 space-y-1 min-h-[200px] overflow-y-auto scrollbar-hide">
         {navigationItems.map((item) => {
           const Icon = item.icon;
-          const hasChildren = !!item.children?.length || (item.id === 'chat' && !!user);
+          const hasChildren =
+            !!item.children?.length || (item.id === 'chat' && !!user);
           const isActiveParent = currentPage === item.id && !hasChildren;
 
           const handleItemClick = () => {
@@ -326,7 +330,10 @@ export function Sidebar({
           };
 
           return (
-            <div key={item.id} className="w-full">
+            <div
+              key={item.id}
+              className="w-full"
+            >
               <Button
                 variant="ghost"
                 className={`w-full justify-start ${isActiveParent
@@ -359,8 +366,17 @@ export function Sidebar({
                       New Chat
                     </Button>
                   )}
-                  <div className={`${showAllChats && item.id === 'chat' ? 'max-h-[300px] overflow-y-auto pr-2' : ''} flex flex-col gap-2`}>
-                    {((showAllChats && item.id === 'chat' ? item.children : (item.children && item.children.length > 0 ? item.children : [])?.slice(0, 5)) || []).map((child) => {
+                  <div
+                    className={`${showAllChats && item.id === 'chat' ? 'max-h-[300px] overflow-y-auto pr-2' : ''} flex flex-col gap-2`}
+                  >
+                    {(
+                      (showAllChats && item.id === 'chat'
+                        ? item.children
+                        : (item.children && item.children.length > 0
+                          ? item.children
+                          : []
+                        )?.slice(0, 5)) || []
+                    ).map((child) => {
                       const chat = child as ChatEntity;
                       return (
                         <Button
@@ -370,18 +386,26 @@ export function Sidebar({
                           className={`w-full justify-start text-[12.5px] text-muted-foreground hover:text-foreground hover:bg-accent/50`}
                           onClick={() => {
                             if (chat.polymarketId) {
-                              return navigate(`/polymarket/${chat.polymarketId}/chat/${chat.id}`);
+                              return navigate(
+                                `/polymarket/${chat.polymarketId}/chat/${chat.id}`,
+                              );
                             } else if (chat.marketId) {
-                              return navigate(`/market/${chat.marketId}/chat/${chat.id}`);
+                              return navigate(
+                                `/market/${chat.marketId}/chat/${chat.id}`,
+                              );
                             } else if (chat.kalshiId) {
-                              return navigate(`/kalshi/${chat.kalshiId}/chat/${chat.id}`)
+                              return navigate(
+                                `/kalshi/${chat.kalshiId}/chat/${chat.id}`,
+                              );
                             } else {
                               return navigate(`/chat/${chat.id}`);
                             }
                           }}
                         >
                           <MessageCircle className="w-4 h-4 mr-2" />
-                          <span className="truncate">{chat.firstMessage ?? `New Message`}</span>
+                          <span className="truncate">
+                            {chat.firstMessage ?? `New Message`}
+                          </span>
                         </Button>
                       );
                     })}
@@ -393,7 +417,9 @@ export function Sidebar({
                       className="text-xs text-primary hover:text-primary/80 h-7"
                       onClick={() => setShowAllChats(!showAllChats)}
                     >
-                      {showAllChats ? 'Show Less' : `View More (${(item.children || []).length - 5} more)`}
+                      {showAllChats
+                        ? 'Show Less'
+                        : `View More (${(item.children || []).length - 5} more)`}
                     </Button>
                   )}
                 </div>
@@ -494,31 +520,36 @@ export function Sidebar({
                   </p>
 
                   <p className="text-xs gap-1 mt-0.5 text-muted-foreground flex items-center">
-                    <img src="/polygon.png" className='w-3 h-3' alt="" />
+                    <img
+                      src="/polygon.png"
+                      className="w-3 h-3"
+                      alt=""
+                    />
                     {shortenAddress(user?.appWallet || '')}
                     <Copy
                       className="w-3 h-3 ml-2 cursor-pointer"
-                      onClick={() =>
-                        handleCopyToClipboard(user?.appWallet)
-                      }
+                      onClick={() => handleCopyToClipboard(user?.appWallet)}
                     />
                   </p>
-                  <div className='text-xs mt-0.5 flex gap-1 items-center text-muted-foreground'>
-                    <img src="/solana.png" className='w-3 h-3' alt="" />
+                  <div className="text-xs mt-0.5 flex gap-1 items-center text-muted-foreground">
+                    <img
+                      src="/solana.png"
+                      className="w-3 h-3"
+                      alt=""
+                    />
                     <p>
-                      {(!publicKey || !connected) ?
-                        'Not connected' :
-                        shortenAddress(publicKey?.toBase58())
-                      }
+                      {!publicKey || !connected
+                        ? 'Not connected'
+                        : shortenAddress(publicKey?.toBase58())}
                     </p>
-                    {publicKey && connected &&
+                    {publicKey && connected && (
                       <Copy
                         className="w-3 h-3 ml-2 cursor-pointer"
                         onClick={() =>
                           handleCopyToClipboard(publicKey?.toBase58())
                         }
                       />
-                    }
+                    )}
                   </div>
                 </div>
               </div>
@@ -582,7 +613,10 @@ export function Sidebar({
             </div>
           </div>
         ) : (
-          <Button className="w-full" onClick={onOpenWalletDialog}>
+          <Button
+            className="w-full"
+            onClick={onOpenWalletDialog}
+          >
             <User className="w-4 h-4 mr-2" />
             Sign In
           </Button>
@@ -635,7 +669,10 @@ export function Sidebar({
         <aside className="w-64 border-r border-border bg-sidebar flex flex-col h-screen">
           {/* Logo Section */}
           <div className="py-4 px-6 border-b border-border">
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={() => navigate('/')}
+            >
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <ImageWithFallback
                   src={'/logo-MarkWhite.svg'}
@@ -654,7 +691,8 @@ export function Sidebar({
           <nav className="flex-1 p-4 space-y-1 min-h-[200px] overflow-y-auto scrollbar-hide">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-              const hasChildren = !!item.children?.length || (item.id === 'chat' && !!user);
+              const hasChildren =
+                !!item.children?.length || (item.id === 'chat' && !!user);
               const isActiveParent = currentPage === item.id && !hasChildren;
 
               const handleItemClick = () => {
@@ -671,7 +709,10 @@ export function Sidebar({
               };
 
               return (
-                <div key={item.id} className="w-full">
+                <div
+                  key={item.id}
+                  className="w-full"
+                >
                   <Button
                     variant="ghost"
                     className={`w-full justify-start ${isActiveParent
@@ -708,8 +749,17 @@ export function Sidebar({
                           New Chat
                         </Button>
                       )}
-                      <div className={`${item.id === 'chat' ? 'max-h-[100px] overflow-y-auto pr-2 scrollbar-hide' : ''} flex flex-col gap-2`}>
-                        {((showAllChats && item.id === 'chat' ? item.children : (item?.children && item?.children?.length > 0 ? item.children : [])?.slice(0, 5)) || []).map((child) => {
+                      <div
+                        className={`${item.id === 'chat' ? 'max-h-[100px] overflow-y-auto pr-2 scrollbar-hide' : ''} flex flex-col gap-2`}
+                      >
+                        {(
+                          (showAllChats && item.id === 'chat'
+                            ? item.children
+                            : (item?.children && item?.children?.length > 0
+                              ? item.children
+                              : []
+                            )?.slice(0, 5)) || []
+                        ).map((child) => {
                           const chat = child as ChatEntity;
                           return (
                             <Button
@@ -719,32 +769,42 @@ export function Sidebar({
                               className={`w-full justify-start text-[12.5px] text-muted-foreground hover:text-foreground hover:bg-accent/50`}
                               onClick={() => {
                                 if (chat.polymarketId) {
-                                  return navigate(`/polymarket/${chat.polymarketId}/chat/${chat.id}`);
+                                  return navigate(
+                                    `/polymarket/${chat.polymarketId}/chat/${chat.id}`,
+                                  );
                                 } else if (chat.marketId) {
-                                  return navigate(`/market/${chat.marketId}/chat/${chat.id}`);
+                                  return navigate(
+                                    `/market/${chat.marketId}/chat/${chat.id}`,
+                                  );
                                 } else if (chat.kalshiId) {
-                                  return navigate(`/kalshi/${chat.kalshiId}/chat/${chat.id}`)
+                                  return navigate(
+                                    `/kalshi/${chat.kalshiId}/chat/${chat.id}`,
+                                  );
                                 } else {
                                   return navigate(`/chat/${chat.id}`);
                                 }
                               }}
                             >
                               <MessageCircle className="w-4 h-4 mr-2" />
-                              <span className="truncate">{chat.firstMessage ?? `New Message`}</span>
+                              <span className="truncate">
+                                {chat.firstMessage ?? `New Message`}
+                              </span>
                             </Button>
                           );
                         })}
                       </div>
-                      {item.id === 'chat' && (item.children || []).length > 5 && !showAllChats && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs text-muted-foreground font-bold opacity-80 hover:text-primary/80 h-7"
-                          onClick={() => setShowAllChats(!showAllChats)}
-                        >
-                          {`View More (${(item.children || []).length - 5} more)`}
-                        </Button>
-                      )}
+                      {item.id === 'chat' &&
+                        (item.children || []).length > 5 &&
+                        !showAllChats && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-muted-foreground font-bold opacity-80 hover:text-primary/80 h-7"
+                            onClick={() => setShowAllChats(!showAllChats)}
+                          >
+                            {`View More (${(item.children || []).length - 5} more)`}
+                          </Button>
+                        )}
                     </div>
                   )}
                 </div>
@@ -836,31 +896,36 @@ export function Sidebar({
                       </p>
 
                       <p className="text-xs gap-1 text-muted-foreground flex items-center mt-1">
-                        <img src="/polygon.png" className='w-3 h-3' alt="" />
+                        <img
+                          src="/polygon.png"
+                          className="w-3 h-3"
+                          alt=""
+                        />
                         {shortenAddress(user?.appWallet || '')}
                         <Copy
                           className="w-3 h-3 ml-2 cursor-pointer"
-                          onClick={() =>
-                            handleCopyToClipboard(user?.appWallet)
-                          }
+                          onClick={() => handleCopyToClipboard(user?.appWallet)}
                         />
                       </p>
-                      <div className='text-xs mt-0.5 flex gap-1 items-center text-muted-foreground'>
-                        <img src="/solana.png" className='w-3 h-3' alt="" />
+                      <div className="text-xs mt-0.5 flex gap-1 items-center text-muted-foreground">
+                        <img
+                          src="/solana.png"
+                          className="w-3 h-3"
+                          alt=""
+                        />
                         <p>
-                          {(!publicKey || !connected) ?
-                            'Not connected' :
-                            shortenAddress(publicKey?.toBase58())
-                          }
+                          {!publicKey || !connected
+                            ? 'Not connected'
+                            : shortenAddress(publicKey?.toBase58())}
                         </p>
-                        {publicKey && connected &&
+                        {publicKey && connected && (
                           <Copy
                             className="w-3 h-3 ml-2 cursor-pointer"
                             onClick={() =>
                               handleCopyToClipboard(publicKey?.toBase58())
                             }
                           />
-                        }
+                        )}
                       </div>
                     </div>
                   </div>
@@ -925,7 +990,10 @@ export function Sidebar({
                 </div>
               </div>
             ) : (
-              <Button className="w-full" onClick={onOpenWalletDialog}>
+              <Button
+                className="w-full"
+                onClick={onOpenWalletDialog}
+              >
                 <User className="w-4 h-4 mr-2" />
                 Sign In
               </Button>

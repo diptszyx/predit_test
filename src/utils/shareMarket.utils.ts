@@ -4,9 +4,7 @@ const shareMarketOnX = (marketUrl: string) => {
   const text = encodeURIComponent(
     `Market is heating up — the outcome is still wide open.
 
-Which side would you pick?
-
-Watch how this plays out 👇
+Which side would you pick? Watch how this plays out 👇
 
 ${marketUrl}
 

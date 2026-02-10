@@ -28,6 +28,8 @@ import { RequirePhantomConnected } from './components/guard/WalletConnectGuard';
 import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
+import { PrivacyPolicyPage } from './components/legal/PrivacyPolicy';
+import { TermsOfServicePage } from './components/legal/TermsOfService';
 import MarketDetail from './components/market/MarketDetail';
 import MarketPage from './components/MarketPage';
 import PolymarketChatPage from './components/polymarket/PolymarketChatPage';
@@ -136,8 +138,10 @@ function AppContent() {
     if (path.match(/^\/polymarket\/[^/]+$/)) return 'polymarket-detail';
     if (path.match(/^\/polymarket\/[^/]+\/chat\/[^/]+$/))
       return 'polymarket-chat';
-    if (path === '/kalshi') return 'kalshi';
     if (path === '/quests') return 'quests';
+    if (path === '/kalshi') return 'kalshi';
+    if (path === '/privacy-policy') return 'privacy-policy';
+    if (path === '/terms-of-service') return 'terms-of-service';
     return 'home';
   };
 
@@ -204,6 +208,12 @@ function AppContent() {
         break;
       case 'quests':
         navigate('/quests');
+        break;
+      case 'privacy-policy':
+        navigate('/privacy-policy');
+        break;
+      case 'terms-of-service':
+        navigate('/terms-of-service');
         break;
       default:
         navigate('/');
@@ -467,7 +477,10 @@ function AppContent() {
         open={privacyDialogOpen}
         onOpenChange={setPrivacyDialogOpen}
       />
-      <TermsOfUse open={termsDialogOpen} onOpenChange={setTermsDialogOpen} />
+      <TermsOfUse
+        open={termsDialogOpen}
+        onOpenChange={setTermsDialogOpen}
+      />
       <UserProfileDialog
         open={profileDialogOpen}
         onOpenChange={handleProfileDialogOpenChange}
@@ -506,8 +519,14 @@ function AppContent() {
                 property="og:description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
-              <meta property="og:type" content="website" />
-              <meta name="twitter:card" content="summary_large_image" />
+              <meta
+                property="og:type"
+                content="website"
+              />
+              <meta
+                name="twitter:card"
+                content="summary_large_image"
+              />
               <meta
                 name="twitter:title"
                 content="AI-Powered Market Predictions | Predit Market AI Oracles Platform"
@@ -516,7 +535,10 @@ function AppContent() {
                 name="twitter:description"
                 content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
               />
-              <link rel="canonical" href={window.location.origin} />
+              <link
+                rel="canonical"
+                href={window.location.origin}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <div className="flex-1 overflow-y-auto">
@@ -579,7 +601,10 @@ function AppContent() {
                 property="og:description"
                 content="Chat with specialized AI oracle agents for expert market predictions and insights."
               />
-              <link rel="canonical" href={`${window.location.origin}/chat`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/chat`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -855,7 +880,10 @@ function AppContent() {
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               {user && (
                 <div className="flex-1 overflow-y-auto">
-                  <SettingsPage onBack={() => navigate('/chat')} user={user} />
+                  <SettingsPage
+                    onBack={() => navigate('/chat')}
+                    user={user}
+                  />
                 </div>
               )}
               {commonDialogProps}
@@ -941,7 +969,10 @@ function AppContent() {
                 name="description"
                 content="Create and manage prediction markets powered by AI Oracles."
               />
-              <link rel="canonical" href={`${window.location.origin}/market`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/market`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -966,7 +997,10 @@ function AppContent() {
                 name="description"
                 content="Create and manage topics powered by AI Oracles."
               />
-              <link rel="canonical" href={`${window.location.origin}/topic`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/topic`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -992,7 +1026,10 @@ function AppContent() {
                 name="description"
                 content="View and manage prediction market details."
               />
-              <link rel="canonical" href={`${window.location.origin}/market`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/market`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1170,7 +1207,10 @@ function AppContent() {
                 content="Track your earned and spent XP from different activities and events."
               />
 
-              <link rel="canonical" href={`https://predit.market/xp-history`} />
+              <link
+                rel="canonical"
+                href={`https://predit.market/xp-history`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1204,7 +1244,10 @@ function AppContent() {
               />
 
               {/* Open Graph */}
-              <meta property="og:type" content="website" />
+              <meta
+                property="og:type"
+                content="website"
+              />
               <meta
                 property="og:title"
                 content={'Shared Chat | Predit Market AI'}
@@ -1217,7 +1260,10 @@ function AppContent() {
               />
 
               {/* Twitter */}
-              <meta name="twitter:card" content="summary" />
+              <meta
+                name="twitter:card"
+                content="summary"
+              />
               <meta
                 name="twitter:title"
                 content={'Shared Chat | Predit Market AI'}
@@ -1252,7 +1298,10 @@ function AppContent() {
                 name="description"
                 content="Trade crypto prediction markets on real-world outcomes. Market prices reflect real-time probabilities for Bitcoin, Ethereum and key crypto events."
               />
-              <link rel="canonical" href={`${window.location.origin}/kalshi`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/kalshi`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1321,7 +1370,10 @@ function AppContent() {
       />
 
       {/* Restricted Access Page */}
-      <Route path="/restricted" element={<RestrictedPage />} />
+      <Route
+        path="/restricted"
+        element={<RestrictedPage />}
+      />
 
       <Route
         path="/quests"
@@ -1346,14 +1398,20 @@ function AppContent() {
                 property="og:description"
                 content="Complete quests: follow on X, share markets, invite friends, and earn points. Level up and unlock rewards."
               />
-              <meta property="og:type" content="website" />
+              <meta
+                property="og:type"
+                content="website"
+              />
               <meta
                 property="og:url"
                 content={`${window.location.origin}/quest`}
               />
 
               {/* X */}
-              <meta name="twitter:card" content="summary_large_image" />
+              <meta
+                name="twitter:card"
+                content="summary_large_image"
+              />
               <meta
                 name="twitter:title"
                 content="Quest Center – Earn Points & Grow Your Rank"
@@ -1363,7 +1421,10 @@ function AppContent() {
                 content="Follow, share, and invite to earn points. Join the quest and climb the leaderboard."
               />
 
-              <link rel="canonical" href={`${window.location.origin}/quest`} />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/quest`}
+              />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
@@ -1376,6 +1437,86 @@ function AppContent() {
               )}
               {commonDialogProps}
             </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      <Route
+        path="/privacy-policy"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Privacy Policy | AI Predictions Platform</title>
+              <meta
+                name="description"
+                content="Read our Privacy Policy to understand how we collect, use, and protect your information when you use our AI predictions platform."
+              />
+              <meta
+                name="keywords"
+                content="privacy policy, data privacy, personal data, data protection, AI predictions platform, user privacy"
+              />
+              <meta
+                property="og:title"
+                content="Privacy Policy | AI Predictions Platform"
+              />
+              <meta
+                property="og:description"
+                content="Learn how we collect, use, and protect your data on our AI predictions platform."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/privacy-policy`}
+              />
+            </Helmet>
+
+            <Sidebar {...commonSidebarProps} />
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="container mx-auto px-4 py-6">
+                <PrivacyPolicyPage />
+              </div>
+            </div>
+            {commonDialogProps}
+          </div>
+        }
+      />
+
+      <Route
+        path="/terms-of-service"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Terms of Service | AI Predictions Platform</title>
+              <meta
+                name="description"
+                content="Read our Terms of Use to understand the rules, responsibilities, and conditions for using our AI predictions platform."
+              />
+              <meta
+                name="keywords"
+                content="terms of service, terms and conditions, user agreement, platform rules, AI predictions platform"
+              />
+              <meta
+                property="og:title"
+                content="Terms of service | AI Predictions Platform"
+              />
+              <meta
+                property="og:description"
+                content="Review the rules and conditions for using our AI predictions platform."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/terms-of-service`}
+              />
+            </Helmet>
+
+            <Sidebar {...commonSidebarProps} />
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="container mx-auto px-4 py-6">
+                <TermsOfServicePage />
+              </div>
+            </div>
+            {commonDialogProps}
           </div>
         }
       />

@@ -4,12 +4,11 @@ import clsx from 'clsx';
 import {
   ArrowLeft,
   ArrowRight,
-  CircleDollarSign,
   Crown,
   Loader2,
   MessageSquare,
   Share,
-  TriangleAlert,
+  TriangleAlert
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
@@ -48,7 +47,6 @@ import {
 } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
 import {
   Select,
@@ -59,7 +57,6 @@ import {
 } from '../ui/select';
 import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import Usdc from '../wallet/icon/Usdc';
 import { safePrice } from './TradeModalDflow';
 
 const tabs = [
@@ -90,6 +87,7 @@ const DflowChatPage = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [thinkingTokens, setThinkingTokens] = useState(0);
+  const [phase, setPhase] = useState<'idle' | 'thinking' | 'answering'>('idle')
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>();
 
@@ -238,11 +236,13 @@ const DflowChatPage = () => {
               );
             }
           },
-          onSession: (id) => {},
+          onSession: (id) => { },
           onThinking: (tokens) => {
+            setPhase('thinking')
             setThinkingTokens(tokens);
           },
           onContent: (content) => {
+            setPhase('answering')
             setThinkingTokens(0);
 
             if (!messageCreated) {
@@ -260,10 +260,11 @@ const DflowChatPage = () => {
 
             onStreamContent(content, assistantMessageId);
           },
-          onComplete: (data) => {},
+          onComplete: (data) => { },
           onDone: () => {
             setIsLoading(false);
             setThinkingTokens(0);
+            setPhase('idle')
             fetchUser();
           },
           onError: (error) => {
@@ -271,6 +272,7 @@ const DflowChatPage = () => {
             toast.error('Failed to send message. Please try again.');
             setIsLoading(false);
             setThinkingTokens(0);
+            setPhase('idle')
           },
         },
         chatId,
@@ -280,6 +282,7 @@ const DflowChatPage = () => {
       toast.error('Failed to send message. Please try again.');
       setIsLoading(false);
       setThinkingTokens(0);
+      setPhase('idle')
     }
   };
 
@@ -619,18 +622,16 @@ const DflowChatPage = () => {
                               return (
                                 <div key={message.id}>
                                   <div
-                                    className={`flex ${
-                                      message.sender === 'user'
-                                        ? 'justify-end max-w-[94vw]'
-                                        : 'justify-start'
-                                    }`}
+                                    className={`flex ${message.sender === 'user'
+                                      ? 'justify-end max-w-[94vw]'
+                                      : 'justify-start'
+                                      }`}
                                   >
                                     <div
-                                      className={`max-w-[80%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${
-                                        message.sender === 'user'
-                                          ? 'bg-blue-600 text-white backdrop-blur-sm'
-                                          : `backdrop-blur-md border border-border`
-                                      }`}
+                                      className={`max-w-[80%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg ${message.sender === 'user'
+                                        ? 'bg-blue-600 text-white backdrop-blur-sm'
+                                        : `backdrop-blur-md border border-border`
+                                        }`}
                                     >
                                       {message.sender === 'assistant' ? (
                                         <div className="text-xs sm:text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-2 prose-code:text-xs">
@@ -649,11 +650,10 @@ const DflowChatPage = () => {
                                     </div>
                                   </div>
                                   <div
-                                    className={`text-xs mt-3 text-muted-foreground block ${
-                                      message.sender === 'user'
-                                        ? 'text-right max-w-[94vw]'
-                                        : 'text-left'
-                                    }`}
+                                    className={`text-xs mt-3 text-muted-foreground block ${message.sender === 'user'
+                                      ? 'text-right max-w-[94vw]'
+                                      : 'text-left'
+                                      }`}
                                   >
                                     <span>{formatTime(message.createdAt)}</span>
                                     {message.sender === 'assistant' && (
@@ -701,7 +701,7 @@ const DflowChatPage = () => {
                                 </div>
                               );
                             })}
-                            {isLoading && thinkingTokens > 0 && (
+                            {isLoading && phase !== 'answering' && (
                               <div className="flex justify-start">
                                 <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
                                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
@@ -713,8 +713,9 @@ const DflowChatPage = () => {
                                       />
                                     </div>
                                     <span className="text-xs text-foreground">
-                                      {currentOracle.name} is thinking... (
-                                      {thinkingTokens} tokens)
+                                      {currentOracle.name} is thinking
+                                      {thinkingTokens > 0 && `... (${thinkingTokens} tokens)`}
+                                      {thinkingTokens === 0 && '...'}
                                     </span>
                                   </div>
                                   <div className="flex gap-1">

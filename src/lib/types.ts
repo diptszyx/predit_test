@@ -26,6 +26,7 @@ export interface User {
   avatar: string;
   level: number;
   xp: number;
+  xpFromReferrals: number;
   streakDays: number;
   restTodayPredictionCount: number;
   appliedInviteCode: boolean;
@@ -47,6 +48,7 @@ export interface User {
   dailyLinesUsed?: number;
   dailyLinesResetDate?: string;
   referralCode?: string;
+  inviteCode: string;
   referredBy?: string;
   referredFriends?: Array<{
     username: string;

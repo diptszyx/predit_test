@@ -48,21 +48,14 @@ const QuestPage = () => {
   };
 
   const shareOnX = (codesToShare: string[]) => {
-    // Format codes: 4 codes per line
     const formattedCodes = codesToShare.reduce((acc, code, idx) => {
-      if (idx > 0 && idx % 4 === 0) {
-        acc += '\n';
-      } else if (idx > 0) {
-        acc += ' ';
-      }
-      return acc + code;
+      return acc + code + '\n';
     }, '');
 
     const text = encodeURIComponent(
       `Join Predict Market using my invite code and get 300 XP bonus!
 
 ${formattedCodes}
-
 ${content.shareContent}
 
 #predit_market #prediction`

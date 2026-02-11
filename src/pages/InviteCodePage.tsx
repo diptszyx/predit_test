@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { Copy } from 'lucide-react';
+import { Copy, Share2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -48,21 +48,14 @@ export default function InviteCodePage() {
   const [total, setTotal] = useState(0);
 
   const shareOnX = (codesToShare: string[]) => {
-    // Format codes: 4 codes per line
     const formattedCodes = codesToShare.reduce((acc, code, idx) => {
-      if (idx > 0 && idx % 4 === 0) {
-        acc += '\n';
-      } else if (idx > 0) {
-        acc += ' ';
-      }
-      return acc + code;
+      return acc + code + '\n';
     }, '');
 
     const text = encodeURIComponent(
       `Join Predict Market using my invite code and get 300 XP bonus!
 
 ${formattedCodes}
-
 ${appUrl}
 
 @preditmarket`
@@ -251,6 +244,7 @@ ${appUrl}
               <TableCell className="font-semibold">Code</TableCell>
               <TableCell className="font-semibold">Referral Link</TableCell>
               <TableCell className="font-semibold">Status</TableCell>
+              <TableCell className="font-semibold"></TableCell>
             </TableRow>
           </TableHeader>
 
@@ -263,6 +257,9 @@ ${appUrl}
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-5 w-24" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-5 w-16" />
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-5 w-16" />
@@ -305,7 +302,7 @@ ${appUrl}
                           {referralLink}
                         </span>
                         <Copy
-                          className="h-3 w-3 ml-3 cursor-pointer text-muted-foreground hover:text-foreground flex-shrink-0"
+                          className="h-3 w-3 ml-3 cursor-pointer text-muted-foreground hover:text-foreground shrink-0"
                           onClick={() => handleCopyToClipboard(referralLink, "Referral link")}
                         />
                       </div>
@@ -318,6 +315,17 @@ ${appUrl}
                           Unused
                         </span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleConfirmShare([code.code])}
+                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                        title="Share code on X"
+                      >
+                        <Share2 className="h-3 w-3" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );

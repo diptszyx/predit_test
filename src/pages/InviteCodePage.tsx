@@ -203,12 +203,12 @@ export default function InviteCodePage() {
                 </div>
                 <h3 className="text-lg font-semibold">Referral Status</h3>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground mb-6 max-w-md">
                 Share your unique code with friends. When they sign up using your code, you'll earn XP bonuses.
               </p>
 
               <div className="flex items-center gap-4">
-                <div className="rounded-lg border p-4 border-border bg-muted/30 w-full max-w-md">
+                <div className="rounded-lg border p-4 border-border bg-muted/30 w-full">
                   <div className="flex items-center justify-between mb-2">
                     <Label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">My Referral Code</Label>
                     <Tooltip>

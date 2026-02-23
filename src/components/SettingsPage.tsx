@@ -44,7 +44,7 @@ import {
   getPredictionsForNextLevel,
 } from '../lib/prediction';
 import { refListService } from '../services/ref.service';
-import InviteCard from './settings/InviteCard';
+
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -448,7 +448,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
           </CardContent>
         </Card>
 
-        <InviteCard user={user} />
+
 
         {/* Subscription Management */}
         <Card className="border-border bg-card">

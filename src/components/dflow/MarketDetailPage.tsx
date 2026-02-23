@@ -1,7 +1,7 @@
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import clsx from 'clsx';
-import { ArrowLeft, CircleDollarSign, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -17,9 +17,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Skeleton } from '../ui/skeleton';
-import Usdc from '../wallet/icon/Usdc';
 import { safePrice } from './TradeModalDflow';
 
 export const MarketDetailPage = () => {
@@ -274,20 +272,23 @@ export const MarketDetailPage = () => {
                       />
                     </div>
                     <div className="flex-1 flex items-start justify-between gap-2">
-                      <div className="space-y-3">
-                        <h1 className="text-lg md:text-xl font-bold">
+                      <div className="space-y-0.5">
+                        <h1 className="text-lg md:text-xl font-bold w-full">
                           {market.title}
                           <Badge
                             variant={
                               getStatusBadgeProps(dflowMarket.status).variant
                             }
-                            className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${
-                              getStatusBadgeProps(dflowMarket.status).className
-                            }`}
+                            className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${getStatusBadgeProps(dflowMarket.status).className
+                              }`}
                           >
                             {dflowMarket.status}
                           </Badge>
                         </h1>
+                        {market.yesSubTitle && (
+                          <span className='text-sm font-semibold text-gray-40 line-clamp-1'>
+                            {!market.title.startsWith('Will') ? <>{market.yesSubTitle}?</> : <></>}</span>)
+                        }
                       </div>
                     </div>
                   </div>
@@ -300,9 +301,8 @@ export const MarketDetailPage = () => {
                         variant={
                           getStatusBadgeProps(dflowMarket.result).variant
                         }
-                        className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${
-                          getStatusBadgeProps(dflowMarket.result).className
-                        }`}
+                        className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${getStatusBadgeProps(dflowMarket.result).className
+                          }`}
                       >
                         {dflowMarket.result}
                       </Badge>
@@ -609,6 +609,6 @@ export const MarketDetailPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };

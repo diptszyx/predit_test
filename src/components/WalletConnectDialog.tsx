@@ -124,6 +124,7 @@ export function WalletConnectDialog({
   const resetState = () => {
     setConnectingWallet(null);
     setConnectingSocial(null);
+    setPendingMwaLogin(false);
   };
 
   const isMobile = useIsMobile(1024);
@@ -140,6 +141,8 @@ export function WalletConnectDialog({
   );
   const currentUser = useAuthStore((state) => state.user);
   const [isAuthenticatingSolana, setIsAuthenticatingSolana] = useState(false);
+  // Only true after user explicitly clicks the MWA/wallet button
+  const [pendingMwaLogin, setPendingMwaLogin] = useState(false);
 
   const handleSolanaLogin = async () => {
     if (!publicKey || !signMessage || isAuthenticatingSolana) return;
@@ -182,13 +185,13 @@ export function WalletConnectDialog({
     }
   };
 
-  // When wallet connects AND dialog is open AND no user is logged in → sign in automatically.
-  // This handles both MWA (mobile) and desktop flows after connect() resolves.
+  // Only trigger login if user explicitly initiated an MWA connect
   useEffect(() => {
-    if (connected && publicKey && open && !currentUser && !isAuthenticatingSolana) {
+    if (pendingMwaLogin && connected && publicKey && !currentUser && !isAuthenticatingSolana) {
+      setPendingMwaLogin(false);
       handleSolanaLogin();
     }
-  }, [connected, publicKey, open, currentUser]);
+  }, [connected, publicKey, pendingMwaLogin, currentUser]);
 
   const handleSocialConnect = async (provider: SocialProvider) => {
     setConnectingSocial(provider);
@@ -290,7 +293,10 @@ export function WalletConnectDialog({
                   setConnectingWallet={setConnectingWallet}
                   onConnect={onConnect}
                   isMobile={isMobile}
-                  onConnectMwa={connect}
+                  onConnectMwa={async () => {
+                    setPendingMwaLogin(true);
+                    await connect();
+                  }}
                 />
               );
             })}

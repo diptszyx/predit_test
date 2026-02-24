@@ -14,6 +14,7 @@ import { Toaster } from './components/ui/sonner';
 import type { WalletType } from './components/WalletConnectDialog';
 import { useUserPhotoRefresh } from './hooks';
 import type { User } from './lib/types';
+import { mwaAuthCache } from './lib/mwaAuthCache';
 import { useXP } from './lib/useXP';
 
 // Components
@@ -73,6 +74,7 @@ export default function App() {
 }
 
 function AppContent() {
+
   const resetWalletStore = useWalletStore((state) => state.resetWallet);
   const navigate = useNavigate();
   const location = useLocation();
@@ -410,7 +412,12 @@ function AppContent() {
     }
   };
 
-  const handleWalletDisconnect = () => {
+  const handleWalletDisconnect = async () => {
+    try {
+      await mwaAuthCache.clear();
+    } catch (e) {
+      console.error('Failed to clear MWA cache', e);
+    }
     logout();
     closeProfileDialog();
     resetWalletStore();

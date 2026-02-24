@@ -1,10 +1,9 @@
 import clsx from 'clsx';
 import { ethers } from 'ethers';
 import { CheckCircle2, Loader2, Wallet } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getPhantomProvider, usePhantomDirectConnect } from '../hooks/usePhantomConnect';
 import apiClient from '../lib/axios';
 import { User } from '../lib/types';
 import useAuthStore from '../store/auth.store';
@@ -17,7 +16,11 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { Separator } from './ui/separator';
-export type WalletType = 'metamask' | 'phantom' | 'backpack';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import bs58 from "bs58";
+
+export type WalletType = 'metamask' | 'phantom' | 'backpack' | 'solana';
 export type SocialProvider = 'google' | 'x';
 
 interface WalletConnectDialogProps {
@@ -29,15 +32,6 @@ interface WalletConnectDialogProps {
   onOpenTerms: () => void;
 }
 
-interface WalletOption {
-  id: WalletType;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-  supported: boolean;
-}
-
 interface SocialOption {
   id: SocialProvider;
   name: string;
@@ -47,32 +41,7 @@ interface SocialOption {
 
 const hasMeta = typeof window !== 'undefined' && (window as any).ethereum;
 
-const wallets: WalletOption[] = [
-  {
-    id: 'metamask',
-    name: 'MetaMask',
-    description: 'Connect with MetaMask wallet',
-    icon: 'https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg',
-    color: 'from-orange-600 to-yellow-600',
-    supported: hasMeta,
-  },
-  {
-    id: 'phantom',
-    name: 'Phantom',
-    description: 'Connect with Phantom wallet',
-    icon: 'https://mintcdn.com/phantom-e50e2e68/fkWrmnMWhjoXSGZ9/resources/images/Phantom_SVG_Icon.svg?w=840&fit=max&auto=format&n=fkWrmnMWhjoXSGZ9&q=85&s=7311f84864aeebc085a674acff85ff99',
-    color: 'from-blue-600 to-cyan-600',
-    supported: getPhantomProvider(),
-  },
-  {
-    id: 'backpack',
-    name: 'Backpack',
-    description: 'Connect with Backpack wallet',
-    icon: '/backpack.png',
-    color: 'from-green-600 to-red-600',
-    supported: false,
-  },
-];
+
 
 const socialOptions: SocialOption[] = [
   {
@@ -90,7 +59,7 @@ const socialOptions: SocialOption[] = [
 ];
 
 const getMetaMaskProvider = (): any => {
-  const eth = window.ethereum as any;
+  const eth = (window as any).ethereum;
 
   if (eth?.providers?.length) {
     return eth.providers.find((p: any) => p.isMetaMask);
@@ -123,6 +92,14 @@ export function WalletConnectDialog({
     setConnectingSocial(null);
   };
 
+  const { setVisible } = useWalletModal();
+  const { publicKey, connected, signMessage, disconnect } = useWallet();
+  const authenticateWithToken = useAuthStore(
+    (state) => state.authenticateWithToken
+  );
+
+  const [isAuthenticatingSolana, setIsAuthenticatingSolana] = useState(false);
+
   const handleSocialConnect = async (provider: SocialProvider) => {
     setConnectingSocial(provider);
 
@@ -145,6 +122,55 @@ export function WalletConnectDialog({
     setConnectingSocial(null);
     onSocialConnect(provider);
   };
+
+  const handleSolanaLogin = async () => {
+    if (!publicKey || !signMessage) return;
+
+    setIsAuthenticatingSolana(true);
+    try {
+      const { data: nonceResp } = await apiClient.post("/auth/nonce", {
+        publicKey: publicKey.toBase58(),
+        walletType: "phantom",
+      });
+
+      if (!nonceResp?.nonce) {
+        throw new Error("Failed to get authentication nonce");
+      }
+
+      const message = `Login to Deor\nNonce=${nonceResp.nonce}`;
+      const messageBytes = new TextEncoder().encode(message);
+
+      const signature = await signMessage(messageBytes);
+      const signatureBase58 = bs58.encode(signature);
+
+      const { data: verifyResp } = await apiClient.post("/auth/verify", {
+        message,
+        signature: signatureBase58,
+        publicKey: publicKey.toBase58(),
+      });
+
+      if (!verifyResp?.token || !verifyResp?.user) {
+        throw new Error("Authentication failed");
+      }
+
+      await authenticateWithToken(verifyResp.token);
+      toast.success("Successfully logged in with Solana!");
+      onConnect("solana", verifyResp.user);
+    } catch (err: any) {
+      console.error("Solana login error:", err);
+      toast.error(err.message || "Failed to login with Solana");
+    } finally {
+      setIsAuthenticatingSolana(false);
+    }
+  };
+
+  const currentUser = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    if (connected && publicKey && open && !currentUser && !isAuthenticatingSolana) {
+      handleSolanaLogin();
+    }
+  }, [connected, publicKey, open, currentUser]);
 
   return (
     <Dialog
@@ -210,19 +236,53 @@ export function WalletConnectDialog({
           </div>
 
           <div className="space-y-3">
-            {wallets.map((wallet) => {
-              const isConnecting = connectingWallet === wallet.id;
+            {/* Solana Wallet Button */}
+            <button
+              onClick={() => setVisible(true)}
+              disabled={isAuthenticatingSolana}
+              className={`w-full p-4 rounded-xl border-2 transition-all text-left border-border hover:border-blue-500 hover:bg-accent cursor-pointer ${isAuthenticatingSolana ? 'border-blue-500 bg-accent transition-all' : ''}`}
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className={`w-12 h-12 rounded-xl bg-gradient-to-br overflow-hidden from-blue-600 to-cyan-600 flex items-center justify-center text-2xl shrink-0`}
+                >
+                  <img
+                    src="https://mintcdn.com/phantom-e50e2e68/fkWrmnMWhjoXSGZ9/resources/images/Phantom_SVG_Icon.svg?w=840&fit=max&auto=format&n=fkWrmnMWhjoXSGZ9&q=85&s=7311f84864acff85ff99"
+                    className="w-7 h-7"
+                  />
+                </div>
 
-              return (
-                <WalletConnectButton
-                  key={wallet.id}
-                  loading={isConnecting}
-                  wallet={wallet}
-                  setConnectingWallet={setConnectingWallet}
-                  onConnect={onConnect}
-                />
-              );
-            })}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-medium">Solana Wallet</h3>
+                    <Badge
+                      variant="outline"
+                      className="text-xs bg-green-500/10 border-green-500/30 text-green-500"
+                    >
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      MWA Ready
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Phantom, Backpack & more via Mobile Wallet Adapter</p>
+                </div>
+                {isAuthenticatingSolana && <Loader2 className="w-5 h-5 animate-spin text-blue-500" />}
+              </div>
+            </button>
+
+            {/* MetaMask / EVM Button */}
+            <WalletConnectButton
+              loading={connectingWallet === 'metamask'}
+              wallet={{
+                id: 'metamask',
+                name: 'MetaMask (Polygon)',
+                description: 'Connect with MetaMask for Polygon features',
+                icon: 'https://images.ctfassets.net/clixtyxoaeas/4rnpEzy1ATWRKVBOLxZ1Fm/a74dc1eed36d23d7ea6030383a4d5163/MetaMask-icon-fox.svg',
+                color: 'from-orange-600 to-yellow-600',
+                supported: hasMeta
+              }}
+              setConnectingWallet={setConnectingWallet}
+              onConnect={onConnect}
+            />
           </div>
 
           <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
@@ -269,7 +329,14 @@ const WalletConnectButton = ({
   setConnectingWallet,
   onConnect,
 }: {
-  wallet: WalletOption;
+  wallet: {
+    id: WalletType;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    supported: boolean;
+  };
   loading: boolean;
   onConnect: (wallet: WalletType, user: User) => void;
   setConnectingWallet: (walletType: WalletType | null) => void;
@@ -282,29 +349,11 @@ const WalletConnectButton = ({
     (state) => state.authenticateWithToken
   );
 
-  const { handlePhantomDirectConnect } = usePhantomDirectConnect({
-    onConnect,
-    setConnectingWallet,
-  });
-
   const handleConnect = async (walletType: WalletType) => {
     setConnectingWallet(walletType);
     setPendingWalletType(walletType);
 
     switch (walletType) {
-      case 'phantom':
-        if (!getPhantomProvider()) {
-          toast.error('Phantom not installed');
-          setConnectingWallet(null);
-          setPendingWalletType(null);
-          return;
-        } else {
-          handlePhantomDirectConnect();
-        }
-
-        break;
-      case 'backpack':
-        break;
       case 'metamask':
         try {
           const metaMaskProvider = getMetaMaskProvider();
@@ -345,6 +394,8 @@ const WalletConnectButton = ({
           setConnectingWallet(null);
         }
 
+        break;
+      default:
         break;
     }
   };

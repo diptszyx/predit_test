@@ -18,7 +18,7 @@ import {
 } from './ui/dialog';
 import { Separator } from './ui/separator';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+
 import bs58 from "bs58";
 import { useIsMobile } from '../hooks/useIsMobile';
 
@@ -134,7 +134,7 @@ export function WalletConnectDialog({
     return w;
   });
 
-  const { publicKey, connected, signMessage } = useWallet();
+  const { publicKey, connected, signMessage, connect } = useWallet();
   const authenticateWithToken = useAuthStore(
     (state) => state.authenticateWithToken
   );
@@ -182,6 +182,8 @@ export function WalletConnectDialog({
     }
   };
 
+  // When wallet connects AND dialog is open AND no user is logged in → sign in automatically.
+  // This handles both MWA (mobile) and desktop flows after connect() resolves.
   useEffect(() => {
     if (connected && publicKey && open && !currentUser && !isAuthenticatingSolana) {
       handleSolanaLogin();
@@ -287,6 +289,8 @@ export function WalletConnectDialog({
                   wallet={wallet}
                   setConnectingWallet={setConnectingWallet}
                   onConnect={onConnect}
+                  isMobile={isMobile}
+                  onConnectMwa={connect}
                 />
               );
             })}
@@ -335,6 +339,8 @@ const WalletConnectButton = ({
   wallet,
   setConnectingWallet,
   onConnect,
+  isMobile,
+  onConnectMwa,
 }: {
   wallet: {
     id: WalletType;
@@ -347,6 +353,8 @@ const WalletConnectButton = ({
   loading: boolean;
   onConnect: (wallet: WalletType, user: User) => void;
   setConnectingWallet: (walletType: WalletType | null) => void;
+  isMobile: boolean;
+  onConnectMwa: () => Promise<void>;
 }) => {
   const [pendingWalletType, setPendingWalletType] = useState<WalletType | null>(
     null
@@ -361,9 +369,6 @@ const WalletConnectButton = ({
     setConnectingWallet,
   });
 
-  const isMobile = useIsMobile(1024);
-  const { setVisible } = useWalletModal();
-
   const handleConnect = async (walletType: WalletType) => {
     setConnectingWallet(walletType);
     setPendingWalletType(walletType);
@@ -371,7 +376,14 @@ const WalletConnectButton = ({
     switch (walletType) {
       case 'phantom':
         if (isMobile) {
-          setVisible(true);
+          // Directly trigger MWA without any intermediate modal
+          try {
+            await onConnectMwa();
+          } catch (e: any) {
+            toast.error(e.message || 'Failed to connect wallet');
+            setConnectingWallet(null);
+            setPendingWalletType(null);
+          }
         } else {
           if (!getPhantomProvider()) {
             toast.error('Phantom not installed');

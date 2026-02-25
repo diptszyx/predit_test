@@ -215,9 +215,15 @@ export const MarketListPage = () => {
               />
             </div>
             <div className="flex-1 flex items-start justify-between gap-2">
-              <h4 className="text-sm font-medium line-clamp-2 leading-snug">
-                {market.title}
-              </h4>
+              <div>
+                <h4 className="text-sm font-medium line-clamp-2 leading-snug">
+                  {market.title}
+                </h4>
+                {market.yesSubTitle && (
+                  <p className='text-xs text-gray-400 line-clamp-1 mt-0.5'>
+                    {!market.title.startsWith('Will') ? <>{market.yesSubTitle}?</> : <></>}</p>)
+                }
+              </div>
               <div className="flex flex-col items-center shrink-0">
                 {/* Semicircle Progress Bar (Simulated) */}
                 <div className="relative w-24 h-12 mb-1">

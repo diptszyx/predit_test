@@ -203,7 +203,7 @@ export default function InviteCodePage() {
                 </div>
                 <h3 className="text-lg font-semibold">Referral Status</h3>
               </div>
-              <p className="text-sm text-muted-foreground mb-6 max-w-md">
+              <p className="text-sm text-muted-foreground mb-6">
                 Share your unique code with friends. When they sign up using your code, you'll earn XP bonuses.
               </p>
 
@@ -309,7 +309,7 @@ export default function InviteCodePage() {
             </div>
 
             <div className="w-full md:w-auto min-w-[200px]">
-              <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/20 text-center relative overflow-hidden">
+              <div className="p-6 rounded-xl bg-linear-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/20 text-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-grid-white/5 opacity-50" />
                 <div className="relative z-10">
                   <div className="text-sm font-medium text-blue-400 mb-1">Total Referral Gains</div>

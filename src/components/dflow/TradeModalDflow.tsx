@@ -134,13 +134,13 @@ const TradeModalDflow = ({
     setAmount(val);
 
     if (Number(val) < 1 && tradeSide === 'BUY') {
-      setErrorAmount('Minimum amount for buying is 1');
+      setErrorAmount('Minimum amount for buying is 1.');
     } else {
       setErrorAmount('');
     }
 
     if (Number(val) > Number(balance)) {
-      setErrorAmount('Amount cannot exceed your available balance.');
+      setErrorAmount('Insufficient balance.');
     }
   };
 

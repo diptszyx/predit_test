@@ -1,13 +1,11 @@
 [
   {
-    "relation": [
-      "delegate_permission/common.handle_all_urls"
-    ],
+    "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
       "package_name": "market.predit.twa",
       "sha256_cert_fingerprints": [
-        "F6:10:5E:BE:EB:81:E8:22:66:D9:E0:92:E3:F4:6D:96:EC:30:28:34:FF:7C:C6:5E:3B:D0:2E:09:51:EA:F4:4D"
+        "F4:18:3C:FF:E5:4A:F7:DF:13:3B:6A:21:29:C1:D4:6E:FF:36:E4:4E:13:F3:CE:E4:D2:9C:65:66:97:40:8C:B4"
       ]
     }
   }

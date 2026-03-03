@@ -193,7 +193,7 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
             </p>
           </div>
 
-          <div className='flex justify-between mb-8'>
+          <div className='flex justify-between mb-8 flex-col sm:flex-row'>
             {/* Topic Filter */}
             <div>
               <div className="flex gap-2 overflow-x-auto pb-2">
@@ -228,7 +228,10 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
               </div>
             </div>
 
-            <Button size='sm' onClick={() => setOpenCreateNews(true)}>
+            <Button size='sm'
+              onClick={() => setOpenCreateNews(true)}
+              className="w-fit text-xs mt-2 sm:mt-0"
+            >
               <CircleFadingPlus /> Create news
             </Button>
           </div>

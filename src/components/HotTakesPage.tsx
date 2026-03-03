@@ -1,4 +1,4 @@
-import { CircleAlert, Trash } from 'lucide-react';
+import { CircleAlert, CircleFadingPlus, Trash } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { timeAgo } from '../lib/date';
@@ -8,6 +8,7 @@ import { Topic, topicServices } from '../services/topic-admin.service';
 import useAuthStore from '../store/auth.store';
 import { checkIsAdmin } from '../utils/isAdmin';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import CreateHotTakeAdmin from './hotTake/CreateHotTakeAdmin';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
@@ -39,6 +40,8 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [selected, setSelected] = useState<News | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [openCreateNews, setOpenCreateNews] = useState(false);
 
   // Load articles
   const loadArticles = async (reset = false) => {
@@ -171,6 +174,15 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {isAdmin &&
+        <CreateHotTakeAdmin
+          open={openCreateNews}
+          onOpenChange={setOpenCreateNews}
+          onSuccess={setArticles}
+        />
+      }
+
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-6">
           {/* Header */}
@@ -181,39 +193,44 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
             </p>
           </div>
 
-          {/* Topic Filter */}
-          <div className="mb-8">
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              <Button
-                size="sm"
-                variant={topicFilter === null ? 'default' : 'outline'}
-                onClick={() => setTopicFilter(null)}
-                className="min-w-[60px] text-xs"
-                style={{ padding: '4px 12px' }}
-              >
-                All
-              </Button>
-
-              {isLoadingTopicList
-                ? Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-8 w-20 rounded"
-                  />
-                ))
-                : topicList.map((topic) => (
-                  <Button
-                    key={topic.id}
-                    size="sm"
-                    variant={topicFilter === topic.id ? 'default' : 'outline'}
-                    onClick={() => setTopicFilter(topic.id)}
-                    className="min-w-[60px] text-xs"
-                    style={{ padding: '4px 12px' }}
-                  >
-                    {topic.name}
-                  </Button>
-                ))}
+          <div className='flex justify-between mb-8'>
+            {/* Topic Filter */}
+            <div>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                <Button
+                  size="sm"
+                  variant={topicFilter === null ? 'default' : 'outline'}
+                  onClick={() => setTopicFilter(null)}
+                  className="min-w-[60px] text-xs"
+                  style={{ padding: '4px 12px' }}
+                >
+                  All
+                </Button>
+                {isLoadingTopicList
+                  ? Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton
+                      key={i}
+                      className="h-8 w-20 rounded"
+                    />
+                  ))
+                  : topicList.map((topic) => (
+                    <Button
+                      key={topic.id}
+                      size="sm"
+                      variant={topicFilter === topic.id ? 'default' : 'outline'}
+                      onClick={() => setTopicFilter(topic.id)}
+                      className="min-w-[60px] text-xs"
+                      style={{ padding: '4px 12px' }}
+                    >
+                      {topic.name}
+                    </Button>
+                  ))}
+              </div>
             </div>
+
+            <Button size='sm' onClick={() => setOpenCreateNews(true)}>
+              <CircleFadingPlus /> Create news
+            </Button>
           </div>
 
           {/* Articles Grid */}

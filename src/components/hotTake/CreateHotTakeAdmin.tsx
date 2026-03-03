@@ -85,8 +85,9 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
         handleClose();
         onSuccess?.((prev) => [res, ...prev]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Create news failed', error)
+      toast.error(error?.response?.data?.message || "Failed to create news")
     } finally {
       setIsCreating(false)
     }

@@ -40,7 +40,7 @@ interface CustomOracleSelectProps {
   oracles: OracleEntity[];
 }
 
-function CustomOracleSelect({ value, onChange, oracles }: CustomOracleSelectProps) {
+export function CustomOracleSelect({ value, onChange, oracles }: CustomOracleSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedOracle = oracles.find((o) => o.id === value);

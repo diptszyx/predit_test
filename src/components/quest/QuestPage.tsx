@@ -447,15 +447,15 @@ export function QuestItem({
       case QuestType.JOIN_DISCORD:
         return (
           <>
-            Join our{' '}
+            Join Predit{' '}
             <a
               href="https://discord.gg/Qy383ZHH8"
               target="_blank"
               className="text-blue-400"
             >
-              Discord group
+              Discord
             </a>{' '}
-            to earn XP
+            to earn more XP
           </>
         );
 

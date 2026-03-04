@@ -11,8 +11,5 @@ export const sanitizeArticleHtml = (html: string): string => {
     /(<br\s*\/?>\s*){2,}/gi,
     "</p><p>",
   );
-
-  // Remove remaining single <br>
-  doc.querySelectorAll("br").forEach((br) => br.remove());
   return doc.body.innerHTML;
 };

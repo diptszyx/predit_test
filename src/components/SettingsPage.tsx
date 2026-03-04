@@ -45,6 +45,7 @@ import {
 } from '../lib/prediction';
 import { refListService } from '../services/ref.service';
 
+
 interface SettingsPageProps {
   onBack: () => void;
   user: typeof mockUser;
@@ -57,30 +58,21 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
   // Profile Settings
   const [avatar, setAvatar] = useState(
     user.photo?.path ||
-      user.avatar ||
-      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80',
+    user.avatar ||
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&q=80',
   );
-  const [nickname, setNickname] = useState(user.username || 'Oracle Seeker');
   const [email, setEmail] = useState(user.email || 'oracle.seeker@example.com');
   const [phone, setPhone] = useState(
     user.phone || user.phoneNumber || '+1 (555) 123-4567',
   );
-  const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [isSavingNickname, setIsSavingNickname] = useState(false);
   const [isSavingEmail, setIsSavingEmail] = useState(false);
   const [isSavingPhone, setIsSavingPhone] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [refList, setRefList] = useState([]);
 
-  // XP and Level calculations
-  // const xpForCurrentLevel = getXPForCurrentLevel(user.level);
-  // const xpForNextLevel = getXPForNextLevel(user.level);
-  // const xpProgress = getLevelProgress(user.xp, user.level);
-  // const xpIntoLevel = user.xp - xpForCurrentLevel;
-  // const xpNeededForLevel = xpForNextLevel - xpForCurrentLevel;
   const subscriptionMult = getSubscriptionMultiplier(
     user.subscriptionTier || 'free',
   );
@@ -145,7 +137,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error uploading photo:', error);
       toast.error(
         error?.response?.data?.message ||
-          'Failed to upload photo. Please try again.',
+        'Failed to upload photo. Please try again.',
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -153,32 +145,6 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    }
-  };
-
-  const handleSaveNickname = async () => {
-    if (!nickname || nickname.trim().length === 0) {
-      toast.error('Please enter a nickname');
-      return;
-    }
-    if (nickname.length > 30) {
-      toast.error('Nickname must be less than 30 characters');
-      return;
-    }
-
-    setIsSavingNickname(true);
-    try {
-      await updateProfile({ username: nickname.trim() });
-      setIsEditingNickname(false);
-      toast.success('Nickname updated successfully');
-    } catch (error: any) {
-      console.error('Error updating nickname:', error);
-      toast.error(
-        error?.response?.data?.message ||
-          'Failed to update nickname. Please try again.',
-      );
-    } finally {
-      setIsSavingNickname(false);
     }
   };
 
@@ -197,7 +163,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error updating email:', error);
       toast.error(
         error?.response?.data?.message ||
-          'Failed to update email. Please try again.',
+        'Failed to update email. Please try again.',
       );
     } finally {
       setIsSavingEmail(false);
@@ -219,7 +185,7 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       console.error('Error updating phone:', error);
       toast.error(
         error?.response?.data?.message ||
-          'Failed to update phone number. Please try again.',
+        'Failed to update phone number. Please try again.',
       );
     } finally {
       setIsSavingPhone(false);
@@ -336,76 +302,6 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
 
               <Separator />
 
-              {/* Nickname Section */}
-              {/* <div className="space-y-3">
-                <Label
-                  htmlFor="nickname"
-                  className="text-sm flex items-center gap-2"
-                >
-                  <User className="w-4 h-4" />
-                  Nickname
-                </Label>
-                <div className="flex gap-3">
-                  <Input
-                    id="nickname"
-                    type="text"
-                    placeholder="Enter your nickname"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    disabled={!isEditingNickname}
-                    className={`flex-1 ${
-                      !isEditingNickname ? "bg-accent" : ""
-                    }`}
-                    maxLength={30}
-                  />
-                  {!isEditingNickname ? (
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsEditingNickname(true)}
-                      disabled={isSavingNickname}
-                    >
-                      <Edit2 className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setIsEditingNickname(false);
-                          setNickname(user.username || "Oracle Seeker");
-                        }}
-                        disabled={isSavingNickname}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleSaveNickname}
-                        className="bg-blue-600 hover:bg-blue-700"
-                        disabled={isSavingNickname}
-                      >
-                        {isSavingNickname ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Check className="w-4 h-4 mr-2" />
-                            Save
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Your display name shown to other users (max 30 characters)
-                </p>
-              </div>
-
-              <Separator /> */}
-
               {/* Email Section */}
               <div className="space-y-3">
                 <Label
@@ -507,8 +403,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
                           setIsEditingPhone(false);
                           setPhone(
                             user.phone ||
-                              user.phoneNumber ||
-                              '+1 (555) 123-4567',
+                            user.phoneNumber ||
+                            '+1 (555) 123-4567',
                           );
                         }}
                         disabled={isSavingPhone}
@@ -551,6 +447,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
             </div>
           </CardContent>
         </Card>
+
+
 
         {/* Subscription Management */}
         <Card className="border-border bg-card">
@@ -843,60 +741,6 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
           </CardContent>
         </Card>
 
-        {/* Prediction History */}
-        {user.predictionHistory && user.predictionHistory.length > 0 && (
-          <Card className="border-border bg-card">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-blue-400" />
-                <h3>Recent Predictions</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Your last {user.predictionHistory.length} prediction
-                {user.predictionHistory.length !== 1 ? 's' : ''}
-              </p>
-
-              <div className="space-y-3">
-                {user.predictionHistory.map((prediction, index) => (
-                  <div
-                    key={prediction.id}
-                    className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/30 transition-colors"
-                  >
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs text-primary font-medium">
-                        {index + 1}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm mb-2 line-clamp-2">
-                        {prediction.question}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                        <span className="flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" />
-                          {prediction.oracleName}
-                        </span>
-                        <span>•</span>
-                        <span>
-                          {new Date(prediction.timestamp).toLocaleDateString(
-                            'en-US',
-                            {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            },
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Account Stats */}
         <Card className="border-border bg-card">
           <CardContent className="p-6">
@@ -1001,10 +845,8 @@ export function SettingsPage({ onBack, user = mockUser }: SettingsPageProps) {
       <SubscriptionManagementDialog
         open={subscriptionDialogOpen}
         onOpenChange={setSubscriptionDialogOpen}
-        // currentTier={user.subscriptionTier || 'free'}
         isUserPro={user?.isPro}
         onSubscriptionSuccess={() => {
-          // toast.success('Subscription updated successfully!');
         }}
       />
     </div>

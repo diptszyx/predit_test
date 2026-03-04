@@ -143,10 +143,14 @@ const TradeModalDflow = ({
   const handleSetAmount = (val: string) => {
     setAmount(val);
 
-    if (Number(val) < 1) {
-      setErrorAmount('Minimum amount for buying is 1');
+    if (Number(val) < 1 && tradeSide === 'BUY') {
+      setErrorAmount('Minimum amount for buying is 1.');
     } else {
       setErrorAmount('');
+    }
+
+    if (Number(val) > Number(balance)) {
+      setErrorAmount('Insufficient balance.');
     }
   };
 
@@ -186,9 +190,9 @@ const TradeModalDflow = ({
         const mint =
           selectedOutcome === 'Yes'
             ? market.accounts['EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v']
-                .yesMint
+              .yesMint
             : market.accounts['EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v']
-                .noMint;
+              .noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
@@ -235,7 +239,7 @@ const TradeModalDflow = ({
     isTrading ||
     !user ||
     !amount ||
-    (tradeSide === 'BUY' && errorAmount) ||
+    errorAmount ||
     parseFloat(amount) <= 0 ||
     (tradeSide === 'BUY' && isBuyDisabled) ||
     (tradeSide === 'SELL' && isSellDisabled);
@@ -270,9 +274,8 @@ const TradeModalDflow = ({
             {dflowMarket && (
               <Badge
                 variant={getStatusBadgeProps(dflowMarket?.status).variant}
-                className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${
-                  getStatusBadgeProps(dflowMarket?.status).className
-                }`}
+                className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${getStatusBadgeProps(dflowMarket?.status).className
+                  }`}
               >
                 {dflowMarket?.status}
               </Badge>
@@ -355,7 +358,7 @@ const TradeModalDflow = ({
             max={balance}
             step="0.01"
           />
-          {tradeSide === 'BUY' && amount && errorAmount && (
+          {amount && errorAmount && (
             <p className="text-sm text-red-500 mt-1">{errorAmount}</p>
           )}
           <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">

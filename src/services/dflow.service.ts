@@ -1,7 +1,7 @@
-import axios from 'axios';
-import apiClient from '../lib/axios';
-import { TokenAccount } from '../utils/getTokenAccounts';
-import { CreatePolymarketChatResponse } from './polymarket-message.service';
+import axios from "axios";
+import apiClient from "../lib/axios";
+import { TokenAccount } from "../utils/getTokenAccounts";
+import { CreatePolymarketChatResponse } from "./polymarket-message.service";
 
 type MarketAccount = {
   isInitialized: boolean;
@@ -36,7 +36,7 @@ export interface DflowDataEntity {
   isDeleted: boolean;
   isMessaged: boolean;
 
-  marketType: 'binary' | string;
+  marketType: "binary" | string;
 
   noAsk: string;
   noBid: string;
@@ -47,12 +47,14 @@ export interface DflowDataEntity {
   volume: string;
 
   result: string;
-  status: 'active' | 'closed' | 'finalized' | 'determined' | string;
+  status: "active" | "closed" | "finalized" | "determined" | string;
 
   subtitle: string;
+  yesSubTitle: string;
+  noSubTitle: string;
   title: string;
 
-  entity: 'DflowDataEntity';
+  entity: "DflowDataEntity";
 }
 
 export interface DflowListResponse {
@@ -65,7 +67,7 @@ export interface DflowListResponse {
 }
 
 export const getDflowEvents = async (params?: any) => {
-  const response = await apiClient.get<DflowListResponse>('/dflow/markets', {
+  const response = await apiClient.get<DflowListResponse>("/dflow/markets", {
     params,
   });
   return response.data;
@@ -73,7 +75,7 @@ export const getDflowEvents = async (params?: any) => {
 
 // Kept signature compatible, but returns the new response structure
 export const getDflowEventDetail = async (seriesTicker: string) => {
-  const response = await apiClient.get<DflowListResponse>('/dflow/markets', {
+  const response = await apiClient.get<DflowListResponse>("/dflow/markets", {
     params: { seriesTickers: seriesTicker },
   });
   return response.data;
@@ -97,7 +99,7 @@ export async function getDflowMarket(marketId: string) {
     `https://dev-prediction-markets-api.dflow.net/api/v1/market/${marketId}`,
     {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     },
   );
@@ -107,7 +109,7 @@ export async function getDflowMarket(marketId: string) {
 
 export const createDflowMarketChat = async (id: string) => {
   const response = await apiClient.post<CreatePolymarketChatResponse>(
-    '/chats',
+    "/chats",
     {
       kalshiId: id,
     },
@@ -131,7 +133,7 @@ export interface DflowTradeResponse {
 
 export const getDflowTradeTransaction = async (params: DflowTradeDto) => {
   const response = await apiClient.get<DflowTradeResponse>(
-    '/dflow/trade/transaction',
+    "/dflow/trade/transaction",
     { params },
   );
   return response.data;
@@ -147,7 +149,7 @@ export interface DflowRedeemDto {
 
 export const getDflowRedemptionTransaction = async (params: DflowRedeemDto) => {
   const response = await apiClient.get<DflowTradeResponse>(
-    '/dflow/redeem/transaction',
+    "/dflow/redeem/transaction",
     { params },
   );
   return response.data;
@@ -169,7 +171,7 @@ export const postTradeSignature = async (payload: {
   tradeId: string;
   signature: string;
 }) => {
-  const res = await apiClient.post('dflow/trade/signature', payload);
+  const res = await apiClient.post("dflow/trade/signature", payload);
   return res.data;
 };
 
@@ -188,7 +190,7 @@ export interface DflowTradeEntity {
   userPublicKey: string;
 
   signature: string | null;
-  status: 'pending' | 'open' | 'closed' | 'failed' | string;
+  status: "pending" | "open" | "closed" | "failed" | string;
 
   inAmount: string | null;
   outAmount: string | null;
@@ -201,7 +203,7 @@ export interface DflowTradeEntity {
   createdAt: string;
   updatedAt: string;
 
-  __entity: 'DflowTradeEntity';
+  __entity: "DflowTradeEntity";
 }
 export interface DflowTradeFill {
   signature: string;
@@ -236,7 +238,7 @@ export interface DflowTransactionResponse {
   routePlan: DflowRoutePlan[];
 
   contextSlot: number;
-  executionMode: 'async' | string;
+  executionMode: "async" | string;
 
   revertMint: string | null;
 
@@ -282,7 +284,7 @@ export const getTradeHistory = async (params?: {
   limit?: number;
   offset?: number;
 }) => {
-  const res = await apiClient.get<TradeHistoryResponse>('dflow/trade/history', {
+  const res = await apiClient.get<TradeHistoryResponse>("dflow/trade/history", {
     params,
   });
   return res.data;
@@ -297,7 +299,7 @@ export interface MarketPosition {
   mint: string;
   balance: string;
   decimals: number;
-  positionType: 'YES' | 'NO';
+  positionType: "YES" | "NO";
   market: DflowDataEntity;
   avgPrice?: number;
 }
@@ -314,7 +316,7 @@ export interface MarketPositionsResponse {
 
 export const getPositions = async (data: GetPositionsParams) => {
   const res = await apiClient.post<MarketPositionsResponse>(
-    'dflow/positions',
+    "dflow/positions",
     data,
   );
 

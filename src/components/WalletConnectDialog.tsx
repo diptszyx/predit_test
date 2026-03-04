@@ -1,4 +1,14 @@
+import clsx from 'clsx';
+import { ethers } from 'ethers';
+import { CheckCircle2, Loader2, Wallet } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { getPhantomProvider, usePhantomDirectConnect } from '../hooks/usePhantomConnect';
+import apiClient from '../lib/axios';
+import { User } from '../lib/types';
+import useAuthStore from '../store/auth.store';
+import { Badge } from './ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -6,17 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
-import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
-import { Loader2, Wallet, CheckCircle2 } from 'lucide-react';
-import apiClient from '../lib/axios';
-import useAuthStore from '../store/auth.store';
-import { User } from '../lib/types';
-import { toast } from 'sonner';
-import clsx from 'clsx';
-import { ethers } from 'ethers';
-import { getPhantomProvider, usePhantomDirectConnect } from '../hooks/usePhantomConnect';
-
 export type WalletType = 'metamask' | 'phantom' | 'backpack';
 export type SocialProvider = 'google' | 'x';
 
@@ -111,6 +111,7 @@ export function WalletConnectDialog({
   onOpenPrivacy,
   onOpenTerms,
 }: WalletConnectDialogProps) {
+  const navigate = useNavigate()
   const [connectingWallet, setConnectingWallet] = useState<WalletType | null>(
     null
   );
@@ -235,33 +236,25 @@ export function WalletConnectDialog({
             <p className="text-xs text-muted-foreground">
               By continuing, you agree to our{' '}
               <button
-                onClick={onOpenPrivacy}
-                className="text-blue-500 hover:underline cursor-pointer"
+                onClick={() => {
+                  navigate('/privacy-policy')
+                  onOpenChange(false)
+                }}
+                className="text-blue-500 hover:underline cursor-pointer text-xs"
               >
                 Privacy Policy
               </button>{' '}
               and{' '}
               <button
-                onClick={onOpenTerms}
-                className="text-blue-500 hover:underline cursor-pointer"
+                onClick={() => {
+                  navigate('/terms-of-service')
+                  onOpenChange(false)
+                }}
+                className="text-blue-500 hover:underline cursor-pointer text-xs"
               >
-                Terms of Use
+                Terms of Service
               </button>
               .
-            </p>
-          </div>
-
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">
-              New to crypto wallets?{' '}
-              <a
-                href="https://metamask.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                Learn how to get started
-              </a>
             </p>
           </div>
         </div>
@@ -368,7 +361,7 @@ const WalletConnectButton = ({
     >
       <div className="flex items-center gap-4">
         <div
-          className={`w-12 h-12 rounded-xl bg-gradient-to-br overflow-hidden ${wallet.color} flex items-center justify-center text-2xl flex-shrink-0`}
+          className={`w-12 h-12 rounded-xl bg-gradient-to-br overflow-hidden ${wallet.color} flex items-center justify-center text-2xl shrink-0`}
         >
           <img
             src={wallet.icon}

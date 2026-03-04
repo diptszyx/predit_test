@@ -163,6 +163,7 @@ export function ChatPage({
 
   // Streaming states
   const [thinkingTokens, setThinkingTokens] = useState(0);
+  const [phase, setPhase] = useState<'idle' | 'thinking' | 'answering'>('idle')
   const [citations, setCitations] = useState<string[]>([]);
   const [sessionId, setSessionId] = useState<string>('');
 
@@ -475,10 +476,12 @@ export function ChatPage({
           }
         },
         onThinking: (tokens) => {
+          setPhase('thinking')
           setThinkingTokens(tokens);
         },
         onContent: (content) => {
           // Hide thinking indicator when content starts
+          setPhase('answering')
           setThinkingTokens(0);
 
           // Create assistant message only on first content chunk
@@ -516,6 +519,7 @@ export function ChatPage({
           // Handle stream done
           setIsLoading(false);
           setThinkingTokens(0);
+          setPhase('idle')
           fetchUser();
         },
         onError: (error) => {
@@ -524,6 +528,7 @@ export function ChatPage({
           toast.error('Failed to send message. Please try again.');
           setIsLoading(false);
           setThinkingTokens(0);
+          setPhase('idle')
         },
       }, chatId);
     } catch (error) {
@@ -531,6 +536,7 @@ export function ChatPage({
       toast.error('Failed to send message. Please try again.');
       setIsLoading(false);
       setThinkingTokens(0);
+      setPhase('idle')
     }
   };
 
@@ -990,7 +996,7 @@ export function ChatPage({
                                 </div>
                               );
                             })}
-                            {isLoading && thinkingTokens > 0 && (
+                            {isLoading && phase !== 'answering' && (
                               <div className="flex justify-start">
                                 <div className="max-w-[85%] sm:max-w-[75%] rounded-xl sm:rounded-2xl px-3 py-2 sm:px-4 sm:py-3 bg-muted/80 backdrop-blur-md border border-border shadow-lg">
                                   <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
@@ -1002,7 +1008,9 @@ export function ChatPage({
                                       />
                                     </div>
                                     <span className="text-xs text-foreground">
-                                      {currentOracle.name} is thinking... ({thinkingTokens} tokens)
+                                      {currentOracle.name} is thinking
+                                      {thinkingTokens > 0 && `... (${thinkingTokens} tokens)`}
+                                      {thinkingTokens === 0 && '...'}
                                     </span>
                                   </div>
                                   <div className="flex gap-1">

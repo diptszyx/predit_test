@@ -73,8 +73,16 @@ export const inviteCodeService = {
   generateCodeForUser: async (payload: GenerateInviteCodeUser) => {
     const res = await apiClient.post(
       "/invite-codes/admin/generate-for-user",
-      payload
+      payload,
     );
+    return res.data;
+  },
+
+  customMyCode: async (code: string) => {
+    const res = await apiClient.patch("/invite-codes/my-code", {
+      code,
+    });
+
     return res.data;
   },
 };

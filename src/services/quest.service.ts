@@ -1,10 +1,11 @@
-import apiClient from "../lib/axios";
+import apiClient from '../lib/axios';
 
 export enum QuestType {
-  CONNECT_X = "CONNECT_X",
-  FOLLOW_X = "FOLLOW_X",
-  SHARE_POST = "SHARE_POST",
-  DAILY_TRADE = "DAILY_TRADE",
+  CONNECT_X = 'CONNECT_X',
+  FOLLOW_X = 'FOLLOW_X',
+  SHARE_POST = 'SHARE_POST',
+  DAILY_TRADE = 'DAILY_TRADE',
+  JOIN_DISCORD = 'JOIN_DISCORD',
 }
 
 export const DAILY_QUEST_TYPES: QuestType[] = [
@@ -13,9 +14,9 @@ export const DAILY_QUEST_TYPES: QuestType[] = [
 ];
 
 export enum QuestStatus {
-  NOT_STARTED = "not_started",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
+  NOT_STARTED = 'not_started',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
 }
 
 export interface BaseQuest {
@@ -52,6 +53,10 @@ export type Quest =
   | (BaseQuest & {
       questType: QuestType.DAILY_TRADE;
       metadata: null;
+    })
+  | (BaseQuest & {
+      questType: QuestType.JOIN_DISCORD;
+      metadata: null;
     });
 
 export interface QuestResponse {
@@ -61,7 +66,7 @@ export interface QuestResponse {
 }
 
 export const getQuests = async () => {
-  const response = await apiClient.get<QuestResponse>("/quests");
+  const response = await apiClient.get<QuestResponse>('/quests');
   return response.data;
 };
 
@@ -88,14 +93,20 @@ export type ConnectX = {
 };
 
 export const connectX = async () => {
-  const response = await apiClient.get<ConnectX>("/quests/connect-x");
+  const response = await apiClient.get<ConnectX>('/quests/connect-x');
+
+  return response.data;
+};
+
+export const connectDiscord = async () => {
+  const response = await apiClient.get<ConnectX>('/quests/connect-discord');
 
   return response.data;
 };
 
 export const verifySharePost = async (questId: string, tweetUrl: string) => {
   const response = await apiClient.post<VerifyFollowResponse>(
-    "/quests/verify-share-post",
+    '/quests/verify-share-post',
     {
       questId,
       tweetUrl,
@@ -107,7 +118,18 @@ export const verifySharePost = async (questId: string, tweetUrl: string) => {
 
 export const verifyTradeDaily = async (questId: string) => {
   const response = await apiClient.post<VerifyFollowResponse>(
-    "/quests/verify-daily-trade",
+    '/quests/verify-daily-trade',
+    {
+      questId,
+    },
+  );
+
+  return response.data;
+};
+
+export const verifyJoinDiscord = async (questId: string) => {
+  const response = await apiClient.post<VerifyFollowResponse>(
+    '/quests/verify-join-discord',
     {
       questId,
     },
@@ -126,7 +148,7 @@ export type ContentShareResponse = {
 
 export const getContentShare = async () => {
   const response = await apiClient.get<ContentShareResponse>(
-    "/quests/share-content",
+    '/quests/share-content',
   );
 
   return response.data;

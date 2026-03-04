@@ -445,7 +445,19 @@ export function QuestItem({
   const renderQuestContent = (quest: Quest) => {
     switch (quest.questType) {
       case QuestType.JOIN_DISCORD:
-        return <>{quest.description || 'Join our Discord to earn XP'}</>;
+        return (
+          <>
+            Join our{' '}
+            <a
+              href="https://discord.gg/Qy383ZHH8"
+              target="_blank"
+              className="text-blue-400"
+            >
+              Discord group
+            </a>{' '}
+            to earn XP
+          </>
+        );
 
       case QuestType.FOLLOW_X:
         return (
@@ -509,7 +521,18 @@ export function QuestItem({
 
           <div className="pl-3">
             <p className="text-sm font-semibold sm:text-base flex items-center gap-3">
-              <span>{quest.name}</span>
+              {quest.questType === QuestType.JOIN_DISCORD ? (
+                <a
+                  href="https://discord.gg/Qy383ZHH8"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:underline hover:text-blue-400 cursor-pointer"
+                >
+                  {quest.name}
+                </a>
+              ) : (
+                <span>{quest.name}</span>
+              )}
               {requiresX &&
                 quest.status !== QuestStatus.COMPLETED &&
                 !isConnectedX && (

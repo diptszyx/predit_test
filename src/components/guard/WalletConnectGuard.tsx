@@ -9,18 +9,18 @@ type RequireWalletProps = {
 export function RequirePhantomConnected({ children }: RequireWalletProps) {
   const { wallets, wallet, select, connect, connected, connecting } = useWallet();
 
-  const phantom = wallets.find(w => w.adapter.name === "Phantom");
+  const availableWallet = wallets[0];
 
   const handleConnect = async () => {
     if (!wallet) {
-      if (!phantom) throw new Error("Phantom not available");
-      select(phantom.adapter.name);
+      if (!availableWallet) throw new Error("No Solana wallet available");
+      select(availableWallet.adapter.name);
       await new Promise((r) => setTimeout(r, 0));
     }
     await connect();
   };
 
-  if (!phantom) {
+  if (!availableWallet) {
     return (
       <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/20 backdrop-blur-sm">
         <div className="relative w-full max-w-md">
@@ -32,10 +32,10 @@ export function RequirePhantomConnected({ children }: RequireWalletProps) {
             </div>
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-foreground">
-                Phantom Wallet Not Detected
+                Solana Wallet Not Detected
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Please install Phantom to continue, then refresh this page.
+                Please install a supported Solana wallet to continue, then refresh this page.
               </p>
             </div>
           </div>
@@ -76,7 +76,7 @@ export function RequirePhantomConnected({ children }: RequireWalletProps) {
                 }
               }}
             >
-              {connecting ? "Connecting..." : "Connect Phantom Wallet"}
+              {connecting ? "Connecting..." : "Connect Wallet"}
             </Button>
           </div>
         </div>

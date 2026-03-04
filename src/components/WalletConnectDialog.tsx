@@ -128,9 +128,16 @@ export function WalletConnectDialog({
   };
 
   const isMobile = useIsMobile(1024);
-  const displayWallets = wallets.map(w => {
+  const displayWallets = (isMobile ? wallets.filter((w) => w.id === 'phantom') : wallets).map((w) => {
     if (w.id === 'phantom') {
-      return isMobile ? { ...w, supported: true, name: 'Solana Mobile Wallet', description: 'Phantom, Backpack, Solflare...' } : w;
+      return isMobile
+        ? {
+          ...w,
+          supported: true,
+          name: 'Solana Mobile Wallet',
+          description: 'Phantom, Backpack, Solflare...',
+        }
+        : w;
     }
     return w;
   });
@@ -295,7 +302,18 @@ export function WalletConnectDialog({
                   isMobile={isMobile}
                   onConnectMwa={async () => {
                     setPendingMwaLogin(true);
-                    await connect();
+
+                    // Avoid reconnect race/errors when adapter is already connected.
+                    if (connected && publicKey) {
+                      return;
+                    }
+
+                    try {
+                      await connect();
+                    } catch (error) {
+                      setPendingMwaLogin(false);
+                      throw error;
+                    }
                   }}
                 />
               );

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { ethers } from 'ethers';
 import { CheckCircle2, Loader2, Wallet } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { getPhantomProvider, usePhantomDirectConnect } from '../hooks/usePhantomConnect';
@@ -17,6 +17,11 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { Separator } from './ui/separator';
+import { useWallet } from '@solana/wallet-adapter-react';
+
+import bs58 from "bs58";
+import { useIsMobile } from '../hooks/useIsMobile';
+
 export type WalletType = 'metamask' | 'phantom' | 'backpack';
 export type SocialProvider = 'google' | 'x';
 
@@ -29,6 +34,13 @@ interface WalletConnectDialogProps {
   onOpenTerms: () => void;
 }
 
+interface SocialOption {
+  id: SocialProvider;
+  name: string;
+  icon: string;
+  color: string;
+}
+
 interface WalletOption {
   id: WalletType;
   name: string;
@@ -36,13 +48,6 @@ interface WalletOption {
   icon: string;
   color: string;
   supported: boolean;
-}
-
-interface SocialOption {
-  id: SocialProvider;
-  name: string;
-  icon: string;
-  color: string;
 }
 
 const hasMeta = typeof window !== 'undefined' && (window as any).ethereum;
@@ -72,9 +77,7 @@ const wallets: WalletOption[] = [
     color: 'from-green-600 to-red-600',
     supported: false,
   },
-];
-
-const socialOptions: SocialOption[] = [
+];const socialOptions: SocialOption[] = [
   {
     id: 'google',
     name: 'Continue with Google',
@@ -90,7 +93,7 @@ const socialOptions: SocialOption[] = [
 ];
 
 const getMetaMaskProvider = (): any => {
-  const eth = window.ethereum as any;
+  const eth = (window as any).ethereum;
 
   if (eth?.providers?.length) {
     return eth.providers.find((p: any) => p.isMetaMask);
@@ -121,7 +124,81 @@ export function WalletConnectDialog({
   const resetState = () => {
     setConnectingWallet(null);
     setConnectingSocial(null);
+    setPendingMwaLogin(false);
   };
+
+  const isMobile = useIsMobile(1024);
+  const displayWallets = (isMobile ? wallets.filter((w) => w.id === 'phantom') : wallets).map((w) => {
+    if (w.id === 'phantom') {
+      return isMobile
+        ? {
+          ...w,
+          supported: true,
+          name: 'Solana Mobile Wallet',
+          description: 'Phantom, Backpack, Solflare...',
+        }
+        : w;
+    }
+    return w;
+  });
+
+  const { publicKey, connected, signMessage, connect } = useWallet();
+  const authenticateWithToken = useAuthStore(
+    (state) => state.authenticateWithToken
+  );
+  const currentUser = useAuthStore((state) => state.user);
+  const [isAuthenticatingSolana, setIsAuthenticatingSolana] = useState(false);
+  // Only true after user explicitly clicks the MWA/wallet button
+  const [pendingMwaLogin, setPendingMwaLogin] = useState(false);
+
+  const handleSolanaLogin = async () => {
+    if (!publicKey || !signMessage || isAuthenticatingSolana) return;
+
+    setIsAuthenticatingSolana(true);
+    try {
+      const { data: nonceResp } = await apiClient.post("/auth/nonce", {
+        publicKey: publicKey.toBase58(),
+        walletType: "phantom",
+      });
+
+      if (!nonceResp?.nonce) {
+        throw new Error("Failed to get authentication nonce");
+      }
+
+      const message = `Login to Deor\nNonce=${nonceResp.nonce}`;
+      const messageBytes = new TextEncoder().encode(message);
+
+      const signature = await signMessage(messageBytes);
+      const signatureBase58 = bs58.encode(signature);
+
+      const { data: verifyResp } = await apiClient.post("/auth/verify", {
+        message,
+        signature: signatureBase58,
+        publicKey: publicKey.toBase58(),
+      });
+
+      if (!verifyResp?.token || !verifyResp?.user) {
+        throw new Error("Authentication failed");
+      }
+
+      await authenticateWithToken(verifyResp.token);
+      toast.success("Successfully logged in with Solana!");
+      onConnect("phantom", verifyResp.user);
+    } catch (err: any) {
+      console.error("Solana login error:", err);
+      toast.error(err.message || "Failed to login with Solana");
+    } finally {
+      setIsAuthenticatingSolana(false);
+    }
+  };
+
+  // Only trigger login if user explicitly initiated an MWA connect
+  useEffect(() => {
+    if (pendingMwaLogin && connected && publicKey && !currentUser && !isAuthenticatingSolana) {
+      setPendingMwaLogin(false);
+      handleSolanaLogin();
+    }
+  }, [connected, publicKey, pendingMwaLogin, currentUser]);
 
   const handleSocialConnect = async (provider: SocialProvider) => {
     setConnectingSocial(provider);
@@ -145,6 +222,8 @@ export function WalletConnectDialog({
     setConnectingSocial(null);
     onSocialConnect(provider);
   };
+
+
 
   return (
     <Dialog
@@ -210,8 +289,8 @@ export function WalletConnectDialog({
           </div>
 
           <div className="space-y-3">
-            {wallets.map((wallet) => {
-              const isConnecting = connectingWallet === wallet.id;
+            {displayWallets.map((wallet) => {
+              const isConnecting = connectingWallet === wallet.id || (isAuthenticatingSolana && wallet.id === 'phantom');
 
               return (
                 <WalletConnectButton
@@ -220,6 +299,22 @@ export function WalletConnectDialog({
                   wallet={wallet}
                   setConnectingWallet={setConnectingWallet}
                   onConnect={onConnect}
+                  isMobile={isMobile}
+                  onConnectMwa={async () => {
+                    setPendingMwaLogin(true);
+
+                    // Avoid reconnect race/errors when adapter is already connected.
+                    if (connected && publicKey) {
+                      return;
+                    }
+
+                    try {
+                      await connect();
+                    } catch (error) {
+                      setPendingMwaLogin(false);
+                      throw error;
+                    }
+                  }}
                 />
               );
             })}
@@ -268,11 +363,22 @@ const WalletConnectButton = ({
   wallet,
   setConnectingWallet,
   onConnect,
+  isMobile,
+  onConnectMwa,
 }: {
-  wallet: WalletOption;
+  wallet: {
+    id: WalletType;
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    supported: boolean;
+  };
   loading: boolean;
   onConnect: (wallet: WalletType, user: User) => void;
   setConnectingWallet: (walletType: WalletType | null) => void;
+  isMobile: boolean;
+  onConnectMwa: () => Promise<void>;
 }) => {
   const [pendingWalletType, setPendingWalletType] = useState<WalletType | null>(
     null
@@ -293,17 +399,25 @@ const WalletConnectButton = ({
 
     switch (walletType) {
       case 'phantom':
-        if (!getPhantomProvider()) {
-          toast.error('Phantom not installed');
-          setConnectingWallet(null);
-          setPendingWalletType(null);
-          return;
+        if (isMobile) {
+          // Directly trigger MWA without any intermediate modal
+          try {
+            await onConnectMwa();
+          } catch (e: any) {
+            toast.error(e.message || 'Failed to connect wallet');
+            setConnectingWallet(null);
+            setPendingWalletType(null);
+          }
         } else {
-          handlePhantomDirectConnect();
+          if (!getPhantomProvider()) {
+            toast.error('Phantom not installed');
+            setConnectingWallet(null);
+            setPendingWalletType(null);
+            return;
+          } else {
+            handlePhantomDirectConnect();
+          }
         }
-
-        break;
-      case 'backpack':
         break;
       case 'metamask':
         try {
@@ -345,6 +459,8 @@ const WalletConnectButton = ({
           setConnectingWallet(null);
         }
 
+        break;
+      default:
         break;
     }
   };

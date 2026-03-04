@@ -1,9 +1,9 @@
-import { AxiosError } from "axios";
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { AxiosError } from 'axios';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
-import apiClient, { AUTH_TOKEN_STORAGE_KEY } from "../lib/axios";
-import type { User } from "../lib/types";
+import apiClient, { AUTH_TOKEN_STORAGE_KEY } from '../lib/axios';
+import type { User } from '../lib/types';
 
 export interface LoginCredentials {
   email: string;
@@ -32,7 +32,7 @@ interface AuthState {
 
 const initialState: Pick<
   AuthState,
-  "user" | "accessToken" | "isAuthenticating" | "error"
+  'user' | 'accessToken' | 'isAuthenticating' | 'error'
 > = {
   user: null,
   accessToken: null,
@@ -41,7 +41,7 @@ const initialState: Pick<
 };
 
 const safeStorage = () => {
-  if (typeof window !== "undefined" && window.localStorage) {
+  if (typeof window !== 'undefined' && window.localStorage) {
     return window.localStorage;
   }
 
@@ -64,13 +64,13 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const { data } = await apiClient.post<AuthResponse>(
-            "/auth/login",
-            credentials
+            '/auth/login',
+            credentials,
           );
 
           const { token, user } = data;
 
-          if (typeof window !== "undefined") {
+          if (typeof window !== 'undefined') {
             window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
           }
           apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
@@ -84,7 +84,7 @@ export const useAuthStore = create<AuthState>()(
 
           return user;
         } catch (error) {
-          let errorMessage = "Unable to login. Please try again.";
+          let errorMessage = 'Unable to login. Please try again.';
           if (error instanceof AxiosError) {
             const apiMessage = (
               error.response?.data as { message?: string } | undefined
@@ -96,7 +96,7 @@ export const useAuthStore = create<AuthState>()(
             }
           }
 
-          if (typeof window !== "undefined") {
+          if (typeof window !== 'undefined') {
             window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
           }
 
@@ -117,7 +117,7 @@ export const useAuthStore = create<AuthState>()(
           accessToken: token,
         });
 
-        if (typeof window !== "undefined") {
+        if (typeof window !== 'undefined') {
           window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
         }
 
@@ -126,7 +126,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const user = await get().fetchCurrentUser();
           if (!user) {
-            throw new Error("Unable to load your profile. Please try again.");
+            throw new Error('Unable to load your profile. Please try again.');
           }
 
           set({
@@ -138,12 +138,12 @@ export const useAuthStore = create<AuthState>()(
 
           return user;
         } catch (error) {
-          if (typeof window !== "undefined") {
+          if (typeof window !== 'undefined') {
             window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
           }
           delete apiClient.defaults.headers.common.Authorization;
 
-          let errorMessage = "Authentication failed. Please try again.";
+          let errorMessage = 'Authentication failed. Please try again.';
           if (error instanceof AxiosError) {
             const apiMessage = (
               error.response?.data as { message?: string } | undefined
@@ -167,7 +167,7 @@ export const useAuthStore = create<AuthState>()(
       },
       async fetchCurrentUser() {
         try {
-          const { data } = await apiClient.get<User>("/auth/me");
+          const { data } = await apiClient.get<User>('/auth/me');
           set({
             user: data,
             error: null,
@@ -179,7 +179,7 @@ export const useAuthStore = create<AuthState>()(
             return null;
           }
 
-          let errorMessage = "Failed to load your profile.";
+          let errorMessage = 'Failed to load your profile.';
           if (error instanceof AxiosError) {
             const apiMessage = (
               error.response?.data as { message?: string } | undefined
@@ -201,14 +201,14 @@ export const useAuthStore = create<AuthState>()(
       },
       async updateProfile(updates) {
         try {
-          const { data } = await apiClient.patch<User>("/auth/me", updates);
+          const { data } = await apiClient.patch<User>('/auth/me', updates);
           set({
             user: data,
             error: null,
           });
           return data;
         } catch (error) {
-          let errorMessage = "Failed to update your profile.";
+          let errorMessage = 'Failed to update your profile.';
           if (error instanceof AxiosError) {
             const apiMessage = (
               error.response?.data as { message?: string } | undefined
@@ -227,7 +227,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       logout() {
-        if (typeof window !== "undefined") {
+        if (typeof window !== 'undefined') {
           window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
         }
 
@@ -237,14 +237,14 @@ export const useAuthStore = create<AuthState>()(
       },
       setUser(user, accessToken) {
         const tokenToPersist =
-          typeof accessToken === "undefined" ? get().accessToken : accessToken;
+          typeof accessToken === 'undefined' ? get().accessToken : accessToken;
 
         set({
           user,
           accessToken: tokenToPersist ?? null,
         });
 
-        if (typeof window !== "undefined") {
+        if (typeof window !== 'undefined') {
           if (tokenToPersist) {
             window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, tokenToPersist);
             apiClient.defaults.headers.common.Authorization = `Bearer ${tokenToPersist}`;
@@ -270,7 +270,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "deor-auth",
+      name: 'deor-auth',
       storage: createJSONStorage(safeStorage),
       partialize: (state) => ({
         user: state.user,
@@ -283,17 +283,17 @@ export const useAuthStore = create<AuthState>()(
 
         apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
 
-        if (typeof window !== "undefined") {
+        if (typeof window !== 'undefined') {
           const existingToken = window.localStorage.getItem(
-            AUTH_TOKEN_STORAGE_KEY
+            AUTH_TOKEN_STORAGE_KEY,
           );
           if (!existingToken) {
             window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
           }
         }
       },
-    }
-  )
+    },
+  ),
 );
 
 export default useAuthStore;

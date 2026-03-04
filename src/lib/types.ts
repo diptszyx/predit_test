@@ -16,7 +16,7 @@ export interface AIAgent {
   bgColor: string;
   level?: number;
   xp?: number;
-  tier?: "free" | "premium" | "elite";
+  tier?: 'free' | 'premium' | 'elite';
   consultSessions?: string;
 }
 
@@ -35,13 +35,15 @@ export interface User {
   aiAgentsVisited: number;
   appWallet: string;
   walletAddress?: string;
-  walletType?: "metamask" | "phantom" | "backpack";
-  socialProvider?: "google" | "apple" | "email";
+  walletType?: 'metamask' | 'phantom' | 'backpack';
+  socialProvider?: 'google' | 'apple' | 'email';
   email?: string;
   phone?: string;
   phoneNumber?: string;
   provider?: string;
-  subscriptionTier?: "free" | "master";
+  subscriptionTier?: 'free' | 'master';
+  discordId?: string;
+  xUsername?: string;
   visitedAIAgents?: string[];
   dailyPredictionsUsed?: number;
   dailyPredictionsResetDate?: string;
@@ -83,7 +85,7 @@ export interface Prediction {
   question: string;
   prediction: string;
   confidence: number;
-  outcome?: "correct" | "incorrect" | "pending";
+  outcome?: 'correct' | 'incorrect' | 'pending';
   stake?: number;
   reward?: number;
   timestamp: Date;
@@ -122,7 +124,7 @@ export interface PredictionMarket {
   endDate: Date;
   totalStaked: number;
   options: MarketOption[];
-  status: "active" | "closed" | "resolved";
+  status: 'active' | 'closed' | 'resolved';
 }
 
 export interface MarketOption {

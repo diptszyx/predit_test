@@ -20,6 +20,7 @@ import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Skeleton } from '../ui/skeleton';
 import Usdc from '../wallet/icon/Usdc';
+import KYCVerificationModal from '../polymarket/KYCVerificationModal';
 import { safePrice } from './TradeModalDflow';
 
 export const MarketDetailPage = () => {
@@ -32,6 +33,9 @@ export const MarketDetailPage = () => {
   const { market, dflowMarket, loading } = useMarketDetail(id || '');
 
   const { placeOrder, redeemPositions, isTrading } = useTrade();
+
+  const [showKYC, setShowKYC] = useState(false);
+  const [kycVerified, setKycVerified] = useState(false);
 
   const [selectedOutcome, setSelectedOutcome] = useState<'Yes' | 'No'>('Yes');
   const [tradeSide, setTradeSide] = useState<'BUY' | 'SELL'>('BUY');
@@ -72,6 +76,12 @@ export const MarketDetailPage = () => {
       setBalance('0');
     }
   };
+
+  useEffect(() => {
+    if (publicKey && !kycVerified) {
+      setShowKYC(true);
+    }
+  }, [publicKey]);
 
   useEffect(() => {
     if (user) {
@@ -206,9 +216,22 @@ export const MarketDetailPage = () => {
     (tradeSide === 'BUY' && errorAmount) ||
     parseFloat(amount) <= 0 ||
     (tradeSide === 'BUY' && isBuyDisabled) ||
-    (tradeSide === 'SELL' && isSellDisabled);
+    (tradeSide === 'SELL' && isSellDisabled) ||
+    (!!publicKey && !kycVerified);
 
   return (
+    <>
+    {publicKey && (
+      <KYCVerificationModal
+        open={showKYC}
+        onOpenChange={setShowKYC}
+        walletAddress={publicKey.toBase58()}
+        onVerified={() => {
+          setKycVerified(true);
+          setShowKYC(false);
+        }}
+      />
+    )}
     <div className="min-h-screen bg-background">
       <div className="w-full p-4 lg:p-6">
         <div className="max-w-6xl mx-auto space-y-6">
@@ -610,5 +633,6 @@ export const MarketDetailPage = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };

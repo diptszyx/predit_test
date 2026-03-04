@@ -20,6 +20,7 @@ import { getStatusBadgeProps } from '../market/MarketListAdmin';
 import { Badge } from '../ui/badge';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import Usdc from '../wallet/icon/Usdc';
+import KYCVerificationModal from '../polymarket/KYCVerificationModal';
 
 interface TradeModalDflowProps {
   open: boolean;
@@ -49,6 +50,9 @@ const TradeModalDflow = ({
   const { connection } = useConnection();
   const { publicKey } = useWallet();
   const { placeOrder, redeemPositions, isTrading } = useTrade();
+
+  const [showKYC, setShowKYC] = useState(false);
+  const [kycVerified, setKycVerified] = useState(false);
 
   const [balance, setBalance] = useState('0');
 
@@ -113,6 +117,12 @@ const TradeModalDflow = ({
       setTradeSide('BUY');
       setAmount('');
       setErrorAmount('');
+      if (publicKey && !kycVerified) {
+        setShowKYC(true);
+      }
+    } else {
+      setKycVerified(false);
+      setShowKYC(false);
     }
   }, [open, initialOutcome]);
 
@@ -229,6 +239,21 @@ const TradeModalDflow = ({
     parseFloat(amount) <= 0 ||
     (tradeSide === 'BUY' && isBuyDisabled) ||
     (tradeSide === 'SELL' && isSellDisabled);
+
+  if (showKYC && publicKey) {
+    return (
+      <KYCVerificationModal
+        open={open}
+        onOpenChange={onOpenChange}
+        walletAddress={publicKey.toBase58()}
+        onVerified={() => {
+          setKycVerified(true);
+          setShowKYC(false);
+          fetchBalance();
+        }}
+      />
+    );
+  }
 
   return (
     <Dialog

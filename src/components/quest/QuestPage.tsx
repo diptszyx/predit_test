@@ -16,6 +16,8 @@ import {
   verifyFollow,
   verifySharePost,
   verifyTradeDaily,
+  verifyLikeTweet,
+  verifyRetweetTweet,
 } from '../../services/quest.service';
 import useAuthStore from '../../store/auth.store';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
@@ -40,6 +42,7 @@ const QuestPage = () => {
   const [openShareModal, setOpenShareModal] = useState(false);
   const [openVerifyShareModal, setOpenVerifyShareModal] = useState(false);
   const [verifyQuestId, setVerifyQuestId] = useState<string | null>(null);
+  const [clickedActionQuests, setClickedActionQuests] = useState<string[]>([]);
   const isConnectedX = quests.some(
     (q) =>
       q.questType === QuestType.CONNECT_X && q.status === QuestStatus.COMPLETED,
@@ -109,7 +112,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Couldn’t start X connection. Please try again.',
+        'Couldn’t start X connection. Please try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -126,7 +129,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Couldn’t start Discord connection. Please try again.',
+        'Couldn’t start Discord connection. Please try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -151,7 +154,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please join and try again.',
+        'Verification failed. Please join and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -176,7 +179,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please follow and try again.',
+        'Verification failed. Please follow and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -201,7 +204,57 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please trade and try again.',
+        'Verification failed. Please trade and try again.',
+      );
+    } finally {
+      setVerifyQuestId((current) => (current === questId ? null : current));
+    }
+  };
+
+  const handleVerifyLike = async (questId: string) => {
+    try {
+      setVerifyQuestId(questId);
+
+      const data = await verifyLikeTweet(questId);
+      if (data.success) {
+        await fetchCurrentUser();
+        await refetch();
+        toast.success(
+          'Like verified successfully! XP has been added to your account.',
+        );
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message ||
+        'Verification failed. Please like the tweet and try again.',
+      );
+    } finally {
+      setVerifyQuestId((current) => (current === questId ? null : current));
+    }
+  };
+
+  const handleVerifyRetweet = async (questId: string) => {
+    try {
+      setVerifyQuestId(questId);
+
+      const data = await verifyRetweetTweet(questId);
+      if (data.success) {
+        await fetchCurrentUser();
+        await refetch();
+        toast.success(
+          'Retweet verified successfully! XP has been added to your account.',
+        );
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message ||
+        'Verification failed. Please retweet and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -225,7 +278,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please share and try again.',
+        'Verification failed. Please share and try again.',
       );
     }
   };
@@ -280,6 +333,36 @@ ${content.shareContent}
           },
         };
 
+      case QuestType.LIKE_X:
+      case QuestType.RETWEET_X: {
+        const hasClickedAction = clickedActionQuests.includes(quest.questId);
+        if (!hasClickedAction) {
+          return {
+            label: 'Go',
+            disabled: !isConnectedX,
+            onClick: () => {
+              const tweetId = quest.metadata?.targetTweetId;
+              if (tweetId) {
+                const actionUrl = `https://x.com/preditmarket/status/${tweetId}`;
+                window.open(actionUrl, '_blank');
+              } else {
+                window.open('https://x.com', '_blank');
+              }
+              setClickedActionQuests((prev) => [...prev, quest.questId]);
+            },
+          };
+        }
+
+        return {
+          label: isVerifyingThis ? 'Verifying...' : 'Verify',
+          disabled: isVerifyingThis || !isConnectedX,
+          onClick: () =>
+            quest.questType === QuestType.LIKE_X
+              ? handleVerifyLike(quest.questId)
+              : handleVerifyRetweet(quest.questId),
+        };
+      }
+
       case QuestType.DAILY_TRADE:
         return {
           label: isVerifyingThis ? 'Verifying...' : 'Verify',
@@ -310,13 +393,13 @@ ${content.shareContent}
 
   const questSections = shouldShowOneTimeFirst
     ? [
-        { title: 'One-time Quests', data: oneTimeQuests },
-        { title: 'Daily Quests', data: dailyQuests },
-      ]
+      { title: 'One-time Quests', data: oneTimeQuests },
+      { title: 'Daily Quests', data: dailyQuests },
+    ]
     : [
-        { title: 'Daily Quests', data: dailyQuests },
-        { title: 'One-time Quests', data: oneTimeQuests },
-      ];
+      { title: 'Daily Quests', data: dailyQuests },
+      { title: 'One-time Quests', data: oneTimeQuests },
+    ];
 
   return (
     <div className="space-y-6 mx-auto max-w-2xl">
@@ -431,6 +514,17 @@ export function QuestItem({
           />
         );
 
+      case QuestType.LIKE_X:
+      case QuestType.RETWEET_X:
+        return (
+          <ImageWithFallback
+            src="/Twitter-X.svg"
+            alt="icon-social"
+            width={20}
+            height={20}
+          />
+        );
+
       case QuestType.FOLLOW_X:
         return <UserPlus className="h-5 w-5 text-[#a3a3a3]" />;
 
@@ -509,7 +603,9 @@ export function QuestItem({
 
   const requiresX =
     quest.questType === QuestType.FOLLOW_X ||
-    quest.questType === QuestType.SHARE_POST;
+    quest.questType === QuestType.SHARE_POST ||
+    quest.questType === QuestType.LIKE_X ||
+    quest.questType === QuestType.RETWEET_X;
 
   return (
     <div className="relative rounded-3xl border px-5 py-3">
@@ -562,7 +658,7 @@ export function QuestItem({
           <Button
             className="font-mono"
             size="sm"
-            onClick={onClick ?? (() => {})}
+            onClick={onClick ?? (() => { })}
             disabled={disabled || !onClick}
           >
             {label}

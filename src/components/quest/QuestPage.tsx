@@ -112,7 +112,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-        'Couldn’t start X connection. Please try again.',
+          'Couldn’t start X connection. Please try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -129,7 +129,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-        'Couldn’t start Discord connection. Please try again.',
+          'Couldn’t start Discord connection. Please try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -154,7 +154,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-        'Verification failed. Please join and try again.',
+          'Verification failed. Please join and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -179,7 +179,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-        'Verification failed. Please follow and try again.',
+          'Verification failed. Please follow and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -204,7 +204,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-        'Verification failed. Please trade and try again.',
+          'Verification failed. Please trade and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -229,7 +229,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-        'Verification failed. Please like the tweet and try again.',
+          'Verification failed. Please like the tweet and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -254,7 +254,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-        'Verification failed. Please retweet and try again.',
+          'Verification failed. Please retweet and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -278,7 +278,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-        'Verification failed. Please share and try again.',
+          'Verification failed. Please share and try again.',
       );
     }
   };
@@ -343,7 +343,10 @@ ${content.shareContent}
             onClick: () => {
               const tweetId = quest.metadata?.targetTweetId;
               if (tweetId) {
-                const actionUrl = `https://x.com/preditmarket/status/${tweetId}`;
+                const actionUrl =
+                  quest.questType === QuestType.LIKE_X
+                    ? `https://x.com/intent/like?tweet_id=${tweetId}`
+                    : `https://x.com/intent/retweet?tweet_id=${tweetId}`;
                 window.open(actionUrl, '_blank');
               } else {
                 window.open('https://x.com', '_blank');
@@ -393,13 +396,13 @@ ${content.shareContent}
 
   const questSections = shouldShowOneTimeFirst
     ? [
-      { title: 'One-time Quests', data: oneTimeQuests },
-      { title: 'Daily Quests', data: dailyQuests },
-    ]
+        { title: 'One-time Quests', data: oneTimeQuests },
+        { title: 'Daily Quests', data: dailyQuests },
+      ]
     : [
-      { title: 'Daily Quests', data: dailyQuests },
-      { title: 'One-time Quests', data: oneTimeQuests },
-    ];
+        { title: 'Daily Quests', data: dailyQuests },
+        { title: 'One-time Quests', data: oneTimeQuests },
+      ];
 
   return (
     <div className="space-y-6 mx-auto max-w-2xl">
@@ -658,7 +661,7 @@ export function QuestItem({
           <Button
             className="font-mono"
             size="sm"
-            onClick={onClick ?? (() => { })}
+            onClick={onClick ?? (() => {})}
             disabled={disabled || !onClick}
           >
             {label}

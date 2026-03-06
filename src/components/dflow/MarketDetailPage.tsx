@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
-import KYCVerificationModal from '../polymarket/KYCVerificationModal';
+import KYCVerificationModal from './KYCVerificationModal';
 import { safePrice } from './TradeModalDflow';
 
 export const MarketDetailPage = () => {

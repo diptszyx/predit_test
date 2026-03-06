@@ -18,7 +18,7 @@ import clsx from 'clsx';
 import { TriangleAlert } from 'lucide-react';
 import { getStatusBadgeProps } from '../market/MarketListAdmin';
 import { Badge } from '../ui/badge';
-import KYCVerificationModal from '../polymarket/KYCVerificationModal';
+import KYCVerificationModal from './KYCVerificationModal';
 
 interface TradeModalDflowProps {
   open: boolean;

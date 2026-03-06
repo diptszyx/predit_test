@@ -1144,10 +1144,10 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
               <p className="text-sm text-red-500 mt-1">{errorAmount}</p>
             )}
             <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
-              {[1, 20, 50].map((v) => {
+              {[1, 10, 20].map((v) => {
                 const disabled =
                   !user ||
-                  Number(amount) >= Number(balance) ||
+                  Number(amount) + v > Number(balance) ||
                   v > Number(balance);
 
                 return (
@@ -1168,9 +1168,8 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
                         if (!amount) {
                           handleSetAmount(String(v));
                         } else {
-                          const newValue = Number(amount) + v;
-                          if (newValue > Number(amount)) handleMaxAmount();
-                          else handleSetAmount(String(newValue));
+                          const newValue = Number((Number(amount) + v).toFixed(2));
+                          handleSetAmount(String(newValue));
                         }
                       }
                     }}

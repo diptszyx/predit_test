@@ -15,11 +15,9 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
 import clsx from 'clsx';
-import { CircleDollarSign, TriangleAlert } from 'lucide-react';
+import { TriangleAlert } from 'lucide-react';
 import { getStatusBadgeProps } from '../market/MarketListAdmin';
 import { Badge } from '../ui/badge';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import Usdc from '../wallet/icon/Usdc';
 import KYCVerificationModal from '../polymarket/KYCVerificationModal';
 
 interface TradeModalDflowProps {
@@ -190,9 +188,9 @@ const TradeModalDflow = ({
         const mint =
           selectedOutcome === 'Yes'
             ? market.accounts['EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v']
-              .yesMint
+                .yesMint
             : market.accounts['EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v']
-              .noMint;
+                .noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
@@ -260,22 +258,17 @@ const TradeModalDflow = ({
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      <DialogContent
-        aria-describedby="trade"
-        className="sm:max-w-md"
-      >
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent aria-describedby="trade" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {market.title}
             {dflowMarket && (
               <Badge
                 variant={getStatusBadgeProps(dflowMarket?.status).variant}
-                className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${getStatusBadgeProps(dflowMarket?.status).className
-                  }`}
+                className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${
+                  getStatusBadgeProps(dflowMarket?.status).className
+                }`}
               >
                 {dflowMarket?.status}
               </Badge>
@@ -362,10 +355,10 @@ const TradeModalDflow = ({
             <p className="text-sm text-red-500 mt-1">{errorAmount}</p>
           )}
           <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
-            {[1, 20, 50].map((v) => {
+            {[1, 10, 20].map((v) => {
               const disabled =
                 !user ||
-                Number(amount) >= Number(balance) ||
+                Number(amount) + v > Number(balance) ||
                 v > Number(balance);
 
               return (
@@ -386,9 +379,10 @@ const TradeModalDflow = ({
                       if (!amount) {
                         handleSetAmount(String(v));
                       } else {
-                        const newValue = Number(amount) + v;
-                        if (newValue > Number(amount)) handleMaxAmount();
-                        else handleSetAmount(String(newValue));
+                        const newValue = Number(
+                          (Number(amount) + v).toFixed(2),
+                        );
+                        handleSetAmount(String(newValue));
                       }
                     }
                   }}

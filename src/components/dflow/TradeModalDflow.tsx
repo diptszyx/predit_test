@@ -18,6 +18,7 @@ import clsx from 'clsx';
 import { TriangleAlert } from 'lucide-react';
 import { getStatusBadgeProps } from '../market/MarketListAdmin';
 import { Badge } from '../ui/badge';
+import KYCVerificationModal from './KYCVerificationModal';
 
 interface TradeModalDflowProps {
   open: boolean;
@@ -47,6 +48,9 @@ const TradeModalDflow = ({
   const { connection } = useConnection();
   const { publicKey } = useWallet();
   const { placeOrder, redeemPositions, isTrading } = useTrade();
+
+  const [showKYC, setShowKYC] = useState(false);
+  const [kycVerified, setKycVerified] = useState(false);
 
   const [balance, setBalance] = useState('0');
 
@@ -111,6 +115,12 @@ const TradeModalDflow = ({
       setTradeSide('BUY');
       setAmount('');
       setErrorAmount('');
+      if (publicKey && !kycVerified) {
+        setShowKYC(true);
+      }
+    } else {
+      setKycVerified(false);
+      setShowKYC(false);
     }
   }, [open, initialOutcome]);
 
@@ -178,9 +188,9 @@ const TradeModalDflow = ({
         const mint =
           selectedOutcome === 'Yes'
             ? market.accounts['EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v']
-              .yesMint
+                .yesMint
             : market.accounts['EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v']
-              .noMint;
+                .noMint;
         result = await redeemPositions(mint, parseFloat(amount), market.id);
       }
 
@@ -232,23 +242,33 @@ const TradeModalDflow = ({
     (tradeSide === 'BUY' && isBuyDisabled) ||
     (tradeSide === 'SELL' && isSellDisabled);
 
+  if (showKYC && publicKey) {
+    return (
+      <KYCVerificationModal
+        open={open}
+        onOpenChange={onOpenChange}
+        walletAddress={publicKey.toBase58()}
+        onVerified={() => {
+          setKycVerified(true);
+          setShowKYC(false);
+          fetchBalance();
+        }}
+      />
+    );
+  }
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      <DialogContent
-        aria-describedby="trade"
-        className="sm:max-w-md"
-      >
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent aria-describedby="trade" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {market.title}
             {dflowMarket && (
               <Badge
                 variant={getStatusBadgeProps(dflowMarket?.status).variant}
-                className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${getStatusBadgeProps(dflowMarket?.status).className
-                  }`}
+                className={`text-[10px] ml-3 px-1.5 py-0 h-6 capitalize shrink-0 ${
+                  getStatusBadgeProps(dflowMarket?.status).className
+                }`}
               >
                 {dflowMarket?.status}
               </Badge>
@@ -359,7 +379,9 @@ const TradeModalDflow = ({
                       if (!amount) {
                         handleSetAmount(String(v));
                       } else {
-                        const newValue = Number((Number(amount) + v).toFixed(2));
+                        const newValue = Number(
+                          (Number(amount) + v).toFixed(2),
+                        );
                         handleSetAmount(String(newValue));
                       }
                     }

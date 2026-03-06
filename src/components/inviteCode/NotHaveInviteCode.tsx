@@ -19,7 +19,7 @@ const SOCIAL_LINKS = [
     label: 'X (Twitter)',
   },
   {
-    href: 'https://discord.com/invite/pVkpN2Au6P',
+    href: 'https://discord.com/invite/Qy383ZHH8',
     icon: '/discord-outline.svg',
     label: 'Discord',
   },
@@ -33,7 +33,7 @@ const SOCIAL_LINKS = [
 export default function NotHaveInviteCode({ onOpenWalletDialog }: Props) {
   const user = useAuthStore((state) => state.user);
   const refetchUser = useAuthStore((state) => state.fetchCurrentUser);
-  const isAdmin = checkIsAdmin(user)
+  const isAdmin = checkIsAdmin(user);
 
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,10 @@ export default function NotHaveInviteCode({ onOpenWalletDialog }: Props) {
               <p className="text-muted-foreground text-sm">
                 Please sign in to continue.
               </p>
-              <Button className="w-full" onClick={onOpenWalletDialog}>
+              <Button
+                className="w-full"
+                onClick={onOpenWalletDialog}
+              >
                 <User className="w-4 h-4 mr-2" />
                 Sign In
               </Button>

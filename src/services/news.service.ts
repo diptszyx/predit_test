@@ -12,6 +12,13 @@ export interface News {
   slug: string;
 }
 
+export type CreateNewsValues = {
+  title: string;
+  content: string;
+  oracleId: string;
+  topicId: string;
+};
+
 const mockImage = [
   "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400&q=80",
   "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&q=80",
@@ -54,7 +61,7 @@ export const newsService = {
     oracleId: string,
     topicFilter?: string,
     limit?: number,
-    offset?: number
+    offset?: number,
   ): Promise<News[]> => {
     const params: any = {};
     if (limit !== undefined) params.limit = limit;
@@ -92,7 +99,7 @@ export const newsService = {
   getAll: async (
     topicFilter?: string,
     limit?: number,
-    offset?: number
+    offset?: number,
   ): Promise<News[]> => {
     const params: any = {};
     if (limit) params.limit = limit;
@@ -122,5 +129,16 @@ export const newsService = {
   deleteNewsById: async (id: string) => {
     const response = await apiClient.delete(`/news/${id}`);
     return response.status;
+  },
+
+  createAdmin: async (news: CreateNewsValues): Promise<News> => {
+    const { data } = await apiClient.post<News>("news/create", {
+      ...news,
+    });
+    return {
+      ...data,
+      image: data.image || getRandomImage(),
+      relevance: data.relevance || getRandomRelevance(),
+    };
   },
 };

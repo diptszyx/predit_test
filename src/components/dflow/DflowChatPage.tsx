@@ -955,10 +955,14 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
   const handleSetAmount = (val: string) => {
     setAmount(val);
 
-    if (Number(val) < 1) {
-      setErrorAmount('Minimum amount for buying is 1');
+    if (Number(val) < 1 && tradeSide === 'BUY') {
+      setErrorAmount('Minimum amount for buying is 1.');
     } else {
       setErrorAmount('');
+    }
+
+    if (Number(val) > Number(balance)) {
+      setErrorAmount('Insufficient balance.');
     }
   };
 
@@ -1039,7 +1043,7 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
     isTrading ||
     !user ||
     !amount ||
-    (tradeSide === 'BUY' && errorAmount) ||
+    errorAmount ||
     parseFloat(amount) <= 0 ||
     (tradeSide === 'BUY' && isBuyDisabled) ||
     (tradeSide === 'SELL' && isSellDisabled);
@@ -1136,14 +1140,14 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
               max={balance}
               step="0.01"
             />
-            {tradeSide === 'BUY' && amount && errorAmount && (
+            {amount && errorAmount && (
               <p className="text-sm text-red-500 mt-1">{errorAmount}</p>
             )}
             <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
-              {[1, 20, 50].map((v) => {
+              {[1, 10, 20].map((v) => {
                 const disabled =
                   !user ||
-                  Number(amount) >= Number(balance) ||
+                  Number(amount) + v > Number(balance) ||
                   v > Number(balance);
 
                 return (
@@ -1164,9 +1168,8 @@ const TradeSidebar = ({ market, dflowMarket }: TradeSidebarProps) => {
                         if (!amount) {
                           handleSetAmount(String(v));
                         } else {
-                          const newValue = Number(amount) + v;
-                          if (newValue > Number(amount)) handleMaxAmount();
-                          else handleSetAmount(String(newValue));
+                          const newValue = Number((Number(amount) + v).toFixed(2));
+                          handleSetAmount(String(newValue));
                         }
                       }
                     }}

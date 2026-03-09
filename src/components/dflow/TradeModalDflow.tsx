@@ -15,11 +15,10 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
 import clsx from 'clsx';
-import { CircleDollarSign, TriangleAlert } from 'lucide-react';
+import { TriangleAlert } from 'lucide-react';
 import { getStatusBadgeProps } from '../market/MarketListAdmin';
 import { Badge } from '../ui/badge';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import Usdc from '../wallet/icon/Usdc';
+import KYCVerificationModal from './KYCVerificationModal';
 
 interface TradeModalDflowProps {
   open: boolean;
@@ -49,6 +48,9 @@ const TradeModalDflow = ({
   const { connection } = useConnection();
   const { publicKey } = useWallet();
   const { placeOrder, redeemPositions, isTrading } = useTrade();
+
+  const [showKYC, setShowKYC] = useState(false);
+  const [kycVerified, setKycVerified] = useState(false);
 
   const [balance, setBalance] = useState('0');
 
@@ -113,6 +115,12 @@ const TradeModalDflow = ({
       setTradeSide('BUY');
       setAmount('');
       setErrorAmount('');
+      if (publicKey && !kycVerified) {
+        setShowKYC(true);
+      }
+    } else {
+      setKycVerified(false);
+      setShowKYC(false);
     }
   }, [open, initialOutcome]);
 
@@ -133,10 +141,14 @@ const TradeModalDflow = ({
   const handleSetAmount = (val: string) => {
     setAmount(val);
 
-    if (Number(val) < 1) {
-      setErrorAmount('Minimum amount for buying is 1');
+    if (Number(val) < 1 && tradeSide === 'BUY') {
+      setErrorAmount('Minimum amount for buying is 1.');
     } else {
       setErrorAmount('');
+    }
+
+    if (Number(val) > Number(balance)) {
+      setErrorAmount('Insufficient balance.');
     }
   };
 
@@ -225,20 +237,29 @@ const TradeModalDflow = ({
     isTrading ||
     !user ||
     !amount ||
-    (tradeSide === 'BUY' && errorAmount) ||
+    errorAmount ||
     parseFloat(amount) <= 0 ||
     (tradeSide === 'BUY' && isBuyDisabled) ||
     (tradeSide === 'SELL' && isSellDisabled);
 
+  if (showKYC && publicKey) {
+    return (
+      <KYCVerificationModal
+        open={open}
+        onOpenChange={onOpenChange}
+        walletAddress={publicKey.toBase58()}
+        onVerified={() => {
+          setKycVerified(true);
+          setShowKYC(false);
+          fetchBalance();
+        }}
+      />
+    );
+  }
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      <DialogContent
-        aria-describedby="trade"
-        className="sm:max-w-md"
-      >
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent aria-describedby="trade" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             {market.title}
@@ -330,14 +351,14 @@ const TradeModalDflow = ({
             max={balance}
             step="0.01"
           />
-          {tradeSide === 'BUY' && amount && errorAmount && (
+          {amount && errorAmount && (
             <p className="text-sm text-red-500 mt-1">{errorAmount}</p>
           )}
           <div className="mt-2 flex gap-1 items-center bg-background rounded-3xl p-1 w-fit">
-            {[1, 20, 50].map((v) => {
+            {[1, 10, 20].map((v) => {
               const disabled =
                 !user ||
-                Number(amount) >= Number(balance) ||
+                Number(amount) + v > Number(balance) ||
                 v > Number(balance);
 
               return (
@@ -358,9 +379,10 @@ const TradeModalDflow = ({
                       if (!amount) {
                         handleSetAmount(String(v));
                       } else {
-                        const newValue = Number(amount) + v;
-                        if (newValue > Number(amount)) handleMaxAmount();
-                        else handleSetAmount(String(newValue));
+                        const newValue = Number(
+                          (Number(amount) + v).toFixed(2),
+                        );
+                        handleSetAmount(String(newValue));
                       }
                     }
                   }}

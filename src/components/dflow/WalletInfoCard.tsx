@@ -1,16 +1,33 @@
 import { useWallet } from "@solana/wallet-adapter-react";
-import { ChevronDown, Copy, DollarSign, LogOut, Wallet as WalletIcon } from "lucide-react";
+import { ChevronDown, Copy, DollarSign, LogOut, ShieldCheck, ShieldX, Wallet as WalletIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { copyToClipboard } from "../../lib/clipboardUtils";
+import { verifyWallet } from "../../lib/proof";
 import { useUSDCBalance } from "../../utils/getBalanceWallet";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { cn } from "../ui/utils";
 import { shortenAddress } from "../../lib/address";
 
+const PROOF_VERIFY_URL =
+  import.meta.env.VITE_PROOF_VERIFY_URL ?? "https://proof.dflow.net/verify";
+
+type KYCStatus = "loading" | "verified" | "unverified" | "unknown";
+
 export function WalletInfoCard() {
   const { publicKey, connected, disconnect } = useWallet();
   const { balance, loading } = useUSDCBalance();
+  const [kycStatus, setKycStatus] = useState<KYCStatus>("loading");
+
+  useEffect(() => {
+    if (!publicKey) return;
+    const address = publicKey.toBase58();
+    setKycStatus("loading");
+    verifyWallet(address, PROOF_VERIFY_URL)
+      .then((verified) => setKycStatus(verified ? "verified" : "unverified"))
+      .catch(() => setKycStatus("unknown"));
+  }, [publicKey]);
 
   if (!connected || !publicKey) return null;
 
@@ -27,6 +44,8 @@ export function WalletInfoCard() {
       });
     }
   };
+
+  const kycLabel = kycStatus === "loading" ? "Checking..." : kycStatus === "verified" ? "Verified" : "Not Verified";
 
   return (
     <DropdownMenu>
@@ -48,6 +67,13 @@ export function WalletInfoCard() {
               </span>
             </div>
           </div>
+
+          {kycStatus === "verified" && (
+            <ShieldCheck className="h-4 w-4 text-green-500" title="KYC Verified" />
+          )}
+          {kycStatus === "unverified" && (
+            <ShieldX className="h-4 w-4 text-yellow-500" title="KYC Not Verified" />
+          )}
 
           <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
         </button>
@@ -91,6 +117,27 @@ export function WalletInfoCard() {
                 <span className="text-xs text-muted-foreground">USDC Balance</span>
                 <span className="text-sm font-semibold">
                   {loading ? "Loading..." : `$${balance.toFixed(2)}`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <DropdownMenuSeparator className="my-1 h-px bg-border" />
+
+          <div className="px-2 py-2">
+            <div className="flex items-center gap-2">
+              {kycStatus === "verified" ? (
+                <ShieldCheck className="h-4 w-4 text-green-500 shrink-0" />
+              ) : (
+                <ShieldX className="h-4 w-4 text-yellow-500 shrink-0" />
+              )}
+              <div className="flex flex-col leading-tight">
+                <span className="text-xs text-muted-foreground">KYC Status</span>
+                <span className={cn(
+                  "text-sm font-semibold",
+                  kycStatus === "verified" ? "text-green-500" : "text-yellow-500"
+                )}>
+                  {kycLabel}
                 </span>
               </div>
             </div>

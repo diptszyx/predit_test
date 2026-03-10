@@ -187,7 +187,7 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
         <div className="container mx-auto px-4 py-6">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-left mb-2 text-[40px]">Hot Takes</h1>
+            <h1 className="text-left mb-2 text-[40px]">News</h1>
             <p className="text-left text-muted-foreground mb-8">
               Latest insights and analyses from our oracle community
             </p>

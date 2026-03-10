@@ -504,7 +504,7 @@ export function HomePage({
                     to="/hot-takes"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Hot Takes
+                    News
                   </Link>
                 </li>
                 <li>

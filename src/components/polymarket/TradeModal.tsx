@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useWalletStore } from '../../store/wallet.store';
+import { toPriceLabel } from '../dflow/TradeModalDflow';
 
 interface TradeModalProps {
   open: boolean;
@@ -212,6 +213,9 @@ const TradeModal = ({
     }
   };
 
+  const yesToken = market.tokens.find((t) => t.outcome === 'Yes' || t.outcome === 'Up');
+  const noToken = market.tokens.find((t) => t.outcome === 'No' || t.outcome === 'Down');
+
   return (
     <Dialog
       open={open}
@@ -236,6 +240,9 @@ const TradeModal = ({
                 }
               >
                 YES
+                {yesToken &&
+                  <span className="text-[12.5px]">${toPriceLabel(yesToken.price)}</span>
+                }
               </Button>
               <Button
                 variant={selectedOutcome === 'No' ? 'default' : 'outline'}
@@ -245,6 +252,9 @@ const TradeModal = ({
                 }
               >
                 NO
+                {noToken &&
+                  <span className="text-[12.5px]">${toPriceLabel(noToken.price)}</span>
+                }
               </Button>
             </div>
           </div>
@@ -287,10 +297,10 @@ const TradeModal = ({
                     (tradeSide === 'BUY'
                       ? parseFloat(usdcBalance) <= 0
                       : parseFloat(
-                          selectedOutcome === 'Yes'
-                            ? yesTokenBalance
-                            : noTokenBalance
-                        ) <= 0)
+                        selectedOutcome === 'Yes'
+                          ? yesTokenBalance
+                          : noTokenBalance
+                      ) <= 0)
                   }
                   title={
                     tradeSide === 'BUY'

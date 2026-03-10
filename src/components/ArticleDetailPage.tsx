@@ -265,7 +265,7 @@ export function ArticleDetailPage({
         />
         <link
           rel="canonical"
-          href={`${window.location.origin}/hot-takes/${slug}`}
+          href={`${window.location.origin}/news/${slug}`}
         />
       </Helmet>
       <div className="min-h-screen bg-background relative">
@@ -280,7 +280,7 @@ export function ArticleDetailPage({
                     className="flex lg:hidden mb-6 -ml-2 hover:bg-blue-500/10"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to {previousPage === 'chat' ? 'chat' : 'hot takes'}
+                    Back to {previousPage === 'chat' ? 'chat' : 'news'}
                   </Button>
 
                   <div className="flex items-start gap-4">
@@ -393,7 +393,7 @@ export function ArticleDetailPage({
                           className="border-border hover:border-blue-500/50 cursor-pointer"
                           onClick={() => {
                             onSelectRelated(ra);
-                            navigate(`/hot-takes/${ra.slug}`);
+                            navigate(`/news/${ra.slug}`);
                           }}
                         >
                           <CardContent className="p-0">

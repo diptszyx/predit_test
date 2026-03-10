@@ -318,7 +318,7 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
               <div className="text-6xl mb-4">📰</div>
               <h3 className="mb-2">No articles found</h3>
               <p className="text-sm text-muted-foreground">
-                No hot takes available in this category yet
+                No news available in this category yet
               </p>
             </div>
           )}

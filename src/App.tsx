@@ -124,8 +124,8 @@ function AppContent() {
     const path = location.pathname;
     if (path === '/' || path === '/home') return 'home';
     if (path === '/chat' || path.startsWith('/chat/')) return 'chat';
-    if (path === '/hot-takes') return 'hotTakes';
-    if (path.match(/^\/hot-takes\/[^/]+$/)) return 'hotTakeDetail';
+    if (path === '/news') return 'news';
+    if (path.match(/^\/news\/[^/]+$/)) return 'newsDetail';
     if (path === '/leaderboard') return 'leaderboard';
     if (path === '/subscription') return 'subscription';
     if (path === '/settings') return 'settings';
@@ -172,8 +172,8 @@ function AppContent() {
           }
         }
         break;
-      case 'hotTakes':
-        navigate('/hot-takes');
+      case 'news':
+        navigate('/news');
         break;
       case 'leaderboard':
         navigate('/leaderboard');
@@ -687,12 +687,12 @@ function AppContent() {
 
       {/* Hot Takes Page */}
       <Route
-        path="/hot-takes"
+        path="/news"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
               <title>
-                Hot Takes & Market News | AI Oracle Analysis & Predictions
+                Market News | AI Oracle Analysis & Predictions
               </title>
               <meta
                 name="description"
@@ -712,15 +712,15 @@ function AppContent() {
               />
               <link
                 rel="canonical"
-                href={`${window.location.origin}/hot-takes`}
+                href={`${window.location.origin}/news`}
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <HotTakesPage
               onArticleClick={(article) => {
                 setSelectedArticle(article);
-                setPreviousPage('hotTakes');
-                navigate(`/hot-takes/${article.slug}`);
+                setPreviousPage('news');
+                navigate(`/news/${article.slug}`);
               }}
               onBack={() => navigate('/')}
             />
@@ -731,7 +731,7 @@ function AppContent() {
 
       {/* Hot Take Detail Page */}
       <Route
-        path="/hot-takes/:slug"
+        path="/news/:slug"
         element={
           <ArticleDetailWrapper
             selectedArticle={selectedArticle}
@@ -1576,9 +1576,9 @@ function ArticleDetailWrapper({
               } else {
                 navigate('/chat');
               }
-            } else if (previousPage === 'hotTakes') {
+            } else if (previousPage === 'news') {
               setPreviousPage(null);
-              navigate('/hot-takes');
+              navigate('/news');
             } else if (previousPage === 'home') {
               setPreviousPage(null);
               navigate('/');
@@ -1599,8 +1599,8 @@ function ArticleDetailWrapper({
               case 'chat':
                 navigate('/chat');
                 break;
-              case 'hotTakes':
-                navigate('/hot-takes');
+              case 'news':
+                navigate('/news');
                 break;
               default:
                 navigate('/');
@@ -1715,7 +1715,7 @@ function ChatWithOracleWrapper({
             onBack={() => {
               if (previousPage === 'articleDetail' && selectedArticle) {
                 setPreviousPage(null);
-                navigate(`/hot-takes/${selectedArticle.id}`);
+                navigate(`/news/${selectedArticle.id}`);
               } else {
                 setSelectedAIAgent(null);
                 setArticleContext(null);
@@ -1737,7 +1737,7 @@ function ChatWithOracleWrapper({
             onArticleClick={(article: News) => {
               setSelectedArticle(article);
               setPreviousPage('chat');
-              navigate(`/hot-takes/${article.id}`);
+              navigate(`/news/${article.id}`);
             }}
             onOpenSettings={() => navigate('/settings')}
             onSetPendingNavigation={setPendingNavigation}

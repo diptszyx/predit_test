@@ -110,7 +110,7 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     requiresAuth: true,
   },
   {
-    id: 'hotTakes',
+    id: 'news',
     label: 'News',
     icon: Flame,
     requiresAuth: false,

@@ -102,7 +102,7 @@ interface ChatPageProps {
 
 const tabs = [
   { id: 'chat', label: 'Chat' },
-  { id: 'hotTakes', label: 'Hot Takes' },
+  { id: 'hotTakes', label: 'News' },
   { id: 'market', label: 'Market' },
 ];
 
@@ -378,7 +378,7 @@ export function ChatPage({
   }
 
   const handleArticleClick = async (slug: string) => {
-    navigate(`/hot-takes/${slug}`);
+    navigate(`/news/${slug}`);
   };
 
   const handleSend = async (messageToSend?: string) => {
@@ -1198,7 +1198,7 @@ export function ChatPage({
                     <CardHeader className="border-b border-border pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
                         <Zap className="w-4 h-4" />
-                        <span>Hot Takes</span>
+                        <span>News</span>
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
                         Latest insights from {currentOracle.name}
@@ -1280,7 +1280,7 @@ export function ChatPage({
                 <CardHeader className="border-b border-border pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Zap className="w-4 h-4" />
-                    <span>Hot Takes</span>
+                    <span>News</span>
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
                     Latest insights from {currentOracle.name}

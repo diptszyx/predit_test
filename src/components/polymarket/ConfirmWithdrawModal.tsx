@@ -84,7 +84,10 @@ export default function ConfirmWithdrawModal({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        style={{ zIndex: 9999999 }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -142,7 +145,6 @@ export default function ConfirmWithdrawModal({
           </Button>
 
           <Button
-            variant="destructive"
             disabled={loading || confirming || !gas}
             onClick={handleConfirm}
           >

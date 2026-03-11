@@ -228,12 +228,14 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
               </div>
             </div>
 
-            <Button size='sm'
-              onClick={() => setOpenCreateNews(true)}
-              className="bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 cursor-pointer w-fit text-xs mt-2 sm:mt-0"
-            >
-              <CircleFadingPlus /> Create news
-            </Button>
+            {isAdmin &&
+              <Button size='sm'
+                onClick={() => setOpenCreateNews(true)}
+                className="bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 cursor-pointer w-fit text-xs mt-2 sm:mt-0"
+              >
+                <CircleFadingPlus /> Create news
+              </Button>
+            }
           </div>
 
           {/* Articles Grid */}

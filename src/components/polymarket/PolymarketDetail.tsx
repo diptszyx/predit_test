@@ -384,7 +384,7 @@ const PolymarketDetail = () => {
                       >
                         YES
                         {yesToken &&
-                          <span className="text-[12.5px]">${toPriceLabel(yesToken.price)}</span>
+                          <span className="text-[12.5px]">${yesToken.price}</span>
                         }
                       </Button>
                       <Button
@@ -400,7 +400,7 @@ const PolymarketDetail = () => {
                       >
                         NO
                         {noToken &&
-                          <span className="text-[12.5px]">${toPriceLabel(noToken.price)}</span>
+                          <span className="text-[12.5px]">${noToken.price}</span>
                         }
                       </Button>
                     </div>

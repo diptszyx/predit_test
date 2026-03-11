@@ -4,6 +4,7 @@ import { getUSDCBalance } from '../services/polymarket.service';
 
 interface WalletState {
   usdcBalance: string;
+
   loadingBalance: boolean;
 
   fetchUSDCBalance: () => Promise<void>;
@@ -20,9 +21,9 @@ export const useWalletStore = create<WalletState>((set) => ({
       set({ loadingBalance: true });
 
       const data = await getUSDCBalance();
-      const formatted = (
-        Number(data.balance) / Math.pow(10, data.decimals)
-      ).toFixed(2);
+      const formatted = data.formatted
+        ? data.formatted
+        : (Number(data.balance) / Math.pow(10, data.decimals)).toFixed(2);
 
       set({ usdcBalance: formatted });
     } catch (err) {

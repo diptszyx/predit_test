@@ -163,9 +163,14 @@ export default function WithdrawModal({
             toast.success('Withdraw request submitted');
             setConfirmOpen(false);
             onOpenChange(false);
-          } catch (err) {
+          } catch (err: any) {
             console.error(err);
-            alert('Withdraw failed');
+            toast.error(
+              <>
+                <p>Withdraw failed. Please try again.</p>
+                <p>{err?.message}</p>
+              </>,
+            );
           }
         }}
       />

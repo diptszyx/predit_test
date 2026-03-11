@@ -94,7 +94,10 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
 
             <Button
               type="button"
-              onClick={() => setOpenPromptModal(true)}
+              onClick={() => {
+                setOpenPromptModal(true)
+                onOpenChange(false)
+              }}
               className="bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white cursor-pointer shrink-0 mr-4"
             >
               <WandSparkles className="w-4 h-4" />
@@ -224,6 +227,7 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
           setValue('content', data.content)
           if (data.topic.id) setValue('topicId', data.topic.id)
           setOpenPromptModal(false)
+          onOpenChange(true)
         }} />
     </>
   )

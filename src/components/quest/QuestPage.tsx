@@ -1,4 +1,4 @@
-import { Info, Share2, Store, UserPlus, Zap } from 'lucide-react';
+import { Info, LineChart, Share2, Store, UserPlus, Zap } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -18,6 +18,7 @@ import {
   verifyTradeDaily,
   verifyLikeTweet,
   verifyRetweetTweet,
+  verifyTradeDailyPolymarket,
 } from '../../services/quest.service';
 import useAuthStore from '../../store/auth.store';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
@@ -112,7 +113,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Couldn’t start X connection. Please try again.',
+        'Couldn’t start X connection. Please try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -129,7 +130,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Couldn’t start Discord connection. Please try again.',
+        'Couldn’t start Discord connection. Please try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -154,7 +155,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please join and try again.',
+        'Verification failed. Please join and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -179,7 +180,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please follow and try again.',
+        'Verification failed. Please follow and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -204,7 +205,32 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please trade and try again.',
+        'Verification failed. Please trade and try again.',
+      );
+    } finally {
+      setVerifyQuestId((current) => (current === questId ? null : current));
+    }
+  };
+
+  const handleVerifyTradeDailyPolymarket = async (questId: string) => {
+    try {
+      setVerifyQuestId(questId);
+
+      const data = await verifyTradeDailyPolymarket(questId);
+      if (data.success) {
+        await fetchCurrentUser();
+        await refetch();
+        toast.success(
+          'Daily Polymarket trade verified successfully! XP has been added to your account.',
+        );
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message ||
+        'Verification failed. Please trade and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -229,7 +255,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please like the tweet and try again.',
+        'Verification failed. Please like the tweet and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -254,7 +280,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please retweet and try again.',
+        'Verification failed. Please retweet and try again.',
       );
     } finally {
       setVerifyQuestId((current) => (current === questId ? null : current));
@@ -278,7 +304,7 @@ ${content.shareContent}
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          'Verification failed. Please share and try again.',
+        'Verification failed. Please share and try again.',
       );
     }
   };
@@ -373,6 +399,13 @@ ${content.shareContent}
           onClick: () => handleVerifyTradeDaily(quest.questId),
         };
 
+      case QuestType.DAILY_TRADE_POLYMARKET:
+        return {
+          label: isVerifyingThis ? 'Verifying...' : 'Verify',
+          disabled: isVerifyingThis,
+          onClick: () => handleVerifyTradeDailyPolymarket(quest.questId),
+        };
+
       default:
         return {
           label: 'Go',
@@ -396,13 +429,13 @@ ${content.shareContent}
 
   const questSections = shouldShowOneTimeFirst
     ? [
-        { title: 'One-time Quests', data: oneTimeQuests },
-        { title: 'Daily Quests', data: dailyQuests },
-      ]
+      { title: 'One-time Quests', data: oneTimeQuests },
+      { title: 'Daily Quests', data: dailyQuests },
+    ]
     : [
-        { title: 'Daily Quests', data: dailyQuests },
-        { title: 'One-time Quests', data: oneTimeQuests },
-      ];
+      { title: 'Daily Quests', data: dailyQuests },
+      { title: 'One-time Quests', data: oneTimeQuests },
+    ];
 
   return (
     <div className="space-y-6 mx-auto max-w-2xl">
@@ -534,6 +567,9 @@ export function QuestItem({
       case QuestType.DAILY_TRADE:
         return <Store className="h-5 w-5 text-[#a3a3a3]" />;
 
+      case QuestType.DAILY_TRADE_POLYMARKET:
+        return <LineChart className="h-5 w-5 text-[#a3a3a3]" />
+
       default:
         return <Share2 className="h-5 w-5 text-[#a3a3a3]" />;
     }
@@ -585,6 +621,20 @@ export function QuestItem({
           </>
         );
 
+      case QuestType.DAILY_TRADE_POLYMARKET:
+        return (
+          <>
+            Make a trade on{' '}
+            <button
+              className="text-blue-400 text-[10px] sm:text-xs cursor-pointer"
+              onClick={() => navigate('/polymarket')}
+            >
+              Polymarket
+            </button>{' '}
+            to earn XP (1 per day)
+          </>
+        );
+
       case QuestType.SHARE_POST:
         return (
           <>
@@ -625,7 +675,7 @@ export function QuestItem({
                   href="https://discord.gg/Qy383ZHH8"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:underline hover:text-blue-400 cursor-pointer"
+                  className="hover:text-blue-400 cursor-pointer"
                 >
                   {quest.name}
                 </a>
@@ -661,7 +711,7 @@ export function QuestItem({
           <Button
             className="font-mono"
             size="sm"
-            onClick={onClick ?? (() => {})}
+            onClick={onClick ?? (() => { })}
             disabled={disabled || !onClick}
           >
             {label}

@@ -1,24 +1,26 @@
-import apiClient from '../lib/axios';
+import apiClient from "../lib/axios";
 
 export enum QuestType {
-  CONNECT_X = 'CONNECT_X',
-  FOLLOW_X = 'FOLLOW_X',
-  SHARE_POST = 'SHARE_POST',
-  DAILY_TRADE = 'DAILY_TRADE',
-  JOIN_DISCORD = 'JOIN_DISCORD',
-  LIKE_X = 'LIKE_X',
-  RETWEET_X = 'RETWEET_X',
+  CONNECT_X = "CONNECT_X",
+  FOLLOW_X = "FOLLOW_X",
+  SHARE_POST = "SHARE_POST",
+  DAILY_TRADE = "DAILY_TRADE",
+  JOIN_DISCORD = "JOIN_DISCORD",
+  LIKE_X = "LIKE_X",
+  RETWEET_X = "RETWEET_X",
+  DAILY_TRADE_POLYMARKET = "DAILY_TRADE_POLYMARKET",
 }
 
 export const DAILY_QUEST_TYPES: QuestType[] = [
   QuestType.SHARE_POST,
   QuestType.DAILY_TRADE,
+  QuestType.DAILY_TRADE_POLYMARKET,
 ];
 
 export enum QuestStatus {
-  NOT_STARTED = 'not_started',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
+  NOT_STARTED = "not_started",
+  IN_PROGRESS = "in_progress",
+  COMPLETED = "completed",
 }
 
 export interface BaseQuest {
@@ -49,33 +51,37 @@ export interface RetweetXMetadata {
 
 export type Quest =
   | (BaseQuest & {
-    questType: QuestType.CONNECT_X;
-    metadata: null;
-  })
+      questType: QuestType.CONNECT_X;
+      metadata: null;
+    })
   | (BaseQuest & {
-    questType: QuestType.FOLLOW_X;
-    metadata: FollowXMetadata;
-  })
+      questType: QuestType.FOLLOW_X;
+      metadata: FollowXMetadata;
+    })
   | (BaseQuest & {
-    questType: QuestType.SHARE_POST;
-    metadata: SharePostMetadata;
-  })
+      questType: QuestType.SHARE_POST;
+      metadata: SharePostMetadata;
+    })
   | (BaseQuest & {
-    questType: QuestType.DAILY_TRADE;
-    metadata: null;
-  })
+      questType: QuestType.DAILY_TRADE;
+      metadata: null;
+    })
   | (BaseQuest & {
-    questType: QuestType.JOIN_DISCORD;
-    metadata: null;
-  })
+      questType: QuestType.JOIN_DISCORD;
+      metadata: null;
+    })
   | (BaseQuest & {
-    questType: QuestType.LIKE_X;
-    metadata: LikeXMetadata;
-  })
+      questType: QuestType.LIKE_X;
+      metadata: LikeXMetadata;
+    })
   | (BaseQuest & {
-    questType: QuestType.RETWEET_X;
-    metadata: RetweetXMetadata;
-  });
+      questType: QuestType.RETWEET_X;
+      metadata: RetweetXMetadata;
+    })
+  | (BaseQuest & {
+      questType: QuestType.DAILY_TRADE_POLYMARKET;
+      metadata: null;
+    });
 
 export interface QuestResponse {
   quests: Quest[];
@@ -84,18 +90,18 @@ export interface QuestResponse {
 }
 
 export const getQuests = async () => {
-  const response = await apiClient.get<QuestResponse>('/quests');
+  const response = await apiClient.get<QuestResponse>("/quests");
   return response.data;
 };
 
-export type VerifyFollowResponse = {
+export type VerifyQuestResponse = {
   success: boolean;
   message: string;
   xpAwarded: number;
 };
 
 export const verifyFollow = async (questId: string) => {
-  const response = await apiClient.post<VerifyFollowResponse>(
+  const response = await apiClient.post<VerifyQuestResponse>(
     `/quests/verify-follow`,
     {
       questId,
@@ -111,20 +117,20 @@ export type ConnectX = {
 };
 
 export const connectX = async () => {
-  const response = await apiClient.get<ConnectX>('/quests/connect-x');
+  const response = await apiClient.get<ConnectX>("/quests/connect-x");
 
   return response.data;
 };
 
 export const connectDiscord = async () => {
-  const response = await apiClient.get<ConnectX>('/quests/connect-discord');
+  const response = await apiClient.get<ConnectX>("/quests/connect-discord");
 
   return response.data;
 };
 
 export const verifySharePost = async (questId: string, tweetUrl: string) => {
-  const response = await apiClient.post<VerifyFollowResponse>(
-    '/quests/verify-share-post',
+  const response = await apiClient.post<VerifyQuestResponse>(
+    "/quests/verify-share-post",
     {
       questId,
       tweetUrl,
@@ -135,8 +141,19 @@ export const verifySharePost = async (questId: string, tweetUrl: string) => {
 };
 
 export const verifyTradeDaily = async (questId: string) => {
-  const response = await apiClient.post<VerifyFollowResponse>(
-    '/quests/verify-daily-trade',
+  const response = await apiClient.post<VerifyQuestResponse>(
+    "/quests/verify-daily-trade",
+    {
+      questId,
+    },
+  );
+
+  return response.data;
+};
+
+export const verifyTradeDailyPolymarket = async (questId: string) => {
+  const response = await apiClient.post<VerifyQuestResponse>(
+    "/quests/verify-daily-trade-polymarket",
     {
       questId,
     },
@@ -146,8 +163,8 @@ export const verifyTradeDaily = async (questId: string) => {
 };
 
 export const verifyJoinDiscord = async (questId: string) => {
-  const response = await apiClient.post<VerifyFollowResponse>(
-    '/quests/verify-join-discord',
+  const response = await apiClient.post<VerifyQuestResponse>(
+    "/quests/verify-join-discord",
     {
       questId,
     },
@@ -157,8 +174,8 @@ export const verifyJoinDiscord = async (questId: string) => {
 };
 
 export const verifyLikeTweet = async (questId: string) => {
-  const response = await apiClient.post<VerifyFollowResponse>(
-    '/quests/verify-like',
+  const response = await apiClient.post<VerifyQuestResponse>(
+    "/quests/verify-like",
     {
       questId,
     },
@@ -168,8 +185,8 @@ export const verifyLikeTweet = async (questId: string) => {
 };
 
 export const verifyRetweetTweet = async (questId: string) => {
-  const response = await apiClient.post<VerifyFollowResponse>(
-    '/quests/verify-retweet',
+  const response = await apiClient.post<VerifyQuestResponse>(
+    "/quests/verify-retweet",
     {
       questId,
     },
@@ -188,7 +205,7 @@ export type ContentShareResponse = {
 
 export const getContentShare = async () => {
   const response = await apiClient.get<ContentShareResponse>(
-    '/quests/share-content',
+    "/quests/share-content",
   );
 
   return response.data;

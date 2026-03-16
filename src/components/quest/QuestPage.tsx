@@ -19,6 +19,7 @@ import {
   verifyLikeTweet,
   verifyRetweetTweet,
   verifyTradeDailyPolymarket,
+  verifyTradeDailyPreditMarket,
 } from '../../services/quest.service';
 import useAuthStore from '../../store/auth.store';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
@@ -237,6 +238,31 @@ ${content.shareContent}
     }
   };
 
+  const handleVerifyTradeDailyPreditMarket = async (questId: string) => {
+    try {
+      setVerifyQuestId(questId);
+
+      const data = await verifyTradeDailyPreditMarket(questId);
+      if (data.success) {
+        await fetchCurrentUser();
+        await refetch();
+        toast.success(
+          'Daily Predit Market trade verified successfully! XP has been added to your account.',
+        );
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(
+        error?.response?.data?.message ||
+        'Verification failed. Please trade and try again.',
+      );
+    } finally {
+      setVerifyQuestId((current) => (current === questId ? null : current));
+    }
+  };
+
   const handleVerifyLike = async (questId: string) => {
     try {
       setVerifyQuestId(questId);
@@ -406,6 +432,13 @@ ${content.shareContent}
           onClick: () => handleVerifyTradeDailyPolymarket(quest.questId),
         };
 
+      case QuestType.DAILY_TRADE_PREDIT_MARKET:
+        return {
+          label: isVerifyingThis ? 'Verifying...' : 'Verify',
+          disabled: isVerifyingThis,
+          onClick: () => handleVerifyTradeDailyPreditMarket(quest.questId),
+        };
+
       default:
         return {
           label: 'Go',
@@ -568,7 +601,10 @@ export function QuestItem({
         return <Store className="h-5 w-5 text-[#a3a3a3]" />;
 
       case QuestType.DAILY_TRADE_POLYMARKET:
-        return <LineChart className="h-5 w-5 text-[#a3a3a3]" />
+        return <LineChart className="h-5 w-5 text-[#a3a3a3]" />;
+
+      case QuestType.DAILY_TRADE_PREDIT_MARKET:
+        return <LineChart className="h-5 w-5 text-[#a3a3a3]" />;
 
       default:
         return <Share2 className="h-5 w-5 text-[#a3a3a3]" />;
@@ -630,6 +666,20 @@ export function QuestItem({
               onClick={() => navigate('/polymarket')}
             >
               Polymarket
+            </button>{' '}
+            to earn XP (1 per day)
+          </>
+        );
+
+      case QuestType.DAILY_TRADE_PREDIT_MARKET:
+        return (
+          <>
+            Make a trade on{' '}
+            <button
+              className="text-blue-400 text-[10px] sm:text-xs cursor-pointer"
+              onClick={() => navigate('/')}
+            >
+              Predit Market
             </button>{' '}
             to earn XP (1 per day)
           </>

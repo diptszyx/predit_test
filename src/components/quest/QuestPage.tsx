@@ -1,23 +1,23 @@
 import { Info, LineChart, Share2, Store, UserPlus, Zap } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import useGetContentShare from '../../hooks/quests/getContentShare';
 import useGetInviteCodes from '../../hooks/quests/getInviteCodes';
 import useGetQuest from '../../hooks/quests/getQuest';
 import {
-  connectX,
   connectDiscord,
-  verifyJoinDiscord,
+  connectX,
   DAILY_QUEST_TYPES,
   Quest,
   QuestStatus,
   QuestType,
   verifyFollow,
-  verifySharePost,
-  verifyTradeDaily,
+  verifyJoinDiscord,
   verifyLikeTweet,
   verifyRetweetTweet,
+  verifySharePost,
+  verifyTradeDaily,
   verifyTradeDailyPolymarket,
 } from '../../services/quest.service';
 import useAuthStore from '../../store/auth.store';
@@ -26,6 +26,7 @@ import ShareCodesModal from '../inviteCode/ShareCodesModal';
 import { Button } from '../ui/button';
 import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import ClaimTokenModal from './ClaimTokenModal';
 import VerifyShareXModal from './VerifyShareXModal';
 
 type QuestButtonConfig = {
@@ -35,13 +36,15 @@ type QuestButtonConfig = {
 };
 
 const QuestPage = () => {
-  const appUrl = `${import.meta.env.VITE_APP_URL}`;
   const { user, fetchCurrentUser } = useAuthStore();
   const { quests, totalXpEarned, refetch } = useGetQuest();
   const { codes } = useGetInviteCodes();
   const { content } = useGetContentShare();
+
   const [openShareModal, setOpenShareModal] = useState(false);
   const [openVerifyShareModal, setOpenVerifyShareModal] = useState(false);
+  const [openClaimTokenModal, setOpenClaimTokenModal] = useState(false)
+
   const [verifyQuestId, setVerifyQuestId] = useState<string | null>(null);
   const [clickedActionQuests, setClickedActionQuests] = useState<string[]>([]);
   const isConnectedX = quests.some(
@@ -446,15 +449,23 @@ ${content.shareContent}
         </p>
       </div>
 
-      <div className="mb-6 rounded-3xl p-2 md:p-4 border">
-        <div className="flex flex-col items-center justify-center">
-          <div className="flex items-center text-2xl md:text-4xl font-semibold text-[#FCD05A]">
-            <Zap className="w-7 h-7 sm:w-9 sm:h-9" />
+      <div className="mb-6 rounded-3xl border p-3 md:p-4">
+        <div className="flex flex-col items-center justify-center text-center">
+          <div className="flex items-center text-2xl font-semibold text-[#FCD05A] md:text-4xl">
+            <Zap className="h-7 w-7 sm:h-9 sm:w-9" />
             <span className="pl-1">{totalXpEarned}</span>
           </div>
-          <p className="mt-2 font-semibold text-[#FCD05A] text-base ">
+
+          <p className="mt-2 text-base font-semibold text-[#FCD05A]">
             Total XP Earned
           </p>
+
+          <button
+            className="mt-4 rounded-2xl bg-[#FCD05A] px-5 py-2.5 text-sm font-semibold text-black transition hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] cursor-pointer"
+            onClick={() => setOpenClaimTokenModal(true)}
+          >
+            Claim Token
+          </button>
         </div>
       </div>
 
@@ -505,6 +516,8 @@ ${content.shareContent}
         codes={codes}
         onConfirm={handleConfirmShare}
       />
+
+      <ClaimTokenModal open={openClaimTokenModal} onOpenChange={setOpenClaimTokenModal} />
     </div>
   );
 };

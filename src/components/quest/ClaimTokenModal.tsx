@@ -2,7 +2,6 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { Wallet } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { shortenAddress } from "../../lib/address";
 import { claimToken } from "../../services/claim-token.service";
 import useAuthStore from "../../store/auth.store";
 import { Button } from "../ui/button";
@@ -157,7 +156,7 @@ const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
             onClick={handleClaimToken}
             className="rounded-xl bg-[#FCD05A] px-5 font-semibold text-black hover:bg-[#f7c93f]"
           >
-            {isClaiming ? 'Claiming' : 'Claim Predit Token'}
+            {isClaiming ? 'Claiming...' : 'Claim Predit Token'}
           </Button>
         </div>
       </div>

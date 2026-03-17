@@ -21,7 +21,6 @@ import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { MarketAskModal } from './MarketAskModal';
 import { getStatusBadgeProps } from './MarketListAdmin';
 import { MarketModal } from './MarketModal';
 
@@ -222,33 +221,11 @@ export default function MarketList({
   const handleSelect = (choice: MarketChoice, item: Market) => {
     setSelectedItem(item);
     setSelectedChoice(choice);
-    if (!isFromMarketPage) {
-      setModalOpen(true);
-    } else {
-      setIsOpenMarketAskModal(true);
-    }
+    setModalOpen(true);
   };
 
   const handleConfirm = () => {
     setModalOpen(false);
-  };
-
-  const handleConfirmMarketAsk = async () => {
-    if (!selectedItem?.oracle?.id || !selectedItem?.question) {
-      console.error('Missing oracleId or question');
-      return;
-    }
-
-    try {
-      const oracleId = selectedItem.oracle.id;
-      const question = selectedItem.question;
-
-      navigate(`/chat/${oracleId}`, {
-        state: { autoSend: { question } },
-      });
-    } catch (e: any) {
-      toast.error(e.message);
-    }
   };
 
   const shouldShowSkeleton = loading || isUserBlocked
@@ -346,17 +323,6 @@ export default function MarketList({
             marketId={selectedItem?.id}
             onConfirm={handleConfirm}
             onBetPlaced={handleBetPlaced}
-          />
-
-          <MarketAskModal
-            open={isOpenMarketAskModal}
-            title={selectedItem?.question || ''}
-            onClose={() => setIsOpenMarketAskModal(false)}
-            onCancel={() => {
-              setIsOpenMarketAskModal(false);
-              setModalOpen(true);
-            }}
-            onConfirm={handleConfirmMarketAsk}
           />
 
           {!loading &&

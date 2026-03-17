@@ -1,9 +1,10 @@
 import clsx from "clsx";
-import { ArrowLeft, Info, Loader2 } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDate } from "../../lib/date";
+import { marketAdminServices } from "../../services/market-admin.service";
 import { getMarketById, Market, placeBet } from "../../services/market.service";
 import useAuthStore from "../../store/auth.store";
 import { checkIsAdmin } from "../../utils/isAdmin";
@@ -17,7 +18,6 @@ import { Skeleton } from "../ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { getStatusBadgeProps } from "./MarketListAdmin";
 import { AUTO_OPTIONS } from "./MarketModal";
-import { marketAdminServices } from "../../services/market-admin.service";
 
 const MarketDetails = () => {
   const { id } = useParams<{ id: string; }>();
@@ -122,7 +122,7 @@ const MarketDetails = () => {
   }
 
   const disabledBetButton =
-    loading ||
+    trading ||
     Number(amount) <= 0 ||
     (user && Number(amount) > user.xp) ||
     market.isBetted ||
@@ -144,7 +144,7 @@ const MarketDetails = () => {
         description: 'All bets have been settled and payouts distributed.',
       });
 
-      fetchMarket()
+      await fetchMarket()
     } catch (err: any) {
       console.error(err);
       toast.error('Failed to resolve market', {
@@ -455,22 +455,14 @@ const MarketDetails = () => {
                               onClick={() => handleResolve('yes')}
                               disabled={resolving}
                             >
-                              {resolving ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                              ) : (
-                                'Resolve as Yes'
-                              )}
+                              Resolve as Yes
                             </Button>
                             <Button
                               className="flex-1 bg-red-500 hover:bg-red-600 text-white h-8 text-sm"
                               onClick={() => handleResolve('no')}
                               disabled={resolving}
                             >
-                              {resolving ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                              ) : (
-                                'Resolve as No'
-                              )}
+                              Resolve as No
                             </Button>
                           </div>
                         </div>

@@ -1,5 +1,6 @@
 import apiClient from "../lib/axios";
 import { OracleEntity } from "./oracles.service";
+import { Topic } from "./topic-admin.service";
 
 export interface News {
   id: string;
@@ -15,8 +16,18 @@ export interface News {
 export type CreateNewsValues = {
   title: string;
   content: string;
-  oracleId: string;
   topicId: string;
+};
+
+export type CreateNewsByPrompt = {
+  topicId: string;
+  prompt: string;
+};
+
+export type GeneratedNewsPreview = {
+  title: string;
+  content: string;
+  topic: Topic;
 };
 
 const mockImage = [
@@ -140,5 +151,16 @@ export const newsService = {
       image: data.image || getRandomImage(),
       relevance: data.relevance || getRandomRelevance(),
     };
+  },
+
+  generateNewsByPrompt: async (createNewsPrompt: CreateNewsByPrompt) => {
+    const { data } = await apiClient.post<GeneratedNewsPreview>(
+      "news/preview",
+      {
+        ...createNewsPrompt,
+      },
+    );
+
+    return data;
   },
 };

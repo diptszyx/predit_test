@@ -165,7 +165,7 @@ export default function HotTakeChatPageList({
             <div className="text-center py-8">
               <Zap className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
               <p className="text-xs text-muted-foreground">
-                No hot takes available
+                No news available
               </p>
             </div>
           )}

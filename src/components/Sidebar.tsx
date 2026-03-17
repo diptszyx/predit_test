@@ -75,28 +75,9 @@ interface NavigationItem {
 
 const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   {
-    id: 'chat',
-    label: 'Predictions',
-    icon: MessageSquare,
-    requiresAuth: true,
-    children: [],
-  },
-  {
     id: 'kalshi',
     label: 'Kalshi Market',
     icon: Store,
-    requiresAuth: true,
-  },
-  {
-    id: 'quests',
-    label: 'Quests',
-    icon: ScrollText,
-    requiresAuth: true,
-  },
-  {
-    id: 'leaderboard',
-    label: 'Leaderboard',
-    icon: Trophy,
     requiresAuth: true,
   },
   {
@@ -105,22 +86,41 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
     icon: ShoppingCart,
     requiresAuth: true,
   },
+  ...(import.meta.env.VITE_POLYMARKET_ENABLE === 'true'
+    ? [
+      {
+        id: 'polymarket',
+        label: 'Polymarket',
+        icon: LineChart,
+        requiresAuth: true,
+      },
+    ]
+    : []),
   {
-    id: 'hotTakes',
-    label: 'Hot Takes',
+    id: 'chat',
+    label: 'Predictions',
+    icon: MessageSquare,
+    requiresAuth: true,
+    children: [],
+  },
+  {
+    id: 'quests',
+    label: 'Quests',
+    icon: ScrollText,
+    requiresAuth: true,
+  },
+  {
+    id: 'news',
+    label: 'News',
     icon: Flame,
     requiresAuth: false,
   },
-  ...(import.meta.env.VITE_POLYMARKET_ENABLE === 'true'
-    ? [
-        {
-          id: 'polymarket',
-          label: 'Polymarket',
-          icon: LineChart,
-          requiresAuth: true,
-        },
-      ]
-    : []),
+  {
+    id: 'leaderboard',
+    label: 'Leaderboard',
+    icon: Trophy,
+    requiresAuth: true,
+  },
   {
     id: 'invites',
     label: 'Invites',
@@ -129,13 +129,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(isAdmin
     ? [
-        {
-          id: 'topic',
-          label: 'Topic',
-          icon: BookType,
-          requiresAuth: true,
-        },
-      ]
+      {
+        id: 'topic',
+        label: 'Topic',
+        icon: BookType,
+        requiresAuth: true,
+      },
+    ]
     : []),
 ];
 
@@ -336,11 +336,10 @@ export function Sidebar({
             >
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${
-                  isActiveParent
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                }`}
+                className={`w-full justify-start ${isActiveParent
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  }`}
                 onClick={handleItemClick}
               >
                 <Icon className="w-4 h-4 mr-3" />
@@ -374,9 +373,9 @@ export function Sidebar({
                       (showAllChats && item.id === 'chat'
                         ? item.children
                         : (item.children && item.children.length > 0
-                            ? item.children
-                            : []
-                          )?.slice(0, 5)) || []
+                          ? item.children
+                          : []
+                        )?.slice(0, 5)) || []
                     ).map((child) => {
                       const chat = child as ChatEntity;
                       return (
@@ -716,11 +715,10 @@ export function Sidebar({
                 >
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${
-                      isActiveParent
-                        ? 'bg-accent text-accent-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                    }`}
+                    className={`w-full justify-start ${isActiveParent
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                      }`}
                     onClick={handleItemClick}
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -758,9 +756,9 @@ export function Sidebar({
                           (showAllChats && item.id === 'chat'
                             ? item.children
                             : (item?.children && item?.children?.length > 0
-                                ? item.children
-                                : []
-                              )?.slice(0, 5)) || []
+                              ? item.children
+                              : []
+                            )?.slice(0, 5)) || []
                         ).map((child) => {
                           const chat = child as ChatEntity;
                           return (

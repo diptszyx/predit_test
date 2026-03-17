@@ -501,10 +501,10 @@ export function HomePage({
                 </li>
                 <li>
                   <Link
-                    to="/hot-takes"
+                    to="/news"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Hot Takes
+                    News
                   </Link>
                 </li>
                 <li>

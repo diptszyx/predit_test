@@ -187,7 +187,7 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
         <div className="container mx-auto px-4 py-6">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-left mb-2 text-[40px]">Hot Takes</h1>
+            <h1 className="text-left mb-2 text-[40px]">News</h1>
             <p className="text-left text-muted-foreground mb-8">
               Latest insights and analyses from our oracle community
             </p>
@@ -228,12 +228,14 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
               </div>
             </div>
 
-            <Button size='sm'
-              onClick={() => setOpenCreateNews(true)}
-              className="w-fit text-xs mt-2 sm:mt-0"
-            >
-              <CircleFadingPlus /> Create news
-            </Button>
+            {isAdmin &&
+              <Button size='sm'
+                onClick={() => setOpenCreateNews(true)}
+                className="bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 cursor-pointer w-fit text-xs mt-2 sm:mt-0"
+              >
+                <CircleFadingPlus /> Create news
+              </Button>
+            }
           </div>
 
           {/* Articles Grid */}
@@ -318,7 +320,7 @@ export function HotTakesPage({ onArticleClick, onBack }: HotTakesPageProps) {
               <div className="text-6xl mb-4">📰</div>
               <h3 className="mb-2">No articles found</h3>
               <p className="text-sm text-muted-foreground">
-                No hot takes available in this category yet
+                No news available in this category yet
               </p>
             </div>
           )}

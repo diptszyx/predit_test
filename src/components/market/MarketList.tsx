@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Clock, Share2, Users } from 'lucide-react';
+import { Clock, MessageSquare, Share2, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -20,6 +20,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { MarketAskModal } from './MarketAskModal';
 import { getStatusBadgeProps } from './MarketListAdmin';
 import { MarketModal } from './MarketModal';
@@ -427,6 +428,10 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
   }, [item.closeAt, item.status]);
 
   const handleCardClick = async () => {
+    navigate(`/market/${item.id}`);
+  };
+
+  const handleMarketChat = async () => {
     if (!item.chatId) {
       try {
         const data = await createPreditMarketChat(item.id)
@@ -470,7 +475,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
                 </Badge>
               )}
             </div>
-            <div className="flex flex-col items-center flex-shrink-0">
+            <div className="flex flex-col items-center shrink-0">
               {/* Semicircle Progress Bar */}
               <div className="relative w-24 h-12 mb-1">
                 <svg
@@ -551,13 +556,23 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
               <span>{formatDate(item.closeAt)}</span>
             </div>
           </div>
-          {
-            (item.chatId && item.status === 'open') ?
-              <Share2 className="w-4 h-4"
-                onClick={(e: React.MouseEvent) =>
-                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)} />
-              : <></>
-          }
+
+          <Tooltip>
+            <TooltipTrigger>
+              <MessageSquare className='w-4 h-4 cursor-pointer'
+                onClick={(e: Event) => {
+                  e.stopPropagation()
+                  handleMarketChat()
+                }} />
+            </TooltipTrigger>
+            <TooltipContent>
+              Chat with this market
+            </TooltipContent>
+          </Tooltip>
+
+          <Share2 className="w-4 h-4"
+            onClick={(e: React.MouseEvent) =>
+              handleShareMarket(e, `${window.location.origin}/market/${item.id}`)} />
         </div>
       </CardContent>
     </Card>
@@ -603,6 +618,10 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
   }, [item.closeAt]);
 
   const handleCardClick = async () => {
+    navigate(`/market/${item.id}`);
+  };
+
+  const handleMarketChat = async () => {
     if (!item.chatId) {
       try {
         const data = await createPreditMarketChat(item.id)
@@ -770,14 +789,22 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
               <span>{formatDate(item.closeAt)}</span>
             </div>
           </div>
+          <Tooltip>
+            <TooltipTrigger>
+              <MessageSquare className='w-4 h-4 cursor-pointer'
+                onClick={(e: Event) => {
+                  e.stopPropagation()
+                  handleMarketChat()
+                }} />
+            </TooltipTrigger>
+            <TooltipContent>
+              Chat with this market
+            </TooltipContent>
+          </Tooltip>
 
-          {
-            (item.chatId && item.status === 'open') ?
-              <Share2 className="w-4 h-4"
-                onClick={(e: React.MouseEvent) =>
-                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)} />
-              : <></>
-          }
+          <Share2 className="w-4 h-4"
+            onClick={(e: React.MouseEvent) =>
+              handleShareMarket(e, `${window.location.origin}/market/${item.id}`)} />
         </div>
       </CardContent>
     </Card>

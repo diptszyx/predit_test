@@ -13,8 +13,8 @@ import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 import type { WalletType } from './components/WalletConnectDialog';
 import { useUserPhotoRefresh } from './hooks';
-import type { User } from './lib/types';
 import { mwaAuthCache } from './lib/mwaAuthCache';
+import type { User } from './lib/types';
 import { useXP } from './lib/useXP';
 
 // Components
@@ -31,7 +31,8 @@ import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
 import { PrivacyPolicyPage } from './components/legal/PrivacyPolicy';
 import { TermsOfServicePage } from './components/legal/TermsOfService';
-import MarketDetail from './components/market/MarketDetail';
+import MarketChatPage from './components/market/MarketChatPage';
+import MarketDetails from './components/market/MarketDetails';
 import MarketPage from './components/MarketPage';
 import PolymarketChatPage from './components/polymarket/PolymarketChatPage';
 import PolymarketDetail from './components/polymarket/PolymarketDetail';
@@ -1024,7 +1025,7 @@ function AppContent() {
 
       {/* Market Detail Page */}
       <Route
-        path="/market/:marketId/chat/:chatID"
+        path="/market/:id"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
@@ -1042,7 +1043,36 @@ function AppContent() {
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               {user && (
                 <div className="flex-1 overflow-y-auto">
-                  <MarketDetail />
+                  <MarketDetails />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* Market Predit Chat Page */}
+      <Route
+        path="/market/:marketId/chat/:chatID"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Market Chat - Predit Market AI Oracles</title>
+              <meta
+                name="description"
+                content="View and manage prediction market details."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/market`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <MarketChatPage />
                 </div>
               )}
               {commonDialogProps}

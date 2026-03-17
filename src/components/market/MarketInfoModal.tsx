@@ -7,12 +7,12 @@ import { marketAdminServices } from '../../services/market-admin.service'
 import { Market } from '../../services/market.service'
 import useAuthStore from '../../store/auth.store'
 import { checkIsAdmin } from '../../utils/isAdmin'
+import { handleShareMarket } from '../../utils/shareMarket.utils'
 import { ImageWithFallback } from '../figma/ImageWithFallback'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { getStatusBadgeProps } from './MarketListAdmin'
-import { handleShareMarket } from '../../utils/shareMarket.utils'
 
 interface MarketInfoModal {
   open: boolean
@@ -208,13 +208,10 @@ const MarketInfoModal = ({ open, onOpenChange, market, handleBetClick, fetchMark
             </div>
           </div>
 
-          {
-            (market.chatId && market.status === 'open') ?
-              <Share2 className="w-4 h-4 cursor-pointer"
-                onClick={(e: React.MouseEvent) =>
-                  handleShareMarket(e, `${window.location.origin}/market/${market.id}/chat/${market.chatId}`)} />
-              : <></>
-          }
+          <Share2 className="w-4 h-4 cursor-pointer"
+            onClick={(e: React.MouseEvent) =>
+              handleShareMarket(e, `${window.location.origin}/market`)} />
+
         </div>
 
         {isAdmin ? <>

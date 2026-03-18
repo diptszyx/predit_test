@@ -67,7 +67,6 @@ export default function MarketList({
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [isOpenMarketAskModal, setIsOpenMarketAskModal] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Market | null>(null);

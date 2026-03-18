@@ -189,15 +189,15 @@ const MarketDetails = () => {
                       </p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Market ID</p>
-                      <p className="text-xs font-mono">
-                        {market.id.slice(0, 8)}...
-                      </p>
-                    </div>
-                    <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">Oracle</p>
                       <p className="text-sm font-semibold">
                         {market.oracle.name}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">Market ID</p>
+                      <p className="text-xs font-mono">
+                        {market.id.slice(0, 8)}...
                       </p>
                     </div>
                   </div>

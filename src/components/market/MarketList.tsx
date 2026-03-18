@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { arcLength } from '../../constants/ui';
+import useJoyrideTour from '../../hooks/useJoyrideTour';
 import { formatDate } from '../../lib/date';
 import { createPreditMarketChat } from '../../services/market-messages.service';
 import {
@@ -16,6 +17,7 @@ import useAuthStore from '../../store/auth.store';
 import { checkIsAdmin } from '../../utils/isAdmin';
 import { handleShareMarket } from '../../utils/shareMarket.utils';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
+import JoyrideCustom from '../joyride/JoyRideComponent';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
@@ -28,6 +30,7 @@ export type MarketChoice = 'yes' | 'no' | null;
 
 export interface MarketItemProps {
   item: Market;
+  index: number;
   onSelect: (choice: MarketChoice, item: Market) => void;
   isFromMarketPage?: boolean
 }
@@ -64,7 +67,6 @@ export default function MarketList({
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [isOpenMarketAskModal, setIsOpenMarketAskModal] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Market | null>(null);
@@ -82,6 +84,14 @@ export default function MarketList({
   const [pageMyBetHistory, setPageMyBetHistory] = useState(1);
   const [hasMoreMyBetHistory, setHasMoreMyBetHistory] = useState(false);
   const isUserBlocked = !isAdmin && !user?.appliedInviteCode
+
+  const {
+    runTour,
+    stepIndex,
+    steps,
+    joyrideStyles,
+    handleJoyrideCallback,
+  } = useJoyrideTour();
 
   const fetchMarkets = async (pageNum: number, replace = false) => {
     if (isUserBlocked) return;
@@ -234,6 +244,20 @@ export default function MarketList({
 
   return (
     <div className="h-full overflow-hidden">
+      {!isAdmin &&
+        <JoyrideCustom
+          steps={steps}
+          run={runTour}
+          stepIndex={stepIndex}
+          callback={handleJoyrideCallback}
+          styles={joyrideStyles}
+          continuous
+          showSkipButton
+          locale={{
+            last: "Got it"
+          }}
+        />
+      }
       {/* Status filter */}
       <div className="flex gap-2 overflow-x-auto lg:mt-3 px-2 pb-2 scrollbar-hidden">
         {statusOptions.map((status) => (
@@ -282,8 +306,12 @@ export default function MarketList({
             })}
           >
             {!isBetHistoryPage &&
-              markets.map((item) => (
-                <MarketItem key={item.id} item={item} onSelect={handleSelect} isFromMarketPage={isFromMarketPage} />
+              markets.map((item, index) => (
+                <MarketItem key={item.id}
+                  index={index}
+                  item={item}
+                  onSelect={handleSelect}
+                  isFromMarketPage={isFromMarketPage} />
               ))}
 
             {myBetHistory.length > 0 &&
@@ -358,7 +386,7 @@ const getTimeRemaining = (closeAt: string) => {
   return `${seconds}s`;
 };
 
-const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPage }) => {
+const MarketItem: React.FC<MarketItemProps> = ({ item, index, onSelect, isFromMarketPage }) => {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
@@ -487,7 +515,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
         )}
 
         {item.status === 'open' && (
-          <div className="grid grid-cols-2 gap-3 mt-6 mb-4">
+          <div className="grid grid-cols-2 gap-3 mt-6 mb-4" data-tour={index === 0 && 'trade-button'}>
             <Button
               className="h-10 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-lg font-semibold border border-green-600/30 rounded-lg"
               onClick={(e: React.MouseEvent) => {
@@ -526,6 +554,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
           <Tooltip>
             <TooltipTrigger>
               <MessageSquare className='w-4 h-4 cursor-pointer'
+                data-tour={index === 0 && 'chat-button'}
                 onClick={(e: Event) => {
                   e.stopPropagation()
                   handleMarketChat()

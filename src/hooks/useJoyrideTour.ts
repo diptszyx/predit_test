@@ -38,7 +38,7 @@ export default function useJoyrideTour() {
     if (typeof window === "undefined") return;
 
     const isNewUser = localStorage.getItem("isNewUser") === "true";
-
+    console.log("isNewUser in useHook", isNewUser);
     if (isNewUser) {
       const timer = setTimeout(() => {
         setRunTour(true);

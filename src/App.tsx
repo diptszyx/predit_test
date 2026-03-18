@@ -119,7 +119,7 @@ function AppContent() {
   const [xpInfoDialogOpen, setXPInfoDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
-
+  console.log('123321')
   // Get current page from route
   const getCurrentPage = () => {
     const path = location.pathname;
@@ -231,7 +231,10 @@ function AppContent() {
     user?: User | null;
     require?: boolean;
   }) => {
+    console.log('openProfileDialog called')
     localStorage.setItem('isNewUser', 'true')
+    console.log('after set in openProfileDialog:', localStorage.getItem('isNewUser'));
+
     const storeUser = useAuthStore.getState().user;
     const targetUser = options?.user ?? storeUser ?? user ?? null;
     setProfileDialogUser(targetUser);
@@ -261,6 +264,10 @@ function AppContent() {
       setProfileDialogOpen(true);
     }
   };
+
+  const open = () => {
+    setProfileDialogOpen(true)
+  }
 
   // Update user function
   const updateUser = (updates: Partial<User>) => {
@@ -352,7 +359,9 @@ function AppContent() {
           }
 
           if (isNewUser) {
+            console.log('isNewUser1 called')
             localStorage.setItem('isNewUser', 'true')
+            console.log('after set in isNewUser1:', localStorage.getItem('isNewUser'));
             openProfileDialog({
               user: authenticatedUser,
               require: true,
@@ -376,8 +385,10 @@ function AppContent() {
     const createdAt = new Date(user.createdAt).getTime();
     const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
     if (createdAt >= tenMinutesAgo) {
-      openProfileDialog({ user, require: true });
+      console.log('createdAt >= tenMinutesAgo called')
       localStorage.setItem('isNewUser', 'true')
+      openProfileDialog({ user, require: true });
+      console.log('after set in createdAt >= tenMinutesAgo called:', localStorage.getItem('isNewUser'));
     }
 
     if (pendingNavigation) {
@@ -692,6 +703,7 @@ function AppContent() {
             setPrivacyDialogOpen={setPrivacyDialogOpen}
             setTermsDialogOpen={setTermsDialogOpen}
             setPendingNavigation={setPendingNavigation}
+            openModal={open}
           />
         }
       />
@@ -1520,6 +1532,7 @@ function ArticleDetailWrapper({
   setPrivacyDialogOpen,
   setTermsDialogOpen,
   setPendingNavigation,
+  openModal,
 }: any) {
   const navigate = useNavigate();
   const { slug } = useParams();
@@ -1527,6 +1540,7 @@ function ArticleDetailWrapper({
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar {...commonSidebarProps} />
+      {/* <Button onClick={openModal} >Open</Button> */}
       <div className="flex-1 overflow-y-auto">
         <ArticleDetailPage
           hotTake={selectedArticle}

@@ -26,7 +26,6 @@ import { MarketDetailPage } from './components/dflow/MarketDetailPage';
 import { MarketListPage } from './components/dflow/MarketListPage';
 import InviteCodeGuard from './components/guard/InviteCodeGuard';
 import { RequirePhantomConnected } from './components/guard/WalletConnectGuard';
-import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
 import { PrivacyPolicyPage } from './components/legal/PrivacyPolicy';
@@ -47,6 +46,7 @@ import { TermsOfUse } from './components/TermsOfUse';
 import TopicPage from './components/topic/TopicPage';
 import UserProfileDialog from './components/UserProfileDialog';
 import { WalletConnectDialog } from './components/WalletConnectDialog';
+import HomeWrapper from './components/wrapper/HomeWrapper';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
@@ -61,7 +61,6 @@ import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
 import { useWalletStore } from './store/wallet.store';
 import { checkIsAdmin } from './utils/isAdmin';
-import HomeWrapper from './components/wrapper/HomeWrapper';
 
 export default function App() {
   return (
@@ -232,6 +231,7 @@ function AppContent() {
     user?: User | null;
     require?: boolean;
   }) => {
+    localStorage.setItem('isNewUser', 'true')
     const storeUser = useAuthStore.getState().user;
     const targetUser = options?.user ?? storeUser ?? user ?? null;
     setProfileDialogUser(targetUser);
@@ -352,11 +352,11 @@ function AppContent() {
           }
 
           if (isNewUser) {
+            localStorage.setItem('isNewUser', 'true')
             openProfileDialog({
               user: authenticatedUser,
               require: true,
             });
-            localStorage.setItem('isNewUser', String(isNewUser))
           } else if (authenticatedUser) {
             setProfileDialogUser(authenticatedUser);
           }

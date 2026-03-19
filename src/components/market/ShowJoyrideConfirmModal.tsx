@@ -1,51 +1,44 @@
+import { Button } from '../ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogDescription,
-  DialogTitle,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '../ui/dialog';
-import { Button } from '../ui/button';
-import { useState } from 'react';
 
 interface MarketAskModalProps {
   open: boolean;
   onClose: () => void;
-  title: string;
-  onConfirm: () => Promise<void> | void;
+  onConfirm: () => void
   onCancel: () => void;
 }
 
-export function MarketAskModal({
+export function ShowJoyrideConfirmModal({
   open,
   onClose,
-  title,
   onConfirm,
   onCancel,
 }: MarketAskModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleConfirm = async () => {
-    try {
-      setIsLoading(true);
-      await onConfirm();
-      onClose();
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    onConfirm();
+    onClose();
+  }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onClose}
-    >
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Are you want to ask oracle?</DialogTitle>
+          <DialogTitle>Want a quick tour?</DialogTitle>
           <DialogDescription>
-            <span className="font-medium">{title}</span>
+            We’ll show you how to chat with AI and make your first trade — it only takes a moment.
+            <br />
+            <br />
+            <span className="text-sm text-muted-foreground">
+              You can skip anytime if you prefer to explore on your own.
+            </span>
           </DialogDescription>
         </DialogHeader>
 
@@ -53,16 +46,14 @@ export function MarketAskModal({
           <Button
             variant="outline"
             onClick={onCancel}
-            disabled={isLoading}
           >
-            Cancel
+            Skip
           </Button>
 
           <Button
             onClick={handleConfirm}
-            disabled={isLoading}
           >
-            {isLoading ? 'Asking...' : 'Yes'}
+            Show me
           </Button>
         </DialogFooter>
       </DialogContent>

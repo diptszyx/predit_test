@@ -148,7 +148,15 @@ export function WalletConnectDialog({
     return w;
   });
 
-  const { publicKey, connected, signMessage, connect, wallets: adapterWallets } = useWallet();
+  const {
+    publicKey,
+    connected,
+    signMessage,
+    connect,
+    select,
+    wallet: selectedWallet,
+    wallets: adapterWallets,
+  } = useWallet();
   const walletDebugToastShown = useRef(false);
   const authenticateWithToken = useAuthStore(
     (state) => state.authenticateWithToken
@@ -336,6 +344,13 @@ export function WalletConnectDialog({
                     }
 
                     try {
+                      if (!selectedWallet && adapterWallets.length) {
+                        select(adapterWallets[0].adapter.name);
+                        await new Promise((r) => setTimeout(r, 0));
+                      }
+                      toast.info(
+                        `selected: ${selectedWallet?.adapter.name || 'none'}, wallets: ${adapterWallets.length}`,
+                      );
                       await connect();
                     } catch (error) {
                       setPendingMwaLogin(false);

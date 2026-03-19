@@ -31,7 +31,7 @@ export type MarketChoice = 'yes' | 'no' | null;
 export interface MarketItemProps {
   item: Market;
   index: number;
-  onSelect: (choice: MarketChoice, item: Market) => void;
+  onSelect: (choice: MarketChoice, item: Market, index: number) => void;
   isFromMarketPage?: boolean
 }
 
@@ -50,6 +50,8 @@ const statusOptions: {
     { label: 'Resolved', value: 'resolved' },
     { label: 'Cancelled', value: 'cancelled' },
   ];
+
+export const TOUR_GUIDE_SHOWN_KEY = 'tourGuideShown'
 
 export default function MarketList({
   oracleId,
@@ -91,6 +93,7 @@ export default function MarketList({
     steps,
     joyrideStyles,
     handleJoyrideCallback,
+    startTour
   } = useJoyrideTour();
 
   const fetchMarkets = async (pageNum: number, replace = false) => {
@@ -131,6 +134,13 @@ export default function MarketList({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const isTourGuideShown = localStorage.getItem(TOUR_GUIDE_SHOWN_KEY);
+    if (isTourGuideShown === null) {
+      localStorage.setItem(TOUR_GUIDE_SHOWN_KEY, 'false');
+    }
+  }, []);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -228,7 +238,13 @@ export default function MarketList({
     }
   };
 
-  const handleSelect = (choice: MarketChoice, item: Market) => {
+  const handleSelect = (choice: MarketChoice, item: Market, index: number) => {
+    const isTourGuideShown = localStorage.getItem(TOUR_GUIDE_SHOWN_KEY) === 'true'
+    if (!isTourGuideShown) {
+      startTour(index);
+      return;
+    }
+
     setSelectedItem(item);
     setSelectedChoice(choice);
     setModalOpen(true);
@@ -394,10 +410,6 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, index, onSelect, isFromMa
     item.totalBets > 0
       ? (item.yesPool * 100) / (item.yesPool + item.noPool)
       : 50;
-  const noPercent =
-    item.totalBets > 0
-      ? (item.noPool * 100) / (item.yesPool + item.noPool)
-      : 50;
   const progressLength = (yesPercent / 100) * arcLength;
 
   const [timeLeft, setTimeLeft] = useState<string>('');
@@ -515,12 +527,12 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, index, onSelect, isFromMa
         )}
 
         {item.status === 'open' && (
-          <div className="grid grid-cols-2 gap-3 mt-6 mb-4" data-tour={index === 0 && 'trade-button'}>
+          <div className="grid grid-cols-2 gap-3 mt-6 mb-4" data-tour={`trade-button-${index}`}>
             <Button
               className="h-10 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-lg font-semibold border border-green-600/30 rounded-lg"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
-                onSelect('yes', item);
+                onSelect('yes', item, index);
               }}
               disabled={item.isBetted || !user}
             >
@@ -530,7 +542,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, index, onSelect, isFromMa
               className="h-10 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-lg font-semibold border border-red-600/30 rounded-lg"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
-                onSelect('no', item);
+                onSelect('no', item, index);
               }}
               disabled={item.isBetted || !user}
             >
@@ -554,7 +566,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, index, onSelect, isFromMa
           <Tooltip>
             <TooltipTrigger>
               <MessageSquare className='w-4 h-4 cursor-pointer'
-                data-tour={index === 0 && 'chat-button'}
+                data-tour={`chat-button-${index}`}
                 onClick={(e: Event) => {
                   e.stopPropagation()
                   handleMarketChat()

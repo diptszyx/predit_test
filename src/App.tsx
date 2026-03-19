@@ -119,7 +119,7 @@ function AppContent() {
   const [xpInfoDialogOpen, setXPInfoDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
-  console.log('123321')
+
   // Get current page from route
   const getCurrentPage = () => {
     const path = location.pathname;
@@ -231,10 +231,6 @@ function AppContent() {
     user?: User | null;
     require?: boolean;
   }) => {
-    console.log('openProfileDialog called')
-    localStorage.setItem('isNewUser', 'true')
-    console.log('after set in openProfileDialog:', localStorage.getItem('isNewUser'));
-
     const storeUser = useAuthStore.getState().user;
     const targetUser = options?.user ?? storeUser ?? user ?? null;
     setProfileDialogUser(targetUser);
@@ -359,9 +355,6 @@ function AppContent() {
           }
 
           if (isNewUser) {
-            console.log('isNewUser1 called')
-            localStorage.setItem('isNewUser', 'true')
-            console.log('after set in isNewUser1:', localStorage.getItem('isNewUser'));
             openProfileDialog({
               user: authenticatedUser,
               require: true,
@@ -385,10 +378,7 @@ function AppContent() {
     const createdAt = new Date(user.createdAt).getTime();
     const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
     if (createdAt >= tenMinutesAgo) {
-      console.log('createdAt >= tenMinutesAgo called')
-      localStorage.setItem('isNewUser', 'true')
       openProfileDialog({ user, require: true });
-      console.log('after set in createdAt >= tenMinutesAgo called:', localStorage.getItem('isNewUser'));
     }
 
     if (pendingNavigation) {

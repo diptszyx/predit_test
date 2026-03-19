@@ -527,7 +527,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, index, onSelect, isFromMa
         )}
 
         {item.status === 'open' && (
-          <div className="grid grid-cols-2 gap-3 mt-6 mb-4" data-tour={index === 0 && 'trade-button'}>
+          <div className="grid grid-cols-2 gap-3 mt-6 mb-4" data-tour={`trade-button-${index}`}>
             <Button
               className="h-10 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-lg font-semibold border border-green-600/30 rounded-lg"
               onClick={(e: React.MouseEvent) => {
@@ -566,7 +566,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, index, onSelect, isFromMa
           <Tooltip>
             <TooltipTrigger>
               <MessageSquare className='w-4 h-4 cursor-pointer'
-                data-tour={index === 0 && 'chat-button'}
+                data-tour={`chat-button-${index}`}
                 onClick={(e: Event) => {
                   e.stopPropagation()
                   handleMarketChat()

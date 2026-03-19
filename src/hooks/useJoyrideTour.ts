@@ -14,26 +14,29 @@ export default function useJoyrideTour() {
     () =>
       [
         {
-          target: '[data-tour="chat-button"]',
+          target: `[data-tour="chat-button-${activeIndex}"]`,
           content:
             "Chat with AI Oracles to get predictions and insights before making a trade.",
           disableBeacon: true,
           placement: "right",
         },
         {
-          target: '[data-tour="trade-button"]',
+          target: `[data-tour="trade-button-${activeIndex}"]`,
           content:
             "Start trading on this market. Use your XP from quests to place your first bet here.",
           placement: "right",
         },
       ] as Step[],
-    [],
+    [activeIndex],
   );
 
   const startTour = (index: number) => {
     setStepIndex(0);
     setActiveIndex(index);
-    setRunTour(true);
+
+    setTimeout(() => {
+      setRunTour(true);
+    }, 300);
   };
 
   const handleJoyrideCallback = (data: CallBackProps) => {
@@ -51,7 +54,6 @@ export default function useJoyrideTour() {
     }
   };
 
-  // styles
   const joyrideStyles = useMemo(
     () => ({
       options: {

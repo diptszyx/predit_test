@@ -1,23 +1,23 @@
-import { Info, LineChart, Share2, Store, UserPlus, Zap } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { Info, LineChart, Share2, ShoppingCart, Store, UserPlus, Zap } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import useGetContentShare from '../../hooks/quests/getContentShare';
 import useGetInviteCodes from '../../hooks/quests/getInviteCodes';
 import useGetQuest from '../../hooks/quests/getQuest';
 import {
-  connectX,
   connectDiscord,
-  verifyJoinDiscord,
+  connectX,
   DAILY_QUEST_TYPES,
   Quest,
   QuestStatus,
   QuestType,
   verifyFollow,
-  verifySharePost,
-  verifyTradeDaily,
+  verifyJoinDiscord,
   verifyLikeTweet,
   verifyRetweetTweet,
+  verifySharePost,
+  verifyTradeDaily,
   verifyTradeDailyPolymarket,
   verifyTradeDailyPreditMarket,
 } from '../../services/quest.service';
@@ -604,7 +604,7 @@ export function QuestItem({
         return <LineChart className="h-5 w-5 text-[#a3a3a3]" />;
 
       case QuestType.DAILY_TRADE_PREDIT_MARKET:
-        return <LineChart className="h-5 w-5 text-[#a3a3a3]" />;
+        return <ShoppingCart className="h-5 w-5 text-[#a3a3a3]" />;
 
       default:
         return <Share2 className="h-5 w-5 text-[#a3a3a3]" />;
@@ -677,7 +677,7 @@ export function QuestItem({
             Make a trade on{' '}
             <button
               className="text-blue-400 text-[10px] sm:text-xs cursor-pointer"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/market')}
             >
               Predit Market
             </button>{' '}

@@ -25,6 +25,7 @@ import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { getStatusBadgeProps } from './MarketListAdmin';
 import { MarketModal } from './MarketModal';
+import { ShowJoyrideConfirmModal } from './ShowJoyrideConfirmModal';
 
 export type MarketChoice = 'yes' | 'no' | null;
 
@@ -87,6 +88,8 @@ export default function MarketList({
   const [hasMoreMyBetHistory, setHasMoreMyBetHistory] = useState(false);
   const isUserBlocked = !isAdmin && !user?.appliedInviteCode
 
+  const [showTourConfirm, setShowTourConfirm] = useState(false);
+  const [pendingIndex, setPendingIndex] = useState<number | null>(null);
   const {
     runTour,
     stepIndex,
@@ -241,7 +244,8 @@ export default function MarketList({
   const handleSelect = (choice: MarketChoice, item: Market, index: number) => {
     const isTourGuideShown = localStorage.getItem(TOUR_GUIDE_SHOWN_KEY) === 'true'
     if (!isTourGuideShown) {
-      startTour(index);
+      setPendingIndex(index)
+      setShowTourConfirm(true)
       return;
     }
 
@@ -249,6 +253,20 @@ export default function MarketList({
     setSelectedChoice(choice);
     setModalOpen(true);
   };
+
+  const handleSkipTour = () => {
+    localStorage.setItem(TOUR_GUIDE_SHOWN_KEY, 'true')
+    setShowTourConfirm(false)
+
+    setTimeout(() => {
+      setModalOpen(true);
+    }, 300)
+  }
+
+  const handleShowTour = () => {
+    if (pendingIndex === null) return
+    startTour(pendingIndex);
+  }
 
   const handleConfirm = () => {
     setModalOpen(false);
@@ -260,6 +278,13 @@ export default function MarketList({
 
   return (
     <div className="h-full overflow-hidden">
+      <ShowJoyrideConfirmModal
+        open={showTourConfirm}
+        onClose={() => setShowTourConfirm(false)}
+        onCancel={handleSkipTour}
+        onConfirm={handleShowTour}
+      />
+
       {!isAdmin &&
         <JoyrideCustom
           steps={steps}

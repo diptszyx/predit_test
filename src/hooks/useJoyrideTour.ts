@@ -23,7 +23,7 @@ export default function useJoyrideTour() {
         {
           target: `[data-tour="trade-button-${activeIndex}"]`,
           content:
-            "Start trading on this market. Use your XP from quests to place your first bet here.",
+            "Once you’ve made your decision, choose Yes or No, then decide how much XP to use. Your quest rewards can be used to place the trade.",
           placement: "right",
         },
       ] as Step[],

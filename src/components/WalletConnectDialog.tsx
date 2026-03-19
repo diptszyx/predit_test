@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { ethers } from 'ethers';
 import { CheckCircle2, Loader2, Wallet } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -148,7 +148,8 @@ export function WalletConnectDialog({
     return w;
   });
 
-  const { publicKey, connected, signMessage, connect } = useWallet();
+  const { publicKey, connected, signMessage, connect, wallets: adapterWallets } = useWallet();
+  const walletDebugToastShown = useRef(false);
   const authenticateWithToken = useAuthStore(
     (state) => state.authenticateWithToken
   );
@@ -211,6 +212,17 @@ export function WalletConnectDialog({
       handleSolanaLogin();
     }
   }, [connected, publicKey, pendingMwaLogin, currentUser]);
+
+  useEffect(() => {
+    if (!open) {
+      walletDebugToastShown.current = false;
+      return;
+    }
+    if (walletDebugToastShown.current) return;
+    const names = adapterWallets.map((w) => w.adapter.name).join(', ');
+    toast.info(`Wallets: ${names || 'none'}`);
+    walletDebugToastShown.current = true;
+  }, [open, adapterWallets]);
 
   const handleSocialConnect = async (provider: SocialProvider) => {
     setConnectingSocial(provider);

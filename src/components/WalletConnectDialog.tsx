@@ -197,6 +197,8 @@ export function WalletConnectDialog({
       }
 
       await authenticateWithToken(verifyResp.token);
+      // Clear selected wallet to avoid re-triggering MWA flow on return.
+      select(null);
       toast.success('Successfully logged in with Solana!');
       onConnect('phantom', verifyResp.user);
     } catch (err: any) {

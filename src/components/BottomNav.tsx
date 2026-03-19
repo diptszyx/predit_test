@@ -68,7 +68,7 @@ export function BottomNav({
               }`}
           >
             <Flame className="w-5 h-5" />
-            <span className="text-xs">Hot Takes</span>
+            <span className="text-xs">News</span>
           </Button>
 
           {/* Profile */}
@@ -136,7 +136,7 @@ export function BottomNav({
             }`}
         >
           <Flame className="w-5 h-5" />
-          <span className="text-xs">Hot Takes</span>
+          <span className="text-xs">News</span>
         </Button>
 
         {/* Sign In */}

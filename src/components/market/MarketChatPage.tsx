@@ -40,7 +40,7 @@ const tabs = [
   { id: 'market', label: 'Market' },
 ];
 
-export default function MarketDetail() {
+export default function MarketChatPage() {
   const navigate = useNavigate();
   const fetchUser = useAuthStore((state) => state.fetchCurrentUser);
   const user = useAuthStore((state) => state.user);

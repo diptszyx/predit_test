@@ -14,7 +14,7 @@ import { Topic, topicServices } from "../services/topic-admin.service";
 
 const tabs = [
   { id: 'chat', label: 'Shared Message' },
-  { id: 'hotTakes', label: 'Hot Takes' },
+  { id: 'hotTakes', label: 'News' },
 ];
 
 const PAGE_SIZE = 10;
@@ -173,7 +173,7 @@ const ShareChatPage = () => {
   }
 
   const handleArticleClick = async (slug: string) => {
-    navigate(`/hot-takes/${slug}`);
+    navigate(`/news/${slug}`);
   };
 
   const loadArticles = async (reset = false) => {
@@ -378,7 +378,7 @@ const ShareChatPage = () => {
                     <CardHeader className="border-b border-border pb-3">
                       <CardTitle className="flex items-center gap-2 text-base">
                         <Zap className="w-4 h-4" />
-                        <span>Hot Takes</span>
+                        <span>News</span>
                       </CardTitle>
                       <p className="text-xs text-muted-foreground">
                         Latest insights from our oracle community
@@ -415,7 +415,7 @@ const ShareChatPage = () => {
                 <CardHeader className="border-b border-border pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Zap className="w-4 h-4" />
-                    <span>Hot Takes</span>
+                    <span>News</span>
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
                     Latest insights from our oracle community

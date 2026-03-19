@@ -37,6 +37,7 @@ type QuestButtonConfig = {
 };
 
 const QuestPage = () => {
+  const claimTokenEnable = import.meta.env.VITE_CLAIM_TOKEN_ENABLE === 'true'
   const { user, fetchCurrentUser } = useAuthStore();
   const { quests, totalXpEarned, refetch } = useGetQuest();
   const { codes } = useGetInviteCodes();
@@ -493,12 +494,14 @@ ${content.shareContent}
             Total XP Earned
           </p>
 
-          <button
-            className="mt-4 rounded-2xl bg-[#FCD05A] px-5 py-2.5 text-sm font-semibold text-black transition hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] cursor-pointer"
-            onClick={() => setOpenClaimTokenModal(true)}
-          >
-            Claim Token
-          </button>
+          {claimTokenEnable &&
+            <button
+              className="mt-4 rounded-2xl bg-[#FCD05A] px-5 py-2.5 text-sm font-semibold text-black transition hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] cursor-pointer"
+              onClick={() => setOpenClaimTokenModal(true)}
+            >
+              Claim Token
+            </button>
+          }
         </div>
       </div>
 

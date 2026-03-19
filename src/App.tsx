@@ -13,8 +13,8 @@ import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 import type { WalletType } from './components/WalletConnectDialog';
 import { useUserPhotoRefresh } from './hooks';
-import type { User } from './lib/types';
 import { mwaAuthCache } from './lib/mwaAuthCache';
+import type { User } from './lib/types';
 import { useXP } from './lib/useXP';
 
 // Components
@@ -26,12 +26,12 @@ import { MarketDetailPage } from './components/dflow/MarketDetailPage';
 import { MarketListPage } from './components/dflow/MarketListPage';
 import InviteCodeGuard from './components/guard/InviteCodeGuard';
 import { RequirePhantomConnected } from './components/guard/WalletConnectGuard';
-import { HomePage } from './components/HomePage';
 import { HotTakesPage } from './components/HotTakesPage';
 import { LeaderboardPage } from './components/LeaderboardPage';
 import { PrivacyPolicyPage } from './components/legal/PrivacyPolicy';
 import { TermsOfServicePage } from './components/legal/TermsOfService';
-import MarketDetail from './components/market/MarketDetail';
+import MarketChatPage from './components/market/MarketChatPage';
+import MarketDetails from './components/market/MarketDetails';
 import MarketPage from './components/MarketPage';
 import PolymarketChatPage from './components/polymarket/PolymarketChatPage';
 import PolymarketDetail from './components/polymarket/PolymarketDetail';
@@ -46,6 +46,7 @@ import { TermsOfUse } from './components/TermsOfUse';
 import TopicPage from './components/topic/TopicPage';
 import UserProfileDialog from './components/UserProfileDialog';
 import { WalletConnectDialog } from './components/WalletConnectDialog';
+import HomeWrapper from './components/wrapper/HomeWrapper';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
@@ -124,8 +125,8 @@ function AppContent() {
     const path = location.pathname;
     if (path === '/' || path === '/home') return 'home';
     if (path === '/chat' || path.startsWith('/chat/')) return 'chat';
-    if (path === '/hot-takes') return 'hotTakes';
-    if (path.match(/^\/hot-takes\/[^/]+$/)) return 'hotTakeDetail';
+    if (path === '/news') return 'news';
+    if (path.match(/^\/news\/[^/]+$/)) return 'newsDetail';
     if (path === '/leaderboard') return 'leaderboard';
     if (path === '/subscription') return 'subscription';
     if (path === '/settings') return 'settings';
@@ -172,8 +173,8 @@ function AppContent() {
           }
         }
         break;
-      case 'hotTakes':
-        navigate('/hot-takes');
+      case 'news':
+        navigate('/news');
         break;
       case 'leaderboard':
         navigate('/leaderboard');
@@ -259,6 +260,10 @@ function AppContent() {
       setProfileDialogOpen(true);
     }
   };
+
+  const open = () => {
+    setProfileDialogOpen(true)
+  }
 
   // Update user function
   const updateUser = (updates: Partial<User>) => {
@@ -504,82 +509,16 @@ function AppContent() {
       <Route
         path="/"
         element={
-          <div className="flex h-screen bg-background overflow-hidden">
-            <Helmet>
-              <title>
-                AI-Powered Market Predictions | Predit Market AI Oracles
-                Platform
-              </title>
-              <meta
-                name="description"
-                content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, sports, and financial markets with our AI agents platform."
-              />
-              <meta
-                name="keywords"
-                content="AI-powered predictions, AI oracles, market predictions, cryptocurrency predictions, tech predictions, sports predictions, AI agents, financial market analysis"
-              />
-              <meta
-                property="og:title"
-                content="AI-Powered Market Predictions | Predit Market AI Oracles Platform"
-              />
-              <meta
-                property="og:description"
-                content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
-              />
-              <meta
-                property="og:type"
-                content="website"
-              />
-              <meta
-                name="twitter:card"
-                content="summary_large_image"
-              />
-              <meta
-                name="twitter:title"
-                content="AI-Powered Market Predictions | Predit Market AI Oracles Platform"
-              />
-              <meta
-                name="twitter:description"
-                content="AI-powered market predictions and expert insights from specialized AI oracles. Get predictions for crypto, tech, politics, and financial markets."
-              />
-              <link
-                rel="canonical"
-                href={window.location.origin}
-              />
-            </Helmet>
-            <Sidebar {...commonSidebarProps} />
-            <div className="flex-1 overflow-y-auto">
-              <HomePage
-                onGetStarted={() => setWalletDialogOpen(true)}
-                onExplorePredictions={(prompt) => {
-                  if (prompt) {
-                    setInitialPrompt(prompt);
-                  }
-                  const handlePredictionNav = async () => {
-                    let targetAgent = selectedAIAgent;
-                    if (!targetAgent && listOracles.length > 0) {
-                      targetAgent = listOracles[0];
-                      localStorage.setItem(
-                        'deor-currentOracle',
-                        listOracles[0].id,
-                      );
-                      setSelectedAIAgent(listOracles[0]);
-                    }
-
-                    if (targetAgent) {
-                      const newChat = await chatService.createChat();
-                      if (newChat) navigate(`/chat/${newChat.id}`);
-                    } else {
-                      navigate('/chat');
-                    }
-                  };
-                  handlePredictionNav();
-                }}
-                user={user}
-              />
-            </div>
-            {commonDialogProps}
-          </div>
+          <HomeWrapper
+            commonSidebarProps={commonSidebarProps}
+            setWalletDialogOpen={setWalletDialogOpen}
+            setInitialPrompt={setInitialPrompt}
+            selectedAIAgent={selectedAIAgent}
+            listOracles={listOracles}
+            setSelectedAIAgent={setSelectedAIAgent}
+            commonDialogProps={commonDialogProps}
+            user={user}
+          />
         }
       />
 
@@ -687,12 +626,12 @@ function AppContent() {
 
       {/* Hot Takes Page */}
       <Route
-        path="/hot-takes"
+        path="/news"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
               <title>
-                Hot Takes & Market News | AI Oracle Analysis & Predictions
+                Market News | AI Oracle Analysis & Predictions
               </title>
               <meta
                 name="description"
@@ -712,15 +651,15 @@ function AppContent() {
               />
               <link
                 rel="canonical"
-                href={`${window.location.origin}/hot-takes`}
+                href={`${window.location.origin}/news`}
               />
             </Helmet>
             <Sidebar {...commonSidebarProps} />
             <HotTakesPage
               onArticleClick={(article) => {
                 setSelectedArticle(article);
-                setPreviousPage('hotTakes');
-                navigate(`/hot-takes/${article.slug}`);
+                setPreviousPage('news');
+                navigate(`/news/${article.slug}`);
               }}
               onBack={() => navigate('/')}
             />
@@ -731,7 +670,7 @@ function AppContent() {
 
       {/* Hot Take Detail Page */}
       <Route
-        path="/hot-takes/:slug"
+        path="/news/:slug"
         element={
           <ArticleDetailWrapper
             selectedArticle={selectedArticle}
@@ -754,6 +693,7 @@ function AppContent() {
             setPrivacyDialogOpen={setPrivacyDialogOpen}
             setTermsDialogOpen={setTermsDialogOpen}
             setPendingNavigation={setPendingNavigation}
+            openModal={open}
           />
         }
       />
@@ -1024,7 +964,7 @@ function AppContent() {
 
       {/* Market Detail Page */}
       <Route
-        path="/market/:marketId/chat/:chatID"
+        path="/market/:id"
         element={
           <div className="flex h-screen bg-background overflow-hidden">
             <Helmet>
@@ -1042,7 +982,36 @@ function AppContent() {
             <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
               {user && (
                 <div className="flex-1 overflow-y-auto">
-                  <MarketDetail />
+                  <MarketDetails />
+                </div>
+              )}
+              {commonDialogProps}
+            </InviteCodeGuard>
+          </div>
+        }
+      />
+
+      {/* Market Predit Chat Page */}
+      <Route
+        path="/market/:marketId/chat/:chatID"
+        element={
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Helmet>
+              <title>Market Chat - Predit Market AI Oracles</title>
+              <meta
+                name="description"
+                content="View and manage prediction market details."
+              />
+              <link
+                rel="canonical"
+                href={`${window.location.origin}/market`}
+              />
+            </Helmet>
+            <Sidebar {...commonSidebarProps} />
+            <InviteCodeGuard onOpenWalletDialog={handleWalletDisconnect}>
+              {user && (
+                <div className="flex-1 overflow-y-auto">
+                  <MarketChatPage />
                 </div>
               )}
               {commonDialogProps}
@@ -1553,6 +1522,7 @@ function ArticleDetailWrapper({
   setPrivacyDialogOpen,
   setTermsDialogOpen,
   setPendingNavigation,
+  openModal,
 }: any) {
   const navigate = useNavigate();
   const { slug } = useParams();
@@ -1560,6 +1530,7 @@ function ArticleDetailWrapper({
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar {...commonSidebarProps} />
+      {/* <Button onClick={openModal} >Open</Button> */}
       <div className="flex-1 overflow-y-auto">
         <ArticleDetailPage
           hotTake={selectedArticle}
@@ -1576,9 +1547,9 @@ function ArticleDetailWrapper({
               } else {
                 navigate('/chat');
               }
-            } else if (previousPage === 'hotTakes') {
+            } else if (previousPage === 'news') {
               setPreviousPage(null);
-              navigate('/hot-takes');
+              navigate('/news');
             } else if (previousPage === 'home') {
               setPreviousPage(null);
               navigate('/');
@@ -1599,8 +1570,8 @@ function ArticleDetailWrapper({
               case 'chat':
                 navigate('/chat');
                 break;
-              case 'hotTakes':
-                navigate('/hot-takes');
+              case 'news':
+                navigate('/news');
                 break;
               default:
                 navigate('/');
@@ -1715,7 +1686,7 @@ function ChatWithOracleWrapper({
             onBack={() => {
               if (previousPage === 'articleDetail' && selectedArticle) {
                 setPreviousPage(null);
-                navigate(`/hot-takes/${selectedArticle.id}`);
+                navigate(`/news/${selectedArticle.id}`);
               } else {
                 setSelectedAIAgent(null);
                 setArticleContext(null);
@@ -1737,7 +1708,7 @@ function ChatWithOracleWrapper({
             onArticleClick={(article: News) => {
               setSelectedArticle(article);
               setPreviousPage('chat');
-              navigate(`/hot-takes/${article.id}`);
+              navigate(`/news/${article.id}`);
             }}
             onOpenSettings={() => navigate('/settings')}
             onSetPendingNavigation={setPendingNavigation}

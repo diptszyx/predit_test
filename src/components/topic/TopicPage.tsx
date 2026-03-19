@@ -8,11 +8,17 @@ import TopicList from "./TopicList";
 const TopicPage = () => {
   const [openCreate, setOpenCreate] = useState(false);
   const [listTopic, setListTopic] = useState<Topic[]>([])
+  const [loadingTopic, setLoadingTopic] = useState(true)
 
   const fetchTopics = async () => {
-    const data = await topicServices.getAllTopics();
-    if (data) {
-      setListTopic(data)
+    try {
+      const data = await topicServices.getAllTopics();
+      if (data) {
+        setListTopic(data)
+      }
+      setLoadingTopic(false)
+    } catch (error) {
+      console.error("Failed to load topics")
     }
   }
 
@@ -28,7 +34,7 @@ const TopicPage = () => {
           <CircleFadingPlus /> Create topic
         </Button>
 
-        <TopicList list={listTopic} fetchTopics={fetchTopics} />
+        <TopicList list={listTopic} fetchTopics={fetchTopics} loading={loadingTopic} />
       </div>
     </div>
   )

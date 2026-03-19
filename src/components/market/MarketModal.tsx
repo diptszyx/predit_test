@@ -26,7 +26,7 @@ interface MarketModalProps {
   onBetPlaced: () => void;
 }
 
-const AUTO_OPTIONS = [10, 20, 50, 100];
+export const AUTO_OPTIONS = [10, 20, 50, 100];
 
 export function MarketModal({
   open,

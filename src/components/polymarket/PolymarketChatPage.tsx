@@ -1067,7 +1067,7 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
               >
                 YES
                 {yesToken &&
-                  <span className="text-[12.5px]">${toPriceLabel(yesToken.price, 1)}</span>
+                  <span className="text-[12.5px]">${yesToken.price}</span>
                 }
               </Button>
               <Button
@@ -1083,7 +1083,7 @@ const TradeSidebar = ({ market }: TradeSidebarProps) => {
               >
                 NO
                 {noToken &&
-                  <span className="text-[12.5px]">${toPriceLabel(noToken.price, 1)}</span>
+                  <span className="text-[12.5px]">${noToken.price}</span>
                 }
               </Button>
             </div>

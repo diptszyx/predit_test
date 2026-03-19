@@ -10,6 +10,7 @@ import { Button } from "../ui/button"
 interface TopicListProps {
   list: Topic[]
   fetchTopics: () => void
+  loading: boolean
 }
 
 interface TopicItemProps {
@@ -18,7 +19,7 @@ interface TopicItemProps {
   fetchTopics: () => void
 }
 
-const TopicList = ({ list, fetchTopics }: TopicListProps) => {
+const TopicList = ({ list, fetchTopics, loading }: TopicListProps) => {
   const handleDeleteTopic = async (id: string) => {
     try {
       const res = await topicServices.deleteTopic(id)
@@ -45,11 +46,20 @@ const TopicList = ({ list, fetchTopics }: TopicListProps) => {
         </TableHeader>
 
         <TableBody>
+          {loading && <TableRow>
+            <TableCell
+              colSpan={4}
+              className="py-6 text-center text-muted-foreground"
+            >
+              Loading...
+            </TableCell>
+          </TableRow>}
+
           {list.map((item) => (
             <TopicItem key={item.id} item={item} handleDelete={handleDeleteTopic} fetchTopics={fetchTopics} />
           ))}
 
-          {list.length === 0 && (
+          {!loading && list.length === 0 && (
             <TableRow>
               <TableCell
                 colSpan={4}

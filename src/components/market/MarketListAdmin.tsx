@@ -1,4 +1,4 @@
-import { CircleAlert, Clock, Loader2, Pen, Share2, Trash2, Users } from 'lucide-react';
+import { CircleAlert, Clock, Loader2, MessageSquare, Pen, Share2, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -36,6 +36,7 @@ export interface MarketItemProps {
   item: Market;
   onClick: (item: Market) => void;
   onRefetch: () => void;
+  handleMarketChat: (item: Market) => void
 }
 
 type MarketStatus = 'open' | 'closed' | 'resolved' | 'cancelled' | 'all';
@@ -92,7 +93,11 @@ export default function MarketListAdmin({
     }
   }, [onRefetchReady]);
 
-  const handleMarketClick = async (item: Market) => {
+  const handleCardClick = async (item: Market) => {
+    navigate(`/market/${item.id}`);
+  };
+
+  const handleMarketChat = async (item: Market) => {
     if (!item.chatId) {
       try {
         const data = await createPreditMarketChat(item.id)
@@ -170,8 +175,9 @@ export default function MarketListAdmin({
             <MarketItem
               key={item.id}
               item={item}
-              onClick={handleMarketClick}
+              onClick={handleCardClick}
               onRefetch={handleRefetch}
+              handleMarketChat={handleMarketChat}
             />
           ))
         )}
@@ -254,6 +260,7 @@ const MarketItem: React.FC<MarketItemProps> = ({
   item,
   onClick,
   onRefetch,
+  handleMarketChat,
 }) => {
   const yesPercent =
     item.totalBets > 0
@@ -585,17 +592,26 @@ const MarketItem: React.FC<MarketItemProps> = ({
             >
               <Trash2 className="w-4 h-4" />
             </Button>
-            {item.chatId &&
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e: React.MouseEvent) =>
-                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)}
-                className="bg-background/50 hover:opacity-70 transition-opacity p-1 rounded-full"
-              >
-                <Share2 className="w-4 h-4" />
-              </Button>
-            }
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e: Event) => {
+                e.stopPropagation()
+                handleMarketChat(item)
+              }}
+              className="bg-background/white hover:opacity-70 transition-opacity p-1 rounded-full ml-auto"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e: React.MouseEvent) =>
+                handleShareMarket(e, `${window.location.origin}/market/${item.id}`)}
+              className="bg-background/50 hover:opacity-70 transition-opacity p-1 rounded-full"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>

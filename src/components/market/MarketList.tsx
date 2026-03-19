@@ -1,9 +1,10 @@
 import clsx from 'clsx';
-import { Clock, Share2, Users } from 'lucide-react';
+import { Clock, MessageSquare, Share2, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { arcLength } from '../../constants/ui';
+import useJoyrideTour from '../../hooks/useJoyrideTour';
 import { formatDate } from '../../lib/date';
 import { createPreditMarketChat } from '../../services/market-messages.service';
 import {
@@ -16,19 +17,22 @@ import useAuthStore from '../../store/auth.store';
 import { checkIsAdmin } from '../../utils/isAdmin';
 import { handleShareMarket } from '../../utils/shareMarket.utils';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
+import JoyrideCustom from '../joyride/JoyRideComponent';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
-import { MarketAskModal } from './MarketAskModal';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { getStatusBadgeProps } from './MarketListAdmin';
 import { MarketModal } from './MarketModal';
+import { ShowJoyrideConfirmModal } from './ShowJoyrideConfirmModal';
 
 export type MarketChoice = 'yes' | 'no' | null;
 
 export interface MarketItemProps {
   item: Market;
-  onSelect: (choice: MarketChoice, item: Market) => void;
+  index: number;
+  onSelect: (choice: MarketChoice, item: Market, index: number) => void;
   isFromMarketPage?: boolean
 }
 
@@ -48,6 +52,8 @@ const statusOptions: {
     { label: 'Cancelled', value: 'cancelled' },
   ];
 
+export const TOUR_GUIDE_SHOWN_KEY = 'tourGuideShown'
+
 export default function MarketList({
   oracleId,
   isFromMarketPage,
@@ -64,7 +70,6 @@ export default function MarketList({
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [isOpenMarketAskModal, setIsOpenMarketAskModal] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Market | null>(null);
@@ -82,6 +87,17 @@ export default function MarketList({
   const [pageMyBetHistory, setPageMyBetHistory] = useState(1);
   const [hasMoreMyBetHistory, setHasMoreMyBetHistory] = useState(false);
   const isUserBlocked = !isAdmin && !user?.appliedInviteCode
+
+  const [showTourConfirm, setShowTourConfirm] = useState(false);
+  const [pendingIndex, setPendingIndex] = useState<number | null>(null);
+  const {
+    runTour,
+    stepIndex,
+    steps,
+    joyrideStyles,
+    handleJoyrideCallback,
+    startTour
+  } = useJoyrideTour();
 
   const fetchMarkets = async (pageNum: number, replace = false) => {
     if (isUserBlocked) return;
@@ -121,6 +137,13 @@ export default function MarketList({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const isTourGuideShown = localStorage.getItem(TOUR_GUIDE_SHOWN_KEY);
+    if (isTourGuideShown === null) {
+      localStorage.setItem(TOUR_GUIDE_SHOWN_KEY, 'false');
+    }
+  }, []);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -218,36 +241,35 @@ export default function MarketList({
     }
   };
 
-  const handleSelect = (choice: MarketChoice, item: Market) => {
-    setSelectedItem(item);
-    setSelectedChoice(choice);
-    if (!isFromMarketPage) {
-      setModalOpen(true);
-    } else {
-      setIsOpenMarketAskModal(true);
-    }
-  };
-
-  const handleConfirm = () => {
-    setModalOpen(false);
-  };
-
-  const handleConfirmMarketAsk = async () => {
-    if (!selectedItem?.oracle?.id || !selectedItem?.question) {
-      console.error('Missing oracleId or question');
+  const handleSelect = (choice: MarketChoice, item: Market, index: number) => {
+    const isTourGuideShown = localStorage.getItem(TOUR_GUIDE_SHOWN_KEY) === 'true'
+    if (!isTourGuideShown) {
+      setPendingIndex(index)
+      setShowTourConfirm(true)
       return;
     }
 
-    try {
-      const oracleId = selectedItem.oracle.id;
-      const question = selectedItem.question;
+    setSelectedItem(item);
+    setSelectedChoice(choice);
+    setModalOpen(true);
+  };
 
-      navigate(`/chat/${oracleId}`, {
-        state: { autoSend: { question } },
-      });
-    } catch (e: any) {
-      toast.error(e.message);
-    }
+  const handleSkipTour = () => {
+    localStorage.setItem(TOUR_GUIDE_SHOWN_KEY, 'true')
+    setShowTourConfirm(false)
+
+    setTimeout(() => {
+      setModalOpen(true);
+    }, 300)
+  }
+
+  const handleShowTour = () => {
+    if (pendingIndex === null) return
+    startTour(pendingIndex);
+  }
+
+  const handleConfirm = () => {
+    setModalOpen(false);
   };
 
   const shouldShowSkeleton = loading || isUserBlocked
@@ -256,6 +278,27 @@ export default function MarketList({
 
   return (
     <div className="h-full overflow-hidden">
+      <ShowJoyrideConfirmModal
+        open={showTourConfirm}
+        onClose={() => setShowTourConfirm(false)}
+        onCancel={handleSkipTour}
+        onConfirm={handleShowTour}
+      />
+
+      {!isAdmin &&
+        <JoyrideCustom
+          steps={steps}
+          run={runTour}
+          stepIndex={stepIndex}
+          callback={handleJoyrideCallback}
+          styles={joyrideStyles}
+          continuous
+          showSkipButton
+          locale={{
+            last: "Got it"
+          }}
+        />
+      }
       {/* Status filter */}
       <div className="flex gap-2 overflow-x-auto lg:mt-3 px-2 pb-2 scrollbar-hidden">
         {statusOptions.map((status) => (
@@ -304,8 +347,12 @@ export default function MarketList({
             })}
           >
             {!isBetHistoryPage &&
-              markets.map((item) => (
-                <MarketItem key={item.id} item={item} onSelect={handleSelect} isFromMarketPage={isFromMarketPage} />
+              markets.map((item, index) => (
+                <MarketItem key={item.id}
+                  index={index}
+                  item={item}
+                  onSelect={handleSelect}
+                  isFromMarketPage={isFromMarketPage} />
               ))}
 
             {myBetHistory.length > 0 &&
@@ -347,17 +394,6 @@ export default function MarketList({
             onBetPlaced={handleBetPlaced}
           />
 
-          <MarketAskModal
-            open={isOpenMarketAskModal}
-            title={selectedItem?.question || ''}
-            onClose={() => setIsOpenMarketAskModal(false)}
-            onCancel={() => {
-              setIsOpenMarketAskModal(false);
-              setModalOpen(true);
-            }}
-            onConfirm={handleConfirmMarketAsk}
-          />
-
           {!loading &&
             (isAdmin || !!user?.appliedInviteCode) &&
             (markets.length === 0 ||
@@ -391,17 +427,13 @@ const getTimeRemaining = (closeAt: string) => {
   return `${seconds}s`;
 };
 
-const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPage }) => {
+const MarketItem: React.FC<MarketItemProps> = ({ item, index, onSelect, isFromMarketPage }) => {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
 
   const yesPercent =
     item.totalBets > 0
       ? (item.yesPool * 100) / (item.yesPool + item.noPool)
-      : 50;
-  const noPercent =
-    item.totalBets > 0
-      ? (item.noPool * 100) / (item.yesPool + item.noPool)
       : 50;
   const progressLength = (yesPercent / 100) * arcLength;
 
@@ -427,6 +459,10 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
   }, [item.closeAt, item.status]);
 
   const handleCardClick = async () => {
+    navigate(`/market/${item.id}`);
+  };
+
+  const handleMarketChat = async () => {
     if (!item.chatId) {
       try {
         const data = await createPreditMarketChat(item.id)
@@ -470,7 +506,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
                 </Badge>
               )}
             </div>
-            <div className="flex flex-col items-center flex-shrink-0">
+            <div className="flex flex-col items-center shrink-0">
               {/* Semicircle Progress Bar */}
               <div className="relative w-24 h-12 mb-1">
                 <svg
@@ -516,12 +552,12 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
         )}
 
         {item.status === 'open' && (
-          <div className="grid grid-cols-2 gap-3 mt-6 mb-4">
+          <div className="grid grid-cols-2 gap-3 mt-6 mb-4" data-tour={`trade-button-${index}`}>
             <Button
               className="h-10 bg-green-600/20 hover:bg-green-600/30 text-green-400 text-lg font-semibold border border-green-600/30 rounded-lg"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
-                onSelect('yes', item);
+                onSelect('yes', item, index);
               }}
               disabled={item.isBetted || !user}
             >
@@ -531,7 +567,7 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
               className="h-10 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-lg font-semibold border border-red-600/30 rounded-lg"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
-                onSelect('no', item);
+                onSelect('no', item, index);
               }}
               disabled={item.isBetted || !user}
             >
@@ -551,13 +587,24 @@ const MarketItem: React.FC<MarketItemProps> = ({ item, onSelect, isFromMarketPag
               <span>{formatDate(item.closeAt)}</span>
             </div>
           </div>
-          {
-            (item.chatId && item.status === 'open') ?
-              <Share2 className="w-4 h-4"
-                onClick={(e: React.MouseEvent) =>
-                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)} />
-              : <></>
-          }
+
+          <Tooltip>
+            <TooltipTrigger>
+              <MessageSquare className='w-4 h-4 cursor-pointer'
+                data-tour={`chat-button-${index}`}
+                onClick={(e: Event) => {
+                  e.stopPropagation()
+                  handleMarketChat()
+                }} />
+            </TooltipTrigger>
+            <TooltipContent>
+              Chat with this market
+            </TooltipContent>
+          </Tooltip>
+
+          <Share2 className="w-4 h-4"
+            onClick={(e: React.MouseEvent) =>
+              handleShareMarket(e, `${window.location.origin}/market/${item.id}`)} />
         </div>
       </CardContent>
     </Card>
@@ -603,6 +650,10 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
   }, [item.closeAt]);
 
   const handleCardClick = async () => {
+    navigate(`/market/${item.id}`);
+  };
+
+  const handleMarketChat = async () => {
     if (!item.chatId) {
       try {
         const data = await createPreditMarketChat(item.id)
@@ -770,14 +821,22 @@ const MyBetsHistoryItem: React.FC<MyBetMarketsProps> = ({
               <span>{formatDate(item.closeAt)}</span>
             </div>
           </div>
+          <Tooltip>
+            <TooltipTrigger>
+              <MessageSquare className='w-4 h-4 cursor-pointer'
+                onClick={(e: Event) => {
+                  e.stopPropagation()
+                  handleMarketChat()
+                }} />
+            </TooltipTrigger>
+            <TooltipContent>
+              Chat with this market
+            </TooltipContent>
+          </Tooltip>
 
-          {
-            (item.chatId && item.status === 'open') ?
-              <Share2 className="w-4 h-4"
-                onClick={(e: React.MouseEvent) =>
-                  handleShareMarket(e, `${window.location.origin}/market/${item.id}/chat/${item.chatId}`)} />
-              : <></>
-          }
+          <Share2 className="w-4 h-4"
+            onClick={(e: React.MouseEvent) =>
+              handleShareMarket(e, `${window.location.origin}/market/${item.id}`)} />
         </div>
       </CardContent>
     </Card>

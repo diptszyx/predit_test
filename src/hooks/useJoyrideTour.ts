@@ -1,15 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  ACTIONS,
-  CallBackProps,
-  EVENTS,
-  STATUS,
-  type Step,
-} from "react-joyride";
+import { useMemo, useState } from "react";
+import { ACTIONS, CallBackProps, EVENTS, STATUS, Step } from "react-joyride";
+import { TOUR_GUIDE_SHOWN_KEY } from "../components/market/MarketList";
 
 export default function useJoyrideTour() {
   const [runTour, setRunTour] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const isDarkMode =
     typeof window !== "undefined" && localStorage.getItem("theme") === "dark";
@@ -34,20 +30,11 @@ export default function useJoyrideTour() {
     [],
   );
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const isNewUser = localStorage.getItem("isNewUser") === "true";
-    console.log("isNewUser in useHook", isNewUser);
-    if (isNewUser) {
-      const timer = setTimeout(() => {
-        setRunTour(true);
-        setStepIndex(0);
-      }, 300);
-
-      return () => clearTimeout(timer);
-    }
-  }, []);
+  const startTour = (index: number) => {
+    setStepIndex(0);
+    setActiveIndex(index);
+    setRunTour(true);
+  };
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { action, index, status, type } = data;
@@ -59,7 +46,8 @@ export default function useJoyrideTour() {
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setRunTour(false);
       setStepIndex(0);
-      localStorage.removeItem("isNewUser");
+      setActiveIndex(null);
+      localStorage.setItem(TOUR_GUIDE_SHOWN_KEY, "true");
     }
   };
 
@@ -128,5 +116,6 @@ export default function useJoyrideTour() {
     steps,
     joyrideStyles,
     handleJoyrideCallback,
+    startTour,
   };
 }

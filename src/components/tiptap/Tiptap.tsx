@@ -7,6 +7,12 @@ import StarterKit from '@tiptap/starter-kit'
 import { useEffect } from 'react'
 import { MenuBar } from './MenuBar.jsx'
 
+const CustomLink = Link.extend({
+  inclusive() {
+    return false
+  },
+})
+
 export function TiptapEditor({
   value,
   onChange,
@@ -22,10 +28,15 @@ export function TiptapEditor({
       }),
       TextStyleKit,
       Highlight,
-      Link.configure({
-        openOnClick: false,
+      CustomLink.configure({
         autolink: true,
+        linkOnPaste: true,
+        openOnClick: false,
         defaultProtocol: 'https',
+        HTMLAttributes: {
+          target: '_blank',
+          rel: 'noopener noreferrer',
+        },
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -59,10 +70,10 @@ export function TiptapEditor({
 
   return (
     <div
-      className={`max-w-[900px] rounded-2xl border shadow-sm overflow-hidden bg-background ${error ? 'border-red-500' : 'border-gray-200'
+      className={`max-w-[900px] rounded-2xl border shadow-sm overflow-hidden bg-background dark:border-input  ${error ? 'border-red-500' : 'border-gray-200'
         }`}
     >
-      <div className="flex flex-wrap gap-2 border-b border-gray-200 bg-background p-3">
+      <div className="flex flex-wrap gap-2 border-b dark:border-input  bg-background p-3">
         <MenuBar editor={editor} />
       </div>
 

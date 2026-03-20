@@ -37,7 +37,7 @@ export const MenuBar = ({ editor }: Props) => {
 
 
   const btn =
-    'p-2 rounded hover:bg-gray-200'
+    'p-2 rounded hover:bg-gray-400'
 
   const active = 'bg-gray-900 text-white hover:bg-gray-800'
 

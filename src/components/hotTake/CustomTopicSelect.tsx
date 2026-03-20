@@ -37,7 +37,7 @@ export function CustomTopicSelect({ value, onChange, topics }: CustomTopicSelect
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex w-full items-center justify-between gap-2 rounded-md border border-input bg-input-background px-3 py-2 text-sm h-9',
+          'flex w-full items-center justify-between gap-2 rounded-md border border-input bg-input-background px-3 py-2 text-sm h-10',
           'hover:bg-input/50 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring',
           'disabled:cursor-not-allowed disabled:opacity-50',
           !selectedTopic && 'text-muted-foreground'

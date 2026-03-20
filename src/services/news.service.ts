@@ -17,6 +17,7 @@ export type CreateNewsValues = {
   title: string;
   content: string;
   topicId: string;
+  slug: string;
 };
 
 export type CreateNewsByPrompt = {
@@ -28,6 +29,7 @@ export type GeneratedNewsPreview = {
   title: string;
   content: string;
   topic: Topic;
+  slug: string;
 };
 
 const mockImage = [

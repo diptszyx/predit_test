@@ -20,8 +20,11 @@ import {
   Quote,
   Redo,
   Strikethrough,
-  Undo
+  Undo,
+  Unlink
 } from 'lucide-react'
+import { useState } from 'react'
+import ButtonLink from './ButtonLink'
 import { menuBarStateSelector } from './MenubarState'
 
 type Props = {
@@ -30,15 +33,16 @@ type Props = {
 
 export const MenuBar = ({ editor }: Props) => {
   if (!editor) return null
+
+  const [isLinkOpen, setIsLinkOpen] = useState(false)
+  const [linkValue, setLinkValue] = useState('')
+
   const editorState = useEditorState({
     editor: editor ?? undefined,
     selector: menuBarStateSelector,
   })
 
-
-  const btn =
-    'p-2 rounded hover:bg-gray-400'
-
+  const btn = 'p-2 rounded hover:bg-gray-400'
   const active = 'bg-gray-900 text-white hover:bg-gray-800'
 
   const handleAction = (
@@ -55,26 +59,40 @@ export const MenuBar = ({ editor }: Props) => {
     e.stopPropagation()
   }
 
-  const setLink = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const openLinkPopover = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
 
+    if (!editor) return
+
     const previousUrl = editor.getAttributes('link').href || ''
-    const url = window.prompt('Enter URL', previousUrl)
+    setLinkValue(previousUrl)
+    setIsLinkOpen(true)
+  }
 
-    if (url === null) return
+  const submitLink = () => {
+    if (!editor) return
 
-    if (url.trim() === '') {
+    const value = linkValue.trim()
+
+    if (!value) {
       editor.chain().focus().extendMarkRange('link').unsetLink().run()
+      setIsLinkOpen(false)
+      setLinkValue('')
       return
     }
+
+    const href = /^https?:\/\//i.test(value) ? value : `https://${value}`
 
     editor
       .chain()
       .focus()
       .extendMarkRange('link')
-      .setLink({ href: url.trim() })
+      .setLink({ href })
       .run()
+
+    setIsLinkOpen(false)
+    setLinkValue('')
   }
 
   return (
@@ -271,15 +289,17 @@ export const MenuBar = ({ editor }: Props) => {
         <AlignRight size={16} />
       </button>
 
-      {/* <button
-        type="button"
-        className={`${btn} ${editorState.isLink ? active : ''}`}
-        onMouseDown={preventMouseDown}
-        onClick={setLink}
-        title="Set link"
-      >
-        <LinkIcon size={16} />
-      </button>
+      <ButtonLink
+        isLinkOpen={isLinkOpen}
+        setIsLinkOpen={setIsLinkOpen}
+        openLinkPopover={openLinkPopover}
+        btn={btn}
+        active={active}
+        preventMouseDown={preventMouseDown}
+        linkValue={linkValue}
+        setLinkValue={setLinkValue}
+        submitLink={submitLink}
+        editorState={editorState} />
 
       <button
         type="button"
@@ -293,7 +313,7 @@ export const MenuBar = ({ editor }: Props) => {
         title="Unset link"
       >
         <Unlink size={16} />
-      </button> */}
+      </button>
 
       <button
         type="button"

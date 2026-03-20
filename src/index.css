@@ -5859,7 +5859,7 @@ input[type="number"] {
   outline: none;
   font-size: 16px;
   line-height: 1.7;
-  color: #111827;
+  color: inherit;
 }
 
 .tiptap-editor p {

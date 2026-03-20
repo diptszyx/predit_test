@@ -59,10 +59,10 @@ export function TiptapEditor({
 
   return (
     <div
-      className={`max-w-[900px] rounded-2xl border bg-white shadow-sm overflow-hidden ${error ? 'border-red-500' : 'border-gray-200'
+      className={`max-w-[900px] rounded-2xl border shadow-sm overflow-hidden bg-background ${error ? 'border-red-500' : 'border-gray-200'
         }`}
     >
-      <div className="flex flex-wrap gap-2 border-b border-gray-200 bg-slate-50 p-3">
+      <div className="flex flex-wrap gap-2 border-b border-gray-200 bg-background p-3">
         <MenuBar editor={editor} />
       </div>
 

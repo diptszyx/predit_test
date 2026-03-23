@@ -4,11 +4,12 @@ import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { CreateNewsValues, GeneratedNewsPreview, News, newsService } from '../../services/news.service';
 import { Topic, topicServices } from '../../services/topic-admin.service';
+import { slugify } from '../../utils/slug';
+import { TiptapEditor } from '../tiptap/Tiptap';
 import { Button } from '../ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
 import { CustomTopicSelect } from './CustomTopicSelect';
 import PromptNewsModal from './PromptNewsModal';
 
@@ -32,7 +33,8 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
       defaultValues: {
         title: '',
         content: '',
-        topicId: ''
+        topicId: '',
+        slug: ''
       }
     })
 
@@ -64,9 +66,9 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
       const res = await newsService.createAdmin(data)
 
       if (res) {
+        onSuccess?.((prev) => [res, ...prev]);
         toast.success('Create news successfully!');
         handleClose();
-        onSuccess?.((prev) => [res, ...prev]);
       }
     } catch (error: any) {
       console.error('Create news failed', error)
@@ -80,7 +82,7 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="sm:max-w-3xl h-[90vh]"
+          className="sm:max-w-4xl h-[90vh]"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -125,8 +127,18 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
                 render={({ field }) => (
                   <Input
                     id="title"
+                    className='h-10'
                     placeholder="e.g: Global Markets React to Fed Policy Update"
                     {...field}
+                    onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                      field.onBlur();
+                      const value = e.target.value;
+                      if (value) {
+                        setValue("slug", slugify(value), {
+                          shouldValidate: true,
+                        });
+                      }
+                    }}
                   />
                 )}
               />
@@ -136,6 +148,7 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
                 </p>
               )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="topicId">
                 Topic<span className="text-red-500">*</span>
@@ -158,35 +171,75 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
                 </p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="content">Content
-                <span className="text-red-500">*</span>
+
+
+            <div className='space-y-2'>
+              <Label htmlFor="slug">
+                Slug
               </Label>
               <Controller
                 control={control}
-                name="content"
+                name="slug"
                 rules={{
-                  required: "Content is required",
                   minLength: {
-                    value: 30,
-                    message: "Content must be at least 30 characters",
+                    value: 3,
+                    message: "Slug must be at least 3 characters",
+                  },
+                  pattern: {
+                    value: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+                    message:
+                      "Slug can only contain lowercase letters, numbers, and hyphens, and cannot start or end with a hyphen."
                   },
                 }}
                 render={({ field }) => (
-                  <Textarea
-                    id="content"
-                    placeholder="Write a detailed analysis or market update related to this news..."
-                    rows={10}
+                  <Input
+                    id="slug"
+                    placeholder="e.g: global-markets-react-to-fed-policy-update"
                     {...field}
                   />
                 )}
               />
+              {errors.slug && (
+                <p className="text-xs text-red-500">
+                  {errors.slug.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="content">
+                Content <span className="text-red-500">*</span>
+              </Label>
+
+              <Controller
+                control={control}
+                name="content"
+                rules={{
+                  required: 'Content is required',
+                  validate: (value) => {
+                    const plainText = value?.replace(/<[^>]*>/g, '').trim() || ''
+                    if (plainText.length < 30) {
+                      return 'Content must be at least 30 characters'
+                    }
+                    return true
+                  },
+                }}
+                render={({ field }) => (
+                  <TiptapEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={!!errors.content}
+                  />
+                )}
+              />
+
               {errors.content && (
                 <p className="text-xs text-red-500">
                   {errors.content.message}
                 </p>
               )}
             </div>
+
             <DialogFooter>
               <Button
                 type="button"
@@ -225,6 +278,7 @@ const CreateHotTakeAdmin = ({ open, onOpenChange, onSuccess }: CreateHotTakeAdmi
         onApply={(data: GeneratedNewsPreview) => {
           setValue('title', data.title)
           setValue('content', data.content)
+          setValue('slug', data.slug)
           if (data.topic.id) setValue('topicId', data.topic.id)
           setOpenPromptModal(false)
           onOpenChange(true)

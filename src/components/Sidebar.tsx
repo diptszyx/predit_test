@@ -4,19 +4,18 @@ import {
   ChevronDown,
   ChevronsLeftRight,
   ChevronUp,
+  Coins,
   Copy,
-  Crown,
   Ellipsis,
   Flame,
   History,
-  Home,
   LineChart,
-  ListTodo,
   LogOut,
   MessageCircle,
   MessageSquare,
   Moon,
   Plus,
+  ScrollText,
   Settings,
   ShoppingCart,
   Sparkles,
@@ -25,13 +24,13 @@ import {
   Trophy,
   User,
   Users,
-  Zap,
-  ScrollText,
+  Zap
 } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useIsMobile } from '../hooks/useIsMobile';
+import useGetXpToken from '../hooks/xp-token/useGetXpToken';
 import { copyToClipboard } from '../lib/clipboardUtils';
 import { User as UserType } from '../lib/types';
 import { ChatEntity, chatService } from '../services/chat.service';
@@ -189,6 +188,8 @@ export function Sidebar({
   const userLevel = user ? user.level : 1;
 
   const { publicKey, connected, disconnect } = useWallet();
+
+  const { xpToken } = useGetXpToken()
 
   useEffect(() => {
     (async () => {
@@ -578,6 +579,15 @@ export function Sidebar({
                   </Badge>
                 )}
               </div>
+
+              <div className="flex items-center gap-1 text-xs mb-2">
+                <Coins className="w-3 h-3 text-primary" />
+                <span className="font-medium">
+                  {xpToken}
+                </span>
+                <span className="text-muted-foreground">XP Token</span>
+              </div>
+
               {polymarketEnabled && <Balance />}
             </div>
 
@@ -932,12 +942,12 @@ export function Sidebar({
 
                   {/* User Stats */}
                   <div className="flex items-center gap-3 text-xs mb-2">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => navigate('/predit-xp-token')}>
                       <Zap className="w-3 h-3 text-primary" />
                       <span className="font-medium">
                         {user?.xp?.toLocaleString() || 1}
                       </span>
-                      <span className="text-muted-foreground">XP</span>
+                      <span className="text-muted-foreground">XP available</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-primary" />
@@ -953,6 +963,14 @@ export function Sidebar({
                         Pro
                       </Badge>
                     )}
+                  </div>
+
+                  <div className="flex items-center gap-1 text-xs mb-2">
+                    <Coins className="w-3 h-3 text-primary" />
+                    <span className="font-medium">
+                      {xpToken}
+                    </span>
+                    <span className="text-muted-foreground">XP Token</span>
                   </div>
 
                   {polymarketEnabled && <Balance />}

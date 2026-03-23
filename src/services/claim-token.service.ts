@@ -21,3 +21,17 @@ export const claimToken = async (data: ClaimToken) => {
 
   return response.data;
 };
+
+type xpTokenBalanceResponse = {
+  solanaWalletAddress: string;
+  balance: number;
+  xp: number;
+  error: any;
+};
+
+export const getXpTokenBalance = async () => {
+  const response =
+    await apiClient.get<xpTokenBalanceResponse>("/solana/xp-balance");
+
+  return response.data;
+};

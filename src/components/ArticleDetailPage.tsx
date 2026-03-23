@@ -334,7 +334,7 @@ export function ArticleDetailPage({
 
               <div className="px-6 md:px-12 space-y-6">
                 <div
-                  className="prose prose-lg max-w-none space-y-6"
+                  className="article-content prose prose-lg max-w-none space-y-6"
                   dangerouslySetInnerHTML={{
                     __html: sanitizeArticleHtml(article.content),
                   }}

@@ -15,6 +15,7 @@ type ClaimTokenModalProps = {
 }
 
 const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
+  const claimNetwork = import.meta.env.VITE_CLAIM_TOKEN_NETWORK
   const { publicKey, wallets, wallet, select, connect, connected, connecting } = useWallet();
   const availableWallet = wallets[0];
 
@@ -58,15 +59,30 @@ const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
       })
 
       if (data.success) {
+        const isDevnetNetwork = claimNetwork === 'devnet'
+        const viewSolscanLink = `https://solscan.io/tx/${data.txSignature}${isDevnetNetwork ? '?cluster=devnet' : ''}`;
+
         updateUser({
           xp: data.remainingXp
         })
         handleClose()
-        toast.success(data.message || 'Claim Predit token successfully!')
+
+        toast.success(
+          <div className="flex gap-1">
+            <span>{data.message || 'Claim Predit token successfully!'}.</span>
+            <a
+              href={viewSolscanLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-medium text-[#3b82f6]"
+            >
+              View on solscan
+            </a>
+          </div>, { duration: 6000 })
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log('Failed to claim token', error)
-      toast.error('Failed to claim token. Pleas try again!')
+      toast.error(error?.response?.data?.message || 'Failed to claim token. Pleas try again!')
     } finally {
       setIsClaiming(false)
     }

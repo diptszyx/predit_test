@@ -965,7 +965,7 @@ export function Sidebar({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer" onClick={() => navigate('/predit-xp-token')}>
+                  <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer hover:text-gray-500" onClick={() => navigate('/predit-xp-token')}>
                     <Coins className="w-3 h-3 text-primary" />
                     <span className="font-medium">
                       {xpToken}

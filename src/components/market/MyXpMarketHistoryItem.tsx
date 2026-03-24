@@ -82,7 +82,8 @@ const MyXpMarketHistoryItem = ({ loading, events }: MyXpMarketHistoryProps) => {
                         href={`${appUrl}/market/${event.metadata.marketId}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="font-semibold text-primary text-[13px]"
+                        className="font-semibold text-blue-300 hover:text-blue-400
+  transition-all duration-200 text-[13px]"
                       >
                         Go to market
                       </a>

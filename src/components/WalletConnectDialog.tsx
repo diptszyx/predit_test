@@ -132,11 +132,12 @@ export function WalletConnectDialog({
   };
 
   const isMobile = useIsMobile(1024);
+  const isApp = import.meta.env.VITE_IS_APP === 'true';
   const displayWallets = (
-    isMobile ? wallets.filter((w) => w.id === 'phantom') : wallets
+    isApp ? wallets.filter((w) => w.id === 'phantom') : wallets
   ).map((w) => {
     if (w.id === 'phantom') {
-      return isMobile
+      return isApp
         ? {
             ...w,
             supported: true,
@@ -197,8 +198,6 @@ export function WalletConnectDialog({
       }
 
       await authenticateWithToken(verifyResp.token);
-      // Clear selected wallet to avoid re-triggering MWA flow on return.
-      select(null);
       toast.success('Successfully logged in with Solana!');
       onConnect('phantom', verifyResp.user);
     } catch (err: any) {
@@ -336,7 +335,7 @@ export function WalletConnectDialog({
                   wallet={wallet}
                   setConnectingWallet={setConnectingWallet}
                   onConnect={onConnect}
-                  isMobile={isMobile}
+                  isApp={isApp}
                   onConnectMwa={async () => {
                     setPendingMwaLogin(true);
 
@@ -350,9 +349,27 @@ export function WalletConnectDialog({
                         select(adapterWallets[0].adapter.name);
                         await new Promise((r) => setTimeout(r, 0));
                       }
-                      toast.info(
-                        `selected: ${selectedWallet?.adapter.name || 'none'}, wallets: ${adapterWallets.length}`,
+                      await connect();
+                    } catch (error) {
+                      setPendingMwaLogin(false);
+                      throw error;
+                    }
+                  }}
+                  onConnectAdapter={async () => {
+                    setPendingMwaLogin(true);
+
+                    if (connected && publicKey) {
+                      return;
+                    }
+
+                    try {
+                      const phantomAdapter = adapterWallets.find(
+                        (w) => w.adapter.name === 'Phantom',
                       );
+                      if (!selectedWallet && phantomAdapter) {
+                        select(phantomAdapter.adapter.name);
+                        await new Promise((r) => setTimeout(r, 0));
+                      }
                       await connect();
                     } catch (error) {
                       setPendingMwaLogin(false);
@@ -407,8 +424,9 @@ const WalletConnectButton = ({
   wallet,
   setConnectingWallet,
   onConnect,
-  isMobile,
+  isApp,
   onConnectMwa,
+  onConnectAdapter,
 }: {
   wallet: {
     id: WalletType;
@@ -421,8 +439,9 @@ const WalletConnectButton = ({
   loading: boolean;
   onConnect: (wallet: WalletType, user: User) => void;
   setConnectingWallet: (walletType: WalletType | null) => void;
-  isMobile: boolean;
+  isApp: boolean;
   onConnectMwa: () => Promise<void>;
+  onConnectAdapter: () => Promise<void>;
 }) => {
   const [pendingWalletType, setPendingWalletType] = useState<WalletType | null>(
     null
@@ -443,7 +462,7 @@ const WalletConnectButton = ({
 
     switch (walletType) {
       case 'phantom':
-        if (isMobile) {
+        if (isApp) {
           // Directly trigger MWA without any intermediate modal
           try {
             await onConnectMwa();
@@ -463,14 +482,7 @@ const WalletConnectButton = ({
             setPendingWalletType(null);
           }
         } else {
-          if (!getPhantomProvider()) {
-            toast.error('Phantom not installed');
-            setConnectingWallet(null);
-            setPendingWalletType(null);
-            return;
-          } else {
-            handlePhantomDirectConnect();
-          }
+          handlePhantomDirectConnect();
         }
         break;
       case 'metamask':

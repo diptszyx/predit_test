@@ -62,8 +62,8 @@ type EventType = "bet_won" | "bet_lost" | "bet_placed";
 interface EventMetadata {
   betId: string;
   marketId: string;
-  payout?: number; // chỉ có khi bet_won
-  prediction?: "yes" | "no"; // chỉ có khi bet_placed
+  payout?: number;
+  prediction?: "yes" | "no";
 }
 export interface XpMarketEvent {
   id: string;
@@ -73,7 +73,7 @@ export interface XpMarketEvent {
   multiplier: number;
   totalXp: number;
   metadata: EventMetadata;
-  createdAt: string; // ISO date string
+  createdAt: string;
 }
 interface XpMarketResponse {
   events: XpMarketEvent[];
@@ -128,7 +128,6 @@ export const leaderboardService = {
       return data;
     } catch (error) {
       console.error("Failed to fetch xp market bets:", error);
-      // return { events: [] };
     }
   },
 };

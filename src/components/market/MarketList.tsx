@@ -92,7 +92,9 @@ export default function MarketList({
   const [isMyXpMarketHistory, setIsMyXpMarketHistory] = useState(false);
   const [myXpMarketHistory, setMyXpMarketHistory] = useState<XpMarketEvent[]>([]);
   const [totalXpMarket, setTotalXpMarket] = useState(0);
-  // const [pageMyBetHistory, setPageMyBetHistory] = useState(1);
+  const [totalXpMarketRecord, setTotalXpMarketRecord] = useState(0)
+  const [pageXpMarketHistory, setPageXpMarketHistory] = useState(1)
+  const pageSize = 10
 
   const isUserBlocked = !isAdmin && !user?.appliedInviteCode
 
@@ -150,8 +152,8 @@ export default function MarketList({
     const fetchXpEvents = async () => {
       setLoading(true);
       const requestParams = {
-        page,
-        limit: 10,
+        page: pageXpMarketHistory,
+        limit: pageSize,
       };
 
       try {
@@ -159,6 +161,7 @@ export default function MarketList({
         if (data) {
           setMyXpMarketHistory(data.events)
           setTotalXpMarket(data.totalXp)
+          setTotalXpMarketRecord(data.count)
         }
       } catch (error) {
         console.error(error)
@@ -169,8 +172,7 @@ export default function MarketList({
 
     if (isMyXpMarketHistory)
       fetchXpEvents()
-  }, [page, isMyXpMarketHistory])
-  console.log('myXpMarketHistory', myXpMarketHistory)
+  }, [pageXpMarketHistory, isMyXpMarketHistory, pageXpMarketHistory])
 
   useEffect(() => {
     const isTourGuideShown = localStorage.getItem(TOUR_GUIDE_SHOWN_KEY);
@@ -307,6 +309,7 @@ export default function MarketList({
   };
 
   const shouldShowSkeleton = loading || isUserBlocked
+  const totalXpMarketHistoryPages = Math.ceil(totalXpMarketRecord / pageSize)
 
   if (error) return <p className="text-red-500">{error}</p>;
 
@@ -371,7 +374,7 @@ export default function MarketList({
           </Button>
         )}
 
-        {!isAdmin && (
+        {!isAdmin && isFromMarketPage && (
           <Button
             variant={isMyXpMarketHistory ? 'default' : 'outline'}
             size="sm"
@@ -458,7 +461,7 @@ export default function MarketList({
           </div>
         }
 
-        {isMyXpMarketHistory &&
+        {isMyXpMarketHistory && isFromMarketPage &&
           <div className='mt-5'>
             <h3
               className={`font-bold tabular-nums text-lg flex gap-1 items-center ${totalXpMarket > 0
@@ -471,7 +474,40 @@ export default function MarketList({
               Total XP: {totalXpMarket > 0 ? `+${totalXpMarket}` : totalXpMarket}
               <Zap className={`w-4 h-4`} />
             </h3>
-            <MyXpMarketHistoryItem loading={loading} events={myXpMarketHistory} />
+            <MyXpMarketHistoryItem
+              loading={loading}
+              events={myXpMarketHistory}
+              page={pageXpMarketHistory}
+              setPage={setPageXpMarketHistory}
+              totalPages={totalXpMarketHistoryPages}
+            />
+            {!loading && myXpMarketHistory?.length > 0 && (
+              <div className="flex items-center justify-between pt-4">
+                <p className="text-sm text-muted-foreground">
+                  Page {page} of {totalXpMarketHistoryPages}
+                </p>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    Previous
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === totalXpMarketHistoryPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         }
       </div>

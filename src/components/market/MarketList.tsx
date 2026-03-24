@@ -471,15 +471,12 @@ export default function MarketList({
                   : "text-muted-foreground"
                 }`}
             >
-              Total XP: {totalXpMarket > 0 ? `+${totalXpMarket}` : totalXpMarket}
+              XP Change: {totalXpMarket > 0 ? `+${totalXpMarket}` : totalXpMarket}
               <Zap className={`w-4 h-4`} />
             </h3>
             <MyXpMarketHistoryItem
               loading={loading}
               events={myXpMarketHistory}
-              page={pageXpMarketHistory}
-              setPage={setPageXpMarketHistory}
-              totalPages={totalXpMarketHistoryPages}
             />
             {!loading && myXpMarketHistory?.length > 0 && (
               <div className="flex items-center justify-between pt-4">

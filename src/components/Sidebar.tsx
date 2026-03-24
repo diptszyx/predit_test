@@ -189,7 +189,7 @@ export function Sidebar({
 
   const { publicKey, connected, disconnect } = useWallet();
 
-  const { xpToken } = useGetXpToken()
+  const { xpToken } = useGetXpToken(user)
 
   useEffect(() => {
     (async () => {
@@ -580,7 +580,7 @@ export function Sidebar({
                 )}
               </div>
 
-              <div className="flex items-center gap-1 text-xs mb-2">
+              <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer" onClick={() => navigate('/predit-xp-token')}>
                 <Coins className="w-3 h-3 text-primary" />
                 <span className="font-medium">
                   {xpToken}
@@ -942,7 +942,7 @@ export function Sidebar({
 
                   {/* User Stats */}
                   <div className="flex items-center gap-3 text-xs mb-2">
-                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => navigate('/predit-xp-token')}>
+                    <div className="flex items-center gap-1">
                       <Zap className="w-3 h-3 text-primary" />
                       <span className="font-medium">
                         {user?.xp?.toLocaleString() || 1}
@@ -965,7 +965,7 @@ export function Sidebar({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1 text-xs mb-2">
+                  <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer" onClick={() => navigate('/predit-xp-token')}>
                     <Coins className="w-3 h-3 text-primary" />
                     <span className="font-medium">
                       {xpToken}

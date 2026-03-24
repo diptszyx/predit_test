@@ -35,3 +35,24 @@ export const getXpTokenBalance = async () => {
 
   return response.data;
 };
+
+export type Claim = {
+  id: string;
+  amount: number;
+  solanaWalletAddress: string;
+  txSignature: string;
+  createdAt: string;
+};
+
+export type ClaimHistoryResponse = {
+  claims: Claim[];
+  total: number;
+};
+
+export const claimedHistory = async () => {
+  const response = await apiClient.get<ClaimHistoryResponse>(
+    "/solana/claim-history",
+  );
+
+  return response.data;
+};

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { User } from "../../lib/types";
 import { getXpTokenBalance } from "../../services/claim-token.service";
 
-const useGetXpToken = () => {
+const useGetXpToken = (user: User | null) => {
   const [xpToken, setXpToken] = useState(0);
+  if (!user) return { xpToken };
+
   const fetchPreditXpToken = async () => {
     try {
       const xpToken = await getXpTokenBalance();
@@ -14,7 +17,7 @@ const useGetXpToken = () => {
 
   useEffect(() => {
     fetchPreditXpToken();
-  }, []);
+  }, [user]);
 
   return { xpToken };
 };

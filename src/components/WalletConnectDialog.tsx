@@ -4,7 +4,10 @@ import { CheckCircle2, Loader2, Wallet } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getPhantomProvider, usePhantomDirectConnect } from '../hooks/usePhantomConnect';
+import {
+  getPhantomProvider,
+  usePhantomDirectConnect,
+} from '../hooks/usePhantomConnect';
 import apiClient from '../lib/axios';
 import { User } from '../lib/types';
 import useAuthStore from '../store/auth.store';
@@ -19,7 +22,7 @@ import {
 import { Separator } from './ui/separator';
 import { useWallet } from '@solana/wallet-adapter-react';
 
-import bs58 from "bs58";
+import bs58 from 'bs58';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 export type WalletType = 'metamask' | 'phantom' | 'backpack';
@@ -77,7 +80,8 @@ const wallets: WalletOption[] = [
     color: 'from-green-600 to-red-600',
     supported: false,
   },
-];const socialOptions: SocialOption[] = [
+];
+const socialOptions: SocialOption[] = [
   {
     id: 'google',
     name: 'Continue with Google',
@@ -114,9 +118,9 @@ export function WalletConnectDialog({
   onOpenPrivacy,
   onOpenTerms,
 }: WalletConnectDialogProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [connectingWallet, setConnectingWallet] = useState<WalletType | null>(
-    null
+    null,
   );
   const [connectingSocial, setConnectingSocial] =
     useState<SocialProvider | null>(null);
@@ -128,15 +132,17 @@ export function WalletConnectDialog({
   };
 
   const isMobile = useIsMobile(1024);
-  const displayWallets = (isMobile ? wallets.filter((w) => w.id === 'phantom') : wallets).map((w) => {
+  const displayWallets = (
+    isMobile ? wallets.filter((w) => w.id === 'phantom') : wallets
+  ).map((w) => {
     if (w.id === 'phantom') {
       return isMobile
         ? {
-          ...w,
-          supported: true,
-          name: 'Solana Mobile Wallet',
-          description: 'Phantom, Backpack, Solflare...',
-        }
+            ...w,
+            supported: true,
+            name: 'Solana Mobile Wallet',
+            description: 'Phantom, Backpack, Solflare...',
+          }
         : w;
     }
     return w;
@@ -144,7 +150,7 @@ export function WalletConnectDialog({
 
   const { publicKey, connected, signMessage, connect } = useWallet();
   const authenticateWithToken = useAuthStore(
-    (state) => state.authenticateWithToken
+    (state) => state.authenticateWithToken,
   );
   const currentUser = useAuthStore((state) => state.user);
   const [isAuthenticatingSolana, setIsAuthenticatingSolana] = useState(false);
@@ -156,13 +162,13 @@ export function WalletConnectDialog({
 
     setIsAuthenticatingSolana(true);
     try {
-      const { data: nonceResp } = await apiClient.post("/auth/nonce", {
+      const { data: nonceResp } = await apiClient.post('/auth/nonce', {
         publicKey: publicKey.toBase58(),
-        walletType: "phantom",
+        walletType: 'phantom',
       });
 
       if (!nonceResp?.nonce) {
-        throw new Error("Failed to get authentication nonce");
+        throw new Error('Failed to get authentication nonce');
       }
 
       const message = `Login to Deor\nNonce=${nonceResp.nonce}`;
@@ -171,22 +177,22 @@ export function WalletConnectDialog({
       const signature = await signMessage(messageBytes);
       const signatureBase58 = bs58.encode(signature);
 
-      const { data: verifyResp } = await apiClient.post("/auth/verify", {
+      const { data: verifyResp } = await apiClient.post('/auth/verify', {
         message,
         signature: signatureBase58,
         publicKey: publicKey.toBase58(),
       });
 
       if (!verifyResp?.token || !verifyResp?.user) {
-        throw new Error("Authentication failed");
+        throw new Error('Authentication failed');
       }
 
       await authenticateWithToken(verifyResp.token);
-      toast.success("Successfully logged in with Solana!");
-      onConnect("phantom", verifyResp.user);
+      toast.success('Successfully logged in with Solana!');
+      onConnect('phantom', verifyResp.user);
     } catch (err: any) {
-      console.error("Solana login error:", err);
-      toast.error(err.message || "Failed to login with Solana");
+      console.error('Solana login error:', err);
+      toast.error(err.message || 'Failed to login with Solana');
     } finally {
       setIsAuthenticatingSolana(false);
     }
@@ -194,7 +200,13 @@ export function WalletConnectDialog({
 
   // Only trigger login if user explicitly initiated an MWA connect
   useEffect(() => {
-    if (pendingMwaLogin && connected && publicKey && !currentUser && !isAuthenticatingSolana) {
+    if (
+      pendingMwaLogin &&
+      connected &&
+      publicKey &&
+      !currentUser &&
+      !isAuthenticatingSolana
+    ) {
       setPendingMwaLogin(false);
       handleSolanaLogin();
     }
@@ -205,14 +217,17 @@ export function WalletConnectDialog({
 
     switch (provider) {
       case 'google':
-        const signInGoogleLink = `${import.meta.env.VITE_API_BASE_URL
-          }/auth/${provider}/authorize?redirectUri=${import.meta.env.VITE_API_BASE_URL
-          }/auth/google/callback`;
+        const signInGoogleLink = `${
+          import.meta.env.VITE_API_BASE_URL
+        }/auth/${provider}/authorize?redirectUri=${
+          import.meta.env.VITE_API_BASE_URL
+        }/auth/google/callback`;
         window.location.href = signInGoogleLink;
         break;
       case 'x':
-        const signInXLink = `${import.meta.env.VITE_API_BASE_URL
-          }/auth/${provider}/authorize`;
+        const signInXLink = `${
+          import.meta.env.VITE_API_BASE_URL
+        }/auth/${provider}/authorize`;
         window.location.href = signInXLink;
         break;
     }
@@ -222,8 +237,6 @@ export function WalletConnectDialog({
     setConnectingSocial(null);
     onSocialConnect(provider);
   };
-
-
 
   return (
     <Dialog
@@ -259,18 +272,18 @@ export function WalletConnectDialog({
                   key={social.id}
                   onClick={() => handleSocialConnect(social.id)}
                   disabled={isConnecting}
-                  className={`w-full p-3 rounded-lg border-2 transition-all text-left ${social.color
-                    } ${isConnecting ? 'border-blue-500 bg-accent' : 'border-border'
-                    }`}
+                  className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
+                    social.color
+                  } ${
+                    isConnecting ? 'border-blue-500 bg-accent' : 'border-border'
+                  }`}
                 >
                   <div className="flex items-center justify-center gap-3">
-                    {
-                      social.id === 'x' ? <span className='text-2xl'>𝕏</span> :
-                        <img
-                          className="w-5 h-5"
-                          src={social.icon}
-                        />
-                    }
+                    {social.id === 'x' ? (
+                      <span className="text-2xl">𝕏</span>
+                    ) : (
+                      <img className="w-5 h-5" src={social.icon} />
+                    )}
                     <span className="text-sm flex-1">{social.name}</span>
                     {isConnecting && (
                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -290,7 +303,9 @@ export function WalletConnectDialog({
 
           <div className="space-y-3">
             {displayWallets.map((wallet) => {
-              const isConnecting = connectingWallet === wallet.id || (isAuthenticatingSolana && wallet.id === 'phantom');
+              const isConnecting =
+                connectingWallet === wallet.id ||
+                (isAuthenticatingSolana && wallet.id === 'phantom');
 
               return (
                 <WalletConnectButton
@@ -332,8 +347,8 @@ export function WalletConnectDialog({
               By continuing, you agree to our{' '}
               <button
                 onClick={() => {
-                  navigate('/privacy-policy')
-                  onOpenChange(false)
+                  navigate('/privacy-policy');
+                  onOpenChange(false);
                 }}
                 className="text-blue-500 hover:underline cursor-pointer text-xs"
               >
@@ -342,8 +357,8 @@ export function WalletConnectDialog({
               and{' '}
               <button
                 onClick={() => {
-                  navigate('/terms-of-service')
-                  onOpenChange(false)
+                  navigate('/terms-of-service');
+                  onOpenChange(false);
                 }}
                 className="text-blue-500 hover:underline cursor-pointer text-xs"
               >
@@ -381,11 +396,11 @@ const WalletConnectButton = ({
   onConnectMwa: () => Promise<void>;
 }) => {
   const [pendingWalletType, setPendingWalletType] = useState<WalletType | null>(
-    null
+    null,
   );
 
   const authenticateWithToken = useAuthStore(
-    (state) => state.authenticateWithToken
+    (state) => state.authenticateWithToken,
   );
 
   const { handlePhantomDirectConnect } = usePhantomDirectConnect({
@@ -470,10 +485,11 @@ const WalletConnectButton = ({
       key={wallet.id}
       onClick={() => handleConnect(wallet.id)}
       disabled={!wallet.supported || loading}
-      className={`w-full p-4 rounded-xl border-2 transition-all text-left ${wallet.supported
-        ? 'border-border hover:border-blue-500 hover:bg-accent cursor-pointer'
-        : 'border-border opacity-50 cursor-not-allowed'
-        } ${loading ? 'border-blue-500 bg-accent' : ''}`}
+      className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+        wallet.supported
+          ? 'border-border hover:border-blue-500 hover:bg-accent cursor-pointer'
+          : 'border-border opacity-50 cursor-not-allowed'
+      } ${loading ? 'border-blue-500 bg-accent' : ''}`}
     >
       <div className="flex items-center gap-4">
         <div
@@ -500,10 +516,7 @@ const WalletConnectButton = ({
                 Available
               </Badge>
             ) : (
-              <Badge
-                variant="outline"
-                className="text-xs"
-              >
+              <Badge variant="outline" className="text-xs">
                 Coming Soon
               </Badge>
             )}

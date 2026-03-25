@@ -8,10 +8,10 @@ type ClaimToken = {
 type ClaimTokenResponse = {
   amount: number;
   message: string;
-  remainingXp: number;
+  remainingXp?: number;
   solanaWalletAddress: string;
   success: boolean;
-  txSignature: string;
+  txSignature?: string;
 };
 
 export const claimToken = async (data: ClaimToken) => {

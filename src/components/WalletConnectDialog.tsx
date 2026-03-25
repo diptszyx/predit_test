@@ -132,12 +132,12 @@ export function WalletConnectDialog({
   };
 
   const isMobile = useIsMobile(1024);
-  const isApp = import.meta.env.VITE_IS_APP === 'true';
+  const hasPhantomExtension = !!getPhantomProvider();
   const displayWallets = (
-    isApp ? wallets.filter((w) => w.id === 'phantom') : wallets
+    !hasPhantomExtension ? wallets.filter((w) => w.id === 'phantom') : wallets
   ).map((w) => {
     if (w.id === 'phantom') {
-      return isApp
+      return !hasPhantomExtension
         ? {
             ...w,
             supported: true,
@@ -335,7 +335,7 @@ export function WalletConnectDialog({
                   wallet={wallet}
                   setConnectingWallet={setConnectingWallet}
                   onConnect={onConnect}
-                  isApp={isApp}
+                  isApp={!hasPhantomExtension}
                   onConnectMwa={async () => {
                     setPendingMwaLogin(true);
 

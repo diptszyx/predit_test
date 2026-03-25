@@ -79,7 +79,6 @@ function AppContent() {
 
   const { disconnect: disconnectWallet } = useWallet();
   const resetWalletStore = useWalletStore((state) => state.resetWallet);
-  const isApp = import.meta.env.VITE_IS_APP === 'true';
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -421,18 +420,15 @@ function AppContent() {
   };
 
   const handleWalletDisconnect = async () => {
-    if (isApp) {
-      try {
-        await mwaAuthCache.clear();
-      } catch (e) {
-        console.error('Failed to clear MWA cache', e);
-      }
-    } else {
-      try {
-        await disconnectWallet();
-      } catch (e) {
-        console.error('Failed to disconnect wallet adapter', e);
-      }
+    try {
+      await mwaAuthCache.clear();
+    } catch (e) {
+      console.error('Failed to clear MWA cache', e);
+    }
+    try {
+      await disconnectWallet();
+    } catch (e) {
+      console.error('Failed to disconnect wallet adapter', e);
     }
     logout();
     closeProfileDialog();

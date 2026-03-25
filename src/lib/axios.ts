@@ -4,7 +4,7 @@ import { generateClientToken } from './clientToken';
 export const AUTH_TOKEN_STORAGE_KEY = 'deor.authToken';
 const DEFAULT_API_BASE_URL = 'https://deor-be-production.up.railway.app/api/v1';
 
-const CLIENT_TOKEN_PATHS = ['/auth/register', '/auth/verify'];
+const CLIENT_TOKEN_PATHS = ['/auth/register', '/auth/verify', '/solana/claim'];
 
 const apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL;

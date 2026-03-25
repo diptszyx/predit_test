@@ -59,26 +59,29 @@ const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
       })
 
       if (data.success) {
-        const isDevnetNetwork = claimNetwork === 'devnet'
-        const viewSolscanLink = `https://solscan.io/tx/${data.txSignature}${isDevnetNetwork ? '?cluster=devnet' : ''}`;
-
-        updateUser({
-          xp: data.remainingXp
-        })
+        if (data.remainingXp !== undefined) {
+          updateUser({ xp: data.remainingXp })
+        }
         handleClose()
 
-        toast.success(
-          <div className="flex gap-1">
-            <span>{data.message || 'Claim Predit token successfully!'}.</span>
-            <a
-              href={viewSolscanLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline font-medium text-[#3b82f6]"
-            >
-              View on solscan
-            </a>
-          </div>, { duration: 6000 })
+        if (data.txSignature) {
+          const isDevnetNetwork = claimNetwork === 'devnet'
+          const viewSolscanLink = `https://solscan.io/tx/${data.txSignature}${isDevnetNetwork ? '?cluster=devnet' : ''}`;
+          toast.success(
+            <div className="flex gap-1">
+              <span>{data.message || 'Claim Predit token successfully!'}.</span>
+              <a
+                href={viewSolscanLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-medium text-[#3b82f6]"
+              >
+                View on solscan
+              </a>
+            </div>, { duration: 6000 })
+        } else {
+          toast.success(data.message || 'Claim Predit token successfully!', { duration: 6000 })
+        }
       }
     } catch (error: any) {
       console.log('Failed to claim token', error)

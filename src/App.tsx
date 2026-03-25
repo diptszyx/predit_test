@@ -62,6 +62,7 @@ import useAuthStore from './store/auth.store';
 import { useWalletStore } from './store/wallet.store';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { checkIsAdmin } from './utils/isAdmin';
+import { getPhantomProvider } from './hooks/usePhantomConnect';
 
 export default function App() {
   return (
@@ -76,7 +77,7 @@ export default function App() {
 }
 
 function AppContent() {
-
+  const hasPhantomExtension = !!getPhantomProvider();
   const { disconnect: disconnectWallet } = useWallet();
   const resetWalletStore = useWalletStore((state) => state.resetWallet);
   const navigate = useNavigate();
@@ -420,15 +421,18 @@ function AppContent() {
   };
 
   const handleWalletDisconnect = async () => {
-    try {
-      await mwaAuthCache.clear();
-    } catch (e) {
-      console.error('Failed to clear MWA cache', e);
-    }
+    if(!hasPhantomExtension) {
+      try {
+        await mwaAuthCache.clear();
+      } catch (e) {
+        console.error('Failed to clear MWA cache', e);
+      }
+    } else {
     try {
       await disconnectWallet();
     } catch (e) {
       console.error('Failed to disconnect wallet adapter', e);
+    }
     }
     logout();
     closeProfileDialog();

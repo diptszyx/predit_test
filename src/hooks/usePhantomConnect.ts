@@ -31,6 +31,8 @@ export const usePhantomDirectConnect = ({
     (state) => state.authenticateWithToken,
   );
 
+  const { select, wallets: adapterWallets } = useWallet();
+
   const handlePhantomDirectConnect = async () => {
     setConnectingWallet("phantom");
 
@@ -72,6 +74,18 @@ export const usePhantomDirectConnect = ({
       }
 
       await authenticateWithToken(verifyResp.token);
+
+      // Sync adapter: select Phantom so autoConnect picks it up
+      try {
+        const phantomAdapter = adapterWallets.find(
+          (w) => w.adapter.name === "Phantom",
+        );
+        if (phantomAdapter) {
+          select(phantomAdapter.adapter.name);
+        }
+      } catch (e) {
+        console.warn("Failed to sync wallet adapter:", e);
+      }
 
       toast.success("Successfully connected to Phantom!");
       onConnect("phantom", verifyResp.user);

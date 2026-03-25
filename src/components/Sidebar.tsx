@@ -24,7 +24,7 @@ import {
   Trophy,
   User,
   Users,
-  Zap
+  Zap,
 } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -87,13 +87,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(import.meta.env.VITE_POLYMARKET_ENABLE === 'true'
     ? [
-      {
-        id: 'polymarket',
-        label: 'Polymarket',
-        icon: LineChart,
-        requiresAuth: true,
-      },
-    ]
+        {
+          id: 'polymarket',
+          label: 'Polymarket',
+          icon: LineChart,
+          requiresAuth: true,
+        },
+      ]
     : []),
   {
     id: 'chat',
@@ -128,13 +128,13 @@ const getBaseNavigationItems = (isAdmin: boolean): NavigationItem[] => [
   },
   ...(isAdmin
     ? [
-      {
-        id: 'topic',
-        label: 'Topic',
-        icon: BookType,
-        requiresAuth: true,
-      },
-    ]
+        {
+          id: 'topic',
+          label: 'Topic',
+          icon: BookType,
+          requiresAuth: true,
+        },
+      ]
     : []),
 ];
 
@@ -175,6 +175,7 @@ export function Sidebar({
 }: SidebarProps) {
   const navigate = useNavigate();
   const polymarketEnabled = import.meta.env.VITE_POLYMARKET_ENABLE === 'true';
+  const claimTokenEnable = import.meta.env.VITE_CLAIM_TOKEN_ENABLE === 'true';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(
     currentPage === 'chat' ? 'chat' : null,
@@ -189,7 +190,7 @@ export function Sidebar({
 
   const { publicKey, connected, disconnect } = useWallet();
 
-  const { xpToken } = useGetXpToken(user)
+  const { xpToken } = useGetXpToken(user);
 
   useEffect(() => {
     (async () => {
@@ -331,16 +332,14 @@ export function Sidebar({
           };
 
           return (
-            <div
-              key={item.id}
-              className="w-full"
-            >
+            <div key={item.id} className="w-full">
               <Button
                 variant="ghost"
-                className={`w-full justify-start ${isActiveParent
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
+                className={`w-full justify-start ${
+                  isActiveParent
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                }`}
                 onClick={handleItemClick}
               >
                 <Icon className="w-4 h-4 mr-3" />
@@ -374,9 +373,9 @@ export function Sidebar({
                       (showAllChats && item.id === 'chat'
                         ? item.children
                         : (item.children && item.children.length > 0
-                          ? item.children
-                          : []
-                        )?.slice(0, 5)) || []
+                            ? item.children
+                            : []
+                          )?.slice(0, 5)) || []
                     ).map((child) => {
                       const chat = child as ChatEntity;
                       return (
@@ -521,11 +520,7 @@ export function Sidebar({
                   </p>
 
                   <p className="text-xs gap-1 mt-0.5 text-muted-foreground flex items-center">
-                    <img
-                      src="/polygon.png"
-                      className="w-3 h-3"
-                      alt=""
-                    />
+                    <img src="/polygon.png" className="w-3 h-3" alt="" />
                     {shortenAddress(user?.appWallet || '')}
                     <Copy
                       className="w-3 h-3 ml-2 cursor-pointer"
@@ -533,11 +528,7 @@ export function Sidebar({
                     />
                   </p>
                   <div className="text-xs mt-0.5 flex gap-1 items-center text-muted-foreground">
-                    <img
-                      src="/solana.png"
-                      className="w-3 h-3"
-                      alt=""
-                    />
+                    <img src="/solana.png" className="w-3 h-3" alt="" />
                     <p>
                       {!publicKey || !connected
                         ? 'Not connected'
@@ -580,13 +571,16 @@ export function Sidebar({
                 )}
               </div>
 
-              <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer" onClick={() => navigate('/predit-xp-token')}>
-                <Coins className="w-3 h-3 text-primary" />
-                <span className="font-medium">
-                  {xpToken}
-                </span>
-                <span className="text-muted-foreground">XP Token</span>
-              </div>
+              {claimTokenEnable && (
+                <div
+                  className="flex items-center gap-1 text-xs mb-2 cursor-pointer"
+                  onClick={() => navigate('/predit-xp-token')}
+                >
+                  <Coins className="w-3 h-3 text-primary" />
+                  <span className="font-medium">{xpToken}</span>
+                  <span className="text-muted-foreground">XP Token</span>
+                </div>
+              )}
 
               {polymarketEnabled && <Balance />}
             </div>
@@ -623,10 +617,7 @@ export function Sidebar({
             </div>
           </div>
         ) : (
-          <Button
-            className="w-full"
-            onClick={onOpenWalletDialog}
-          >
+          <Button className="w-full" onClick={onOpenWalletDialog}>
             <User className="w-4 h-4 mr-2" />
             Sign In
           </Button>
@@ -719,16 +710,14 @@ export function Sidebar({
               };
 
               return (
-                <div
-                  key={item.id}
-                  className="w-full"
-                >
+                <div key={item.id} className="w-full">
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start ${isActiveParent
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                      }`}
+                    className={`w-full justify-start ${
+                      isActiveParent
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                    }`}
                     onClick={handleItemClick}
                   >
                     <Icon className="w-4 h-4 mr-3" />
@@ -766,9 +755,9 @@ export function Sidebar({
                           (showAllChats && item.id === 'chat'
                             ? item.children
                             : (item?.children && item?.children?.length > 0
-                              ? item.children
-                              : []
-                            )?.slice(0, 5)) || []
+                                ? item.children
+                                : []
+                              )?.slice(0, 5)) || []
                         ).map((child) => {
                           const chat = child as ChatEntity;
                           return (
@@ -903,11 +892,7 @@ export function Sidebar({
                       </p>
 
                       <p className="text-xs gap-1 text-muted-foreground flex items-center mt-1">
-                        <img
-                          src="/polygon.png"
-                          className="w-3 h-3"
-                          alt=""
-                        />
+                        <img src="/polygon.png" className="w-3 h-3" alt="" />
                         {shortenAddress(user?.appWallet || '')}
                         <Copy
                           className="w-3 h-3 ml-2 cursor-pointer"
@@ -915,11 +900,7 @@ export function Sidebar({
                         />
                       </p>
                       <div className="text-xs mt-0.5 flex gap-1 items-center text-muted-foreground">
-                        <img
-                          src="/solana.png"
-                          className="w-3 h-3"
-                          alt=""
-                        />
+                        <img src="/solana.png" className="w-3 h-3" alt="" />
                         <p>
                           {!publicKey || !connected
                             ? 'Not connected'
@@ -944,7 +925,9 @@ export function Sidebar({
                       <span className="font-medium">
                         {user?.xp?.toLocaleString() || 1}
                       </span>
-                      <span className="text-muted-foreground">XP available</span>
+                      <span className="text-muted-foreground">
+                        XP available
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-primary" />
@@ -962,13 +945,16 @@ export function Sidebar({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer hover:text-gray-400" onClick={() => navigate('/predit-xp-token')}>
-                    <Coins className="w-3 h-3 text-primary" />
-                    <span className="font-medium">
-                      {xpToken}
-                    </span>
-                    <span className="text-muted-foreground">XP Token</span>
-                  </div>
+                  {claimTokenEnable && (
+                    <div
+                      className="flex items-center gap-1 text-xs mb-2 cursor-pointer hover:text-gray-400"
+                      onClick={() => navigate('/predit-xp-token')}
+                    >
+                      <Coins className="w-3 h-3 text-primary" />
+                      <span className="font-medium">{xpToken}</span>
+                      <span className="text-muted-foreground">XP Token</span>
+                    </div>
+                  )}
 
                   {polymarketEnabled && <Balance />}
                 </div>
@@ -1005,10 +991,7 @@ export function Sidebar({
                 </div>
               </div>
             ) : (
-              <Button
-                className="w-full"
-                onClick={onOpenWalletDialog}
-              >
+              <Button className="w-full" onClick={onOpenWalletDialog}>
                 <User className="w-4 h-4 mr-2" />
                 Sign In
               </Button>

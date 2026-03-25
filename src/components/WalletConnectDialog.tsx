@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { ethers } from 'ethers';
 import { CheckCircle2, Loader2, Wallet } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -132,11 +132,12 @@ export function WalletConnectDialog({
   };
 
   const isMobile = useIsMobile(1024);
+  const hasPhantomExtension = !!getPhantomProvider();
   const displayWallets = (
-    isMobile ? wallets.filter((w) => w.id === 'phantom') : wallets
+    !hasPhantomExtension ? wallets.filter((w) => w.id === 'phantom') : wallets
   ).map((w) => {
     if (w.id === 'phantom') {
-      return isMobile
+      return !hasPhantomExtension
         ? {
             ...w,
             supported: true,
@@ -148,7 +149,16 @@ export function WalletConnectDialog({
     return w;
   });
 
-  const { publicKey, connected, signMessage, connect } = useWallet();
+  const {
+    publicKey,
+    connected,
+    signMessage,
+    connect,
+    select,
+    wallet: selectedWallet,
+    wallets: adapterWallets,
+  } = useWallet();
+  const walletDebugToastShown = useRef(false);
   const authenticateWithToken = useAuthStore(
     (state) => state.authenticateWithToken,
   );
@@ -211,6 +221,17 @@ export function WalletConnectDialog({
       handleSolanaLogin();
     }
   }, [connected, publicKey, pendingMwaLogin, currentUser]);
+
+  useEffect(() => {
+    if (!open) {
+      walletDebugToastShown.current = false;
+      return;
+    }
+    if (walletDebugToastShown.current) return;
+    const names = adapterWallets.map((w) => w.adapter.name).join(', ');
+    toast.info(`Wallets: ${names || 'none'}`);
+    walletDebugToastShown.current = true;
+  }, [open, adapterWallets]);
 
   const handleSocialConnect = async (provider: SocialProvider) => {
     setConnectingSocial(provider);
@@ -314,7 +335,7 @@ export function WalletConnectDialog({
                   wallet={wallet}
                   setConnectingWallet={setConnectingWallet}
                   onConnect={onConnect}
-                  isMobile={isMobile}
+                  isApp={!hasPhantomExtension}
                   onConnectMwa={async () => {
                     setPendingMwaLogin(true);
 
@@ -324,6 +345,31 @@ export function WalletConnectDialog({
                     }
 
                     try {
+                      if (!selectedWallet && adapterWallets.length) {
+                        select(adapterWallets[0].adapter.name);
+                        await new Promise((r) => setTimeout(r, 0));
+                      }
+                      await connect();
+                    } catch (error) {
+                      setPendingMwaLogin(false);
+                      throw error;
+                    }
+                  }}
+                  onConnectAdapter={async () => {
+                    setPendingMwaLogin(true);
+
+                    if (connected && publicKey) {
+                      return;
+                    }
+
+                    try {
+                      const phantomAdapter = adapterWallets.find(
+                        (w) => w.adapter.name === 'Phantom',
+                      );
+                      if (!selectedWallet && phantomAdapter) {
+                        select(phantomAdapter.adapter.name);
+                        await new Promise((r) => setTimeout(r, 0));
+                      }
                       await connect();
                     } catch (error) {
                       setPendingMwaLogin(false);
@@ -378,8 +424,9 @@ const WalletConnectButton = ({
   wallet,
   setConnectingWallet,
   onConnect,
-  isMobile,
+  isApp,
   onConnectMwa,
+  onConnectAdapter,
 }: {
   wallet: {
     id: WalletType;
@@ -392,8 +439,9 @@ const WalletConnectButton = ({
   loading: boolean;
   onConnect: (wallet: WalletType, user: User) => void;
   setConnectingWallet: (walletType: WalletType | null) => void;
-  isMobile: boolean;
+  isApp: boolean;
   onConnectMwa: () => Promise<void>;
+  onConnectAdapter: () => Promise<void>;
 }) => {
   const [pendingWalletType, setPendingWalletType] = useState<WalletType | null>(
     null,
@@ -414,24 +462,27 @@ const WalletConnectButton = ({
 
     switch (walletType) {
       case 'phantom':
-        if (isMobile) {
+        if (isApp) {
           // Directly trigger MWA without any intermediate modal
           try {
             await onConnectMwa();
           } catch (e: any) {
-            toast.error(e.message || 'Failed to connect wallet');
+            let detail = null;
+            try {
+              detail = JSON.stringify(e);
+            } catch {}
+            toast.error(
+              e?.message ||
+                e?.error?.message ||
+                e?.cause?.message ||
+                detail ||
+                'Failed to connect wallet',
+            );
             setConnectingWallet(null);
             setPendingWalletType(null);
           }
         } else {
-          if (!getPhantomProvider()) {
-            toast.error('Phantom not installed');
-            setConnectingWallet(null);
-            setPendingWalletType(null);
-            return;
-          } else {
-            handlePhantomDirectConnect();
-          }
+          handlePhantomDirectConnect();
         }
         break;
       case 'metamask':

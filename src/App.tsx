@@ -60,6 +60,7 @@ import { News } from './services/news.service';
 import { OracleEntity, oraclesServices } from './services/oracles.service';
 import useAuthStore from './store/auth.store';
 import { useWalletStore } from './store/wallet.store';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { checkIsAdmin } from './utils/isAdmin';
 
 export default function App() {
@@ -76,6 +77,7 @@ export default function App() {
 
 function AppContent() {
 
+  const { disconnect: disconnectWallet } = useWallet();
   const resetWalletStore = useWalletStore((state) => state.resetWallet);
   const navigate = useNavigate();
   const location = useLocation();
@@ -422,6 +424,11 @@ function AppContent() {
       await mwaAuthCache.clear();
     } catch (e) {
       console.error('Failed to clear MWA cache', e);
+    }
+    try {
+      await disconnectWallet();
+    } catch (e) {
+      console.error('Failed to disconnect wallet adapter', e);
     }
     logout();
     closeProfileDialog();

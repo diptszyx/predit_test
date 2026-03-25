@@ -825,7 +825,7 @@ export function Sidebar({
           {/* Bottom Section */}
           <div className="p-4 border-t border-border space-y-1">
             {/* Social Links */}
-            <div className="flex items-center justify-center gap-6 pb-2">
+            <div className="flex items-center justify-center gap-6 pb-1">
               {SOCIAL_LINKS.map((social) => {
                 const Icon = social.icon;
                 return (
@@ -886,7 +886,7 @@ export function Sidebar({
             {user ? (
               <div className="space-y-1">
                 {/* User Info Card */}
-                <div className="p-3 rounded-lg bg-accent border border-border">
+                <div className="p-2 rounded-lg bg-accent border border-border">
                   <div className="flex items-center gap-3 mb-2">
                     <Avatar className="w-8 h-8">
                       <AvatarImage
@@ -896,9 +896,6 @@ export function Sidebar({
                         }
                         alt={user.username}
                       />
-                      <AvatarFallback>
-                        {/* {user.username.slice(0, 2).toUpperCase()} */}
-                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
@@ -965,7 +962,7 @@ export function Sidebar({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer hover:text-gray-500" onClick={() => navigate('/predit-xp-token')}>
+                  <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer hover:text-gray-400" onClick={() => navigate('/predit-xp-token')}>
                     <Coins className="w-3 h-3 text-primary" />
                     <span className="font-medium">
                       {xpToken}

@@ -120,7 +120,7 @@ export function WalletConnectDialog({
 }: WalletConnectDialogProps) {
   const navigate = useNavigate();
   const [connectingWallet, setConnectingWallet] = useState<WalletType | null>(
-    null
+    null,
   );
   const [connectingSocial, setConnectingSocial] =
     useState<SocialProvider | null>(null);
@@ -160,7 +160,7 @@ export function WalletConnectDialog({
   } = useWallet();
   const walletDebugToastShown = useRef(false);
   const authenticateWithToken = useAuthStore(
-    (state) => state.authenticateWithToken
+    (state) => state.authenticateWithToken,
   );
   const currentUser = useAuthStore((state) => state.user);
   const [isAuthenticatingSolana, setIsAuthenticatingSolana] = useState(false);
@@ -444,11 +444,11 @@ const WalletConnectButton = ({
   onConnectAdapter: () => Promise<void>;
 }) => {
   const [pendingWalletType, setPendingWalletType] = useState<WalletType | null>(
-    null
+    null,
   );
 
   const authenticateWithToken = useAuthStore(
-    (state) => state.authenticateWithToken
+    (state) => state.authenticateWithToken,
   );
 
   const { handlePhantomDirectConnect } = usePhantomDirectConnect({
@@ -476,7 +476,7 @@ const WalletConnectButton = ({
                 e?.error?.message ||
                 e?.cause?.message ||
                 detail ||
-                'Failed to connect wallet'
+                'Failed to connect wallet',
             );
             setConnectingWallet(null);
             setPendingWalletType(null);

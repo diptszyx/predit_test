@@ -47,6 +47,7 @@ import TopicPage from './components/topic/TopicPage';
 import UserProfileDialog from './components/UserProfileDialog';
 import { WalletConnectDialog } from './components/WalletConnectDialog';
 import HomeWrapper from './components/wrapper/HomeWrapper';
+import XpTokenWrapper from './components/wrapper/XpTokenWrapper';
 import { XPInfoDialog } from './components/XPInfoDialog';
 import { shortenAddress } from './lib/address';
 import InviteCodePage from './pages/InviteCodePage';
@@ -147,6 +148,7 @@ function AppContent() {
     if (path === '/kalshi') return 'kalshi';
     if (path === '/privacy-policy') return 'privacy-policy';
     if (path === '/terms-of-service') return 'terms-of-service';
+    if (path === '/predit-xp-token') return 'predit-xp-token';
     return 'home';
   };
 
@@ -219,6 +221,9 @@ function AppContent() {
         break;
       case 'terms-of-service':
         navigate('/terms-of-service');
+        break;
+      case '/predit-xp-token':
+        navigate('/predit-xp-token');
         break;
       default:
         navigate('/');
@@ -1501,6 +1506,17 @@ function AppContent() {
             </div>
             {commonDialogProps}
           </div>
+        }
+      />
+
+      <Route
+        path="/predit-xp-token"
+        element={
+          <XpTokenWrapper
+            commonSidebarProps={commonSidebarProps}
+            handleWalletDisconnect={handleWalletDisconnect}
+            commonDialogProps={commonDialogProps}
+          />
         }
       />
     </Routes>

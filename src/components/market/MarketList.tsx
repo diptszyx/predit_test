@@ -1,11 +1,12 @@
 import clsx from 'clsx';
-import { Clock, MessageSquare, Share2, Users } from 'lucide-react';
+import { Clock, MessageSquare, Share2, Users, Zap } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { arcLength } from '../../constants/ui';
 import useJoyrideTour from '../../hooks/useJoyrideTour';
 import { formatDate } from '../../lib/date';
+import { leaderboardService, XpMarketEvent } from '../../services/leaderboard.service';
 import { createPreditMarketChat } from '../../services/market-messages.service';
 import {
   getListMarket,
@@ -25,6 +26,7 @@ import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { getStatusBadgeProps } from './MarketListAdmin';
 import { MarketModal } from './MarketModal';
+import MyXpMarketHistoryItem from './MyXpMarketHistoryItem';
 import { ShowJoyrideConfirmModal } from './ShowJoyrideConfirmModal';
 
 export type MarketChoice = 'yes' | 'no' | null;
@@ -86,6 +88,14 @@ export default function MarketList({
   const loadMoreBetHistoryRef = useRef<HTMLDivElement>(null);
   const [pageMyBetHistory, setPageMyBetHistory] = useState(1);
   const [hasMoreMyBetHistory, setHasMoreMyBetHistory] = useState(false);
+
+  const [isMyXpMarketHistory, setIsMyXpMarketHistory] = useState(false);
+  const [myXpMarketHistory, setMyXpMarketHistory] = useState<XpMarketEvent[]>([]);
+  const [totalXpMarket, setTotalXpMarket] = useState(0);
+  const [totalXpMarketRecord, setTotalXpMarketRecord] = useState(0)
+  const [pageXpMarketHistory, setPageXpMarketHistory] = useState(1)
+  const pageSize = 10
+
   const isUserBlocked = !isAdmin && !user?.appliedInviteCode
 
   const [showTourConfirm, setShowTourConfirm] = useState(false);
@@ -137,6 +147,32 @@ export default function MarketList({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchXpEvents = async () => {
+      setLoading(true);
+      const requestParams = {
+        page: pageXpMarketHistory,
+        limit: pageSize,
+      };
+
+      try {
+        const data = await leaderboardService.getXpMarketHistory(requestParams)
+        if (data) {
+          setMyXpMarketHistory(data.events)
+          setTotalXpMarket(data.totalXp)
+          setTotalXpMarketRecord(data.count)
+        }
+      } catch (error) {
+        console.error(error)
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (isMyXpMarketHistory)
+      fetchXpEvents()
+  }, [pageXpMarketHistory, isMyXpMarketHistory, pageXpMarketHistory])
 
   useEffect(() => {
     const isTourGuideShown = localStorage.getItem(TOUR_GUIDE_SHOWN_KEY);
@@ -273,6 +309,7 @@ export default function MarketList({
   };
 
   const shouldShowSkeleton = loading || isUserBlocked
+  const totalXpMarketHistoryPages = Math.ceil(totalXpMarketRecord / pageSize)
 
   if (error) return <p className="text-red-500">{error}</p>;
 
@@ -310,6 +347,7 @@ export default function MarketList({
               setStatusFilter(status.value);
               setMyBetHistory([]);
               setIsBetHistoryPage(false);
+              setIsMyXpMarketHistory(false)
             }}
             className="min-w-[60px] text-xs"
             style={{
@@ -324,85 +362,151 @@ export default function MarketList({
             variant={isBetHistoryPage ? 'default' : 'outline'}
             size="sm"
             onClick={() => {
-              fetchMyBets(1);
+              fetchMyBets(1, true);
               setStatusFilter(undefined);
               setPageMyBetHistory(1);
               setIsBetHistoryPage(true);
+              setIsMyXpMarketHistory(false);
             }}
             className="capitalize text-xs"
           >
             My Placed
           </Button>
         )}
+
+        {!isAdmin && isFromMarketPage && (
+          <Button
+            variant={isMyXpMarketHistory ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => {
+              setStatusFilter(undefined);
+              setIsMyXpMarketHistory(true);
+              setIsBetHistoryPage(false);
+            }}
+            className="capitalize text-xs"
+          >
+            XP History
+          </Button>
+        )}
       </div>
 
       <div className="h-full pb-10" style={{ overflow: 'auto' }}>
         {/* Market list */}
-        <div className="p-3 space-y-3">
-          <div
-            className={clsx({
-              'grid grid-cols-1 gap-3': !isFromMarketPage,
-              'relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3':
-                isFromMarketPage,
-            })}
-          >
-            {!isBetHistoryPage &&
-              markets.map((item, index) => (
-                <MarketItem key={item.id}
-                  index={index}
-                  item={item}
-                  onSelect={handleSelect}
-                  isFromMarketPage={isFromMarketPage} />
-              ))}
-
-            {myBetHistory.length > 0 &&
-              myBetHistory.map((item) => (
-                <MyBetsHistoryItem
-                  key={item.id}
-                  item={item.market}
-                  marketBet={item}
-                  isFromMarketPage={isFromMarketPage}
-                />
-              ))}
-            {/* Infinite scroll trigger */}
-            {hasMoreMyBetHistory && (
-              <div ref={loadMoreBetHistoryRef} className="h-10" />
-            )}
-
-            {shouldShowSkeleton && (
-              <>
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="space-y-2">
-                    <Skeleton className="h-20 w-full rounded-lg" />
-                    <Skeleton className="h-3 w-full" />
-                    <Skeleton className="h-2 w-2/3" />
-                  </div>
+        {
+          !isMyXpMarketHistory &&
+          <div className="p-3 space-y-3">
+            <div
+              className={clsx({
+                'grid grid-cols-1 gap-3': !isFromMarketPage,
+                'relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3':
+                  isFromMarketPage,
+              })}
+            >
+              {!isBetHistoryPage &&
+                markets.map((item, index) => (
+                  <MarketItem key={item.id}
+                    index={index}
+                    item={item}
+                    onSelect={handleSelect}
+                    isFromMarketPage={isFromMarketPage} />
                 ))}
-              </>
-            )}
 
-            <div ref={loaderRef} />
+              {myBetHistory.length > 0 &&
+                myBetHistory.map((item) => (
+                  <MyBetsHistoryItem
+                    key={item.id}
+                    item={item.market}
+                    marketBet={item}
+                    isFromMarketPage={isFromMarketPage}
+                  />
+                ))}
+              {/* Infinite scroll trigger */}
+              {hasMoreMyBetHistory && (
+                <div ref={loadMoreBetHistoryRef} className="h-10" />
+              )}
+
+              {shouldShowSkeleton && (
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-20 w-full rounded-lg" />
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-2 w-2/3" />
+                    </div>
+                  ))}
+                </>
+              )}
+
+              <div ref={loaderRef} />
+            </div>
+
+            <MarketModal
+              open={modalOpen}
+              onClose={() => setModalOpen(false)}
+              title={selectedItem?.question || ''}
+              choice={selectedChoice}
+              marketId={selectedItem?.id}
+              onConfirm={handleConfirm}
+              onBetPlaced={handleBetPlaced}
+            />
+
+            {!loading &&
+              (isAdmin || !!user?.appliedInviteCode) &&
+              (markets.length === 0 ||
+                (myBetHistory.length === 0 && isBetHistoryPage)) && (
+                <p className="text-center text-xs text-muted-foreground py-8">
+                  No markets available
+                </p>
+              )}
           </div>
+        }
 
-          <MarketModal
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-            title={selectedItem?.question || ''}
-            choice={selectedChoice}
-            marketId={selectedItem?.id}
-            onConfirm={handleConfirm}
-            onBetPlaced={handleBetPlaced}
-          />
+        {isMyXpMarketHistory && isFromMarketPage &&
+          <div className='mt-5'>
+            <h3
+              className={`font-bold tabular-nums text-lg flex gap-1 items-center ${totalXpMarket > 0
+                ? "text-emerald-500"
+                : totalXpMarket < 0
+                  ? "text-red-500"
+                  : "text-muted-foreground"
+                }`}
+            >
+              XP Change: {totalXpMarket > 0 ? `+${totalXpMarket}` : totalXpMarket}
+              <Zap className={`w-4 h-4`} />
+            </h3>
+            <MyXpMarketHistoryItem
+              loading={loading}
+              events={myXpMarketHistory}
+            />
+            {!loading && myXpMarketHistory?.length > 0 && (
+              <div className="flex items-center justify-between pt-4">
+                <p className="text-sm text-muted-foreground">
+                  Page {page} of {totalXpMarketHistoryPages}
+                </p>
 
-          {!loading &&
-            (isAdmin || !!user?.appliedInviteCode) &&
-            (markets.length === 0 ||
-              (myBetHistory.length === 0 && isBetHistoryPage)) && (
-              <p className="text-center text-xs text-muted-foreground py-8">
-                No markets available
-              </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    Previous
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === totalXpMarketHistoryPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
             )}
-        </div>
+          </div>
+        }
       </div>
     </div>
   );

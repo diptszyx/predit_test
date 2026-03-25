@@ -57,13 +57,37 @@ export const XP_EVENT_LABEL: Record<XpEventType, string> = {
   milestone: "Milestone",
 };
 
+type EventType = "bet_won" | "bet_lost" | "bet_placed";
+
+interface EventMetadata {
+  betId: string;
+  marketId: string;
+  payout?: number;
+  prediction?: "yes" | "no";
+}
+export interface XpMarketEvent {
+  id: string;
+  userId: string;
+  eventType: EventType;
+  baseXp: number;
+  multiplier: number;
+  totalXp: number;
+  metadata: EventMetadata;
+  createdAt: string;
+}
+interface XpMarketResponse {
+  events: XpMarketEvent[];
+  totalXp: number;
+  count: number;
+}
+
 export const leaderboardService = {
   getLeaderboard: async (
-    type: LeaderboardType = "xp"
+    type: LeaderboardType = "xp",
   ): Promise<LeaderboardResponse> => {
     try {
       const { data } = await apiClient.get<LeaderboardResponse>(
-        `/xp-events/leaderboard?type=${type}`
+        `/xp-events/leaderboard?type=${type}`,
       );
       return {
         leaderboard: data?.leaderboard ?? [],
@@ -90,6 +114,20 @@ export const leaderboardService = {
     } catch (error) {
       console.error("Failed to fetch leaderboard:", error);
       return { events: [] };
+    }
+  },
+
+  getXpMarketHistory: async (params: { page: number; limit: number }) => {
+    try {
+      const { data } = await apiClient.get<XpMarketResponse>(
+        `/xp-events/market-bets`,
+        {
+          params,
+        },
+      );
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch xp market bets:", error);
     }
   },
 };

@@ -4,19 +4,18 @@ import {
   ChevronDown,
   ChevronsLeftRight,
   ChevronUp,
+  Coins,
   Copy,
-  Crown,
   Ellipsis,
   Flame,
   History,
-  Home,
   LineChart,
-  ListTodo,
   LogOut,
   MessageCircle,
   MessageSquare,
   Moon,
   Plus,
+  ScrollText,
   Settings,
   ShoppingCart,
   Sparkles,
@@ -25,13 +24,13 @@ import {
   Trophy,
   User,
   Users,
-  Zap,
-  ScrollText,
+  Zap
 } from 'lucide-react';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useIsMobile } from '../hooks/useIsMobile';
+import useGetXpToken from '../hooks/xp-token/useGetXpToken';
 import { copyToClipboard } from '../lib/clipboardUtils';
 import { User as UserType } from '../lib/types';
 import { ChatEntity, chatService } from '../services/chat.service';
@@ -189,6 +188,8 @@ export function Sidebar({
   const userLevel = user ? user.level : 1;
 
   const { publicKey, connected, disconnect } = useWallet();
+
+  const { xpToken } = useGetXpToken(user)
 
   useEffect(() => {
     (async () => {
@@ -578,6 +579,15 @@ export function Sidebar({
                   </Badge>
                 )}
               </div>
+
+              <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer" onClick={() => navigate('/predit-xp-token')}>
+                <Coins className="w-3 h-3 text-primary" />
+                <span className="font-medium">
+                  {xpToken}
+                </span>
+                <span className="text-muted-foreground">XP Token</span>
+              </div>
+
               {polymarketEnabled && <Balance />}
             </div>
 
@@ -815,7 +825,7 @@ export function Sidebar({
           {/* Bottom Section */}
           <div className="p-4 border-t border-border space-y-1">
             {/* Social Links */}
-            <div className="flex items-center justify-center gap-6 pb-2">
+            <div className="flex items-center justify-center gap-6 pb-1">
               {SOCIAL_LINKS.map((social) => {
                 const Icon = social.icon;
                 return (
@@ -876,7 +886,7 @@ export function Sidebar({
             {user ? (
               <div className="space-y-1">
                 {/* User Info Card */}
-                <div className="p-3 rounded-lg bg-accent border border-border">
+                <div className="p-2 rounded-lg bg-accent border border-border">
                   <div className="flex items-center gap-3 mb-2">
                     <Avatar className="w-8 h-8">
                       <AvatarImage
@@ -886,9 +896,6 @@ export function Sidebar({
                         }
                         alt={user.username}
                       />
-                      <AvatarFallback>
-                        {/* {user.username.slice(0, 2).toUpperCase()} */}
-                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">
@@ -937,7 +944,7 @@ export function Sidebar({
                       <span className="font-medium">
                         {user?.xp?.toLocaleString() || 1}
                       </span>
-                      <span className="text-muted-foreground">XP</span>
+                      <span className="text-muted-foreground">XP available</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Trophy className="w-3 h-3 text-primary" />
@@ -953,6 +960,14 @@ export function Sidebar({
                         Pro
                       </Badge>
                     )}
+                  </div>
+
+                  <div className="flex items-center gap-1 text-xs mb-2 cursor-pointer hover:text-gray-400" onClick={() => navigate('/predit-xp-token')}>
+                    <Coins className="w-3 h-3 text-primary" />
+                    <span className="font-medium">
+                      {xpToken}
+                    </span>
+                    <span className="text-muted-foreground">XP Token</span>
                   </div>
 
                   {polymarketEnabled && <Balance />}

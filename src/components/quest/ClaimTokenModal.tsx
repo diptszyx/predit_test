@@ -1,75 +1,104 @@
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Wallet } from "lucide-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { Wallet as WalletIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { claimToken } from "../../services/claim-token.service";
 import useAuthStore from "../../store/auth.store";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 type ClaimTokenModalProps = {
   open: boolean;
-  onOpenChange: (open: boolean) => void
-}
+  onOpenChange: (open: boolean) => void;
+  onClaimSuccess?: () => void;
+};
 
-const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
-  const claimNetwork = import.meta.env.VITE_CLAIM_TOKEN_NETWORK
-  const { publicKey, wallets, wallet, select, connect, connected, connecting } = useWallet();
-  const availableWallet = wallets[0];
+const ClaimTokenModal = ({
+  open,
+  onOpenChange,
+  onClaimSuccess,
+}: ClaimTokenModalProps) => {
+  const claimNetwork = import.meta.env.VITE_CLAIM_TOKEN_NETWORK;
+  const { publicKey, wallet, wallets, connected, connecting } = useWallet();
+  const { setVisible } = useWalletModal();
 
-  const user = useAuthStore(state => state.user)
-  const updateUser = useAuthStore(state => state.updateUser)
-  const totalXp = user?.xp
+  const hasWallets = wallets.length > 0;
 
-  const [claimAmount, setClaimAmount] = useState('')
-  const [error, setError] = useState('')
-  const [isClaiming, setIsClaiming] = useState(false)
+  const user = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser);
+  const totalXp = user?.xp;
+
+  const [claimAmount, setClaimAmount] = useState("");
+  const [error, setError] = useState("");
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleChangeAmount = (value: string) => {
-    if (!totalXp) return
-    setError('')
+    if (!totalXp) return;
+    setError("");
 
-    if (Number(value) > totalXp) {
-      setError(`Insufficient XP amount`)
+    if (value !== "") {
+      const num = Number(value);
+      if (!Number.isInteger(num) || num < 0) return;
+      if (num > totalXp) {
+        setError("Insufficient XP amount");
+      }
     }
 
-    setClaimAmount(value)
-  }
+    setClaimAmount(value);
+  };
 
-  const handleConnect = async () => {
-    if (!wallet) {
-      if (!availableWallet) throw new Error("No Solana wallet available");
-      select(availableWallet.adapter.name);
-      await new Promise((r) => setTimeout(r, 0));
-    }
-    await connect();
+  const handleConnect = () => {
+    setVisible(true);
+  };
+
+  const handleConfirmClaim = () => {
+    setShowConfirm(true);
   };
 
   const handleClaimToken = async () => {
-    if (!publicKey || !claimAmount) return
+    if (!publicKey || !claimAmount) return;
 
-    const address = publicKey.toBase58()
-    setIsClaiming(true)
+    const address = publicKey.toBase58();
+    setIsClaiming(true);
+    setShowConfirm(false);
     try {
       const data = await claimToken({
         amount: Number(claimAmount),
-        solanaWalletAddress: address
-      })
+        solanaWalletAddress: address,
+      });
 
       if (data.success) {
         if (data.remainingXp !== undefined) {
-          updateUser({ xp: data.remainingXp })
+          updateUser({ xp: data.remainingXp });
         }
-        handleClose()
 
+        let txToast: string | number | undefined;
         if (data.txSignature) {
-          const isDevnetNetwork = claimNetwork === 'devnet'
-          const viewSolscanLink = `https://solscan.io/tx/${data.txSignature}${isDevnetNetwork ? '?cluster=devnet' : ''}`;
-          toast.success(
+          const isDevnetNetwork = claimNetwork === "devnet";
+          const viewSolscanLink = `https://solscan.io/tx/${data.txSignature}${isDevnetNetwork ? "?cluster=devnet" : ""}`;
+          txToast = toast.success(
             <div className="flex gap-1">
-              <span>{data.message || 'Claim Predit token successfully!'}.</span>
+              <span>{data.message || "Claim Predit token successfully!"}.</span>
               <a
                 href={viewSolscanLink}
                 target="_blank"
@@ -78,31 +107,53 @@ const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
               >
                 View on solscan
               </a>
-            </div>, { duration: 6000 })
+            </div>,
+            { duration: 15000 },
+          );
         } else {
-          toast.success(data.message || 'Claim Predit token successfully!', { duration: 6000 })
+          txToast = toast.success(
+            data.message || "Claim Predit token successfully!",
+            { duration: 15000 },
+          );
         }
+
+        const previousXp = totalXp;
+        setClaimAmount("");
+        setError("");
+
+        for (let i = 0; i < 5; i++) {
+          await new Promise((r) => setTimeout(r, 2000));
+          await onClaimSuccess?.();
+          const currentXp = useAuthStore.getState().user?.xp;
+          if (currentXp !== previousXp) break;
+        }
+
+        handleClose();
       }
     } catch (error: any) {
-      console.log('Failed to claim token', error)
-      toast.error(error?.response?.data?.message || 'Failed to claim token. Pleas try again!')
+      console.error("Failed to claim token", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to claim token. Please try again!",
+      );
     } finally {
-      setIsClaiming(false)
+      setIsClaiming(false);
     }
-  }
+  };
 
   const handleClose = () => {
-    setError('')
-    setClaimAmount('')
-    onOpenChange(false)
-  }
+    setError("");
+    setClaimAmount("");
+    setShowConfirm(false);
+    onOpenChange(false);
+  };
 
   const renderContent = () => {
-    if (!availableWallet) {
+    if (!hasWallets) {
       return (
         <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-10 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-            <Wallet className="h-7 w-7 text-muted-foreground" />
+            <WalletIcon className="h-7 w-7 text-muted-foreground" />
           </div>
 
           <h3 className="mt-4 text-lg font-semibold">No wallet detected</h3>
@@ -119,7 +170,7 @@ const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
       return (
         <div className="flex h-full flex-col items-center justify-center rounded-2xl border p-4 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FCD05A]/15">
-            <Wallet className="h-7 w-7 text-[#FCD05A]" />
+            <WalletIcon className="h-7 w-7 text-[#FCD05A]" />
           </div>
 
           <h3 className="mt-2 text-lg font-semibold">Connect your wallet</h3>
@@ -139,6 +190,21 @@ const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
       );
     }
 
+    if (isClaiming && !claimAmount) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center rounded-2xl p-6 text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FCD05A] border-t-transparent" />
+          <h3 className="mt-4 text-lg font-semibold">
+            Processing your claim...
+          </h3>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            Please wait while we update your XP balance. This may take a few
+            seconds.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex h-full flex-col rounded-2xl mt-2">
         <div className="space-y-2">
@@ -147,7 +213,8 @@ const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
               Claim amount
             </Label>
             <span className="text-sm text-muted-foreground">
-              Total XP: <span className="font-semibold text-[#FCD05A]">{totalXp}</span>
+              Total XP:{" "}
+              <span className="font-semibold text-[#FCD05A]">{totalXp}</span>
             </span>
           </div>
           <Input
@@ -159,11 +226,17 @@ const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
             inputMode="numeric"
             placeholder={`Enter amount xp`}
             value={claimAmount}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChangeAmount(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handleChangeAmount(e.target.value)
+            }
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (["e", "E", "+", "-", "."].includes(e.key)) {
                 e.preventDefault();
               }
+            }}
+            onPaste={(e: React.ClipboardEvent<HTMLInputElement>) => {
+              const paste = e.clipboardData.getData("text");
+              if (!/^\d+$/.test(paste)) e.preventDefault();
             }}
           />
 
@@ -171,31 +244,83 @@ const ClaimTokenModal = ({ open, onOpenChange }: ClaimTokenModalProps) => {
         </div>
         <div className="mt-6 flex justify-end">
           <Button
-            disabled={isClaiming || error || !claimAmount}
-            onClick={handleClaimToken}
+            disabled={
+              isClaiming || !!error || !claimAmount || Number(claimAmount) <= 0
+            }
+            onClick={handleConfirmClaim}
             className="rounded-xl bg-[#FCD05A] px-5 font-semibold text-black hover:bg-[#f7c93f]"
           >
-            {isClaiming ? 'Claiming...' : 'Claim Predit Token'}
+            {isClaiming ? "Claiming..." : "Claim Predit Token"}
           </Button>
         </div>
       </div>
     );
   };
 
+  const isProcessing = isClaiming && !claimAmount;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle>Claim token</DialogTitle>
-          <DialogDescription>
-            Connect your wallet and claim your token.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(val: boolean) => {
+          if (isProcessing) return;
+          if (!val) {
+            setError("");
+            setClaimAmount("");
+            setShowConfirm(false);
+          }
+          onOpenChange(val);
+        }}
+      >
+        <DialogContent
+          className={`max-w-2xl max-h-[80vh] ${isProcessing ? "[&>button:last-child]:hidden" : ""}`}
+          onInteractOutside={(e: Event) => {
+            if (isProcessing) e.preventDefault();
+          }}
+          onEscapeKeyDown={(e: KeyboardEvent) => {
+            if (isProcessing) e.preventDefault();
+          }}
+        >
+          {!isProcessing && (
+            <DialogHeader>
+              <DialogTitle>Claim token</DialogTitle>
+              <DialogDescription>
+                {!hasWallets
+                  ? "Install a Solana wallet to get started."
+                  : !connected
+                    ? "Connect your wallet to continue the claim process."
+                    : "Enter the amount of XP you want to convert into tokens."}
+              </DialogDescription>
+            </DialogHeader>
+          )}
 
-        <div className="h-full">{renderContent()}</div>
-      </DialogContent>
-    </Dialog>
-  )
-}
+          <div className="h-full">{renderContent()}</div>
+        </DialogContent>
+      </Dialog>
 
-export default ClaimTokenModal
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm token claim</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to convert <strong>{claimAmount} XP</strong> into
+              Predit tokens. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClaimToken}
+              className="bg-[#FCD05A] text-black hover:bg-[#f7c93f]"
+            >
+              Confirm Claim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
+
+export default ClaimTokenModal;

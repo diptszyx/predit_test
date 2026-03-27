@@ -39,7 +39,7 @@ type QuestButtonConfig = {
 const QuestPage = () => {
   const claimTokenEnable = import.meta.env.VITE_CLAIM_TOKEN_ENABLE === 'true'
   const { user, fetchCurrentUser } = useAuthStore();
-  const { quests, totalXpEarned, refetch } = useGetQuest();
+  const { quests, refetch } = useGetQuest();
   const { codes } = useGetInviteCodes();
   const { content } = useGetContentShare();
 
@@ -487,20 +487,22 @@ ${content.shareContent}
         <div className="flex flex-col items-center justify-center text-center">
           <div className="flex items-center text-2xl font-semibold text-[#FCD05A] md:text-4xl">
             <Zap className="h-7 w-7 sm:h-9 sm:w-9" />
-            <span className="pl-1">{totalXpEarned}</span>
+            <span className="pl-1">{user?.xp}</span>
           </div>
 
           <p className="mt-2 text-base font-semibold text-[#FCD05A]">
-            Total XP Earned
+            Total XP Available To Earn
           </p>
 
           {claimTokenEnable &&
-            <button
-              className="mt-4 rounded-2xl bg-[#FCD05A] px-5 py-2.5 text-sm font-semibold text-black transition hover:scale-[1.02] hover:opacity-90 active:scale-[0.98] cursor-pointer"
+            <Button
+              className="mt-4 rounded-2xl bg-[#FCD05A] px-5 py-2.5 text-sm font-semibold text-black transition hover:scale-[1.02] hover:opacity-90 active:scale-[0.98]"
+              disabled={openClaimTokenModal}
               onClick={() => setOpenClaimTokenModal(true)}
+              aria-label="Claim Token"
             >
               Claim Token
-            </button>
+            </Button>
           }
         </div>
       </div>
@@ -553,7 +555,17 @@ ${content.shareContent}
         onConfirm={handleConfirmShare}
       />
 
-      <ClaimTokenModal open={openClaimTokenModal} onOpenChange={setOpenClaimTokenModal} />
+      {claimTokenEnable && (
+        <ClaimTokenModal 
+          open={openClaimTokenModal} 
+          onOpenChange={setOpenClaimTokenModal} 
+          onClaimSuccess={async() => 
+            { 
+              await fetchCurrentUser(); 
+              await refetch(); 
+            }} 
+        />
+      )}
     </div>
   );
 };

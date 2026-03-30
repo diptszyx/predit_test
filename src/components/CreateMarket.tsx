@@ -224,6 +224,9 @@ export default function CreateUpdateMarketModal({
         const payload = {
           question: data.question,
           description: data.description,
+          closeAt: data.closeAt
+            ? new Date(data.closeAt).toISOString()
+            : undefined,
           // Send imageId if new image uploaded
           ...(data.imageId && { imageId: data.imageId }),
         };
@@ -251,6 +254,7 @@ export default function CreateUpdateMarketModal({
         reset({
           question: item.question,
           description: item.description ?? '',
+          closeAt: item.closeAt ? new Date(item.closeAt) : undefined,
           imageId: item.image?.id ?? null,
           oracleId: item.oracle?.id,
         });
@@ -317,44 +321,42 @@ export default function CreateUpdateMarketModal({
               )}
             </div>
 
-            {!isUpdate && (
-              <div className="space-y-2">
-                <Label htmlFor="closeAt" className="px-1">
-                  Close At<span className="text-red-500">*</span>
-                </Label>
-                <Controller
-                  control={control}
-                  name="closeAt"
-                  rules={{
-                    required: 'Close time is required',
-                    validate: (value) => {
-                      if (!value) return 'Close time is required';
-                      const now = new Date();
-                      if (value <= now) {
-                        return 'Close time must be in the future';
-                      }
-                      return true;
-                    },
-                  }}
-                  render={({ field }) => (
-                    <DateTimePicker
-                      value={field.value as Date}
-                      onChange={(date) => {
-                        field.onChange(date);
-                        clearErrors('closeAt');
-                      }}
-                      min={new Date()}
-                      modal={true}
-                    />
-                  )}
-                />
-                {errors.closeAt && (
-                  <p className="text-xs text-red-500">
-                    {errors.closeAt.message as string}
-                  </p>
+            <div className="space-y-2">
+              <Label htmlFor="closeAt" className="px-1">
+                Close At{!isUpdate && <span className="text-red-500">*</span>}
+              </Label>
+              <Controller
+                control={control}
+                name="closeAt"
+                rules={{
+                  required: isUpdate ? false : 'Close time is required',
+                  validate: (value) => {
+                    if (!value) return isUpdate ? true : 'Close time is required';
+                    const now = new Date();
+                    if (value <= now) {
+                      return 'Close time must be in the future';
+                    }
+                    return true;
+                  },
+                }}
+                render={({ field }) => (
+                  <DateTimePicker
+                    value={field.value as Date}
+                    onChange={(date) => {
+                      field.onChange(date);
+                      clearErrors('closeAt');
+                    }}
+                    min={new Date()}
+                    modal={true}
+                  />
                 )}
-              </div>
-            )}
+              />
+              {errors.closeAt && (
+                <p className="text-xs text-red-500">
+                  {errors.closeAt.message as string}
+                </p>
+              )}
+            </div>
 
             {!isUpdate && (
               <div className="space-y-2">

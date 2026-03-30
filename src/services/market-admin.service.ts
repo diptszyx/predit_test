@@ -18,6 +18,7 @@ export interface CreateMarketValues {
 export interface UpdateMarketDto {
   question?: string;
   description?: string;
+  closeAt?: Date | string;
   imageId?: string | null;
 }
 
